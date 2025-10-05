@@ -1,0 +1,2 @@
+[functions.waitlist-automation.deno_flags]
+allow_env = ["REACT_APP_RESEND_API_KEY"]
