@@ -1,2 +1,7 @@
-[functions.waitlist-automation.deno_flags]
-allow_env = ["REACT_APP_RESEND_API_KEY"]
+[functions.waitlist-automation]
+verify_jwt = false
+
+[functions.test-env]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/test-env/index.ts"

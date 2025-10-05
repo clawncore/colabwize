@@ -15,11 +15,15 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "dev": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext ts,tsx",
-    "email": "deno run -A --unstable supabase/functions/waitlist-automation/index.ts"
+    "email:dev": "deno run --allow-net --allow-env --allow-read --allow-write --unstable --import-map=supabase/functions/waitlist-automation/import_map.json supabase/functions/waitlist-automation/index.ts",
+    "email:deploy": "supabase functions deploy waitlist-automation",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop"
   },
   "eslintConfig": {
     "extends": [

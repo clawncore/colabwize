@@ -14,7 +14,6 @@ export default function WaitlistModal({
   onClose,
   onSuccess,
 }: WaitlistModalProps) {
-  // ...rest of the component
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
@@ -68,10 +67,49 @@ export default function WaitlistModal({
     setShowSuccess(true);
     setIsSubmitting(false);
 
-    // Send email
-    await supabase.functions.invoke("waitlist-automation", {
-      body: { name, email, position: newPosition, referralCode: code },
-    });
+    // Send immediate welcome email
+    try {
+      console.log("Invoking waitlist function with data:", {
+        type: "immediateWelcome",
+        entry: {
+          name,
+          email,
+          position: newPosition,
+          referralCode: code
+        }
+      });
+
+      const { data, error } = await supabase.functions.invoke("waitlist-automation", {
+        body: {
+          type: "immediateWelcome",
+          entry: {
+            name,
+            email,
+            position: newPosition,
+            referralCode: code
+          }
+        },
+      });
+
+      if (error) {
+        console.error("Error invoking waitlist function:", error);
+        console.error("Error details:", {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
+      } else {
+        console.log("Waitlist function response:", data);
+      }
+    } catch (emailError) {
+      console.error("Error sending welcome email:", emailError);
+      console.error("Email error details:", {
+        message: emailError instanceof Error ? emailError.message : 'Unknown error',
+        name: emailError instanceof Error ? emailError.name : 'Unknown',
+        stack: emailError instanceof Error ? emailError.stack : 'No stack'
+      });
+      // Don't prevent success modal from showing if email fails
+    }
   };
 
   const handleReset = () => {

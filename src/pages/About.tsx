@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import { Globe, Users, Shield, ArrowRight } from "lucide-react";
 
-interface TeamMember {
-  name: string;
-  role: string;
-  bio: string;
-  avatar: string;
-}
-
 interface AboutProps {
   onWaitlistClick: () => void;
 }

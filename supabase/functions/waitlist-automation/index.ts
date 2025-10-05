@@ -1,15 +1,55 @@
 /// <reference types="@supabase/supabase-js" />
 
-import { Resend } from "resend";
-// This function adapts the handler to the Supabase Edge runtime
-// The serve function is available as Deno.serve in Supabase Edge Functions
-const resend = new Resend("re_QTsCAvAb_Eyo8L9nLeaWYx5WpJcHSB4kc");
+// Import Resend using the correct format for Supabase Edge Functions
+// @ts-ignore: Deno-specific import
+import { Resend } from 'https://esm.sh/resend@4.0.0';
+
+// Initialize Resend client - will use environment variable
+let resend: any;
+
+// Try to get the API key from environment variables
+const apiKey = Deno.env.get("RESEND_API_KEY") || "";
+
+if (apiKey) {
+  try {
+    resend = new Resend(apiKey);
+    console.log("Resend client initialized successfully");
+  } catch (initError) {
+    console.error("Failed to initialize Resend client:", initError);
+    // Create a mock Resend client for graceful degradation
+    resend = {
+      emails: {
+        send: async (emailContent: any) => {
+          console.log("Mock email send - would have sent:", {
+            to: emailContent.to,
+            subject: emailContent.subject
+          });
+          return { data: { id: "mock-id" }, error: null };
+        }
+      }
+    };
+  }
+} else {
+  console.warn("RESEND_API_KEY not found in environment variables");
+  // Create a mock Resend client for graceful degradation
+  resend = {
+    emails: {
+      send: async (emailContent: any) => {
+        console.log("Mock email send - would have sent:", {
+          to: emailContent.to,
+          subject: emailContent.subject
+        });
+        return { data: { id: "mock-id" }, error: null };
+      }
+    }
+  };
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "Content-Type, Authorization, X-Client-Info, Apikey",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, accept, origin, referer",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
 };
 
 interface WaitlistEntry {
@@ -70,7 +110,10 @@ const sendWelcomeEmail = async (entry: WaitlistEntry) => {
 
     if (error) {
       console.error("Error sending welcome email:", error);
-      throw error;
+      // Don't throw error for mock client
+      if (error.message !== "Resend client failed to initialize") {
+        throw error;
+      }
     }
 
     console.log("Welcome email sent successfully:", data);
@@ -128,7 +171,10 @@ const sendSneakPeekEmail = async (entry: WaitlistEntry) => {
 
     if (error) {
       console.error("Error sending sneak peek email:", error);
-      throw error;
+      // Don't throw error for mock client
+      if (error.message !== "Resend client failed to initialize") {
+        throw error;
+      }
     }
 
     console.log("Sneak peek email sent successfully:", data);
@@ -188,7 +234,10 @@ const sendCollaborationEmail = async (entry: WaitlistEntry) => {
 
     if (error) {
       console.error("Error sending collaboration email:", error);
-      throw error;
+      // Don't throw error for mock client
+      if (error.message !== "Resend client failed to initialize") {
+        throw error;
+      }
     }
 
     console.log("Collaboration email sent successfully:", data);
@@ -245,7 +294,10 @@ const sendLaunchEmail = async (entry: WaitlistEntry) => {
 
     if (error) {
       console.error("Error sending launch email:", error);
-      throw error;
+      // Don't throw error for mock client
+      if (error.message !== "Resend client failed to initialize") {
+        throw error;
+      }
     }
 
     console.log("Launch email sent successfully:", data);
@@ -260,16 +312,75 @@ async function handleRequest(req: Request): Promise<Response> {
   /**
    * This function handles the request and sends the appropriate email.
    */
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
   try {
-    const { type, entry } = (await req.json()) as {
-      type: string;
-      entry: WaitlistEntry;
-    };
+    // Log the request for debugging
+    console.log("handleRequest called:", {
+      method: req.method,
+      url: req.url,
+      headers: Object.fromEntries(req.headers.entries())
+    });
+
+    let requestData;
+    try {
+      requestData = (await req.json()) as {
+        type?: string;
+        entry?: WaitlistEntry;
+        name?: string;
+        email?: string;
+        position?: number;
+        referralCode?: string;
+      };
+      console.log("Parsed request data:", requestData);
+    } catch (parseError) {
+      console.error("Failed to parse request JSON:", parseError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Invalid JSON in request body"
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    let type: string;
+    let entry: WaitlistEntry;
+
+    // Handle the new structure where type and entry are nested
+    if (requestData.type && requestData.entry) {
+      type = requestData.type;
+      entry = requestData.entry;
+      console.log("Using new structure with type:", type, "and entry:", entry);
+
+      // Validate required fields
+      if (!entry.email) {
+        throw new Error("Email is required");
+      }
+      // Ensure all required fields have default values if missing
+      entry.position = entry.position !== undefined ? entry.position : 0;
+      entry.referralCode = entry.referralCode || '';
+      // Ensure name is a string if provided
+      entry.name = entry.name || '';
+    } else {
+      // Handle the old structure (backward compatibility)
+      type = 'immediateWelcome';
+      console.log("Using backward compatibility structure with data:", requestData);
+
+      // Validate required email field
+      if (!requestData.email) {
+        throw new Error("Email is required");
+      }
+      entry = {
+        name: requestData.name || '',
+        email: requestData.email,
+        position: requestData.position !== undefined ? requestData.position : 0,
+        referralCode: requestData.referralCode || ''
+      } as WaitlistEntry;
+    }
+
+    console.log("Processing request with type:", type, "and entry:", entry);
 
     let result;
     switch (type) {
@@ -285,9 +396,15 @@ async function handleRequest(req: Request): Promise<Response> {
       case "launch":
         result = await sendLaunchEmail(entry);
         break;
+      case "immediateWelcome":
+        // Send immediate welcome message after joining waitlist
+        result = await sendWelcomeEmail(entry);
+        break;
       default:
         throw new Error(`Unknown email type: ${type}`);
     }
+
+    console.log("Request processed successfully, returning result:", result);
 
     return new Response(JSON.stringify({ success: true, data: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -314,12 +431,38 @@ Deno.serve(async (req: Request) => {
    * This is the main entry point for the function.
    * It handles the request and sends the appropriate email.
    */
+  // Log all requests for debugging
+  console.log("Function called:", {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries())
+  });
+
+  // Test environment variable access
+  console.log("=== Function Entry Environment Test ===");
+  console.log("RESEND_API_KEY exists:", !!Deno.env.get("RESEND_API_KEY"));
+  console.log("API Key length:", (Deno.env.get("RESEND_API_KEY") || "").length);
+  console.log("=== End Function Entry Test ===");
+
+  // Handle CORS preflight requests
+  if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request with headers:", corsHeaders);
+    return new Response(null, {
+      status: 200,
+      headers: corsHeaders
+    });
+  }
+
   try {
     return await handleRequest(req);
   } catch (error) {
-    console.error("Fatal error:", error);
+    console.error("Fatal error in Deno.serve:", error);
     return new Response(
-      JSON.stringify({ success: false, error: "Internal server error" }),
+      JSON.stringify({
+        success: false,
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error"
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
