@@ -62,7 +62,7 @@ export default function Roadmap({ onWaitlistClick }: RoadmapProps) {
               Public Development Roadmap
             </h1>
             <p className="text-xl text-gray-700 mb-8 leading-relaxed">
-              Follow our journey as we build CollaborateWise. See what we've
+              Follow our journey as we build ColabWize. See what we've
               accomplished, what we're working on, and what's coming next.
             </p>
             <button

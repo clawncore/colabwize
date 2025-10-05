@@ -151,7 +151,7 @@ export const HELP_CATEGORIES = [
     icon: '❓',
     title: 'Waitlist & Launch FAQ',
     articles: [
-      'When will CollaborateWise launch?',
+      'When will ColabWize launch?',
       'What are the benefits of joining the waitlist?',
       'Is there a free plan available at launch?'
     ]
@@ -169,7 +169,7 @@ export const HELP_CATEGORIES = [
 
 export const FAQ_ITEMS = [
   {
-    question: 'When will CollaborateWise launch?',
+    question: 'When will ColabWize launch?',
     answer: "We're targeting Q1 2025 (January-March). Waitlist members get first access."
   },
   {

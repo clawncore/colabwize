@@ -68,3 +68,37 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+## Feature Voting System
+
+This application includes a feature voting system that allows users to vote for their preferred features. The voting data is stored in the Supabase database.
+
+### Database Schema
+
+The feature voting system uses the `feature_votes` column in the `waitlist` table, which stores votes as a JSON object.
+
+### Applying Database Migrations
+
+To apply the necessary database migrations, you have several options:
+
+1. **Using Supabase CLI** (if configured correctly):
+   ```bash
+   supabase db push
+   ```
+
+2. **Manual SQL execution** (recommended if CLI has issues):
+   - Go to your Supabase project dashboard
+   - Navigate to the SQL editor
+   - Copy and paste the contents of `add_feature_votes_column.sql` and execute it
+   - Alternatively, run this SQL directly:
+     ```sql
+     ALTER TABLE public.waitlist 
+     ADD COLUMN IF NOT EXISTS feature_votes jsonb DEFAULT '{}';
+     ```
+
+3. **Using migration scripts**:
+   - Apply the SQL scripts in the `supabase/migrations` directory manually through the Supabase SQL editor.
+
+### Testing the Database Changes
+
+After applying the migration, you can test that the feature voting system works correctly by running the test script in `test_feature_votes.sql` in your Supabase SQL editor.

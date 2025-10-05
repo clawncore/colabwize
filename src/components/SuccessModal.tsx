@@ -45,10 +45,10 @@ export default function SuccessModal({
   }, [isOpen]);
 
   const referralLink = user
-    ? `https://collaboratewise.com?ref=${user.referralCode}`
+    ? `https://colabwize.com?ref=${user.referralCode}`
     : "";
   const shareText =
-    "I just joined the @CollaborateWise waitlist! The future of academic writing is coming Q1 2025 🚀";
+    "I just joined the @ColabWize waitlist! The future of academic writing is coming Q1 2025 🚀";
 
   const copyToClipboard = async () => {
     try {

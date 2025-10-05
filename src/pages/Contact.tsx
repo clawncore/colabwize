@@ -11,6 +11,7 @@ import {
   Building,
 } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 interface ContactProps {
   onWaitlistClick: () => void;
@@ -24,12 +25,42 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setFormData({ name: "", email: "", subject: "", message: "" });
-    setTimeout(() => setSubmitted(false), 5000);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error: insertError } = await supabase
+        .from('contact_messages')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            subject: formData.subject,
+            message: formData.message,
+          }
+        ]);
+
+      if (insertError) {
+        throw new Error(insertError.message);
+      }
+
+      setSubmitted(true);
+      setFormData({ name: "", email: "", subject: "", message: "" });
+
+      // Reset success message after 5 seconds
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (err) {
+      console.error('Error submitting contact form:', err);
+      setError('Failed to send message. Please try again.');
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (
@@ -77,7 +108,7 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
         >
           <div className="bg-blue-100 border-l-4 border-blue-600 p-4 mb-8 max-w-4xl mx-auto">
             <p className="text-blue-800 font-semibold">
-              🚀 CollaborateWise is launching Q1 2025 —{" "}
+              🚀 ColabWize is launching Q1 2025 —{" "}
               <button
                 onClick={onWaitlistClick}
                 className="underline hover:no-underline"
@@ -92,7 +123,7 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
               We're Here to Help — Anytime, Anywhere
             </h1>
             <p className="text-xl text-gray-700 leading-relaxed">
-              Got a question? Need help with CollaborateWise? Whether you're
+              Got a question? Need help with ColabWize? Whether you're
               writing your first essay or submitting your thesis, we're only a
               message away.
             </p>
@@ -126,13 +157,13 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
               <Mail className="w-12 h-12 text-blue-600 mx-auto mb-4" />
               <h3 className="text-xl font-bold mb-2">General Inquiries</h3>
               <p className="text-gray-600 mb-4">
-                Questions about CollaborateWise?
+                Questions about ColabWize?
               </p>
               <a
-                href="mailto:support@collaboratewise.ai"
+                href="mailto:support@colabwize.ai"
                 className="text-blue-600 hover:underline font-semibold"
               >
-                support@collaboratewise.ai
+                support@colabwize.ai
               </a>
             </div>
 
@@ -143,10 +174,10 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
                 Institutional access inquiries
               </p>
               <a
-                href="mailto:partners@collaboratewise.ai"
+                href="mailto:partners@colabwize.ai"
                 className="text-purple-600 hover:underline font-semibold"
               >
-                partners@collaboratewise.ai
+                partners@colabwize.ai
               </a>
             </div>
 
@@ -155,10 +186,10 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
               <h3 className="text-xl font-bold mb-2">Press & Media</h3>
               <p className="text-gray-600 mb-4">Media inquiries welcome</p>
               <a
-                href="mailto:press@collaboratewise.ai"
+                href="mailto:press@colabwize.ai"
                 className="text-green-600 hover:underline font-semibold"
               >
-                press@collaboratewise.ai
+                press@colabwize.ai
               </a>
             </div>
           </div>
@@ -166,6 +197,12 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
           <div className="max-w-2xl mx-auto">
             <div className="bg-white border-2 border-gray-200 rounded-2xl p-8">
               <h3 className="text-2xl font-bold mb-6">Send Us a Message</h3>
+
+              {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                  {error}
+                </div>
+              )}
 
               {submitted ? (
                 <div className="text-center py-8">
@@ -248,9 +285,10 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
 
                   <button
                     type="submit"
-                    className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+                    disabled={loading}
+                    className={`w-full ${loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'} text-white px-6 py-3 rounded-lg transition font-semibold`}
                   >
-                    Send Message
+                    {loading ? 'Sending...' : 'Send Message'}
                   </button>
                 </form>
               )}
@@ -274,7 +312,7 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
               <h3 className="text-xl font-semibold mb-2">Support</h3>
               <p className="text-gray-600">Questions? Email us at</p>
               <p className="text-blue-600 font-medium">
-                hello@collaboratewise.com
+                hello@colabwize.com
               </p>
             </div>
 
@@ -296,7 +334,7 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
               <h3 className="text-xl font-semibold mb-2">Press</h3>
               <p className="text-gray-600">Media inquiries welcome at</p>
               <p className="text-green-600 font-medium">
-                press@collaboratewise.com
+                press@colabwize.com
               </p>
             </div>
           </div>
@@ -312,7 +350,7 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <h3 className="text-lg font-bold mb-2">
-                Is CollaborateWise free to start?
+                Is ColabWize free to start?
               </h3>
               <p className="text-gray-600">
                 Yes! Our Free Plan gives you 1 active project, 5,000
@@ -331,7 +369,7 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
 
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <h3 className="text-lg font-bold mb-2">
-                How does plagiarism detection work?
+                How does plagiarism detection work with ColabWize?
               </h3>
               <p className="text-gray-600">
                 We scan your text against billions of sources and flag
@@ -341,7 +379,7 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
 
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <h3 className="text-lg font-bold mb-2">
-                Can I use CollaborateWise offline?
+                Can I use ColabWize offline?
               </h3>
               <p className="text-gray-600">
                 Yes, you can write offline and sync your work once you're back
@@ -351,7 +389,7 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
 
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <h3 className="text-lg font-bold mb-2">
-                Do you offer student discounts?
+                Do you offer student discounts with ColabWize?
               </h3>
               <p className="text-gray-600">
                 Yes, our Student Pro plan is designed to be affordable at just
@@ -361,7 +399,7 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
 
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <h3 className="text-lg font-bold mb-2">
-                When will CollaborateWise launch?
+                When will ColabWize launch?
               </h3>
               <p className="text-gray-600">
                 We're targeting Q1 2025. Join the waitlist to get notified when
@@ -379,7 +417,7 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
             Our Global Community
           </h2>
           <p className="text-center text-gray-600 mb-12">
-            CollaborateWise users span across continents, united by a passion
+            ColabWize users span across continents, united by a passion
             for better academic writing.
           </p>
 

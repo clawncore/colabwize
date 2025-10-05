@@ -9,8 +9,9 @@ import {
   BookOpen,
   BarChart3,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FEATURES } from "../lib/mockData";
+import { supabase } from "../lib/supabaseClient";
 
 interface FeaturesProps {
   onWaitlistClick: () => void;
@@ -21,16 +22,114 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
     FEATURES.reduce((acc, f) => ({ ...acc, [f.id]: f.votes }), {})
   );
   const [votedFeatures, setVotedFeatures] = useState<Set<string>>(new Set());
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  const handleVote = (featureId: string) => {
+  // Check if user has voted for features
+  useEffect(() => {
+    const email = localStorage.getItem('feature_voter_email');
+    if (email) {
+      setUserEmail(email);
+
+      // Fetch user's previous votes
+      const fetchUserVotes = async () => {
+        const { data, error } = await supabase
+          .from('waitlist')
+          .select('feature_votes')
+          .eq('email', email)
+          .single();
+
+        if (!error && data && data.feature_votes) {
+          const votedFeatureIds = new Set(Object.keys(data.feature_votes));
+          setVotedFeatures(votedFeatureIds);
+
+          // Update vote counts from database
+          const updatedVotes: Record<string, number> = { ...votes };
+          for (const [featureId, count] of Object.entries(data.feature_votes)) {
+            updatedVotes[featureId] = (updatedVotes[featureId] || 0) + (count as number);
+          }
+          setVotes(updatedVotes);
+        }
+      };
+
+      fetchUserVotes();
+    }
+  }, []);
+
+  const handleVote = async (featureId: string) => {
     if (votedFeatures.has(featureId)) {
       return;
     }
 
-    setVotes((prev) => ({
-      ...prev,
-      [featureId]: (prev[featureId] || 0) + 1,
-    }));
+    let email = userEmail;
+
+    // If no email is set, prompt user to enter their email
+    if (!email) {
+      email = prompt('Please enter your email to vote for this feature:');
+
+      if (!email) {
+        alert('Email is required to vote for features');
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address');
+        return;
+      }
+
+      // Store email for future votes
+      localStorage.setItem('feature_voter_email', email);
+      setUserEmail(email);
+    }
+
+    // Check if user exists in waitlist
+    const { data: existingUser, error: fetchError } = await supabase
+      .from('waitlist')
+      .select('feature_votes, id')
+      .eq('email', email)
+      .single();
+
+    let updatedVotes = { ...votes };
+
+    if (fetchError || !existingUser) {
+      // User doesn't exist in waitlist, add them
+      const { error: insertError } = await supabase
+        .from('waitlist')
+        .insert([
+          {
+            email: email,
+            feature_votes: { [featureId]: 1 }
+          }
+        ]);
+
+      if (insertError) {
+        console.error('Error adding user to waitlist:', insertError);
+        alert('Error recording your vote. Please try again.');
+        return;
+      }
+
+      updatedVotes[featureId] = (updatedVotes[featureId] || 0) + 1;
+    } else {
+      // User exists, update their feature votes
+      const currentVotes = existingUser.feature_votes || {};
+      const newVotes = { ...currentVotes, [featureId]: (currentVotes[featureId] || 0) + 1 };
+
+      const { error: updateError } = await supabase
+        .from('waitlist')
+        .update({ feature_votes: newVotes })
+        .eq('id', existingUser.id);
+
+      if (updateError) {
+        console.error('Error updating votes:', updateError);
+        alert('Error recording your vote. Please try again.');
+        return;
+      }
+
+      updatedVotes[featureId] = (updatedVotes[featureId] || 0) + 1;
+    }
+
+    setVotes(updatedVotes);
     setVotedFeatures((prev) => new Set([...prev, featureId]));
   };
 
@@ -61,7 +160,7 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
               Everything You Need to Write Smarter, Not Harder
             </h1>
             <p className="text-xl text-gray-700 mb-8 leading-relaxed">
-              CollaborateWise is more than a tool—it's your personal academic
+              ColabWize is more than a tool—it's your personal academic
               co-pilot. From brainstorming ideas to polishing citations, every
               feature is designed to save you time, reduce stress, and boost
               confidence in your work.
@@ -131,11 +230,10 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
                   <button
                     onClick={() => handleVote("ai-writing")}
                     disabled={votedFeatures.has("ai-writing")}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${
-                      votedFeatures.has("ai-writing")
-                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-100 text-blue-600 hover:bg-blue-200"
-                    }`}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${votedFeatures.has("ai-writing")
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                      }`}
                   >
                     <ThumbsUp className="w-4 h-4" />
                     <span>
@@ -149,24 +247,22 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
                   </span>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-8 h-80 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">
-                    <PenTool size={48} className="mx-auto mb-2 opacity-50" />
-                  </div>
-                  <p className="text-gray-600">Feature preview coming soon</p>
-                </div>
+              <div className="bg-white rounded-2xl p-4 h-80 flex items-center justify-center overflow-hidden">
+                <img
+                  src="https://typli.ai/_next/image?url=https%3A%2F%2Fa-us.storyblok.com%2Ff%2F1016756%2F1248x600%2F05bdb40c99%2Ftypli-2.jpg&w=1200&q=75"
+                  alt="AI Writing Assistant in action"
+                  className="w-full h-full object-cover rounded-lg"
+                />
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="order-2 md:order-1 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-8 h-80 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">
-                    <Shield size={48} className="mx-auto mb-2 opacity-50" />
-                  </div>
-                  <p className="text-gray-600">Feature preview coming soon</p>
-                </div>
+              <div className="order-2 md:order-1 bg-white rounded-2xl p-4 h-80 flex items-center justify-center overflow-hidden">
+                <img
+                  src="https://cdn.prod.website-files.com/60ef088dd8fef99352abb434/665f13d2aea32bb283d3c589_Top%2011%20Best%20Plagiarism%20Checkers%20For%20AI-Generated%20Content.webp"
+                  alt="Plagiarism Detection in action"
+                  className="w-full h-full object-cover rounded-lg"
+                />
               </div>
               <div className="order-1 md:order-2">
                 <div className="inline-block bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">
@@ -205,11 +301,10 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
                   <button
                     onClick={() => handleVote("plagiarism")}
                     disabled={votedFeatures.has("plagiarism")}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${
-                      votedFeatures.has("plagiarism")
-                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                    }`}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${votedFeatures.has("plagiarism")
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                      }`}
                   >
                     <ThumbsUp className="w-4 h-4" />
                     <span>
@@ -263,11 +358,10 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
                   <button
                     onClick={() => handleVote("citations")}
                     disabled={votedFeatures.has("citations")}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${
-                      votedFeatures.has("citations")
-                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        : "bg-green-100 text-green-600 hover:bg-green-200"
-                    }`}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${votedFeatures.has("citations")
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-green-100 text-green-600 hover:bg-green-200"
+                      }`}
                   >
                     <ThumbsUp className="w-4 h-4" />
                     <span>
@@ -281,24 +375,22 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
                   </span>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 h-80 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">
-                    <BookOpen size={48} className="mx-auto mb-2 opacity-50" />
-                  </div>
-                  <p className="text-gray-600">Feature preview coming soon</p>
-                </div>
+              <div className="bg-white rounded-2xl p-4 h-80 flex items-center justify-center overflow-hidden">
+                <img
+                  src="https://blog.f1000.com/wp-content/uploads/2017/12/F1000_work_smartcitations-1.jpg"
+                  alt="Smart Citations in action"
+                  className="w-full h-full object-cover rounded-lg"
+                />
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="order-2 md:order-1 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 h-80 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">
-                    <Users size={48} className="mx-auto mb-2 opacity-50" />
-                  </div>
-                  <p className="text-gray-600">Feature preview coming soon</p>
-                </div>
+              <div className="order-2 md:order-1 bg-white rounded-2xl p-4 h-80 flex items-center justify-center overflow-hidden">
+                <img
+                  src="https://i.ytimg.com/vi/nMzPvQqISyw/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLA5ZTyF0ypgbA1f3oXmJ7dn4_VLXw"
+                  alt="Real-time Collaboration in action"
+                  className="w-full h-full object-cover rounded-lg"
+                />
               </div>
               <div className="order-1 md:order-2">
                 <div className="inline-block bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">
@@ -339,11 +431,10 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
                   <button
                     onClick={() => handleVote("collaboration")}
                     disabled={votedFeatures.has("collaboration")}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${
-                      votedFeatures.has("collaboration")
-                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        : "bg-orange-100 text-orange-600 hover:bg-orange-200"
-                    }`}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${votedFeatures.has("collaboration")
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                      }`}
                   >
                     <ThumbsUp className="w-4 h-4" />
                     <span>
@@ -397,11 +488,10 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
                   <button
                     onClick={() => handleVote("dashboard")}
                     disabled={votedFeatures.has("dashboard")}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${
-                      votedFeatures.has("dashboard")
-                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        : "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
-                    }`}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${votedFeatures.has("dashboard")
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
+                      }`}
                   >
                     <ThumbsUp className="w-4 h-4" />
                     <span>
@@ -415,24 +505,22 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
                   </span>
                 </div>
               </div>
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-8 h-80 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">
-                    <BarChart3 size={48} className="mx-auto mb-2 opacity-50" />
-                  </div>
-                  <p className="text-gray-600">Feature preview coming soon</p>
-                </div>
+              <div className="bg-white rounded-2xl p-4 h-80 flex items-center justify-center overflow-hidden">
+                <img
+                  src="https://www.projectmanager.com/wp-content/uploads/2023/10/Project-Dashboard-Template-Excel-image.png"
+                  alt="Project Dashboard in action"
+                  className="w-full h-full object-cover rounded-lg"
+                />
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="order-2 md:order-1 bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl p-8 h-80 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">
-                    <Download size={48} className="mx-auto mb-2 opacity-50" />
-                  </div>
-                  <p className="text-gray-600">Feature preview coming soon</p>
-                </div>
+              <div className="order-2 md:order-1 bg-white rounded-2xl p-4 h-80 flex items-center justify-center overflow-hidden">
+                <img
+                  src="https://etimg.etb2bimg.com/photo/123882794.cms"
+                  alt="Export Anywhere in action"
+                  className="w-full h-full object-cover rounded-lg"
+                />
               </div>
               <div className="order-1 md:order-2">
                 <div className="inline-block bg-teal-100 text-teal-700 px-3 py-1 rounded-full text-sm font-semibold mb-4">
@@ -470,11 +558,10 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
                   <button
                     onClick={() => handleVote("export")}
                     disabled={votedFeatures.has("export")}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${
-                      votedFeatures.has("export")
-                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        : "bg-teal-100 text-teal-600 hover:bg-teal-200"
-                    }`}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition font-semibold ${votedFeatures.has("export")
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-teal-100 text-teal-600 hover:bg-teal-200"
+                      }`}
                   >
                     <ThumbsUp className="w-4 h-4" />
                     <span>
@@ -499,7 +586,7 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
             Built to Help You Succeed at Every Stage
           </h2>
           <p className="text-xl text-gray-700 mb-8">
-            From your first essay to your final thesis, CollaborateWise grows
+            From your first essay to your final thesis, ColabWize grows
             with you. Simple enough for students. Powerful enough for
             researchers.
           </p>

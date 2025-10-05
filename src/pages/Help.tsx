@@ -45,7 +45,7 @@ export default function HelpPage({ onWaitlistClick }: HelpPageProps) {
       icon: Rocket,
       title: "Getting Started (When We Launch)",
       description:
-        "Everything you need to know for your first CollaborateWise project",
+        "Everything you need to know for your first ColabWize project",
       color: "blue",
       articles: [
         "How to create your first project",
@@ -57,7 +57,7 @@ export default function HelpPage({ onWaitlistClick }: HelpPageProps) {
     {
       icon: Sparkles,
       title: "Feature Previews",
-      description: "Deep dives into CollaborateWise's powerful features",
+      description: "Deep dives into ColabWize's powerful features",
       color: "purple",
       articles: [
         "Using the AI Writing Assistant",
@@ -73,7 +73,7 @@ export default function HelpPage({ onWaitlistClick }: HelpPageProps) {
         "Common questions about our launch timeline and early access",
       color: "green",
       articles: [
-        "When will CollaborateWise launch?",
+        "When will ColabWize launch?",
         "What are the benefits of joining the waitlist?",
         "Is there a free plan available at launch?",
         "How do referrals work?",
@@ -95,7 +95,7 @@ export default function HelpPage({ onWaitlistClick }: HelpPageProps) {
 
   const featuredArticles: FeaturedArticle[] = [
     {
-      title: "5 Tips to Get the Most Out of CollaborateWise",
+      title: "5 Tips to Get the Most Out of ColabWize",
       description:
         "Maximize your productivity with these expert recommendations",
       icon: Target,
@@ -144,7 +144,7 @@ export default function HelpPage({ onWaitlistClick }: HelpPageProps) {
           </h1>
 
           <p className="text-xl lg:text-2xl mb-12 text-blue-100 leading-relaxed">
-            Explore CollaborateWise features, read launch FAQs, and see how
+            Explore ColabWize features, read launch FAQs, and see how
             we're building the future of academic writing.
           </p>
 
@@ -366,7 +366,7 @@ export default function HelpPage({ onWaitlistClick }: HelpPageProps) {
             {[
               {
                 quote:
-                  "CollaborateWise feels like the tool I've been waiting for my entire PhD.",
+                  "ColabWize feels like the tool I've been waiting for my entire PhD.",
                 author: "Sarah M., PhD Student",
                 role: "Biology, Stanford University",
                 rating: 5,
@@ -421,7 +421,7 @@ export default function HelpPage({ onWaitlistClick }: HelpPageProps) {
           </h2>
 
           <p className="text-xl mb-12 text-blue-100">
-            CollaborateWise is built to help you focus on learning and creating.
+            ColabWize is built to help you focus on learning and creating.
             If you need help, we've got your back.
           </p>
 

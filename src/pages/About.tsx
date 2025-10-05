@@ -75,36 +75,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
     return () => observer.disconnect();
   }, [stats]);
 
-  const teamMembers: TeamMember[] = [
-    {
-      name: "Alex Chen",
-      role: "Founder & CEO",
-      bio: "Former Stanford PhD student who got tired of juggling 6 tools to write one paper.",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    },
-    {
-      name: "Sarah Kim",
-      role: "Head of Product",
-      bio: "Ex-Microsoft PM who believes great writing tools should be accessible to everyone.",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-    },
-    {
-      name: "Dr. Maria Rodriguez",
-      role: "Academic Advisor",
-      bio: "Published researcher and professor who guides our academic integrity features.",
-      avatar:
-        "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face",
-    },
-    {
-      name: "James Wilson",
-      role: "Lead Engineer",
-      bio: "Full-stack developer passionate about building tools that make learning easier.",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-    },
-  ];
+
 
   return (
     <div className="min-h-screen">
@@ -133,7 +104,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
               Built for Students. Trusted by Researchers. Driven by Purpose.
             </h1>
             <p className="text-xl text-gray-700 leading-relaxed">
-              CollaborateWise was created with one mission: to make academic
+              ColabWize was created with one mission: to make academic
               success accessible to every student, anywhere in the world.
             </p>
           </div>
@@ -156,7 +127,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
               </span>
             </p>
             <p className="text-xl">
-              That question became CollaborateWise — an academic hub where
+              That question became ColabWize — an academic hub where
               students and researchers can write, cite, check originality, and
               collaborate without stress.
             </p>
@@ -173,7 +144,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
           </p>
           <p className="text-lg text-blue-100">
             We believe great ideas shouldn't be blocked by tool overload, high
-            costs, or limited access. That's why CollaborateWise is designed to
+            costs, or limited access. That's why ColabWize is designed to
             be affordable, accessible, and AI-powered — leveling the academic
             playing field for everyone.
           </p>
@@ -248,7 +219,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
                 {animatedStats.waitlistCount.toLocaleString()}+
               </div>
               <p className="text-gray-600">
-                Students waiting for CollaborateWise
+                Students waiting for ColabWize
               </p>
             </div>
 
@@ -328,46 +299,6 @@ export default function About({ onWaitlistClick }: AboutProps) {
           </div>
         </div>
       </section>
-
-      {/* Meet the Team */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-4">
-            Meet the Team
-          </h2>
-          <p className="text-xl text-center text-gray-600 mb-16">
-            The people behind CollaborateWise are educators, researchers, and
-            builders who understand your challenges.
-          </p>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {teamMembers.map((member, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-xl shadow-lg overflow-hidden text-center"
-              >
-                <img
-                  src={member.avatar}
-                  alt={member.name}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {member.name}
-                  </h3>
-                  <p className="text-blue-600 font-medium mb-3">
-                    {member.role}
-                  </p>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    {member.bio}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Closing CTA */}
       <section className="py-20 px-6 bg-gradient-to-br from-blue-600 to-purple-700 text-white">
         <div className="max-w-4xl mx-auto text-center">
@@ -376,7 +307,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
           </h2>
 
           <p className="text-xl mb-12 text-blue-100">
-            Want to help shape CollaborateWise? Join as a beta tester and be
+            Want to help shape ColabWize? Join as a beta tester and be
             part of building the future of academic writing.
           </p>
 

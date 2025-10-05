@@ -125,7 +125,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
             Sound Familiar?
           </h2>
           <p className="text-xl text-gray-600 text-center mb-12 max-w-3xl mx-auto">
-            CollaborateWise is here to change that.
+            ColabWize is here to change that.
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -249,7 +249,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
                 $0<span className="text-lg text-gray-500">/month</span>
               </div>
               <p className="text-gray-600 mb-6">
-                Perfect for trying CollaborateWise
+                Perfect for trying ColabWize
               </p>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start space-x-2">
@@ -469,7 +469,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
               <div className="text-5xl mb-4">🎯</div>
               <h3 className="text-xl font-bold mb-2">Early Access</h3>
               <p className="text-gray-600">
-                Be first to try CollaborateWise when we launch
+                Be first to try ColabWize when we launch
               </p>
             </div>
 

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, Twitter, Linkedin, Github } from 'lucide-react';
+import { Twitter, Linkedin, Github } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Footer() {
@@ -19,8 +19,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
-              <Sparkles className="w-8 h-8 text-blue-500" />
-              <span className="text-xl font-bold text-white">CollaborateWise</span>
+              <img 
+                src="/logo.png" 
+                alt="ColabWize Logo" 
+                className="w-8 h-8"
+              />
+              <span className="text-xl font-bold text-white">ColabWize</span>
             </div>
             <p className="text-sm mb-4">
               Your entire academic workflow, unified. Launching Q1 2025.
@@ -164,7 +168,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-4 text-center text-sm text-gray-500">
-          © 2025 CollaborateWise. All rights reserved.
+          © 2025 ColabWize. All rights reserved.
         </div>
       </div>
     </footer>

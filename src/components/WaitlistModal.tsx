@@ -84,8 +84,8 @@ export default function WaitlistModal({
     onClose();
   };
 
-  const shareUrl = `https://collaboratewise.com?ref=${referralCode}`;
-  const shareText = `I just joined the @CollaborateWise waitlist! The future of academic writing is coming Q1 2025 🚀`;
+  const shareUrl = `https://colabwize.com?ref=${referralCode}`;
+  const shareText = `I just joined the @ColabWize waitlist! The future of academic writing is coming Q1 2025 🚀`;
 
   if (showSuccess) {
     return (
@@ -185,10 +185,10 @@ export default function WaitlistModal({
         </button>
 
         <h2 className="text-3xl font-bold mb-2">
-          Join the CollaborateWise Waitlist
+          Join the ColabWize Waitlist
         </h2>
         <p className="text-gray-600 mb-6">
-          Be among the first to experience the future of academic writing
+          Be among the first to experience the future of academic writing with ColabWize
         </p>
 
         <div className="space-y-4 mb-6">
