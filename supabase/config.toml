@@ -1,5 +1,4 @@
 [functions.waitlist-automation]
-verify_jwt = false
 
 [functions.test-env]
 enabled = true

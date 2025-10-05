@@ -20,7 +20,7 @@ export default function WaitlistModal({
   const [institution, setInstitution] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [position, setPosition] = useState(1235);
+  const [position, setPosition] = useState(0);
   const [referralCode, setReferralCode] = useState("");
   const [emailExists, setEmailExists] = useState(false);
 
@@ -30,35 +30,85 @@ export default function WaitlistModal({
     e.preventDefault();
     setIsSubmitting(true);
 
-    const { data } = await supabase
+    const { data: existingUser } = await supabase
       .from("waitlist")
       .select("email")
       .eq("email", email);
 
-    if (data && data.length > 0) {
+    if (existingUser && existingUser.length > 0) {
       setEmailExists(true);
       setIsSubmitting(false);
       return;
     }
 
-    const code = Math.random().toString(36).substring(2, 10);
-    const newPosition = Math.floor(Math.random() * 1500) + 1000;
+    // Generate a proper referral code based on email and timestamp
+    const generateReferralCode = () => {
+      const timestamp = Date.now().toString(36);
+      const emailPart = email.substring(0, Math.min(5, email.indexOf('@') !== -1 ? email.indexOf('@') : email.length));
+      return `${emailPart}_${timestamp}`.substring(0, 10);
+    };
 
-    const { error: insertError } = await supabase.from("waitlist").insert([
+    const code = generateReferralCode();
+
+    // Insert the user first
+    const { data: insertedData, error: insertError } = await supabase.from("waitlist").insert([
       {
         name,
         email,
         role,
         institution,
-        position: newPosition,
+        position: null, // Will be calculated based on created_at
         referral_code: code,
       },
-    ]);
+    ]).select();
 
     if (insertError) {
       console.error("Error inserting user:", insertError);
       setIsSubmitting(false);
       return;
+    }
+
+    // Get the actual position by counting users who joined before this user
+    // We'll use the created_at timestamp to determine the position
+    const insertedUserId = insertedData[0].id;
+
+    // Get the created_at timestamp for the inserted user
+    const { data: userData, error: userError } = await supabase
+      .from("waitlist")
+      .select("created_at")
+      .eq("id", insertedUserId)
+      .single();
+
+    if (userError) {
+      console.error("Error fetching user data:", userError);
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Count how many users joined before this user
+    const { count, error: countError } = await supabase
+      .from("waitlist")
+      .select("*", { count: "exact" })
+      .lt("created_at", userData.created_at);
+
+    if (countError) {
+      console.error("Error counting waitlist users:", countError);
+      setIsSubmitting(false);
+      return;
+    }
+
+    // The position is the count of users who joined before + 1
+    const newPosition = (count || 0) + 1;
+
+    // Update the user's position
+    const { error: updateError } = await supabase
+      .from("waitlist")
+      .update({ position: newPosition })
+      .eq("id", insertedUserId);
+
+    if (updateError) {
+      console.error("Error updating user position:", updateError);
+      // Continue anyway as we have the user in the database
     }
 
     setReferralCode(code);

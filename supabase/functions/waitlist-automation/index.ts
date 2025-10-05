@@ -1,49 +1,50 @@
 /// <reference types="@supabase/supabase-js" />
 
-// Import Resend using the correct format for Supabase Edge Functions
-// @ts-ignore: Deno-specific import
-import { Resend } from 'https://esm.sh/resend@4.0.0';
+// Initialize Plunk client with better error handling
+let plunkApiKey = Deno.env.get("PLUNK_API_KEY") || "";
 
-// Initialize Resend client - will use environment variable
-let resend: any;
+console.log("=== Function Initialization ===");
+console.log("PLUNK_API_KEY exists:", !!plunkApiKey);
+console.log("API Key length:", plunkApiKey.length);
 
-// Try to get the API key from environment variables
-const apiKey = Deno.env.get("RESEND_API_KEY") || "";
-
-if (apiKey) {
-  try {
-    resend = new Resend(apiKey);
-    console.log("Resend client initialized successfully");
-  } catch (initError) {
-    console.error("Failed to initialize Resend client:", initError);
-    // Create a mock Resend client for graceful degradation
-    resend = {
-      emails: {
-        send: async (emailContent: any) => {
-          console.log("Mock email send - would have sent:", {
-            to: emailContent.to,
-            subject: emailContent.subject
-          });
-          return { data: { id: "mock-id" }, error: null };
-        }
+// Create a Plunk-like client using fetch
+const plunk = {
+  emails: {
+    send: async (emailContent: any) => {
+      if (!plunkApiKey) {
+        console.warn("PLUNK_API_KEY not found - using mock client");
+        return { success: true, data: { id: "mock-id" } };
       }
-    };
-  }
-} else {
-  console.warn("RESEND_API_KEY not found in environment variables");
-  // Create a mock Resend client for graceful degradation
-  resend = {
-    emails: {
-      send: async (emailContent: any) => {
-        console.log("Mock email send - would have sent:", {
-          to: emailContent.to,
-          subject: emailContent.subject
+
+      try {
+        const response = await fetch("https://api.useplunk.com/v1/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${plunkApiKey}`
+          },
+          body: JSON.stringify({
+            to: emailContent.to,
+            subject: emailContent.subject,
+            body: emailContent.body
+          })
         });
-        return { data: { id: "mock-id" }, error: null };
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          console.error("Plunk API error:", result);
+          return { success: false, message: result.message || "Failed to send email" };
+        }
+
+        return { success: true, data: result };
+      } catch (error) {
+        console.error("Error sending email via Plunk:", error);
+        return { success: false, message: error instanceof Error ? error.message : "Unknown error" };
       }
     }
-  };
-}
+  }
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,10 +66,10 @@ const sendWelcomeEmail = async (entry: WaitlistEntry) => {
    */
   try {
     const emailContent = {
-      from: "ColabWize <onboarding@colabwize.com>",
+      from: "onboarding@colabwize.com",
       to: entry.email,
       subject: "🎉 You're In! Welcome to the ColabWize Waitlist",
-      html: `
+      body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #2563eb;">Welcome aboard${entry.name ? ", " + entry.name : ""
         }!</h1>
@@ -106,21 +107,18 @@ const sendWelcomeEmail = async (entry: WaitlistEntry) => {
     };
 
     console.log("Sending welcome email to:", entry.email);
-    const { data, error } = await resend.emails.send(emailContent);
+    const result = await plunk.emails.send(emailContent);
 
-    if (error) {
-      console.error("Error sending welcome email:", error);
-      // Don't throw error for mock client
-      if (error.message !== "Resend client failed to initialize") {
-        throw error;
-      }
+    if (!result.success) {
+      console.error("Error sending welcome email:", JSON.stringify(result, null, 2));
+      return { error: result.message || "Failed to send email" };
     }
 
-    console.log("Welcome email sent successfully:", data);
-    return data;
+    console.log("Welcome email sent successfully:", JSON.stringify(result, null, 2));
+    return result.data || { message: "Email sent successfully" };
   } catch (error) {
     console.error("Failed to send welcome email:", error);
-    throw error;
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   }
 };
 
@@ -130,10 +128,10 @@ const sendSneakPeekEmail = async (entry: WaitlistEntry) => {
    */
   try {
     const emailContent = {
-      from: "ColabWize <updates@colabwize.com>",
+      from: "updates@colabwize.com",
       to: entry.email,
       subject: "✍️ Sneak Peek: Stop Juggling Tools—Just Write.",
-      html: `
+      body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #2563eb;">Hi${entry.name ? " " + entry.name : ""
         }!</h1>
@@ -167,31 +165,28 @@ const sendSneakPeekEmail = async (entry: WaitlistEntry) => {
     };
 
     console.log("Sending sneak peek email to:", entry.email);
-    const { data, error } = await resend.emails.send(emailContent);
+    const result = await plunk.emails.send(emailContent);
 
-    if (error) {
-      console.error("Error sending sneak peek email:", error);
-      // Don't throw error for mock client
-      if (error.message !== "Resend client failed to initialize") {
-        throw error;
-      }
+    if (!result.success) {
+      console.error("Error sending sneak peek email:", JSON.stringify(result, null, 2));
+      return { error: result.message || "Failed to send email" };
     }
 
-    console.log("Sneak peek email sent successfully:", data);
-    return data;
+    console.log("Sneak peek email sent successfully:", JSON.stringify(result, null, 2));
+    return result.data || { message: "Email sent successfully" };
   } catch (error) {
     console.error("Failed to send sneak peek email:", error);
-    throw error;
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   }
 };
 
 const sendCollaborationEmail = async (entry: WaitlistEntry) => {
   try {
     const emailContent = {
-      from: "ColabWize <team@colabwize.com>",
+      from: "team@colabwize.com",
       to: entry.email,
       subject: "👥 Collaboration Made Easy (Bring Your Team)",
-      html: `
+      body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #2563eb;">Hi${entry.name ? " " + entry.name : ""
         }!</h1>
@@ -230,32 +225,29 @@ const sendCollaborationEmail = async (entry: WaitlistEntry) => {
     };
 
     console.log("Sending collaboration email to:", entry.email);
-    const { data, error } = await resend.emails.send(emailContent);
+    const result = await plunk.emails.send(emailContent);
 
-    if (error) {
-      console.error("Error sending collaboration email:", error);
-      // Don't throw error for mock client
-      if (error.message !== "Resend client failed to initialize") {
-        throw error;
-      }
+    if (!result.success) {
+      console.error("Error sending collaboration email:", JSON.stringify(result, null, 2));
+      return { error: result.message || "Failed to send email" };
     }
 
-    console.log("Collaboration email sent successfully:", data);
-    return data;
+    console.log("Collaboration email sent successfully:", JSON.stringify(result, null, 2));
+    return result.data || { message: "Email sent successfully" };
   } catch (error) {
     console.error("Failed to send collaboration email:", error);
-    throw error;
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   }
 };
 
 const sendLaunchEmail = async (entry: WaitlistEntry) => {
   try {
     const emailContent = {
-      from: "ColabWize <launch@colabwize.com>",
+      from: "launch@colabwize.com",
       to: entry.email,
       subject:
         "🔓 The Doors Are Open! Your ColabWize Early Access is Here.",
-      html: `
+      body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #2563eb;">Hi${entry.name ? " " + entry.name : ""
         }!</h1>
@@ -290,21 +282,18 @@ const sendLaunchEmail = async (entry: WaitlistEntry) => {
     };
 
     console.log("Sending launch email to:", entry.email);
-    const { data, error } = await resend.emails.send(emailContent);
+    const result = await plunk.emails.send(emailContent);
 
-    if (error) {
-      console.error("Error sending launch email:", error);
-      // Don't throw error for mock client
-      if (error.message !== "Resend client failed to initialize") {
-        throw error;
-      }
+    if (!result.success) {
+      console.error("Error sending launch email:", JSON.stringify(result, null, 2));
+      return { error: result.message || "Failed to send email" };
     }
 
-    console.log("Launch email sent successfully:", data);
-    return data;
+    console.log("Launch email sent successfully:", JSON.stringify(result, null, 2));
+    return result.data || { message: "Email sent successfully" };
   } catch (error) {
     console.error("Failed to send launch email:", error);
-    throw error;
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   }
 };
 
@@ -313,12 +302,7 @@ async function handleRequest(req: Request): Promise<Response> {
    * This function handles the request and sends the appropriate email.
    */
   try {
-    // Log the request for debugging
-    console.log("handleRequest called:", {
-      method: req.method,
-      url: req.url,
-      headers: Object.fromEntries(req.headers.entries())
-    });
+    console.log("=== handleRequest called ===");
 
     let requestData;
     try {
@@ -330,7 +314,7 @@ async function handleRequest(req: Request): Promise<Response> {
         position?: number;
         referralCode?: string;
       };
-      console.log("Parsed request data:", requestData);
+      console.log("Parsed request data:", JSON.stringify(requestData, null, 2));
     } catch (parseError) {
       console.error("Failed to parse request JSON:", parseError);
       return new Response(
@@ -352,24 +336,25 @@ async function handleRequest(req: Request): Promise<Response> {
     if (requestData.type && requestData.entry) {
       type = requestData.type;
       entry = requestData.entry;
-      console.log("Using new structure with type:", type, "and entry:", entry);
+      console.log("Using new structure with type:", type);
 
       // Validate required fields
       if (!entry.email) {
+        console.error("Email is required");
         throw new Error("Email is required");
       }
       // Ensure all required fields have default values if missing
       entry.position = entry.position !== undefined ? entry.position : 0;
       entry.referralCode = entry.referralCode || '';
-      // Ensure name is a string if provided
       entry.name = entry.name || '';
     } else {
       // Handle the old structure (backward compatibility)
       type = 'immediateWelcome';
-      console.log("Using backward compatibility structure with data:", requestData);
+      console.log("Using backward compatibility structure");
 
       // Validate required email field
       if (!requestData.email) {
+        console.error("Email is required");
         throw new Error("Email is required");
       }
       entry = {
@@ -380,7 +365,7 @@ async function handleRequest(req: Request): Promise<Response> {
       } as WaitlistEntry;
     }
 
-    console.log("Processing request with type:", type, "and entry:", entry);
+    console.log("Processing request with type:", type, "and entry:", JSON.stringify(entry, null, 2));
 
     let result;
     switch (type) {
@@ -401,10 +386,11 @@ async function handleRequest(req: Request): Promise<Response> {
         result = await sendWelcomeEmail(entry);
         break;
       default:
+        console.error("Unknown email type:", type);
         throw new Error(`Unknown email type: ${type}`);
     }
 
-    console.log("Request processed successfully, returning result:", result);
+    console.log("Request processed successfully, returning result:", JSON.stringify(result, null, 2));
 
     return new Response(JSON.stringify({ success: true, data: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -440,8 +426,8 @@ Deno.serve(async (req: Request) => {
 
   // Test environment variable access
   console.log("=== Function Entry Environment Test ===");
-  console.log("RESEND_API_KEY exists:", !!Deno.env.get("RESEND_API_KEY"));
-  console.log("API Key length:", (Deno.env.get("RESEND_API_KEY") || "").length);
+  console.log("PLUNK_API_KEY exists:", !!Deno.env.get("PLUNK_API_KEY"));
+  console.log("API Key length:", (Deno.env.get("PLUNK_API_KEY") || "").length);
   console.log("=== End Function Entry Test ===");
 
   // Handle CORS preflight requests
