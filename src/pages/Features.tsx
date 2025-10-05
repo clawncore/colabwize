@@ -23,6 +23,28 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
   );
   const [votedFeatures, setVotedFeatures] = useState<Set<string>>(new Set());
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [waitlistCount, setWaitlistCount] = useState(0);
+
+  useEffect(() => {
+    const fetchWaitlistCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("waitlist")
+          .select("*", { count: "exact", head: true });
+
+        if (error) {
+          console.error("Error fetching waitlist count:", error);
+          return;
+        }
+
+        setWaitlistCount(count || 0);
+      } catch (err) {
+        console.error("Unexpected error fetching waitlist count:", err);
+      }
+    };
+
+    fetchWaitlistCount();
+  }, []);
 
   // Check if user has voted for features
   useEffect(() => {

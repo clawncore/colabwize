@@ -66,7 +66,7 @@ const sendWelcomeEmail = async (entry: WaitlistEntry) => {
    */
   try {
     const emailContent = {
-      from: "onboarding@colabwize.com",
+      from: "onboarding@colabwize.vercel.app",
       to: entry.email,
       subject: "🎉 You're In! Welcome to the ColabWize Waitlist",
       body: `
@@ -78,14 +78,14 @@ const sendWelcomeEmail = async (entry: WaitlistEntry) => {
 
         <p>We built ColabWize to solve the pain of juggling Grammarly, Turnitin, Zotero, and Trello just to write one paper. Soon, you'll have all your AI writing, plagiarism detection, and smart citation tools unified in one workspace.</p>
 
-        <div style="background-color: #dbeafe; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <div style="background-color: #dbeafe; padding: 20px; Sborder-radius: 8px; margin: 20px 0;">
           <h2 style="color: #1e40af; margin-top: 0;">Your Waitlist Position</h2>
           <p style="font-size: 24px; font-weight: bold; color: #2563eb;">#${entry.position
         }</p>
           <p>Share your referral code to move up: <strong>${entry.referralCode
         }</strong></p>
-          <p><a href="https://colabwize.com?ref=${entry.referralCode
-        }" style="color: #2563eb;">https://colabwize.com?ref=${entry.referralCode
+          <p><a href="https://colabwize.vercel.app?ref=${entry.referralCode
+        }" style="color: #2563eb;">https://colabwize.vercel.app?ref=${entry.referralCode
         }</a></p>
         </div>
 
@@ -128,7 +128,7 @@ const sendSneakPeekEmail = async (entry: WaitlistEntry) => {
    */
   try {
     const emailContent = {
-      from: "updates@colabwize.com",
+      from: "updates@colabwize.vercel.app",
       to: entry.email,
       subject: "✍️ Sneak Peek: Stop Juggling Tools—Just Write.",
       body: `
@@ -153,7 +153,7 @@ const sendSneakPeekEmail = async (entry: WaitlistEntry) => {
         <p>Since you're joining the early access group, we value your input. What is the one feature you must have in an academic writing tool?</p>
 
         <p style="text-align: center; margin: 30px 0;">
-          <a href="https://colabwize.com/feedback" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Share Your Feedback</a>
+          <a href="https://colabwize.vercel.app/feedback" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Share Your Feedback</a>
         </p>
 
         <p>More updates soon,<br>The ColabWize Team</p>
@@ -183,7 +183,7 @@ const sendSneakPeekEmail = async (entry: WaitlistEntry) => {
 const sendCollaborationEmail = async (entry: WaitlistEntry) => {
   try {
     const emailContent = {
-      from: "team@colabwize.com",
+      from: "team@colabwize.vercel.app",
       to: entry.email,
       subject: "👥 Collaboration Made Easy (Bring Your Team)",
       body: `
@@ -207,13 +207,13 @@ const sendCollaborationEmail = async (entry: WaitlistEntry) => {
         <p>Every friend you refer helps us open the doors for early access faster! The more users we validate, the sooner we launch.</p>
 
         <p style="text-align: center; margin: 30px 0;">
-          <a href="https://colabwize.com?ref=${entry.referralCode
+          <a href="https://colabwize.vercel.app?ref=${entry.referralCode
         }" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Share with Your Team</a>
         </p>
 
         <p>Feel free to share this link with classmates, colleagues, or anyone who struggles with academic writing:</p>
-        <p><a href="https://colabwize.com?ref=${entry.referralCode
-        }" style="color: #2563eb;">https://colabwize.com?ref=${entry.referralCode
+        <p><a href="https://colabwize.vercel.app?ref=${entry.referralCode
+        }" style="color: #2563eb;">https://colabwize.vercel.app?ref=${entry.referralCode
         }</a></p>
 
         <p>We're excited to see what you'll write!<br>Best,<br>The ColabWize Team</p>
@@ -243,7 +243,7 @@ const sendCollaborationEmail = async (entry: WaitlistEntry) => {
 const sendLaunchEmail = async (entry: WaitlistEntry) => {
   try {
     const emailContent = {
-      from: "launch@colabwize.com",
+      from: "launch@colabwize.vercel.app",
       to: entry.email,
       subject:
         "🔓 The Doors Are Open! Your ColabWize Early Access is Here.",
@@ -257,7 +257,7 @@ const sendLaunchEmail = async (entry: WaitlistEntry) => {
         <p>We are officially opening the doors to our exclusive early access group. Your academic writing workflow is about to be unified.</p>
 
         <p style="text-align: center; margin: 40px 0;">
-          <a href="https://app.colabwize.com/signup" style="background-color: #2563eb; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-size: 18px; font-weight: bold;">Activate My Account Now</a>
+          <a href="https://app.colabwize.vercel.app/signup" style="background-color: #2563eb; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-size: 18px; font-weight: bold;">Activate My Account Now</a>
         </p>
 
         <div style="background-color: #dbeafe; padding: 20px; border-radius: 8px; margin: 20px 0;">

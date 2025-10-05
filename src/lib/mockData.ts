@@ -1,4 +1,4 @@
-export const WAITLIST_COUNT = 1234;
+export const WAITLIST_COUNT = 1234; // Removed fake count, now fetched from database
 export const COUNTRY_COUNT = 15;
 export const UNIVERSITY_COUNT = 20;
 export const DAYS_UNTIL_LAUNCH = 45;

@@ -172,7 +172,7 @@ export default function WaitlistModal({
     onClose();
   };
 
-  const shareUrl = `https://colabwize.com?ref=${referralCode}`;
+  const shareUrl = `https://colabwize.vercel.app?ref=${referralCode}`;
   const shareText = `I just joined the @ColabWize waitlist! The future of academic writing is coming Q1 2025 🚀`;
 
   if (showSuccess) {
@@ -379,7 +379,7 @@ export default function WaitlistModal({
                 Joining...
               </>
             ) : (
-              "Join 1,234 Others on the Waitlist"
+              "Join the Waitlist"
             )}
           </button>
         </form>

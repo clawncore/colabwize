@@ -8,12 +8,13 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
+import { useState, useEffect } from "react";
 import CountdownTimer from "../components/CountdownTimer";
+import { supabase } from "../lib/supabaseClient";
 import {
   FEATURES,
   TESTIMONIALS,
   FAQ_ITEMS,
-  WAITLIST_COUNT,
 } from "../lib/mockData";
 
 interface HomeProps {
@@ -21,6 +22,29 @@ interface HomeProps {
 }
 
 export default function Home({ onWaitlistClick }: HomeProps) {
+  const [waitlistCount, setWaitlistCount] = useState(0);
+
+  useEffect(() => {
+    const fetchWaitlistCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("waitlist")
+          .select("*", { count: "exact", head: true });
+
+        if (error) {
+          console.error("Error fetching waitlist count:", error);
+          return;
+        }
+
+        setWaitlistCount(count || 0);
+      } catch (err) {
+        console.error("Unexpected error fetching waitlist count:", err);
+      }
+    };
+
+    fetchWaitlistCount();
+  }, []);
+
   return (
     <div className="min-h-screen">
       <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white py-20 overflow-hidden">
@@ -94,7 +118,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
               </div>
 
               <p className="mt-4 text-white text-sm text-center font-semibold">
-                Join {WAITLIST_COUNT.toLocaleString()} students already on the
+                Join {waitlistCount.toLocaleString()} students already on the
                 waitlist
               </p>
             </div>
@@ -402,7 +426,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
               <div className="flex items-center justify-center space-x-2 mb-2">
                 <Users className="w-8 h-8 text-blue-600" />
                 <div className="text-4xl font-bold text-blue-600">
-                  {WAITLIST_COUNT.toLocaleString()}+
+                  {waitlistCount.toLocaleString()}+
                 </div>
               </div>
               <p className="text-gray-600">On waitlist</p>
@@ -533,7 +557,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
             className="bg-white text-blue-600 px-8 py-4 rounded-lg hover:bg-gray-100 transition font-semibold text-lg inline-flex items-center space-x-2"
           >
             <span>
-              Join {WAITLIST_COUNT.toLocaleString()} Others on the Waitlist
+              Join {waitlistCount.toLocaleString()} Others on the Waitlist
             </span>
             <ArrowRight className="w-5 h-5" />
           </button>

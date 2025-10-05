@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Globe, Users, Shield, ArrowRight } from "lucide-react";
+import { supabase } from "../lib/supabaseClient";
 
 interface AboutProps {
   onWaitlistClick: () => void;
 }
 
 export default function About({ onWaitlistClick }: AboutProps) {
+  const [waitlistCount, setWaitlistCount] = useState(0);
   const [stats] = useState({
-    waitlistCount: 10000,
     universities: 20,
     countries: 15,
     wordsToWrite: 1000000,
@@ -22,6 +23,27 @@ export default function About({ onWaitlistClick }: AboutProps) {
   });
 
   useEffect(() => {
+    const fetchWaitlistCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("waitlist")
+          .select("*", { count: "exact", head: true });
+
+        if (error) {
+          console.error("Error fetching waitlist count:", error);
+          return;
+        }
+
+        setWaitlistCount(count || 0);
+      } catch (err) {
+        console.error("Unexpected error fetching waitlist count:", err);
+      }
+    };
+
+    fetchWaitlistCount();
+  }, []);
+
+  useEffect(() => {
     const animateCounters = () => {
       const duration = 2000; // 2 seconds
       const steps = 60; // 60 fps
@@ -33,7 +55,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
         const progress = step / steps;
 
         setAnimatedStats({
-          waitlistCount: Math.floor(stats.waitlistCount * progress),
+          waitlistCount: Math.floor(waitlistCount * progress),
           universities: Math.floor(stats.universities * progress),
           countries: Math.floor(stats.countries * progress),
           wordsToWrite: Math.floor(stats.wordsToWrite * progress),
@@ -41,7 +63,12 @@ export default function About({ onWaitlistClick }: AboutProps) {
 
         if (step >= steps) {
           clearInterval(timer);
-          setAnimatedStats(stats);
+          setAnimatedStats({
+            waitlistCount: waitlistCount,
+            universities: stats.universities,
+            countries: stats.countries,
+            wordsToWrite: stats.wordsToWrite,
+          });
         }
       }, increment);
 
@@ -66,7 +93,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
     }
 
     return () => observer.disconnect();
-  }, [stats]);
+  }, [stats, waitlistCount]);
 
 
 
@@ -209,7 +236,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
           >
             <div className="text-center p-6">
               <div className="text-5xl font-bold text-blue-600 mb-2">
-                {animatedStats.waitlistCount.toLocaleString()}+
+                {waitlistCount.toLocaleString()}+
               </div>
               <p className="text-gray-600">
                 Students waiting for ColabWize

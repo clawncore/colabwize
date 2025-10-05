@@ -45,7 +45,7 @@ export default function SuccessModal({
   }, [isOpen]);
 
   const referralLink = user
-    ? `https://colabwize.com?ref=${user.referralCode}`
+    ? `https://colabwize.vercel.app?ref=${user.referralCode}`
     : "";
   const shareText =
     "I just joined the @ColabWize waitlist! The future of academic writing is coming Q1 2025 🚀";
