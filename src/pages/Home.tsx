@@ -7,6 +7,7 @@ import {
   Building2,
   Clock,
   ArrowRight,
+  Video,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import CountdownTimer from "../components/CountdownTimer";
@@ -44,6 +45,18 @@ export default function Home({ onWaitlistClick }: HomeProps) {
 
     fetchWaitlistCount();
   }, []);
+
+  // Function to trigger the video notification
+  const showVideoNotification = () => {
+    // Dispatch a custom event to show the video notification
+    window.dispatchEvent(new CustomEvent('showVideoNotification'));
+  };
+
+  // Function to directly open the video player
+  const openVideoPlayer = () => {
+    // Dispatch a custom event to open the video player directly
+    window.dispatchEvent(new CustomEvent('openVideoPlayer'));
+  };
 
   return (
     <div className="min-h-screen">
@@ -124,9 +137,12 @@ export default function Home({ onWaitlistClick }: HomeProps) {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-white bg-opacity-20 backdrop-blur-sm border-2 border-white text-white px-8 py-3 rounded-lg hover:bg-opacity-30 transition font-semibold flex items-center justify-center space-x-2">
-                <Play className="w-5 h-5" />
-                <span>Watch 60-sec Demo</span>
+              <button 
+                onClick={openVideoPlayer}
+                className="bg-white bg-opacity-20 backdrop-blur-sm border-2 border-white text-white px-8 py-3 rounded-lg hover:bg-opacity-30 transition font-semibold flex items-center justify-center space-x-2"
+              >
+                <Video className="w-5 h-5" />
+                <span>Watch Special Video</span>
               </button>
               <button
                 onClick={() =>
