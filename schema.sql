@@ -6,6 +6,8 @@ CREATE TABLE public.waitlist (
     institution text NULL,
     "position" int8 NULL,
     referral_code text NULL,
+    referred_by text NULL, -- Add this column for referral tracking
+    referral_count int8 DEFAULT 0, -- Add this column to count referrals
     created_at timestamptz NOT NULL DEFAULT now(),
     -- Store feature votes as a JSON object
     feature_votes jsonb DEFAULT '{}',

@@ -1,4 +1,5 @@
 import { X, Check, Loader } from "lucide-react";
+import { FaXTwitter, FaLinkedin, FaInstagram, FaFacebookF, FaWhatsapp } from "react-icons/fa6";
 import { useState } from "react";
 import { User } from "../types/user";
 import { supabase } from "../lib/supabaseClient";
@@ -173,7 +174,7 @@ export default function WaitlistModal({
   };
 
   const shareUrl = `https://colabwize.vercel.app?ref=${referralCode}`;
-  const shareText = `I just joined the @ColabWize waitlist! The future of academic writing is coming Q1 2025 🚀`;
+  const shareText = `I just joined the ColabWize waitlist! The future of academic writing is coming soon. Join me and get early access to revolutionize your research workflow!`;
 
   if (showSuccess) {
     return (
@@ -198,6 +199,12 @@ export default function WaitlistModal({
               <span className="font-bold text-blue-600">#{position}</span> on
               the list
             </p>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-blue-800 font-semibold">
+                Check your email to confirm your spot!
+              </p>
+            </div>
 
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <p className="text-sm font-semibold mb-2">
@@ -227,28 +234,61 @@ export default function WaitlistModal({
                       )}&url=${encodeURIComponent(shareUrl)}`
                     )
                   }
-                  className="flex-1 bg-blue-400 text-white px-4 py-2 rounded hover:bg-blue-500 transition text-sm font-semibold"
+                  className="flex-1 bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition text-sm font-semibold flex items-center justify-center"
                 >
-                  Share on Twitter
+                  <FaXTwitter className="mr-2" />
+                  X
                 </button>
                 <button
                   onClick={() =>
                     window.open(
                       `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
                         shareUrl
-                      )}`
+                      )}&summary=${encodeURIComponent(shareText)}`, "_blank"
                     )
                   }
-                  className="flex-1 bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 transition text-sm font-semibold"
+                  className="flex-1 bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 transition text-sm font-semibold flex items-center justify-center"
                 >
-                  Share on LinkedIn
+                  <FaLinkedin className="mr-2" />
+                  LinkedIn
+                </button>
+              </div>
+
+              {/* Instagram and Facebook sharing buttons */}
+              <div className="flex space-x-2 mt-2">
+                <button
+                  onClick={() =>
+                    window.open(`https://www.instagram.com/direct/new?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
+                  }
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded hover:opacity-90 transition text-sm font-semibold flex items-center justify-center"
+                >
+                  <FaInstagram className="mr-2" />
+                  Instagram
+                </button>
+                <button
+                  onClick={() =>
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=&quote=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
+                  }
+                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm font-semibold flex items-center justify-center"
+                >
+                  <FaFacebookF className="mr-2" />
+                  Facebook
+                </button>
+              </div>
+
+              {/* WhatsApp button */}
+              <div className="flex space-x-2 mt-2">
+                <button
+                  onClick={() =>
+                    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
+                  }
+                  className="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition text-sm font-semibold flex items-center justify-center"
+                >
+                  <FaWhatsapp className="mr-2" />
+                  WhatsApp
                 </button>
               </div>
             </div>
-
-            <p className="text-sm text-gray-600 mb-4">
-              Each referral moves you up +10 spots!
-            </p>
 
             <button
               onClick={handleReset}

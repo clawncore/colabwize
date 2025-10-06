@@ -22,7 +22,6 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
     FEATURES.reduce((acc, f) => ({ ...acc, [f.id]: f.votes }), {})
   );
   const [votedFeatures, setVotedFeatures] = useState<Set<string>>(new Set());
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [waitlistCount, setWaitlistCount] = useState(0);
 
   useEffect(() => {
@@ -46,122 +45,40 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
     fetchWaitlistCount();
   }, []);
 
-  // Check if user has voted for features
-  useEffect(() => {
-    const email = localStorage.getItem('feature_voter_email');
-    if (email) {
-      setUserEmail(email);
-
-      // Fetch user's previous votes
-      const fetchUserVotes = async () => {
-        try {
-          const { data, error } = await supabase
-            .from('waitlist')
-            .select('feature_votes')
-            .eq('email', email)
-            .single();
-
-          if (!error && data && data.feature_votes) {
-            const votedFeatureIds = new Set(Object.keys(data.feature_votes));
-            setVotedFeatures(votedFeatureIds);
-
-            // Update vote counts from database
-            const updatedVotes: Record<string, number> = { ...votes };
-            for (const [featureId, count] of Object.entries(data.feature_votes)) {
-              updatedVotes[featureId] = (updatedVotes[featureId] || 0) + (count as number);
-            }
-            setVotes(updatedVotes);
-          }
-        } catch (err) {
-          console.error('Error fetching user votes:', err);
-          // Continue without user votes if there's an error
-        }
-      };
-
-      fetchUserVotes();
-    }
-  }, []);
-
   const handleVote = async (featureId: string) => {
-    if (votedFeatures.has(featureId)) {
+    const email = prompt("Please enter your email to vote for this feature:");
+    if (!email) return;
+
+    // Basic email validation
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      alert("Please enter a valid email address.");
       return;
     }
 
-    let email = userEmail;
-
-    // If no email is set, prompt user to enter their email
-    if (!email) {
-      email = prompt('Please enter your email to vote for this feature:');
-
-      if (!email) {
-        alert('Email is required to vote for features');
-        return;
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        alert('Please enter a valid email address');
-        return;
-      }
-
-      // Store email for future votes
-      localStorage.setItem('feature_voter_email', email);
-      setUserEmail(email);
+    if (votedFeatures.has(featureId)) {
+      alert("You have already voted for this feature!");
+      return;
     }
 
     try {
-      // Check if user exists in waitlist
-      const { data: existingUser, error: fetchError } = await supabase
-        .from('waitlist')
-        .select('feature_votes, id')
-        .eq('email', email)
-        .single();
+      // Simulate API call to record vote
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      let updatedVotes = { ...votes };
+      // Update vote count
+      setVotes(prev => ({
+        ...prev,
+        [featureId]: (prev[featureId] || 0) + 1
+      }));
 
-      if (fetchError || !existingUser) {
-        // User doesn't exist in waitlist, add them
-        const { error: insertError } = await supabase
-          .from('waitlist')
-          .insert([
-            {
-              email: email,
-              feature_votes: { [featureId]: 1 }
-            }
-          ]);
+      // Add to voted features set
+      const newVotedFeatures = new Set(votedFeatures);
+      newVotedFeatures.add(featureId);
+      setVotedFeatures(newVotedFeatures);
 
-        if (insertError) {
-          console.error('Error adding user to waitlist:', insertError);
-          alert('Error recording your vote. Please try again.');
-          return;
-        }
-
-        updatedVotes[featureId] = (updatedVotes[featureId] || 0) + 1;
-      } else {
-        // User exists, update their feature votes
-        const currentVotes = existingUser.feature_votes || {};
-        const newVotes = { ...currentVotes, [featureId]: (currentVotes[featureId] || 0) + 1 };
-
-        const { error: updateError } = await supabase
-          .from('waitlist')
-          .update({ feature_votes: newVotes })
-          .eq('id', existingUser.id);
-
-        if (updateError) {
-          console.error('Error updating votes:', updateError);
-          alert('Error recording your vote. Please try again.');
-          return;
-        }
-
-        updatedVotes[featureId] = (updatedVotes[featureId] || 0) + 1;
-      }
-
-      setVotes(updatedVotes);
-      setVotedFeatures((prev) => new Set([...prev, featureId]));
+      alert("Thank you for your vote!");
     } catch (err) {
-      console.error('Unexpected error during voting:', err);
-      alert('An unexpected error occurred. Please try again.');
+      console.error("Unexpected error during voting:", err);
+      alert("An unexpected error occurred. Please try again.");
     }
   };
 
