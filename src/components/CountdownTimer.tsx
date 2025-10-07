@@ -1,31 +1,62 @@
 import { useState, useEffect } from 'react';
 
 export default function CountdownTimer() {
+  // Calculate end time: 43 days from now
+  const getEndTime = () => {
+    const now = new Date().getTime();
+    return now + (43 * 24 * 60 * 60 * 1000); // 43 days in milliseconds
+  };
+
+  // Initialize end time in state
+  const [endTime, setEndTime] = useState(getEndTime());
+  
+  // Initialize time left
   const [timeLeft, setTimeLeft] = useState({
-    days: 45,
-    hours: 12,
-    minutes: 34,
-    seconds: 20
+    days: 43,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
   });
 
   useEffect(() => {
+    // Check if we have a stored end time in localStorage
+    const storedEndTime = localStorage.getItem('countdownEndTime');
+    if (storedEndTime) {
+      const parsedEndTime = parseInt(storedEndTime, 10);
+      // If the stored end time is in the future, use it
+      if (parsedEndTime > new Date().getTime()) {
+        setEndTime(parsedEndTime);
+      } else {
+        // If the stored time is in the past, set a new end time
+        const newEndTime = getEndTime();
+        setEndTime(newEndTime);
+        localStorage.setItem('countdownEndTime', newEndTime.toString());
+      }
+    } else {
+      // If no stored time, set and save the end time
+      localStorage.setItem('countdownEndTime', endTime.toString());
+    }
+
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        } else if (prev.hours > 0) {
-          return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        } else if (prev.days > 0) {
-          return { ...prev, days: prev.days - 1, hours: 23, minutes: 59, seconds: 59 };
-        }
-        return prev;
-      });
+      const now = new Date().getTime();
+      const difference = endTime - now;
+      
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        
+        setTimeLeft({ days, hours, minutes, seconds });
+      } else {
+        // Countdown finished
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        clearInterval(timer);
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [endTime]);
 
   return (
     <div className="flex items-center justify-center space-x-4">
