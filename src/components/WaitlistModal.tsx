@@ -263,7 +263,8 @@ export default function WaitlistModal({
                 </button>
               </div>
 
-              <div className="flex space-x-2">
+              {/* Social sharing buttons - improved layout for all devices */}
+              <div className="grid grid-cols-2 gap-2 mt-2">
                 <button
                   onClick={() =>
                     window.open(
@@ -272,10 +273,10 @@ export default function WaitlistModal({
                       )}&url=${encodeURIComponent(shareUrl)}`
                     )
                   }
-                  className="flex-1 bg-black text-white px-3 py-1 rounded hover:bg-gray-800 transition text-xs font-semibold flex items-center justify-center"
+                  className="bg-black text-white px-3 py-2 rounded hover:bg-gray-800 transition text-xs font-semibold flex items-center justify-center"
                 >
-                  <FaXTwitter className="mr-1 w-3 h-3" />
-                  X
+                  <FaXTwitter className="mr-2 w-4 h-4" />
+                  <span className="hidden sm:inline">X</span>
                 </button>
                 <button
                   onClick={() =>
@@ -285,45 +286,41 @@ export default function WaitlistModal({
                       )}&summary=${encodeURIComponent(shareText)}`, "_blank"
                     )
                   }
-                  className="flex-1 bg-blue-700 text-white px-3 py-1 rounded hover:bg-blue-800 transition text-xs font-semibold flex items-center justify-center"
+                  className="bg-blue-700 text-white px-3 py-2 rounded hover:bg-blue-800 transition text-xs font-semibold flex items-center justify-center"
                 >
-                  <FaLinkedin className="mr-1 w-3 h-3" />
-                  LinkedIn
+                  <FaLinkedin className="mr-2 w-4 h-4" />
+                  <span className="hidden sm:inline">LinkedIn</span>
                 </button>
-              </div>
-
-              {/* Social sharing buttons - reorganized to place Instagram beside WhatsApp */}
-              <div className="flex space-x-2 mt-2">
                 <button
                   onClick={() =>
                     window.open(`https://www.instagram.com/direct/new?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
                   }
-                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded hover:opacity-90 transition text-xs font-semibold flex items-center justify-center"
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-2 rounded hover:opacity-90 transition text-xs font-semibold flex items-center justify-center"
                 >
-                  <FaInstagram className="mr-1 w-3 h-3" />
-                  Instagram
+                  <FaInstagram className="mr-2 w-4 h-4" />
+                  <span className="hidden sm:inline">Instagram</span>
                 </button>
                 <button
                   onClick={() =>
                     window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
                   }
-                  className="flex-1 bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition text-xs font-semibold flex items-center justify-center"
+                  className="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition text-xs font-semibold flex items-center justify-center"
                 >
-                  <FaWhatsapp className="mr-1 w-3 h-3" />
-                  WhatsApp
+                  <FaWhatsapp className="mr-2 w-4 h-4" />
+                  <span className="hidden sm:inline">WhatsApp</span>
                 </button>
               </div>
 
-              {/* Facebook button */}
-              <div className="flex space-x-2 mt-2">
+              {/* Facebook button - full width for better visibility */}
+              <div className="mt-2">
                 <button
                   onClick={() =>
                     window.open(`https://www.facebook.com/sharer/sharer.php?u=&quote=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
                   }
-                  className="flex-1 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition text-xs font-semibold flex items-center justify-center"
+                  className="w-full bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition text-xs font-semibold flex items-center justify-center"
                 >
-                  <FaFacebookF className="mr-1 w-3 h-3" />
-                  Facebook
+                  <FaFacebookF className="mr-2 w-4 h-4" />
+                  <span className="hidden sm:inline">Facebook</span>
                 </button>
               </div>
             </div>
