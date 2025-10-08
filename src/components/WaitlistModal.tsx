@@ -246,9 +246,12 @@ export default function WaitlistModal({
 
             <div className="bg-gray-50 rounded-lg p-3 mb-4">
               <p className="text-sm font-semibold mb-2">
-                Share with friends to move up:
+                Share with 3 friends to move to top 100
               </p>
-              <div className="flex items-center space-x-2 mb-2">
+              <p className="text-xs text-gray-600 mb-3">
+                Each referral moves you up 10 spots on the waitlist
+              </p>
+              <div className="flex items-center space-x-2 mb-3">
                 <input
                   type="text"
                   value={shareUrl}
@@ -263,8 +266,8 @@ export default function WaitlistModal({
                 </button>
               </div>
 
-              {/* Social sharing buttons - improved layout for all devices */}
-              <div className="grid grid-cols-2 gap-2 mt-2">
+              {/* Social sharing buttons - all platforms including Instagram, X, LinkedIn */}
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() =>
                     window.open(
@@ -273,10 +276,37 @@ export default function WaitlistModal({
                       )}&url=${encodeURIComponent(shareUrl)}`
                     )
                   }
-                  className="bg-black text-white px-3 py-2 rounded hover:bg-gray-800 transition text-xs font-semibold flex items-center justify-center"
+                  className="bg-black text-white px-2 py-2 rounded hover:bg-gray-800 transition text-xs font-semibold flex flex-col items-center justify-center"
                 >
-                  <FaXTwitter className="mr-2 w-4 h-4" />
-                  <span className="hidden sm:inline">X</span>
+                  <FaXTwitter className="w-4 h-4 mb-1" />
+                  <span className="text-xs">X</span>
+                </button>
+                <button
+                  onClick={() =>
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=&quote=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
+                  }
+                  className="bg-blue-600 text-white px-2 py-2 rounded hover:bg-blue-700 transition text-xs font-semibold flex flex-col items-center justify-center"
+                >
+                  <FaFacebookF className="w-4 h-4 mb-1" />
+                  <span className="text-xs">Facebook</span>
+                </button>
+                <button
+                  onClick={() =>
+                    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
+                  }
+                  className="bg-green-500 text-white px-2 py-2 rounded hover:bg-green-600 transition text-xs font-semibold flex flex-col items-center justify-center"
+                >
+                  <FaWhatsapp className="w-4 h-4 mb-1" />
+                  <span className="text-xs">WhatsApp</span>
+                </button>
+                <button
+                  onClick={() =>
+                    window.open(`https://www.instagram.com/direct/new?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
+                  }
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-2 rounded hover:opacity-90 transition text-xs font-semibold flex flex-col items-center justify-center"
+                >
+                  <FaInstagram className="w-4 h-4 mb-1" />
+                  <span className="text-xs">Instagram</span>
                 </button>
                 <button
                   onClick={() =>
@@ -286,41 +316,10 @@ export default function WaitlistModal({
                       )}&summary=${encodeURIComponent(shareText)}`, "_blank"
                     )
                   }
-                  className="bg-blue-700 text-white px-3 py-2 rounded hover:bg-blue-800 transition text-xs font-semibold flex items-center justify-center"
+                  className="bg-blue-700 text-white px-2 py-2 rounded hover:bg-blue-800 transition text-xs font-semibold flex flex-col items-center justify-center"
                 >
-                  <FaLinkedin className="mr-2 w-4 h-4" />
-                  <span className="hidden sm:inline">LinkedIn</span>
-                </button>
-                <button
-                  onClick={() =>
-                    window.open(`https://www.instagram.com/direct/new?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
-                  }
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-2 rounded hover:opacity-90 transition text-xs font-semibold flex items-center justify-center"
-                >
-                  <FaInstagram className="mr-2 w-4 h-4" />
-                  <span className="hidden sm:inline">Instagram</span>
-                </button>
-                <button
-                  onClick={() =>
-                    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
-                  }
-                  className="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition text-xs font-semibold flex items-center justify-center"
-                >
-                  <FaWhatsapp className="mr-2 w-4 h-4" />
-                  <span className="hidden sm:inline">WhatsApp</span>
-                </button>
-              </div>
-
-              {/* Facebook button - full width for better visibility */}
-              <div className="mt-2">
-                <button
-                  onClick={() =>
-                    window.open(`https://www.facebook.com/sharer/sharer.php?u=&quote=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
-                  }
-                  className="w-full bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition text-xs font-semibold flex items-center justify-center"
-                >
-                  <FaFacebookF className="mr-2 w-4 h-4" />
-                  <span className="hidden sm:inline">Facebook</span>
+                  <FaLinkedin className="w-4 h-4 mb-1" />
+                  <span className="text-xs">LinkedIn</span>
                 </button>
               </div>
             </div>
