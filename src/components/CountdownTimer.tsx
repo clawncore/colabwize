@@ -1,52 +1,37 @@
 import { useState, useEffect } from 'react';
 
 export default function CountdownTimer() {
-  // Calculate end time: 43 days from now
-  const getEndTime = () => {
-    const now = new Date().getTime();
-    return now + (43 * 24 * 60 * 60 * 1000); // 43 days in milliseconds
+  // Fixed universal end time - same for all users
+  // Set to a specific date and time (e.g., 43 days from a fixed start date)
+  const getFixedEndTime = () => {
+    // Set a fixed date (e.g., October 21, 2025 00:00:00 UTC)
+    // You can adjust this date as needed
+    const fixedEndDate = new Date('2025-11-20T00:00:00Z').getTime();
+    return fixedEndDate;
   };
 
   // Initialize end time in state
-  const [endTime, setEndTime] = useState(getEndTime());
-  
+  const [endTime, setEndTime] = useState(getFixedEndTime());
+
   // Initialize time left
   const [timeLeft, setTimeLeft] = useState({
-    days: 43,
+    days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0
   });
 
   useEffect(() => {
-    // Check if we have a stored end time in localStorage
-    const storedEndTime = localStorage.getItem('countdownEndTime');
-    if (storedEndTime) {
-      const parsedEndTime = parseInt(storedEndTime, 10);
-      // If the stored end time is in the future, use it
-      if (parsedEndTime > new Date().getTime()) {
-        setEndTime(parsedEndTime);
-      } else {
-        // If the stored time is in the past, set a new end time
-        const newEndTime = getEndTime();
-        setEndTime(newEndTime);
-        localStorage.setItem('countdownEndTime', newEndTime.toString());
-      }
-    } else {
-      // If no stored time, set and save the end time
-      localStorage.setItem('countdownEndTime', endTime.toString());
-    }
-
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const difference = endTime - now;
-      
+
       if (difference > 0) {
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
         const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-        
+
         setTimeLeft({ days, hours, minutes, seconds });
       } else {
         // Countdown finished

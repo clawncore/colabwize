@@ -1,6 +1,6 @@
 import { X, Check, Loader } from "lucide-react";
 import { FaXTwitter, FaLinkedin, FaInstagram, FaFacebookF, FaWhatsapp } from "react-icons/fa6";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { User } from "../types/user";
 import { supabase } from "../lib/supabaseClient";
 
@@ -24,6 +24,41 @@ export default function WaitlistModal({
   const [position, setPosition] = useState(0);
   const [referralCode, setReferralCode] = useState("");
   const [emailExists, setEmailExists] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to close modal
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -179,47 +214,50 @@ export default function WaitlistModal({
   if (showSuccess) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl max-w-lg w-full p-8 relative animate-in fade-in duration-300">
+        <div
+          ref={modalRef}
+          className="bg-white rounded-xl w-full max-w-md p-6 relative animate-in fade-in duration-300"
+        >
           <button
             onClick={handleReset}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
 
           <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-green-600" />
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Check className="w-6 h-6 text-green-600" />
             </div>
-            <h2 className="text-3xl font-bold mb-2">
+            <h2 className="text-2xl font-bold mb-2">
               Welcome to the Waitlist!
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4 text-sm">
               You're{" "}
               <span className="font-bold text-blue-600">#{position}</span> on
               the list
             </p>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-blue-800 font-semibold">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-blue-800 font-semibold text-sm">
                 Check your email to confirm your spot!
               </p>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="bg-gray-50 rounded-lg p-3 mb-4">
               <p className="text-sm font-semibold mb-2">
                 Share with friends to move up:
               </p>
-              <div className="flex items-center space-x-2 mb-3">
+              <div className="flex items-center space-x-2 mb-2">
                 <input
                   type="text"
                   value={shareUrl}
                   readOnly
-                  className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-sm"
+                  className="flex-1 px-2 py-1 bg-white border border-gray-300 rounded text-xs"
                 />
                 <button
                   onClick={() => navigator.clipboard.writeText(shareUrl)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm font-semibold"
+                  className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition text-xs font-semibold"
                 >
                   Copy
                 </button>
@@ -234,9 +272,9 @@ export default function WaitlistModal({
                       )}&url=${encodeURIComponent(shareUrl)}`
                     )
                   }
-                  className="flex-1 bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition text-sm font-semibold flex items-center justify-center"
+                  className="flex-1 bg-black text-white px-3 py-1 rounded hover:bg-gray-800 transition text-xs font-semibold flex items-center justify-center"
                 >
-                  <FaXTwitter className="mr-2" />
+                  <FaXTwitter className="mr-1 w-3 h-3" />
                   X
                 </button>
                 <button
@@ -247,52 +285,52 @@ export default function WaitlistModal({
                       )}&summary=${encodeURIComponent(shareText)}`, "_blank"
                     )
                   }
-                  className="flex-1 bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 transition text-sm font-semibold flex items-center justify-center"
+                  className="flex-1 bg-blue-700 text-white px-3 py-1 rounded hover:bg-blue-800 transition text-xs font-semibold flex items-center justify-center"
                 >
-                  <FaLinkedin className="mr-2" />
+                  <FaLinkedin className="mr-1 w-3 h-3" />
                   LinkedIn
                 </button>
               </div>
 
-              {/* Instagram and Facebook sharing buttons */}
+              {/* Social sharing buttons - reorganized to place Instagram beside WhatsApp */}
               <div className="flex space-x-2 mt-2">
                 <button
                   onClick={() =>
                     window.open(`https://www.instagram.com/direct/new?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
                   }
-                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded hover:opacity-90 transition text-sm font-semibold flex items-center justify-center"
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded hover:opacity-90 transition text-xs font-semibold flex items-center justify-center"
                 >
-                  <FaInstagram className="mr-2" />
+                  <FaInstagram className="mr-1 w-3 h-3" />
                   Instagram
                 </button>
                 <button
                   onClick={() =>
-                    window.open(`https://www.facebook.com/sharer/sharer.php?u=&quote=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
+                    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
                   }
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm font-semibold flex items-center justify-center"
+                  className="flex-1 bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition text-xs font-semibold flex items-center justify-center"
                 >
-                  <FaFacebookF className="mr-2" />
-                  Facebook
+                  <FaWhatsapp className="mr-1 w-3 h-3" />
+                  WhatsApp
                 </button>
               </div>
 
-              {/* WhatsApp button */}
+              {/* Facebook button */}
               <div className="flex space-x-2 mt-2">
                 <button
                   onClick={() =>
-                    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=&quote=${encodeURIComponent(shareText + " " + shareUrl)}`, "_blank")
                   }
-                  className="flex-1 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition text-sm font-semibold flex items-center justify-center"
+                  className="flex-1 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition text-xs font-semibold flex items-center justify-center"
                 >
-                  <FaWhatsapp className="mr-2" />
-                  WhatsApp
+                  <FaFacebookF className="mr-1 w-3 h-3" />
+                  Facebook
                 </button>
               </div>
             </div>
 
             <button
               onClick={handleReset}
-              className="w-full bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition font-semibold"
+              className="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition text-sm font-semibold"
             >
               Close
             </button>
@@ -304,47 +342,50 @@ export default function WaitlistModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full p-8 relative animate-in fade-in duration-300">
+      <div
+        ref={modalRef}
+        className="bg-white rounded-xl w-full max-w-md p-6 relative animate-in fade-in duration-300"
+      >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
         >
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-3xl font-bold mb-2">
+        <h2 className="text-2xl font-bold mb-2">
           Join the ColabWize Waitlist
         </h2>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 mb-4 text-sm">
           Be among the first to experience the future of academic writing with ColabWize
         </p>
 
-        <div className="space-y-4 mb-6">
-          <div className="flex items-start space-x-3">
-            <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-            <span className="text-sm">
+        <div className="space-y-3 mb-4">
+          <div className="flex items-start space-x-2">
+            <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+            <span className="text-xs">
               Early access when we launch in Q1 2025
             </span>
           </div>
-          <div className="flex items-start space-x-3">
-            <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-            <span className="text-sm">Exclusive 30% lifetime discount</span>
+          <div className="flex items-start space-x-2">
+            <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+            <span className="text-xs">Exclusive 30% lifetime discount</span>
           </div>
-          <div className="flex items-start space-x-3">
-            <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-            <span className="text-sm">
+          <div className="flex items-start space-x-2">
+            <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+            <span className="text-xs">
               Vote on features and shape the product
             </span>
           </div>
-          <div className="flex items-start space-x-3">
-            <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-            <span className="text-sm">No spam, unsubscribe anytime</span>
+          <div className="flex items-start space-x-2">
+            <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+            <span className="text-xs">No spam, unsubscribe anytime</span>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm font-semibold mb-1">Email *</label>
+            <label className="block text-xs font-semibold mb-1">Email *</label>
             <input
               type="email"
               value={email}
@@ -353,31 +394,31 @@ export default function WaitlistModal({
                 setEmailExists(false);
               }}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               placeholder="you@university.edu"
             />
             {emailExists && (
-              <p className="text-red-500 text-sm mt-1">
+              <p className="text-red-500 text-xs mt-1">
                 This email has already been subscribed.
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-1">
+            <label className="block text-xs font-semibold mb-1">
               Name (Optional)
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               placeholder="Your name"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-1">
+            <label className="block text-xs font-semibold mb-1">
               I am a (Optional)
             </label>
             <select
@@ -385,7 +426,7 @@ export default function WaitlistModal({
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                 setRole(e.target.value)
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value="">Select your role</option>
               <option value="student">Student</option>
@@ -396,14 +437,14 @@ export default function WaitlistModal({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-1">
+            <label className="block text-xs font-semibold mb-1">
               University/Institution (Optional)
             </label>
             <input
               type="text"
               value={institution}
               onChange={(e) => setInstitution(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               placeholder="Your institution"
             />
           </div>
@@ -411,11 +452,11 @@ export default function WaitlistModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="w-full bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
             {isSubmitting ? (
               <>
-                <Loader className="w-5 h-5 animate-spin mr-2" />
+                <Loader className="w-4 h-4 animate-spin mr-2" />
                 Joining...
               </>
             ) : (
@@ -424,7 +465,7 @@ export default function WaitlistModal({
           </button>
         </form>
 
-        <p className="text-xs text-gray-500 text-center mt-4">
+        <p className="text-xs text-gray-500 text-center mt-3">
           We respect your privacy. Unsubscribe anytime.
         </p>
       </div>
