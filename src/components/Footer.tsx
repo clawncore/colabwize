@@ -20,7 +20,7 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
               <img
-                src="/logo.png"
+                src="/colabwize logo.jpg"
                 alt="ColabWize Logo"
                 className="w-8 h-8"
               />

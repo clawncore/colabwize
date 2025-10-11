@@ -26,7 +26,7 @@ export default function Navbar({ onWaitlistClick }: NavbarProps) {
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center space-x-2">
               <img
-                src="/logo.png"
+                src="/colabwize logo.jpg"
                 alt="ColabWize Logo"
                 className="w-8 h-8"
               />
