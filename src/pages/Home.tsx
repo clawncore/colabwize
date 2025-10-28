@@ -137,7 +137,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button 
+              <button
                 onClick={openVideoPlayer}
                 className="bg-white bg-opacity-20 backdrop-blur-sm border-2 border-white text-white px-8 py-3 rounded-lg hover:bg-opacity-30 transition font-semibold flex items-center justify-center space-x-2"
               >
@@ -322,8 +322,8 @@ export default function Home({ onWaitlistClick }: HomeProps) {
               <h3 className="text-2xl font-bold mb-2">Student Pro</h3>
               <div className="mb-6">
                 <div className="flex items-baseline space-x-2">
-                  <span className="text-4xl font-bold">$5</span>
-                  <span className="text-lg text-gray-500 line-through">$7</span>
+                  <span className="text-4xl font-bold">$12</span>
+                  <span className="text-lg text-gray-500 line-through">$20</span>
                   <span className="text-lg text-gray-500">/month</span>
                 </div>
                 <p className="text-sm text-blue-600 font-semibold mt-1">
@@ -376,9 +376,9 @@ export default function Home({ onWaitlistClick }: HomeProps) {
               <h3 className="text-2xl font-bold mb-2">Researcher</h3>
               <div className="mb-6">
                 <div className="flex items-baseline space-x-2">
-                  <span className="text-4xl font-bold">$15</span>
+                  <span className="text-4xl font-bold">$20</span>
                   <span className="text-lg text-gray-500 line-through">
-                    $20
+                    $25
                   </span>
                   <span className="text-lg text-gray-500">/month</span>
                 </div>
