@@ -322,8 +322,8 @@ export default function Home({ onWaitlistClick }: HomeProps) {
               <h3 className="text-2xl font-bold mb-2">Student Pro</h3>
               <div className="mb-6">
                 <div className="flex items-baseline space-x-2">
-                  <span className="text-4xl font-bold">$12</span>
-                  <span className="text-lg text-gray-500 line-through">$20</span>
+                  <span className="text-4xl font-bold">$9</span>
+                  <span className="text-lg text-gray-500 line-through">$15</span>
                   <span className="text-lg text-gray-500">/month</span>
                 </div>
                 <p className="text-sm text-blue-600 font-semibold mt-1">
