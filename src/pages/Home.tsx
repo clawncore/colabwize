@@ -333,6 +333,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
               <p className="text-gray-600 mb-6">Everything students need</p>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start space-x-2">
+
                   <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">Unlimited projects</span>
                 </li>
