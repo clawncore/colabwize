@@ -18,3 +18,6 @@ GRANT USAGE ON SCHEMA public TO anon;
 
 -- Grant select and insert permissions on waitlist table to anon users
 GRANT SELECT, INSERT ON public.waitlist TO anon;
+
+-- Grant usage permission on the waitlist_id_seq sequence to anon users
+GRANT USAGE ON SEQUENCE public.waitlist_id_seq TO anon;

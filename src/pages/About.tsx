@@ -121,7 +121,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
         >
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl font-bold mb-6">
-              Built for Students. Trusted by Researchers. Driven by Purpose.
+              Built for Students. Trusted by Researchers. Driven by Purpose.collaborate together
             </h1>
             <p className="text-xl text-gray-700 leading-relaxed">
               ColabWize was created with one mission: to make academic
