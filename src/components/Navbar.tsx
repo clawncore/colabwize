@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, BookOpen, PenTool, Shield, Users, BarChart3, HelpCircle } from "lucide-react";
+import { Menu, X, BookOpen } from "lucide-react";
 
 interface NavbarProps {
   onWaitlistClick: () => void;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Copy, Check, Facebook } from "lucide-react";
+import { X, Copy, Check } from "lucide-react";
 import { FaXTwitter } from "react-icons/fa6";
 import "./SuccessModal.css";
 import { User } from "../types/user";

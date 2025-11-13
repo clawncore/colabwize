@@ -9,11 +9,10 @@ import {
   BookOpen,
   BarChart3,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { FEATURES } from "../lib/mockData";
-import { supabase } from "../lib/supabaseClient";
 
 interface FeaturesProps {
   onWaitlistClick: () => void;
@@ -24,28 +23,6 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
     FEATURES.reduce((acc, f) => ({ ...acc, [f.id]: f.votes }), {})
   );
   const [votedFeatures, setVotedFeatures] = useState<Set<string>>(new Set());
-  const [waitlistCount, setWaitlistCount] = useState(0);
-
-  useEffect(() => {
-    const fetchWaitlistCount = async () => {
-      try {
-        const { count, error } = await supabase
-          .from("waitlist")
-          .select("*", { count: "exact", head: true });
-
-        if (error) {
-          console.error("Error fetching waitlist count:", error);
-          return;
-        }
-
-        setWaitlistCount(count || 0);
-      } catch (err) {
-        console.error("Unexpected error fetching waitlist count:", err);
-      }
-    };
-
-    fetchWaitlistCount();
-  }, []);
 
   const handleVote = async (featureId: string) => {
     const email = prompt("Please enter your email to vote for this feature:");

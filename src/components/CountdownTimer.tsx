@@ -10,8 +10,8 @@ export default function CountdownTimer() {
     return fixedEndDate;
   };
 
-  // Initialize end time in state
-  const [endTime, setEndTime] = useState(getFixedEndTime());
+  // Initialize end time
+  const endTime = getFixedEndTime();
 
   // Initialize time left
   const [timeLeft, setTimeLeft] = useState({
@@ -41,7 +41,7 @@ export default function CountdownTimer() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [endTime]);
+  }, []);
 
   return (
     <div className="flex items-center justify-center space-x-4">

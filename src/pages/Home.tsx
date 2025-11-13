@@ -1,7 +1,6 @@
 import {
   CheckCircle,
   Check,
-  Play,
   Users,
   Globe,
   Building2,
@@ -47,12 +46,6 @@ export default function Home({ onWaitlistClick }: HomeProps) {
 
     fetchWaitlistCount();
   }, []);
-
-  // Function to trigger the video notification
-  const showVideoNotification = () => {
-    // Dispatch a custom event to show the video notification
-    window.dispatchEvent(new CustomEvent('showVideoNotification'));
-  };
 
   // Function to directly open the video player
   const openVideoPlayer = () => {
