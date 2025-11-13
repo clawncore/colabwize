@@ -47,7 +47,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
             author: "Dr. Emily Rodriguez",
             readTime: "7 min read",
             category: "Academic Integrity",
-            image: "https://images.unsplash.com/photo-1532016675997-5e602d385c0f?w=800&h=400&fit=crop"
+            image: "https://media.nature.com/lw1200/magazine-assets/d41586-024-00090-z/d41586-024-00090-z_26605666.jpg"
         },
         {
             id: "5",

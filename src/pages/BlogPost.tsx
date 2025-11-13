@@ -438,7 +438,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
             author: "Dr. Emma Carter",
             readTime: "7 min read",
             category: "Academic Integrity",
-            image: "https://images.unsplash.com/photo-1532016675997-5e602d385c0f?w=1200&h=600&fit=crop",
+            image: "https://media.nature.com/lw1200/magazine-assets/d41586-024-00090-z/d41586-024-00090-z_26605666.jpg",
             content: `
       <p>Plagiarism is one of the most common academic issues students face, often without even realizing it. With tight deadlines, complex research topics, and multiple assignments piling up at once, it's easy to accidentally reuse phrases, forget citations, or paraphrase incorrectly.</p>
       
