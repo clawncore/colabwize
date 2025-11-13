@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import {
   Search,
   Rocket,
@@ -125,7 +127,103 @@ export default function HelpPage({ onWaitlistClick }: HelpPageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="w-full">
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>ColabWize Help Center - Academic Writing Support</title>
+        <meta name="description" content="Find answers to common questions about ColabWize features, launch timeline, beta testing, and academic writing tools. Get help with citation generation, plagiarism checking, and collaboration." />
+        <meta name="keywords" content="ColabWize help, academic writing help, citation tool help, plagiarism checker help, collaboration tool support" />
+        <link rel="canonical" href="https://colabwize.com/help" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://colabwize.com/help" />
+        <meta property="og:title" content="ColabWize Help Center - Academic Writing Support" />
+        <meta property="og:description" content="Find answers to common questions about ColabWize features, launch timeline, beta testing, and academic writing tools. Get help with citation generation, plagiarism checking, and collaboration." />
+        <meta property="og:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://colabwize.com/help" />
+        <meta property="twitter:title" content="ColabWize Help Center - Academic Writing Support" />
+        <meta property="twitter:description" content="Find answers to common questions about ColabWize features, launch timeline, beta testing, and academic writing tools. Get help with citation generation, plagiarism checking, and collaboration." />
+        <meta property="twitter:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "ColabWize",
+            "description": "An academic platform offering AI citation generation, plagiarism checking, and team collaboration.",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })}
+        </script>
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Is ColabWize free to start?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes! Our Free Plan gives you 1 active project, 5,000 words/month, and basic plagiarism checks."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Do I need a credit card to sign up?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No, you can start free without payment info."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does plagiarism detection work with ColabWize?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "We scan your text against billions of sources and flag similarities with detailed reports."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I use ColabWize offline?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, you can write offline and sync your work once you're back online."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Do you offer student discounts with ColabWize?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, our Student Pro plan is designed to be affordable at just $7/month (or $5/month for early supporters)."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "When will ColabWize launch?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "We're targeting Q1 2025. Join the waitlist to get notified when we launch!"
+                }
+              }
+            ]
+          })}
+        </script>
+      </Helmet>
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-600 to-purple-700 text-white py-20 px-6">
         <div
@@ -229,12 +327,13 @@ export default function HelpPage({ onWaitlistClick }: HelpPageProps) {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-gray-200">
-                  <button
+                  <Link
+                    to="/blog"
                     className={`text-${category.color}-600 hover:text-${category.color}-700 font-semibold text-sm flex items-center`}
                   >
                     View All Articles
                     <ArrowRight className="ml-1" size={16} />
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -358,9 +457,12 @@ export default function HelpPage({ onWaitlistClick }: HelpPageProps) {
       {/* Success Stories Teaser */}
       <section className="py-20 px-6 bg-gray-50">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            What Our Beta Testers Are Saying
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
+            Proposed Research Community
           </h2>
+          <p className="text-center text-gray-600 mb-12">
+            Join our proposed research community to stay updated on our progress and connect with other researchers. <Link to="/about" className="text-blue-600 hover:underline">Learn more about our mission</Link>.
+          </p>
 
           <div className="grid lg:grid-cols-3 gap-8">
             {[

@@ -96,7 +96,7 @@ const sendWelcomeEmail = async (entry: WaitlistEntry) => {
           <li>We'll notify you the moment we open the doors for early access</li>
         </ul>
 
-        <p>In the meantime, feel free to connect with us on <a href="https://twitter.com/colabwize" style="color: #2563eb;">Twitter</a> to follow our development journey.</p>
+        <p>In the meantime, feel free to connect with us on <a href="https://x.com/colabwize" style="color: #000000;">X</a> to follow our development journey.</p>
 
         <p>Happy writing (soon!),<br>The ColabWize Team</p>
 

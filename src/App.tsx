@@ -14,6 +14,17 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Help from "./pages/Help";
 import Roadmap from "./pages/Roadmap";
+import WhatIsColabWize from "./pages/WhatIsColabWize";
+import CitationGenerator from "./pages/CitationGenerator";
+import PlagiarismChecker from "./pages/PlagiarismChecker";
+import CollaborationTool from "./pages/CollaborationTool";
+import Comparison from "./pages/Comparison";
+import FAQ from "./pages/FAQ";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
+import Pricing from "./pages/Pricing";
+import NotFound from "./pages/NotFound";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   const [isWaitlistModalOpen, setIsWaitlistModalOpen] = useState(false);
@@ -72,10 +83,10 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen w-full bg-white flex flex-col overflow-x-hidden">
         <Navbar onWaitlistClick={openWaitlistModal} />
 
-        <main className="flex-1">
+        <main className="flex-1 w-full max-w-full overflow-x-hidden">
           <Routes>
             <Route
               path="/"
@@ -100,6 +111,46 @@ function App() {
             <Route
               path="/roadmap"
               element={<Roadmap onWaitlistClick={openWaitlistModal} />}
+            />
+            <Route
+              path="/what-is-colabwize"
+              element={<WhatIsColabWize onWaitlistClick={openWaitlistModal} />}
+            />
+            <Route
+              path="/citation-generator"
+              element={<CitationGenerator onWaitlistClick={openWaitlistModal} />}
+            />
+            <Route
+              path="/plagiarism-checker"
+              element={<PlagiarismChecker onWaitlistClick={openWaitlistModal} />}
+            />
+            <Route
+              path="/collaboration-tool"
+              element={<CollaborationTool onWaitlistClick={openWaitlistModal} />}
+            />
+            <Route
+              path="/comparison"
+              element={<Comparison onWaitlistClick={openWaitlistModal} />}
+            />
+            <Route
+              path="/faq"
+              element={<FAQ onWaitlistClick={openWaitlistModal} />}
+            />
+            <Route
+              path="/pricing"
+              element={<Pricing onWaitlistClick={openWaitlistModal} />}
+            />
+            <Route
+              path="/blog"
+              element={<Blog onWaitlistClick={openWaitlistModal} />}
+            />
+            <Route
+              path="/blog/:slug"
+              element={<BlogPost onWaitlistClick={openWaitlistModal} />}
+            />
+            <Route
+              path="*"
+              element={<NotFound onWaitlistClick={openWaitlistModal} />}
             />
           </Routes>
         </main>
@@ -129,6 +180,8 @@ function App() {
           onClose={() => setIsSuccessModalOpen(false)}
           user={user}
         />
+
+        <Analytics />
       </div>
     </Router>
   );

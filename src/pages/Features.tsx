@@ -10,6 +10,8 @@ import {
   BarChart3,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import { FEATURES } from "../lib/mockData";
 import { supabase } from "../lib/supabaseClient";
 
@@ -83,7 +85,46 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="w-full">
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>ColabWize Features - Academic Writing Tools</title>
+        <meta name="description" content="Explore powerful features coming to ColabWize: AI Writing Assistant, Plagiarism Detection, Smart Citations, Real-time Collaboration, Project Dashboard, and Export Anywhere." />
+        <meta name="keywords" content="academic writing features, AI writing assistant, plagiarism detection, citation tool, collaboration tool, research tools" />
+        <link rel="canonical" href="https://colabwize.com/features" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://colabwize.com/features" />
+        <meta property="og:title" content="ColabWize Features - Academic Writing Tools" />
+        <meta property="og:description" content="Explore powerful features coming to ColabWize: AI Writing Assistant, Plagiarism Detection, Smart Citations, Real-time Collaboration, Project Dashboard, and Export Anywhere." />
+        <meta property="og:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://colabwize.com/features" />
+        <meta property="twitter:title" content="ColabWize Features - Academic Writing Tools" />
+        <meta property="twitter:description" content="Explore powerful features coming to ColabWize: AI Writing Assistant, Plagiarism Detection, Smart Citations, Real-time Collaboration, Project Dashboard, and Export Anywhere." />
+        <meta property="twitter:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "ColabWize",
+            "description": "An academic platform offering AI citation generation, plagiarism checking, and team collaboration.",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })}
+        </script>
+      </Helmet>
+
       <section className="relative bg-gradient-to-br from-blue-50 via-blue-100 to-purple-50 py-20 overflow-hidden">
         {/* Background Image Overlay */}
         <div
@@ -537,7 +578,8 @@ export default function Features({ onWaitlistClick }: FeaturesProps) {
           <p className="text-xl text-gray-700 mb-8">
             From your first essay to your final thesis, ColabWize grows
             with you. Simple enough for students. Powerful enough for
-            researchers.
+            researchers. <Link to="/pricing" className="text-blue-600 hover:underline">See our pricing plans</Link> or
+            <Link to="/what-is-colabwize" className="text-blue-600 hover:underline ml-1">learn more about ColabWize</Link>.
           </p>
           <button
             onClick={onWaitlistClick}

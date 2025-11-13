@@ -5,6 +5,8 @@ import {
   ArrowRight,
   TrendingUp,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import { ROADMAP_ITEMS } from "../lib/mockData";
 
 interface RoadmapProps {
@@ -36,7 +38,46 @@ export default function Roadmap({ onWaitlistClick }: RoadmapProps) {
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="w-full">
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>ColabWize Development Roadmap - Academic Writing Platform</title>
+        <meta name="description" content="Follow our public development roadmap for ColabWize. See what we've accomplished, what we're working on, and what's coming next for our academic writing platform." />
+        <meta name="keywords" content="ColabWize roadmap, academic platform development, citation tool roadmap, plagiarism checker development" />
+        <link rel="canonical" href="https://colabwize.com/roadmap" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://colabwize.com/roadmap" />
+        <meta property="og:title" content="ColabWize Development Roadmap - Academic Writing Platform" />
+        <meta property="og:description" content="Follow our public development roadmap for ColabWize. See what we've accomplished, what we're working on, and what's coming next for our academic writing platform." />
+        <meta property="og:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://colabwize.com/roadmap" />
+        <meta property="twitter:title" content="ColabWize Development Roadmap - Academic Writing Platform" />
+        <meta property="twitter:description" content="Follow our public development roadmap for ColabWize. See what we've accomplished, what we're working on, and what's coming next for our academic writing platform." />
+        <meta property="twitter:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "ColabWize",
+            "description": "An academic platform offering AI citation generation, plagiarism checking, and team collaboration.",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })}
+        </script>
+      </Helmet>
+
       <section className="relative bg-gradient-to-br from-blue-50 to-purple-50 py-20 overflow-hidden">
         {/* Background Image Overlay */}
         <div
@@ -186,6 +227,20 @@ export default function Roadmap({ onWaitlistClick }: RoadmapProps) {
                 ))}
               </div>
             </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="text-xl text-gray-700 mb-4">
+              Want to influence what we build next?
+              <Link to="/features" className="text-blue-600 hover:underline ml-1">Vote on features</Link> or
+              <Link to="/contact" className="text-blue-600 hover:underline ml-1">contact us directly</Link>.
+            </p>
+            <button
+              onClick={onWaitlistClick}
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+            >
+              Join Waitlist
+            </button>
           </div>
         </div>
       </section>

@@ -1,143 +1,103 @@
-import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Menu, X, BookOpen, PenTool, Shield, Users, BarChart3, HelpCircle } from "lucide-react";
 
 interface NavbarProps {
   onWaitlistClick: () => void;
 }
 
 export default function Navbar({ onWaitlistClick }: NavbarProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const navItems = [
+    { name: "Home", path: "/" },
+    { name: "Features", path: "/features" },
+    { name: "Pricing", path: "/pricing" },
+    { name: "About", path: "/about" },
+    { name: "Roadmap", path: "/roadmap" },
+    { name: "Blog", path: "/blog" },
+    { name: "Help", path: "/help" },
+    { name: "Contact", path: "/contact" },
+  ];
 
   return (
-    <>
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 text-center text-sm relative">
-        <span>🚀 Launching Q1 2025 - Join 1,234 on the waitlist</span>
-        <button
-          onClick={onWaitlistClick}
-          className="ml-3 underline hover:no-underline font-semibold"
-        >
-          Join Now
-        </button>
-      </div>
-
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
-              <img
-                src="/colabwize logo.jpg"
-                alt="ColabWize Logo"
-                className="w-8 h-8"
-              />
-              <span className="text-xl font-bold text-gray-900">
-                ColabWize
-              </span>
+    <nav className="bg-white shadow-sm sticky top-0 z-50 w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link to="/" className="flex-shrink-0 flex items-center">
+              <BookOpen className="h-8 w-8 text-blue-600" />
+              <span className="ml-2 text-xl font-bold text-gray-900">ColabWize</span>
             </Link>
+          </div>
 
-            <div className="hidden md:flex items-center space-x-8">
+          {/* Desktop menu */}
+          <div className="hidden md:flex md:items-center md:space-x-8">
+            {navItems.map((item) => (
               <Link
-                to="/features"
-                className="text-gray-700 hover:text-blue-600 transition"
+                key={item.name}
+                to={item.path}
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
               >
-                Features
+                {item.name}
               </Link>
-              <Link
-                to="/roadmap"
-                className="text-gray-700 hover:text-blue-600 transition"
-              >
-                Roadmap
-              </Link>
-              <Link
-                to="/about"
-                className="text-gray-700 hover:text-blue-600 transition"
-              >
-                About
-              </Link>
-              <Link
-                to="/contact"
-                className="text-gray-700 hover:text-blue-600 transition"
-              >
-                Contact
-              </Link>
-              <Link
-                to="/help"
-                className="text-gray-700 hover:text-blue-600 transition"
-              >
-                Help
-              </Link>
-              <button
-                onClick={onWaitlistClick}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
-              >
-                Join Waitlist
-              </button>
-            </div>
+            ))}
 
             <button
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={onWaitlistClick}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6 text-gray-700" />
+              Join Waitlist
+            </button>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="flex md:hidden items-center">
+            <button
+              onClick={toggleMenu}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 focus:outline-none"
+            >
+              {isMenuOpen ? (
+                <X className="block h-6 w-6" />
               ) : (
-                <Menu className="w-6 h-6 text-gray-700" />
+                <Menu className="block h-6 w-6" />
               )}
             </button>
           </div>
         </div>
+      </div>
 
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-200">
-            <div className="px-4 py-4 space-y-3">
+      {/* Mobile menu */}
+      {isMenuOpen && (
+        <div className="md:hidden w-full">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 w-full">
+            {navItems.map((item) => (
               <Link
-                to="/features"
-                className="block text-gray-700 hover:text-blue-600 py-2"
-                onClick={() => setMobileMenuOpen(false)}
+                key={item.name}
+                to={item.path}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                onClick={() => setIsMenuOpen(false)}
               >
-                Features
+                {item.name}
               </Link>
-              <Link
-                to="/roadmap"
-                className="block text-gray-700 hover:text-blue-600 py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Roadmap
-              </Link>
-              <Link
-                to="/about"
-                className="block text-gray-700 hover:text-blue-600 py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link
-                to="/help"
-                className="block text-gray-700 hover:text-blue-600 py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Help
-              </Link>
-              <Link
-                to="/contact"
-                className="block text-gray-700 hover:text-blue-600 py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Contact
-              </Link>
-              <button
-                onClick={() => {
-                  onWaitlistClick();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
-              >
-                Join Waitlist
-              </button>
-            </div>
+            ))}
+
+            <button
+              onClick={() => {
+                onWaitlistClick();
+                setIsMenuOpen(false);
+              }}
+              className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Join Waitlist
+            </button>
           </div>
-        )}
-      </nav>
-    </>
+        </div>
+      )}
+    </nav>
   );
 }

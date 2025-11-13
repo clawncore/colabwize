@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import { Globe, Users, Shield, ArrowRight } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
@@ -98,7 +100,57 @@ export default function About({ onWaitlistClick }: AboutProps) {
 
 
   return (
-    <div className="min-h-screen">
+    <div className="w-full">
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>About ColabWize - Academic Writing Platform</title>
+        <meta name="description" content="Learn about ColabWize, an academic platform offering AI citation generation, plagiarism checking, and team collaboration. Built for students and researchers worldwide." />
+        <meta name="keywords" content="about ColabWize, academic platform, citation tool, plagiarism checker, collaboration tool" />
+        <link rel="canonical" href="https://colabwize.com/about" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://colabwize.com/about" />
+        <meta property="og:title" content="About ColabWize - Academic Writing Platform" />
+        <meta property="og:description" content="Learn about ColabWize, an academic platform offering AI citation generation, plagiarism checking, and team collaboration. Built for students and researchers worldwide." />
+        <meta property="og:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://colabwize.com/about" />
+        <meta property="twitter:title" content="About ColabWize - Academic Writing Platform" />
+        <meta property="twitter:description" content="Learn about ColabWize, an academic platform offering AI citation generation, plagiarism checking, and team collaboration. Built for students and researchers worldwide." />
+        <meta property="twitter:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "ColabWize",
+            "description": "An academic platform offering AI citation generation, plagiarism checking, and team collaboration.",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })}
+        </script>
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "ColabWize",
+            "url": "https://colabwize.com/",
+            "logo": "https://colabwize.com/logo.png",
+            "description": "An academic platform offering AI citation generation, plagiarism checking, and team collaboration."
+          })}
+        </script>
+      </Helmet>
+
       <section className="relative bg-gradient-to-br from-blue-50 to-purple-50 py-20 overflow-hidden">
         {/* Background Image Overlay */}
         <div
@@ -121,7 +173,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
         >
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl font-bold mb-6">
-              Built for Students. Trusted by Researchers. Driven by Purpose.collaborate together
+              Built for Students. Trusted by Researchers. Driven by Purpose.
             </h1>
             <p className="text-xl text-gray-700 leading-relaxed">
               ColabWize was created with one mission: to make academic
@@ -166,7 +218,7 @@ export default function About({ onWaitlistClick }: AboutProps) {
             We believe great ideas shouldn't be blocked by tool overload, high
             costs, or limited access. That's why ColabWize is designed to
             be affordable, accessible, and AI-powered — leveling the academic
-            playing field for everyone.
+            playing field for everyone. <Link to="/pricing" className="text-white underline">See our affordable plans</Link>.
           </p>
         </div>
       </section>
@@ -177,7 +229,8 @@ export default function About({ onWaitlistClick }: AboutProps) {
             We're Building in Public
           </h2>
           <p className="text-xl text-gray-600 text-center mb-12">
-            Follow our journey as we create the future of academic writing
+            Follow our journey as we create the future of academic writing.
+            <Link to="/roadmap" className="text-blue-600 hover:underline ml-1">See our public roadmap</Link>.
           </p>
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">

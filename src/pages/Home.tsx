@@ -10,6 +10,8 @@ import {
   Video,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import CountdownTimer from "../components/CountdownTimer";
 import { supabase } from "../lib/supabaseClient";
 import {
@@ -59,7 +61,61 @@ export default function Home({ onWaitlistClick }: HomeProps) {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="w-full">
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>ColabWize - Your Entire Academic Workflow, Unified</title>
+        <meta name="description" content="Write smarter, cite faster, and check originality — all in one beautiful workspace built for students and researchers. Launching early 2025." />
+        <meta name="keywords" content="academic writing, citation tool, plagiarism checker, collaboration tool, research writing, student tools" />
+        <link rel="canonical" href="https://colabwize.com/" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://colabwize.com/" />
+        <meta property="og:title" content="ColabWize - Your Entire Academic Workflow, Unified" />
+        <meta property="og:description" content="Write smarter, cite faster, and check originality — all in one beautiful workspace built for students and researchers." />
+        <meta property="og:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://colabwize.com/" />
+        <meta property="twitter:title" content="ColabWize - Your Entire Academic Workflow, Unified" />
+        <meta property="twitter:description" content="Write smarter, cite faster, and check originality — all in one beautiful workspace built for students and researchers." />
+        <meta property="twitter:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "ColabWize",
+            "description": "An academic platform offering AI citation generation, plagiarism checking, and team collaboration.",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })}
+        </script>
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": FAQ_ITEMS.map(item => ({
+              "@type": "Question",
+              "name": item.question,
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": item.answer
+              }
+            }))
+          })}
+        </script>
+      </Helmet>
+
       <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white py-20 overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-20"></div>
         <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/5212317/pexels-photo-5212317.jpeg?auto=compress&cs=tinysrgb&w=1920')] bg-cover bg-center opacity-30"></div>
@@ -68,7 +124,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-block bg-purple-500 bg-opacity-40 backdrop-blur-sm px-4 py-2 rounded-full mb-6 animate-pulse">
               <span className="text-sm font-semibold">
-                Coming Soon - Q1 2025
+                Coming Soon - November 25, 2025
               </span>
             </div>
 
@@ -96,7 +152,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
             <p className="text-xl lg:text-2xl mb-12 text-blue-100 max-w-3xl mx-auto leading-relaxed">
               Write smarter, cite faster, and check originality — all in one
               beautiful workspace built for students and researchers. Launching
-              early 2025.
+              November 25, 2025.
             </p>
 
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 mb-8">
@@ -206,7 +262,8 @@ export default function Home({ onWaitlistClick }: HomeProps) {
           </h2>
           <p className="text-xl text-gray-600 text-center mb-12">
             Say goodbye to tool overload. Everything you need is finally in one
-            place.
+            place. <Link to="/features" className="text-blue-600 hover:underline">Explore all features</Link> or
+            check our <Link to="/pricing" className="text-blue-600 hover:underline">transparent pricing</Link>.
           </p>
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">
@@ -306,10 +363,6 @@ export default function Home({ onWaitlistClick }: HomeProps) {
                 </li>
                 <li className="flex items-start space-x-2">
                   <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Simple plagiarism checks</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">APA, MLA, Chicago citations</span>
                 </li>
               </ul>
@@ -322,7 +375,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
               <h3 className="text-2xl font-bold mb-2">Student Pro</h3>
               <div className="mb-6">
                 <div className="flex items-baseline space-x-2">
-                  <span className="text-4xl font-bold">$9</span>
+                  <span className="text-4xl font-bold">$12</span>
                   <span className="text-lg text-gray-500 line-through">$15</span>
                   <span className="text-lg text-gray-500">/month</span>
                 </div>
@@ -333,7 +386,6 @@ export default function Home({ onWaitlistClick }: HomeProps) {
               <p className="text-gray-600 mb-6">Everything students need</p>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start space-x-2">
-
                   <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">Unlimited projects</span>
                 </li>
@@ -377,14 +429,14 @@ export default function Home({ onWaitlistClick }: HomeProps) {
               <h3 className="text-2xl font-bold mb-2">Researcher</h3>
               <div className="mb-6">
                 <div className="flex items-baseline space-x-2">
-                  <span className="text-4xl font-bold">$20</span>
+                  <span className="text-4xl font-bold">$25</span>
                   <span className="text-lg text-gray-500 line-through">
-                    $25
+                    $30
                   </span>
                   <span className="text-lg text-gray-500">/month</span>
                 </div>
                 <p className="text-sm text-blue-600 font-semibold mt-1">
-                  Save 25% as an early supporter
+                  Save 17% as an early supporter
                 </p>
               </div>
               <p className="text-gray-600 mb-6">For serious researchers</p>
@@ -526,7 +578,8 @@ export default function Home({ onWaitlistClick }: HomeProps) {
               <div className="text-5xl mb-4">🗳️</div>
               <h3 className="text-xl font-bold mb-2">Shape the Product</h3>
               <p className="text-gray-600">
-                Vote on features and influence development
+                Vote on features and influence development.
+                <Link to="/roadmap" className="text-blue-600 hover:underline block mt-2">See our public roadmap</Link>.
               </p>
             </div>
 

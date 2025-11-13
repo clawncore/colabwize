@@ -10,7 +10,9 @@ import {
   MessageCircle,
   Building,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
 import { supabase } from "../lib/supabaseClient";
 
 interface ContactProps {
@@ -28,13 +30,40 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Test connection to Supabase on component mount
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        console.log('Testing Supabase connection...');
+        const { data, error } = await supabase
+          .from('contact_messages')
+          .select('id')
+          .limit(1);
+
+        if (error) {
+          console.error('Supabase connection test failed:', error);
+        } else {
+          console.log('Supabase connection successful');
+        }
+      } catch (err) {
+        console.error('Connection test error:', err);
+      }
+    };
+
+    testConnection();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
+    console.log('Form data being submitted:', formData);
+
     try {
-      const { error: insertError } = await supabase
+      console.log('Attempting to insert into contact_messages table');
+
+      const { data, error: insertError } = await supabase
         .from('contact_messages')
         .insert([
           {
@@ -43,11 +72,15 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
             subject: formData.subject,
             message: formData.message,
           }
-        ]);
+        ])
+        .select();
 
       if (insertError) {
-        throw new Error(insertError.message);
+        console.error('Supabase insert error:', insertError);
+        throw new Error(insertError.message || 'Failed to send message. Please try again.');
       }
+
+      console.log('Successfully inserted data:', data);
 
       setSubmitted(true);
       setFormData({ name: "", email: "", subject: "", message: "" });
@@ -56,8 +89,12 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
       setTimeout(() => setSubmitted(false), 5000);
     } catch (err) {
       console.error('Error submitting contact form:', err);
-      setError('Failed to send message. Please try again.');
-      setTimeout(() => setError(null), 5000);
+      if (err instanceof Error) {
+        setError(`Failed to send message: ${err.message}. Please try again or email us directly at hello@colabwize.com`);
+      } else {
+        setError('Failed to send message. Please try again or email us directly at hello@colabwize.com');
+      }
+      setTimeout(() => setError(null), 10000);
     } finally {
       setLoading(false);
     }
@@ -86,7 +123,73 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="w-full">
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>Contact ColabWize - Academic Writing Support</title>
+        <meta name="description" content="Get in touch with ColabWize support team. Contact us for general inquiries, partnerships, or press requests. We're here to help with your academic writing needs." />
+        <meta name="keywords" content="contact ColabWize, academic support, citation tool support, plagiarism checker support" />
+        <link rel="canonical" href="https://colabwize.com/contact" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://colabwize.com/contact" />
+        <meta property="og:title" content="Contact ColabWize - Academic Writing Support" />
+        <meta property="og:description" content="Get in touch with ColabWize support team. Contact us for general inquiries, partnerships, or press requests. We're here to help with your academic writing needs." />
+        <meta property="og:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://colabwize.com/contact" />
+        <meta property="twitter:title" content="Contact ColabWize - Academic Writing Support" />
+        <meta property="twitter:description" content="Get in touch with ColabWize support team. Contact us for general inquiries, partnerships, or press requests. We're here to help with your academic writing needs." />
+        <meta property="twitter:image" content="https://colabwize.com/preview.jpg" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "ColabWize",
+            "description": "An academic platform offering AI citation generation, plagiarism checking, and team collaboration.",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            }
+          })}
+        </script>
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "ColabWize",
+            "url": "https://colabwize.com/",
+            "logo": "https://colabwize.com/logo.png",
+            "contactPoint": [
+              {
+                "@type": "ContactPoint",
+                "email": "support@colabwize.com",
+                "contactType": "customer support"
+              },
+              {
+                "@type": "ContactPoint",
+                "email": "partners@colabwize.com",
+                "contactType": "partnerships"
+              },
+              {
+                "@type": "ContactPoint",
+                "email": "press@colabwize.com",
+                "contactType": "press"
+              }
+            ]
+          })}
+        </script>
+      </Helmet>
+
       <section className="relative bg-gradient-to-br from-blue-50 to-purple-50 py-20 overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
@@ -160,10 +263,10 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
                 Questions about ColabWize?
               </p>
               <a
-                href="mailto:support@colabwize.ai"
+                href="mailto:support@colabwize.com"
                 className="text-blue-600 hover:underline font-semibold"
               >
-                support@colabwize.ai
+                support@colabwize.com
               </a>
             </div>
 
@@ -174,10 +277,10 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
                 Institutional access inquiries
               </p>
               <a
-                href="mailto:partners@colabwize.ai"
+                href="mailto:partners@colabwize.com"
                 className="text-purple-600 hover:underline font-semibold"
               >
-                partners@colabwize.ai
+                partners@colabwize.com
               </a>
             </div>
 
@@ -186,10 +289,10 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
               <h3 className="text-xl font-bold mb-2">Press & Media</h3>
               <p className="text-gray-600 mb-4">Media inquiries welcome</p>
               <a
-                href="mailto:press@colabwize.ai"
+                href="mailto:press@colabwize.com"
                 className="text-green-600 hover:underline font-semibold"
               >
-                press@colabwize.ai
+                press@colabwize.com
               </a>
             </div>
           </div>
@@ -197,6 +300,13 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
           <div className="max-w-2xl mx-auto">
             <div className="bg-white border-2 border-gray-200 rounded-2xl p-8">
               <h3 className="text-2xl font-bold mb-6">Send Us a Message</h3>
+
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                <p className="text-blue-800">
+                  Need help with a specific feature? Check our <Link to="/help" className="underline">Help Center</Link> first.
+                  For general questions about ColabWize, see our <Link to="/faq" className="underline">FAQ page</Link>.
+                </p>
+              </div>
 
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -414,11 +524,10 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
       <section className="py-20 px-6 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-            Our Global Community
+            Proposed Research Community
           </h2>
           <p className="text-center text-gray-600 mb-12">
-            ColabWize users span across continents, united by a passion
-            for better academic writing.
+            Join our proposed research community to stay updated on our progress and connect with other researchers.
           </p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { X, Copy, Check, Twitter, Facebook } from "lucide-react";
+import { X, Copy, Check, Facebook } from "lucide-react";
+import { FaXTwitter } from "react-icons/fa6";
 import "./SuccessModal.css";
 import { User } from "../types/user";
 
@@ -78,8 +79,8 @@ export default function SuccessModal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl max-w-md w-full">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 w-full h-full">
+        <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
           <div className="p-6 text-center">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
@@ -148,10 +149,10 @@ export default function SuccessModal({
               <div className="flex space-x-2">
                 <button
                   onClick={shareToTwitter}
-                  className="flex-1 px-4 py-2 bg-blue-400 text-white rounded-md hover:bg-blue-500 transition-colors flex items-center justify-center space-x-2"
+                  className="flex-1 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center space-x-2"
                 >
-                  <Twitter size={16} />
-                  <span className="text-sm">Twitter</span>
+                  <FaXTwitter size={16} />
+                  <span className="text-sm">X</span>
                 </button>
                 <button
                   onClick={shareToFacebook}

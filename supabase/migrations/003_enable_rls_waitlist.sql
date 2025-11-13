@@ -13,11 +13,12 @@ FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public select" ON public.waitlist
 FOR SELECT USING (true);
 
--- Grant usage on schema to anon users
+-- Grant all necessary permissions to anon users
 GRANT USAGE ON SCHEMA public TO anon;
-
--- Grant select and insert permissions on waitlist table to anon users
-GRANT SELECT, INSERT ON public.waitlist TO anon;
-
--- Grant usage permission on the waitlist_id_seq sequence to anon users
+GRANT ALL ON public.waitlist TO anon;
 GRANT USAGE ON SEQUENCE public.waitlist_id_seq TO anon;
+
+-- Also grant permissions to authenticated users for good measure
+GRANT USAGE ON SCHEMA public TO authenticated;
+GRANT ALL ON public.waitlist TO authenticated;
+GRANT USAGE ON SEQUENCE public.waitlist_id_seq TO authenticated;

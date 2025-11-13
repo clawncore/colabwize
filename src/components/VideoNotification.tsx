@@ -35,10 +35,10 @@ export default function VideoNotification({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-pop-in">
+    <div className="fixed bottom-4 right-4 z-50 animate-pop-in w-full max-w-xs sm:max-w-sm">
       {/* Shaking container with enhanced styling */}
-      <div 
-        className={`bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl shadow-2xl p-4 max-w-xs border-2 border-white cursor-pointer transform transition-all duration-300 hover:scale-105 ${isShaking ? 'animate-shake' : ''}`}
+      <div
+        className={`bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl shadow-2xl p-4 max-w-xs border-2 border-white cursor-pointer transform transition-all duration-300 hover:scale-105 ${isShaking ? 'animate-shake' : ''} w-full`}
         onClick={onPlayVideo}
       >
         <div className="flex justify-between items-start mb-2">
@@ -46,7 +46,7 @@ export default function VideoNotification({
             <Video className="mr-2 animate-pulse" size={20} />
             Special Message!
           </h3>
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation(); // Prevent triggering the parent click
               setIsVisible(false);
