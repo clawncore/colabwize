@@ -35,7 +35,7 @@ export default function Contact({ onWaitlistClick }: ContactProps) {
     const testConnection = async () => {
       try {
         console.log('Testing Supabase connection...');
-        const { data: _, error } = await supabase
+        const { error } = await supabase
           .from('contact_messages')
           .select('id')
           .limit(1);

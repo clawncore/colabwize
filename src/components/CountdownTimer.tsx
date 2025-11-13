@@ -41,7 +41,7 @@ export default function CountdownTimer() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [endTime]);
 
   return (
     <div className="flex items-center justify-center space-x-4">
