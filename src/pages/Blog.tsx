@@ -12,6 +12,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
     const blogPosts = [
         {
             id: "1",
+            slug: "best-citation-tools-2025-comprehensive-guide-for-students",
             title: "Best Citation Tools 2025 — A Comprehensive Guide for Students",
             excerpt: "Discover the top citation tools for 2025 that can save you hours on formatting and referencing. Learn what features to look for and how to choose the right tool for your academic needs.",
             date: "November 15, 2025",
@@ -22,6 +23,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "2",
+            slug: "best-plagiarism-checkers-for-students-in-2025",
             title: "Best Plagiarism Checkers for Students in 2025",
             excerpt: "Discover the top plagiarism checkers for 2025 that can help you maintain academic integrity. Learn what features matter most and how to use these tools effectively.",
             date: "November 10, 2025",
@@ -32,6 +34,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "3",
+            slug: "tools-for-collaborating-on-research-papers-a-students-guide",
             title: "Tools for Collaborating on Research Papers: A Student's Guide",
             excerpt: "Discover the best tools and strategies for effective collaboration on academic research papers with classmates and advisors.",
             date: "November 5, 2025",
@@ -42,6 +45,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "4",
+            slug: "how-to-avoid-plagiarism-in-university-essential-tips-for-students",
             title: "How to Avoid Plagiarism in University: Essential Tips for Students",
             excerpt: "Learn practical strategies to maintain academic integrity and avoid unintentional plagiarism in your university coursework.",
             date: "October 30, 2025",
@@ -52,6 +56,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "5",
+            slug: "apa-vs-mla-vs-chicago-citation-styles-when-to-use-each",
             title: "APA vs MLA vs Chicago Citation Styles: When to Use Each",
             excerpt: "Understand the key differences between major citation styles and learn when to use APA, MLA, or Chicago in your academic writing.",
             date: "October 25, 2025",
@@ -62,6 +67,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "6",
+            slug: "how-to-write-a-research-paper-faster-a-students-guide-to-speed-and-quality",
             title: "How to Write a Research Paper Faster: A Student's Guide to Speed and Quality",
             excerpt: "Learn how to write research papers more efficiently without sacrificing quality. Discover time-saving techniques, tools, and strategies for academic success.",
             date: "October 28, 2025",
@@ -72,6 +78,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "8",
+            slug: "how-to-organize-research-notes-like-a-pro",
             title: "How to Organize Research Notes Like a Pro",
             excerpt: "Learn how to organize your research notes like a professional researcher. Discover simple but powerful methods to save time and reduce stress.",
             date: "October 15, 2025",
@@ -82,6 +89,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "9",
+            slug: "beginners-guide-to-academic-referencing-in-2025",
             title: "Beginner’s Guide to Academic Referencing in 2025",
             excerpt: "Learn everything you need to know about academic referencing in 2025. A beginner-friendly guide to citation styles, best practices, and common mistakes.",
             date: "September 22, 2025",
@@ -92,6 +100,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "10",
+            slug: "why-citations-matter-in-academic-writing",
             title: "Why Citations Matter in Academic Writing",
             excerpt: "Discover why citations are the backbone of credible academic writing. Learn how they build credibility, prevent plagiarism, and strengthen your arguments.",
             date: "September 5, 2025",
@@ -102,6 +111,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "11",
+            slug: "how-to-improve-your-academic-writing-skills-quickly",
             title: "How to Improve Your Academic Writing Skills Quickly",
             excerpt: "Discover simple, actionable steps to elevate your academic writing quickly. Learn how to plan, structure, and polish your essays and research papers.",
             date: "August 29, 2025",
@@ -112,6 +122,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "12",
+            slug: "common-citation-mistakes-students-should-avoid",
             title: "Common Citation Mistakes Students Should Avoid",
             excerpt: "Avoid these 10 common citation mistakes that cost students points. Learn how to cite sources correctly and strengthen your academic writing.",
             date: "August 10, 2025",
@@ -122,6 +133,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "13",
+            slug: "how-to-choose-reliable-sources-for-academic-research",
             title: "How to Choose Reliable Sources for Academic Research",
             excerpt: "Learn how to identify credible academic sources and avoid unreliable information. A guide to building strong research foundations.",
             date: "August 2, 2025",
@@ -132,6 +144,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "14",
+            slug: "how-to-strengthen-your-thesis-statement-in-academic-writing",
             title: "How to Strengthen Your Thesis Statement in Academic Writing",
             excerpt: "Learn how to craft a powerful thesis statement that guides your entire academic paper. Avoid common mistakes and strengthen your argument.",
             date: "July 25, 2025",
@@ -142,6 +155,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "15",
+            slug: "how-to-write-a-strong-introduction-for-academic-papers",
             title: "How to Write a Strong Introduction for Academic Papers",
             excerpt: "Learn how to craft compelling introductions that set the tone for your academic papers. A guide to clear, engaging, and purposeful openings.",
             date: "July 12, 2025",
@@ -152,6 +166,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "16",
+            slug: "how-ai-is-transforming-academic-writing-in-2025",
             title: "How AI Is Transforming Academic Writing in 2025",
             excerpt: "Discover how artificial intelligence is reshaping research, writing, and productivity for students in 2025. A guide to responsible AI use in academia.",
             date: "June 30, 2025",
@@ -162,6 +177,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "17",
+            slug: "how-ai-can-help-students-avoid-plagiarism-the-smart-way",
             title: "How AI Can Help Students Avoid Plagiarism (The Smart Way)",
             excerpt: "Discover how AI tools can help students avoid plagiarism responsibly while improving paraphrasing, citations, and original idea development.",
             date: "June 18, 2025",
@@ -172,6 +188,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "18",
+            slug: "the-role-of-critical-thinking-in-academic-writing-and-how-ai-can-support-it",
             title: "The Role of Critical Thinking in Academic Writing (And How AI Can Support It)",
             excerpt: "Discover why critical thinking is essential for academic writing and how AI tools can support (not replace) strong analytical reasoning in 2025.",
             date: "June 4, 2025",
@@ -182,6 +199,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "19",
+            slug: "how-digital-tools-are-changing-the-way-students-do-research",
             title: "How Digital Tools Are Changing the Way Students Do Research",
             excerpt: "Discover how AI-powered research assistants, cloud storage, and digital note-taking are transforming academic research for students in 2025.",
             date: "May 27, 2025",
@@ -192,6 +210,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "20",
+            slug: "how-to-stay-motivated-during-long-research-projects",
             title: "How to Stay Motivated During Long Research Projects",
             excerpt: "Discover practical strategies to maintain motivation and momentum during long research projects, dissertations, and capstone assignments.",
             date: "May 12, 2025",
@@ -202,6 +221,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "21",
+            slug: "how-to-write-a-high-quality-literature-review-step-by-step-guide",
             title: "How to Write a High-Quality Literature Review (Step-by-Step Guide)",
             excerpt: "Learn how to write a strong literature review with this complete step-by-step guide for students working on dissertations, theses, or research papers.",
             date: "May 2, 2025",
@@ -212,6 +232,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "22",
+            slug: "top-ai-tools-every-student-should-use-in-2025",
             title: "Top AI Tools Every Student Should Use in 2025",
             excerpt: "Discover the most useful AI tools for students in 2025 that can boost productivity, improve research, and enhance academic writing.",
             date: "April 26, 2025",
@@ -222,6 +243,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "23",
+            slug: "how-to-read-academic-articles-faster-and-understand-them-better",
             title: "How to Read Academic Articles Faster and Understand Them Better",
             excerpt: "Learn practical strategies and modern tools to read academic papers faster while improving comprehension and retention.",
             date: "April 15, 2025",
@@ -232,6 +254,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "24",
+            slug: "how-to-write-a-strong-abstract-for-your-research-paper",
             title: "How to Write a Strong Abstract for Your Research Paper",
             excerpt: "Learn how to craft a compelling abstract that summarizes your research paper effectively and grabs readers' attention.",
             date: "April 8, 2025",
@@ -242,6 +265,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "25",
+            slug: "how-to-turn-your-class-notes-into-a-full-research-paper",
             title: "How to Turn Your Class Notes Into a Full Research Paper",
             excerpt: "Discover how to transform your class notes into a complete research paper using a clear process and modern AI-supported tools.",
             date: "March 29, 2025",
@@ -252,6 +276,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "26",
+            slug: "how-to-build-a-strong-research-argument-that-actually-persuades",
             title: "How to Build a Strong Research Argument That Actually Persuades",
             excerpt: "Learn how to craft a powerful academic argument using critical thinking, structured reasoning, and modern AI-supported tools.",
             date: "March 18, 2025",
@@ -262,6 +287,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "27",
+            slug: "digital-reading-skills-how-to-study-faster-using-modern-tools",
             title: "Digital Reading Skills: How to Study Faster Using Modern Tools",
             excerpt: "Discover how to master digital reading tools and strategies to learn faster, understand more, and stay ahead in your academic workload.",
             date: "March 9, 2025",
@@ -272,6 +298,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "28",
+            slug: "time-management-for-university-students-using-ai-and-digital-tools",
             title: "Time Management for University Students Using AI and Digital Tools",
             excerpt: "Learn how to take control of your time using modern AI tools and digital systems to manage your university workload more effectively.",
             date: "March 1, 2025",
@@ -282,6 +309,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "29",
+            slug: "how-to-use-mind-mapping-to-improve-research-and-study-skills",
             title: "How to Use Mind Mapping to Improve Research and Study Skills",
             excerpt: "Discover how to use mind mapping techniques to visualize ideas, connect concepts, and organize information for better research and study skills.",
             date: "October 6, 2025",
@@ -292,6 +320,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "30",
+            slug: "how-to-build-better-study-habits-using-the-science-of-learning",
             title: "How to Build Better Study Habits Using the Science of Learning",
             excerpt: "Learn how to build better study habits using principles from cognitive psychology, neuroscience, and digital learning tools.",
             date: "August 14, 2025",
@@ -302,6 +331,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
         },
         {
             id: "31",
+            slug: "how-to-take-effective-notes-during-fast-paced-lectures",
             title: "How to Take Effective Notes During Fast-Paced Lectures",
             excerpt: "Learn how to take clear, organized notes during fast-paced lectures using modern strategies and digital tools.",
             date: "September 3, 2025",
@@ -348,7 +378,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
                     <div className="grid lg:grid-cols-3 gap-8">
                         {displayedPosts.map((post) => (
                             <article key={post.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                                <Link to={`/blog/${post.id}`}>
+                                <Link to={`/blog/${post.slug}`}>
                                     <img
                                         src={post.image}
                                         alt="Student reading academic books while preparing citations"
@@ -363,7 +393,7 @@ export default function Blog({ onWaitlistClick }: BlogProps) {
                                         <span>{post.readTime}</span>
                                     </div>
                                     <h2 className="text-xl font-bold mb-3 hover:text-blue-600 transition-colors">
-                                        <Link to={`/blog/${post.id}`} className="text-gray-900 hover:text-blue-600">
+                                        <Link to={`/blog/${post.slug}`} className="text-gray-900 hover:text-blue-600">
                                             {post.title}
                                         </Link>
                                     </h2>

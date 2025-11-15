@@ -604,6 +604,97 @@ export default function Home({ onWaitlistClick }: HomeProps) {
         </div>
       </section>
 
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl font-bold text-center mb-12">
+            Latest Articles
+          </h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+              <Link to="/blog/best-citation-tools-2025-comprehensive-guide-for-students">
+                <img
+                  src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&h=400&fit=crop"
+                  alt="Student using citation tools"
+                  className="w-full h-48 object-cover"
+                />
+              </Link>
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-3 hover:text-blue-600 transition-colors">
+                  <Link to="/blog/best-citation-tools-2025-comprehensive-guide-for-students" className="text-gray-900 hover:text-blue-600">
+                    Best Citation Tools 2025 — A Comprehensive Guide for Students
+                  </Link>
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Discover the top citation tools for 2025 that can save you hours on formatting and referencing.
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Dr. Sarah Johnson</span>
+                  <span className="text-sm text-gray-500">November 15, 2025</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+              <Link to="/blog/best-plagiarism-checkers-for-students-in-2025">
+                <img
+                  src="https://www.alloysoftware.com/wp-content/uploads/2025/07/ai-635x400-txt.png"
+                  alt="Plagiarism checker interface"
+                  className="w-full h-48 object-cover"
+                />
+              </Link>
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-3 hover:text-blue-600 transition-colors">
+                  <Link to="/blog/best-plagiarism-checkers-for-students-in-2025" className="text-gray-900 hover:text-blue-600">
+                    Best Plagiarism Checkers for Students in 2025
+                  </Link>
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Discover the top plagiarism checkers for 2025 that can help you maintain academic integrity.
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Dr. Michael Reyes</span>
+                  <span className="text-sm text-gray-500">November 10, 2025</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+              <Link to="/blog/tools-for-collaborating-on-research-papers-a-students-guide">
+                <img
+                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=400&fit=crop"
+                  alt="Students collaborating on research"
+                  className="w-full h-48 object-cover"
+                />
+              </Link>
+              <div className="p-6">
+                <h3 className="text-xl font-bold mb-3 hover:text-blue-600 transition-colors">
+                  <Link to="/blog/tools-for-collaborating-on-research-papers-a-students-guide" className="text-gray-900 hover:text-blue-600">
+                    Tools for Collaborating on Research Papers: A Student's Guide
+                  </Link>
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Discover the best tools and strategies for effective collaboration on academic research papers.
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Alex Morgan</span>
+                  <span className="text-sm text-gray-500">November 5, 2025</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link
+              to="/blog"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            >
+              View All Articles
+              <ArrowRight className="ml-2 -mr-1 h-5 w-5" aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-black opacity-20"></div>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">

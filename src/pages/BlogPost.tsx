@@ -53,7 +53,7 @@ const generateBlogPostSchema = (post: any) => {
     },
     "datePublished": datePublished,
     "dateModified": dateModified,
-    "mainEntityOfPage": `https://colabwize.com/blog/${post.id}`
+    "mainEntityOfPage": `https://colabwize.com/blog/${post.slug}`
   };
 
   // BreadcrumbList schema
@@ -77,7 +77,7 @@ const generateBlogPostSchema = (post: any) => {
         "@type": "ListItem",
         "position": 3,
         "name": post.title,
-        "item": `https://colabwize.com/blog/${post.id}`
+        "item": `https://colabwize.com/blog/${post.slug}`
       }
     ]
   };
@@ -93,6 +93,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
   const posts = [
     {
       id: "1",
+      slug: "best-citation-tools-2025-comprehensive-guide-for-students",
       title: "Best Citation Tools 2025 — A Comprehensive Guide for Students",
       date: "November 15, 2025",
       author: "Dr. Sarah Johnson",
@@ -198,6 +199,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "2",
+      slug: "best-plagiarism-checkers-for-students-in-2025",
       title: "Best Plagiarism Checkers for Students in 2025",
       date: "November 10, 2025",
       author: "Dr. Michael Reyes",
@@ -345,6 +347,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "3",
+      slug: "tools-for-collaborating-on-research-papers-a-students-guide",
       title: "Tools for Collaborating on Research Papers: A Student's Guide",
       date: "November 5, 2025",
       author: "Alex Morgan",
@@ -512,6 +515,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "4",
+      slug: "how-to-avoid-plagiarism-in-university-essential-tips-for-students",
       title: "How to Avoid Plagiarism in University: Essential Tips for Students",
       date: "November 12, 2025",
       author: "Dr. Emma Carter",
@@ -653,6 +657,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "5",
+      slug: "apa-vs-mla-vs-chicago-citation-styles-when-to-use-each",
       title: "APA vs MLA vs Chicago Citation Styles: When to Use Each",
       date: "October 25, 2025",
       author: "Prof. David Wilson",
@@ -802,6 +807,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "6",
+      slug: "how-to-write-a-research-paper-faster-a-students-guide-to-speed-and-quality",
       title: "How to Write a Research Paper Faster: A Student's Guide to Speed and Quality",
       date: "October 28, 2025",
       author: "Dr. Laura Bennett",
@@ -1013,6 +1019,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "8",
+      slug: "how-to-organize-research-notes-like-a-pro",
       title: "How to Organize Research Notes Like a Pro",
       date: "October 15, 2025",
       author: "Dr. Hannah Cole",
@@ -1164,6 +1171,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "9",
+      slug: "beginners-guide-to-academic-referencing-in-2025",
       title: "Beginner’s Guide to Academic Referencing in 2025",
       date: "September 22, 2025",
       author: "Dr. Samuel Hart",
@@ -1304,6 +1312,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "10",
+      slug: "why-citations-matter-in-academic-writing",
       title: "Why Citations Matter in Academic Writing",
       date: "September 5, 2025",
       author: "Dr. Olivia Hayes",
@@ -1430,6 +1439,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "11",
+      slug: "how-to-improve-your-academic-writing-skills-quickly",
       title: "How to Improve Your Academic Writing Skills Quickly",
       date: "August 29, 2025",
       author: "Dr. Marcus Reed",
@@ -1594,6 +1604,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "12",
+      slug: "common-citation-mistakes-students-should-avoid",
       title: "Common Citation Mistakes Students Should Avoid",
       date: "August 10, 2025",
       author: "Dr. Natalie Brooks",
@@ -1735,6 +1746,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "13",
+      slug: "how-to-choose-reliable-sources-for-academic-research",
       title: "How to Choose Reliable Sources for Academic Research",
       date: "August 2, 2025",
       author: "Dr. Ethan Clarke",
@@ -1878,6 +1890,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "14",
+      slug: "how-to-strengthen-your-thesis-statement-in-academic-writing",
       title: "How to Strengthen Your Thesis Statement in Academic Writing",
       date: "July 25, 2025",
       author: "Dr. Claire Mitchell",
@@ -1970,6 +1983,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "15",
+      slug: "how-to-write-a-strong-introduction-for-academic-papers",
       title: "How to Write a Strong Introduction for Academic Papers",
       date: "July 12, 2025",
       author: "Dr. Fiona Andrews",
@@ -2063,6 +2077,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "16",
+      slug: "how-ai-is-transforming-academic-writing-in-2025",
       title: "How AI Is Transforming Academic Writing in 2025",
       date: "June 30, 2025",
       author: "Dr. Riley Thompson",
@@ -2181,6 +2196,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "17",
+      slug: "how-ai-can-help-students-avoid-plagiarism-the-smart-way",
       title: "How AI Can Help Students Avoid Plagiarism (The Smart Way)",
       date: "June 18, 2025",
       author: "Dr. Lucas Bennett",
@@ -2283,6 +2299,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "18",
+      slug: "the-role-of-critical-thinking-in-academic-writing-and-how-ai-can-support-it",
       title: "The Role of Critical Thinking in Academic Writing (And How AI Can Support It)",
       date: "June 4, 2025",
       author: "Dr. Isabella Grant",
@@ -2299,6 +2316,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
       <ul>
         <li>Analyze information</li>
         <li>Evaluate evidence</li>
+
         <li>Understand relationships between ideas</li>
         <li>Identify strengths and weaknesses</li>
         <li>Form independent judgments</li>
@@ -2407,6 +2425,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "19",
+      slug: "how-digital-tools-are-changing-the-way-students-do-research",
       title: "How Digital Tools Are Changing the Way Students Do Research",
       date: "May 27, 2025",
       author: "Dr. Adrian Wells",
@@ -2527,6 +2546,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "20",
+      slug: "how-to-stay-motivated-during-long-research-projects",
       title: "How to Stay Motivated During Long Research Projects",
       date: "May 12, 2025",
       author: "Dr. Helena Ward",
@@ -2676,6 +2696,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "21",
+      slug: "how-to-write-a-high-quality-literature-review-step-by-step-guide",
       title: "How to Write a High-Quality Literature Review (Step-by-Step Guide)",
       date: "May 2, 2025",
       author: "Dr. Naomi Ellis",
@@ -2840,6 +2861,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "22",
+      slug: "top-ai-tools-every-student-should-use-in-2025",
       title: "Top AI Tools Every Student Should Use in 2025",
       date: "April 26, 2025",
       author: "Dr. Valerie Kim",
@@ -2991,6 +3013,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "23",
+      slug: "how-to-read-academic-articles-faster-and-understand-them-better",
       title: "How to Read Academic Articles Faster and Understand Them Better",
       date: "April 15, 2025",
       author: "Dr. Emily Rhodes",
@@ -3147,6 +3170,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "24",
+      slug: "how-to-write-a-strong-abstract-for-your-research-paper",
       title: "How to Write a Strong Abstract for Your Research Paper",
       date: "April 8, 2025",
       author: "Dr. Aisha Morgan",
@@ -3291,6 +3315,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "25",
+      slug: "how-to-turn-your-class-notes-into-a-full-research-paper",
       title: "How to Turn Your Class Notes Into a Full Research Paper",
       date: "March 29, 2025",
       author: "Dr. Leonard Hayes",
@@ -3434,6 +3459,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     },
     {
       id: "26",
+      slug: "how-to-build-a-strong-research-argument-that-actually-persuades",
       title: "How to Build a Strong Research Argument That Actually Persuades",
       date: "March 18, 2025",
       author: "Dr. Serena Blake",
@@ -3441,9 +3467,6 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
       category: "Academic Writing",
       image: "https://images.prismic.io/impactio-blog/e634cd3b-2585-43f0-9bf1-21d9fd78d407_How+To+Build+a+Strong+Argument+in+Your+Academic+Writing.png?auto=compress,format",
       content: `
-      <p>A research paper is more than a collection of facts — it's a structured argument. Your job as a writer is not just to present information but to convince the reader using logic, clarity, and evidence. Many students struggle with this part of academic writing because they focus too heavily on summarizing sources instead of building persuasive arguments.</p>
-      
-      <p>This guide shows you how to craft a powerful academic argument using critical thinking, structured reasoning, and modern AI-supported tools.</p>
       
       <h2 style="margin-top: 2rem;">1. Start With a Clear, Debatable Claim</h2>
       <p>All persuasive research writing begins with a strong claim — your thesis statement. A persuasive claim must be:</p>
@@ -4376,7 +4399,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
     }
   ];
 
-  const post = posts.find(p => p.id === slug) || posts[0];
+  const post = posts.find(p => p.slug === slug) || posts[0];
 
   // Generate JSON-LD schemas
   const [blogPostingSchema, breadcrumbSchema] = generateBlogPostSchema(post);
@@ -4388,7 +4411,7 @@ export default function BlogPost({ onWaitlistClick }: BlogPostProps) {
         <title>{post.title} - ColabWize Blog</title>
         <meta name="description" content={post.content ? post.content.replace(/<[^>]*>/g, '').substring(0, 160) + '...' : "Explore the top citation tools available in 2025 and discover which ones can save you hours on formatting and referencing your academic work."} />
         <meta name="keywords" content="academic writing, research, citations, plagiarism, education" />
-        <link rel="canonical" href={`https://colabwize.com/blog/${post.id}`} />
+        <link rel="canonical" href={`https://colabwize.com/blog/${post.slug}`} />
 
         {/* JSON-LD Schemas */}
         <script type="application/ld+json">
