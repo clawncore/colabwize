@@ -24,7 +24,7 @@ export default function VideoPlayerModal({ isOpen, onClose }: VideoPlayerModalPr
             autoPlay
             className="w-full h-full object-contain max-w-full max-h-full"
           >
-            <source src="/assets/colabwize.mp4" type="video/mp4" />
+            <source src="/assets/colabwize functionality.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </div>
