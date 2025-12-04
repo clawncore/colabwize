@@ -6,7 +6,7 @@ export default function CountdownTimer() {
   const getFixedEndTime = () => {
     // Set a fixed date (e.g., October 21, 2025 00:00:00 UTC)
     // You can adjust this date as needed
-    const fixedEndDate = new Date('2025-12-05T00:00:00Z').getTime();
+    const fixedEndDate = new Date('2025-12-10T00:00:00Z').getTime();
     return fixedEndDate;
   };
 

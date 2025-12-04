@@ -58,7 +58,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
       {/* SEO Meta Tags */}
       <Helmet>
         <title>ColabWize - Your Entire Academic Workflow, Unified</title>
-        <meta name="description" content="Write smarter, cite faster, and check originality — all in one beautiful workspace built for students and researchers. Launching December 5, 2025. Join the Waitlist." />
+        <meta name="description" content="Write smarter, cite faster, and check originality — all in one beautiful workspace built for students and researchers. Launching December 10, 2025. Join the Waitlist." />
         <meta name="keywords" content="academic writing, citation tool, plagiarism checker, collaboration tool, research writing, student tools" />
         <link rel="canonical" href="https://colabwize.com/" />
 
@@ -66,14 +66,14 @@ export default function Home({ onWaitlistClick }: HomeProps) {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://colabwize.com/" />
         <meta property="og:title" content="ColabWize - Your Entire Academic Workflow, Unified" />
-        <meta property="og:description" content="Write smarter, cite faster, and check originality — all in one beautiful workspace built for students and researchers. Launching December 5, 2025. Join the Waitlist." />
+        <meta property="og:description" content="Write smarter, cite faster, and check originality — all in one beautiful workspace built for students and researchers. Launching December 10, 2025. Join the Waitlist." />
         <meta property="og:image" content="https://colabwize.com/logo.png" />
 
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content="https://colabwize.com/" />
         <meta property="twitter:title" content="ColabWize - Your Entire Academic Workflow, Unified" />
-        <meta property="twitter:description" content="Write smarter, cite faster, and check originality — all in one beautiful workspace built for students and researchers. Launching December 5, 2025. Join the Waitlist." />
+        <meta property="twitter:description" content="Write smarter, cite faster, and check originality — all in one beautiful workspace built for students and researchers. Launching December 10, 2025. Join the Waitlist." />
         <meta property="twitter:image" content="https://colabwize.com/logo.png" />
 
         {/* JSON-LD Schemas */}
@@ -117,7 +117,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-block bg-purple-500 bg-opacity-40 backdrop-blur-sm px-4 py-2 rounded-full mb-6 animate-pulse">
               <span className="text-sm font-semibold">
-                Coming Soon - December 5, 2025
+                Coming Soon - December 10, 2025
               </span>
             </div>
 
@@ -145,7 +145,7 @@ export default function Home({ onWaitlistClick }: HomeProps) {
             <p className="text-xl lg:text-2xl mb-12 text-blue-100 max-w-3xl mx-auto leading-relaxed">
               Write smarter, cite faster, and check originality — all in one
               beautiful workspace built for students and researchers. Launching
-              December 5, 2025.
+              December 10, 2025.
             </p>
 
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 mb-8">
