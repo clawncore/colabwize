@@ -4,10 +4,9 @@ export default function CountdownTimer() {
   // Fixed universal end time - same for all users
   // Set to a specific date and time (e.g., 43 days from a fixed start date)
   const getFixedEndTime = () => {
-    // Set a fixed date (e.g., December 15, 2025 00:00:00 UTC)
+    // Set a fixed date (e.g., December 20, 2025 00:00:00 UTC)
     // You can adjust this date as needed
-    const fixedEndDate = new Date('2025-12-15T00:00:00Z').getTime();
-    return fixedEndDate;
+    const fixedEndDate = new Date('2025-12-20T00:00:00Z').getTime();    return fixedEndDate;
   };
 
   // Initialize end time

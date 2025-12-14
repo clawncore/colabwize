@@ -207,8 +207,32 @@ export default function About({ onWaitlistClick }: AboutProps) {
         </div>
       </section>
 
-      <section className="py-20 bg-gradient-to-br from-blue-600 to-purple-600 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold mb-6 text-center">Our Leadership</h2>
+          <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-white p-6 rounded-xl shadow-md">
+                <h3 className="text-xl font-bold mb-2">Mr. Simbisai Chinhema</h3>
+                <p className="text-blue-600 font-semibold mb-3">CEO and Founder</p>
+                <p className="mb-3">
+                  Mr. Simbisai Chinhema is the visionary founder of ColabWize and also the founder of ClawnCore Muititech Company. With a strong background in technology and education, he leads our team with innovation and purpose.
+                </p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl shadow-md">
+                <h3 className="text-xl font-bold mb-2">Mr. Craig E Marowa</h3>
+                <p className="text-blue-600 font-semibold mb-3">CEO and Founder</p>
+                <p className="mb-3">
+                  Mr. Craig E Marowa serves as a co-founder and CEO of ColabWize. He is also the founder of Audacity Impact, bringing valuable leadership experience and a passion for creating impactful educational solutions.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-gradient-to-br from-blue-600 to-purple-600 text-white">        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold mb-6">Our Mission</h2>
           <p className="text-2xl mb-8 leading-relaxed">
             To empower learners everywhere with the tools they need to write
