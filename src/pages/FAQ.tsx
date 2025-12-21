@@ -13,7 +13,7 @@ export default function FAQ({ onWaitlistClick }: FAQProps) {
         },
         {
             question: "When will ColabWize launch?",
-            answer: "We're launching on December 20, 2025. Join our waitlist to get notified when we launch and be among the first to try it."
+            answer: "We're launching on January 1, 2026. Join our waitlist to get notified when we launch and be among the first to try it."
         },
         {
             question: "Is ColabWize free to start?",
