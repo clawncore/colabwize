@@ -1,6 +1,0 @@
-[functions.waitlist-automation]
-
-[functions.test-env]
-enabled = true
-verify_jwt = true
-entrypoint = "./functions/test-env/index.ts"

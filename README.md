@@ -1,104 +1,314 @@
-# Getting Started with Create React App
+# ColabWize 2.0: Academic Submission Shield
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> **The Academic Submission Shield that transforms writing anxiety into career confidence**
 
-## Available Scripts
+## Table of Contents
 
-In the project directory, you can run:
+- [Overview](#overview)
+- [Core Problem](#core-problem)
+- [Unique Solution](#unique-solution)
+- [Core Features](#core-features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Architecture](#architecture)
+- [Phases](#phases)
+- [Community & Impact](#community--impact)
+- [License](#license)
 
-### `npm start`
+## Overview
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+**ColabWize 2.0** is designed to address the career-ending paradox that students and researchers face in today's academic environment. The platform doesn't just help write better—it **proves** the work is original, properly cited, and human-created.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Not Competing With:** Grammarly, Notion, Google Docs
+- **Competing With:** Fear, anxiety, and career uncertainty
 
-### `npm test`
+## Core Problem
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Students and researchers face a career-ending paradox:
 
-### `npm run build`
+- Use AI tools → Risk getting flagged and expelled
+- Don't use AI tools → Fall behind peers who do
+- Submit work → Live in constant fear: "Will Turnitin flag me?"
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Unique Solution
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+A **defensibility-first platform** that provides:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- Proof of originality through Explainable Originality Maps
+- Citation Confidence Auditing
+- AI Detection Shield
+- Authorship Certificate generation
 
-### `npm run eject`
+## Core Features
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 1. Explainable Originality Map (THE WEDGE)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Solves the #1 fear - "Will I get flagged for plagiarism?"
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- Text similarity detection with color-coded heatmap (Green/Yellow/Red)
+- Click sentence → See match source
+- Safety classification:
+  - Green: 0-24% similarity (Safe)
+  - Yellow: 25-49% similarity (Review)
+  - Red: 50%+ similarity (Action required)
+- Basic rephrase suggestions (AI-powered)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### 2. Citation Confidence Auditor
 
-## Learn More
+Solves the #2 fear - "Are my citations strong enough?"
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- Extract bibliography from document
+- Check citation recency (flag if no citations from last 3 years)
+- Show confidence score per section
+- "Find Missing Link" button → Suggest 3 recent papers
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 3. AI Detection Shield
 
-### Code Splitting
+Solves the #3 fear - "Will I get flagged for using AI?"
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- Real-time AI probability meter
+- Highlight "robotic" sentences
+- Humanizing prompts (not auto-fix)
+- Show score: "92% Human Confidence"
 
-### Analyzing the Bundle Size
+### 4. Authorship Certificate (THE MOAT)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Your unique defensibility feature that nobody else has:
 
-### Making a Progressive Web App
+- Track time spent writing
+- Track number of edits/keystrokes
+- Generate PDF certificate showing:
+  - "40 hours of manual work"
+  - "2,847 manual edits"
+  - "0% automated rewriting"
+- ColabWize seal of authenticity
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Tech Stack
 
-### Advanced Configuration
+### Frontend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- React 18+ with TypeScript
+- TipTap editor
+- Tailwind CSS
+- React Query for state management
 
-### Deployment
+### Backend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- Node.js + Express
+- PostgreSQL (Prisma ORM)
+- JWT authentication
+- RESTful APIs
 
-### `npm run build` fails to minify
+### Infrastructure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Hosting: Vercel (frontend) + Railway/Render (backend)
+- Database: Supabase or managed PostgreSQL
+- File Storage: AWS S3 or Cloudinary
+- Email: SendGrid or Resend
 
-## Feature Voting System
+### Third-Party Services
 
-This application includes a feature voting system that allows users to vote for their preferred features. The voting data is stored in the Supabase database.
+- AI Detection: Existing API
+- Text Similarity: Custom algorithm
+- Citation Data: CrossRef API
+- Payment: Stripe
 
-### Database Schema
+## Getting Started
 
-The feature voting system uses the `feature_votes` column in the `waitlist` table, which stores votes as a JSON object.
+### Prerequisites
 
-### Applying Database Migrations
+- Node.js (v16 or higher)
+- PostgreSQL
+- Git
 
-To apply the necessary database migrations, you have several options:
+### Installation
 
-1. **Using Supabase CLI** (if configured correctly):
-   ```bash
-   supabase db push
-   ```
+1. Clone the repository:
 
-2. **Manual SQL execution** (recommended if CLI has issues):
-   - Go to your Supabase project dashboard
-   - Navigate to the SQL editor
-   - Copy and paste the contents of `add_feature_votes_column.sql` and execute it
-   - Alternatively, run this SQL directly:
-     ```sql
-     ALTER TABLE public.waitlist 
-     ADD COLUMN IF NOT EXISTS feature_votes jsonb DEFAULT '{}';
-     ```
+```bash
+git clone https://github.com/your-username/colabwize.git
+cd colabwize
+```
 
-3. **Using migration scripts**:
-   - Apply the SQL scripts in the `supabase/migrations` directory manually through the Supabase SQL editor.
+2. Install dependencies:
 
-### Testing the Database Changes
+```bash
+# Install backend dependencies
+cd backend
+npm install
 
-After applying the migration, you can test that the feature voting system works correctly by running the test script in `test_feature_votes.sql` in your Supabase SQL editor.
+# Install frontend dependencies
+cd ../frontend
+npm install
+```
+
+3. Set up environment variables:
+
+```bash
+# Backend .env file
+cp backend/.env.example backend/.env
+# Edit backend/.env with your configuration
+
+# Frontend .env file
+cp frontend/.env.example frontend/.env
+# Edit frontend/.env with your configuration
+```
+
+4. Set up the database:
+
+```bash
+cd backend
+npx prisma db push
+npx prisma generate
+```
+
+5. Run the application:
+
+```bash
+# Terminal 1 - Start backend
+cd backend
+npm run dev
+
+# Terminal 2 - Start frontend
+cd frontend
+npm run dev
+```
+
+## Architecture
+
+### MVP Architecture
+
+The application follows a hybrid architecture pattern with:
+
+- A main server handling core API requests
+- Microservices for specialized AI processing
+- Serverless functions for file processing
+- Supabase for authentication services
+- WebSockets for real-time notifications
+
+### Directory Structure
+
+```
+colabwize/
+├── backend/
+│   ├── hybrid/                 # Hybrid architecture components
+│   │   ├── microservices/      # AI service
+│   │   ├── serverless/         # File processing
+│   │   ├── supabase/           # Auth service
+│   │   └── websockets/         # Notification service
+│   ├── src/
+│   │   ├── config/             # Configuration files
+│   │   ├── lib/                # Utility libraries
+│   │   ├── middleware/         # Application middleware
+│   │   ├── monitoring/         # Logging and metrics
+│   │   └── services/           # Business logic services
+│   └── supabase/functions/     # Serverless functions
+├── frontend/
+│   ├── public/                 # Static assets
+│   └── src/
+│       ├── components/         # UI components
+│       ├── hooks/              # React hooks
+│       ├── lib/                # Utility functions
+│       ├── pages/              # Application pages
+│       ├── plugins/            # Vite plugins
+│       ├── types/              # TypeScript definitions
+│       └── utils/              # Utility functions
+```
+
+## Phases
+
+### Phase 1: Core MVP Features (Months 1-3)
+
+Goal: Validate Product-Market Fit
+
+Success Metrics:
+
+- 1,000 active users
+- 20% weekly retention
+- 5% conversion to paid
+
+### Phase 2: Post-MVP Optimization (Months 4-9)
+
+Goal: Achieve Product-Market Fit
+
+Success Metrics:
+
+- 10,000 active users
+- LTV:CAC ratio > 3:1
+- 30% feature adoption rate
+
+### Phase 3: Feature Expansion (Months 10-24)
+
+Goal: Sustainable Growth & Scale
+
+Success Metrics:
+
+- 100,000+ users
+- Institutional partnerships
+- Sustainable unit economics
+
+## Pricing Strategy
+
+### Free Tier (Trust Builder):
+
+- 3 document scans per month
+- Basic originality check
+- AI detection
+- Watermarked certificate
+
+### Student Tier ($9.99/month):
+
+- Unlimited document scans
+- Full originality map
+- Citation confidence auditor
+- Professional certificate (no watermark)
+- Email support
+
+### Researcher Tier ($19.99/month):
+
+- Everything in Student
+- Priority scanning
+- Advanced citation suggestions
+- Export to multiple formats
+- Priority support
+
+## Community & Impact
+
+### Mission & Values
+
+**Mission**: Empower students and researchers to submit their work with confidence, knowing their integrity is protected.
+
+**Core Values**:
+
+1. **Transparency**: No black-box algorithms
+2. **Empowerment**: Tools, not crutches
+3. **Integrity**: Promote honest academic work
+4. **Accessibility**: Affordable for all students
+
+### Long-Term Vision
+
+- **5-Year Goal**: Become the standard for academic integrity verification
+- **10-Year Goal**: Eliminate academic anxiety around AI and plagiarism
+
+### Impact Metrics
+
+- Students helped: 1,000,000+
+- False accusations prevented: 100,000+
+- Academic careers saved: 10,000+
+- Institutions partnered: 1,000+
+
+## Contributing
+
+We welcome contributions to ColabWize! Please see our contributing guidelines for more information.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+**Remember**: This blueprint is a living document. Update it quarterly based on what you learn from users.
+
+**Your job as founder**: Validate assumptions, eliminate waste, and build what users actually want.
+
+**Now go build something people love.** 🚀
