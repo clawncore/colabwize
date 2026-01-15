@@ -17,6 +17,30 @@ dist/
 build/
 coverage/
 
+# Backend files and directories to exclude from frontend repo
+backend/
+docs/
+uploads/
+migrations/
+schema.sql
+test_feature_votes.sql
+add_feature_votes_column.sql
+create_contact_messages_table.sql
+update_waitlist_table.sql
+netlify.toml
+ColabWize_Blueprint.md
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Supabase local development
+.supabase/
+
+# Prisma
+prisma/
+
 # Misc
 .DS_Store
 .vscode
