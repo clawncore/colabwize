@@ -2,7 +2,7 @@
   "name": "colabwize",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:3001",
+  "proxy": "https://api.colabwize.com",
   "dependencies": {
     "@convex-dev/auth": "^0.0.90",
     "@hocuspocus/provider": "^3.4.0",

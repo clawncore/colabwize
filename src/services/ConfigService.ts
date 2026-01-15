@@ -16,7 +16,7 @@ export class ConfigService {
       // Fallback for VITE/NEXT variables if they happen to be exposed/shimmed
       process.env.VITE_BACKEND_URL ||
       process.env.NEXT_PUBLIC_BACKEND_URL ||
-      "http://localhost:3001"
+      "https://api.colabwize.com"
     );
   }
 
