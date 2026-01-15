@@ -1,9 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    serverComponentsExternalPackages: ['@testing-library/jest-dom'],
-  },
   images: {
     unoptimized: true,
     remotePatterns: [
