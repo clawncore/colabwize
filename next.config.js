@@ -6,7 +6,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'your-image-domain.com',
+        hostname: 'colabwize.com',
       },
     ],
   },

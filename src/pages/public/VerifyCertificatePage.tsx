@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import {
   CheckCircle,
   XCircle,
@@ -23,7 +24,8 @@ interface CertificateData {
 }
 
 export const VerifyCertificatePage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const { id } = router.query;
   const [data, setData] = useState<CertificateData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +80,7 @@ export const VerifyCertificatePage: React.FC = () => {
                 </h2>
                 <p className="text-red-600 text-sm mb-6">{error}</p>
                 <Link
-                  to="/"
+                  href="/"
                   className="text-indigo-600 font-medium hover:underline">
                   Return to Home
                 </Link>

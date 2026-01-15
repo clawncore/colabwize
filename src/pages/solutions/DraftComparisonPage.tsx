@@ -66,11 +66,10 @@ export const DraftComparisonPage: React.FC = () => {
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                 Comparison Analysis
                 <span
-                  className={`text-sm px-3 py-1 rounded-full ${
-                    result.similarityScore > 20
+                  className={`text-sm px-3 py-1 rounded-full ${result.similarityScore > 20
                       ? "bg-red-100 text-red-800"
                       : "bg-green-100 text-green-800"
-                  }`}>
+                    }`}>
                   {result.similarityScore.toFixed(1)}% Similarity
                 </span>
               </h3>
