@@ -47,7 +47,6 @@
     "@tiptap/extension-character-count": "^3.11.1",
     "@tiptap/extension-code-block-lowlight": "^3.13.0",
     "@tiptap/extension-collaboration": "^3.13.0",
-    "@tiptap/extension-collaboration-cursor": "^2.26.2",
     "@tiptap/extension-color": "^3.11.1",
     "@tiptap/extension-font-family": "^3.11.1",
     "@tiptap/extension-heading": "^3.11.1",
@@ -126,9 +125,10 @@
     "zustand": "^5.0.8"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "dev": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "next start",
+    "dev": "next dev",
+    "build": "next build",
+    "export": "next export",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
