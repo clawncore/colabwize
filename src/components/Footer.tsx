@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Twitter, Github, Linkedin, Mail } from "lucide-react";
 import ConfigService from "../services/ConfigService";
 

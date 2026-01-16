@@ -17,31 +17,31 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
 
   // Auto-refresh stats every 30 seconds
   useEffect(() => {
+    const loadStatsInner = async (isSilent = false) => {
+      if (!isSilent) setIsLoading(true);
+      setError(null);
+
+      try {
+        const data = await AuthorshipService.getStats(projectId);
+        setStats(data);
+      } catch (err: any) {
+        console.error("Error loading stats:", err);
+        // Only show error on initial load, not silent updates
+        if (!isSilent) setError(err.message || "Failed to load statistics");
+      } finally {
+        if (!isSilent) setIsLoading(false);
+      }
+    };
+
     // Initial load
-    loadStats();
+    loadStatsInner();
 
     const intervalId = setInterval(() => {
-      loadStats(true); // Silent update
+      loadStatsInner(true); // Silent update
     }, 30000);
 
     return () => clearInterval(intervalId);
   }, [projectId]);
-
-  const loadStats = async (isSilent = false) => {
-    if (!isSilent) setIsLoading(true);
-    setError(null);
-
-    try {
-      const data = await AuthorshipService.getStats(projectId);
-      setStats(data);
-    } catch (err: any) {
-      console.error("Error loading stats:", err);
-      // Only show error on initial load, not silent updates
-      if (!isSilent) setError(err.message || "Failed to load statistics");
-    } finally {
-      if (!isSilent) setIsLoading(false);
-    }
-  };
 
   const formatTime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -83,7 +83,20 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-900">Authorship Report</h2>
         <button
-          onClick={() => loadStats()}
+          onClick={async () => {
+            if (!isLoading) {
+              setIsLoading(true);
+              setError(null);
+              try {
+                const data = await AuthorshipService.getStats(projectId);
+                setStats(data);
+              } catch (err: any) {
+                setError(err.message || "Failed to load statistics");
+              } finally {
+                setIsLoading(false);
+              }
+            }
+          }}
           disabled={isLoading}
           className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           title="Refresh Statistics">
@@ -223,9 +236,9 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
             {/* Show manual authorship percentage - never go below 70% if edits exist */}
             {stats.manualEditsCount > 0
               ? Math.max(
-                  70,
-                  Math.round(100 - (stats.aiAssistedPercentage || 0))
-                )
+                70,
+                Math.round(100 - (stats.aiAssistedPercentage || 0))
+              )
               : Math.round(100 - (stats.aiAssistedPercentage || 0))}
             % original work
           </strong>

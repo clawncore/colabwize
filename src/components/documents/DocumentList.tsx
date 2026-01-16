@@ -213,11 +213,10 @@ export const DocumentList: React.FC<DocumentListProps> = ({
             {filteredProjects.map((project) => (
               <div
                 key={project.id}
-                className={`relative bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-4 cursor-pointer border ${
-                  selectedProjectId === project.id
-                    ? "border-purple-600 bg-purple-50"
-                    : "border-gray-200"
-                }`}
+                className={`relative bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-4 cursor-pointer border ${selectedProjectId === project.id
+                  ? "border-purple-600 bg-purple-50"
+                  : "border-gray-200"
+                  }`}
                 onClick={() => handleProjectClick(project)}>
                 {/* Menu Icon */}
                 {showActions && (
@@ -278,15 +277,31 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                           </button>
                           <button
                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation(); // Prevent card click event
+
+                              let contentToUse = project.content;
+                              // Lazy load content if missing (performance optimization)
+                              if (!contentToUse) {
+                                try {
+                                  const res = await documentService.getProjectById(project.id);
+                                  if (res.success && res.data) {
+                                    contentToUse = res.data.content;
+                                  }
+                                } catch (err) {
+                                  console.error("Failed to fetch content for duplication", err);
+                                  alert("Failed to fetch project content. Please try again.");
+                                  return;
+                                }
+                              }
+
                               // Duplicate functionality - create a new project with same content
                               documentService
                                 .duplicateProject(
                                   project.id,
                                   `${project.title} (Copy)`,
                                   project.description || "",
-                                  project.content
+                                  contentToUse
                                 )
                                 .then((result) => {
                                   if (result.success) {
@@ -328,32 +343,32 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                   <div className="bg-gray-100 border border-gray-200 rounded-md p-3 h-32 overflow-hidden">
                     <div className="text-xs text-gray-600 h-28 overflow-hidden">
                       {project.content &&
-                      project.content.type === "doc" &&
-                      project.content.content
+                        project.content.type === "doc" &&
+                        project.content.content
                         ? (() => {
-                            // Extract text from content for preview
-                            const paragraphs = project.content.content;
-                            let textPreview = "";
+                          // Extract text from content for preview
+                          const paragraphs = project.content.content;
+                          let textPreview = "";
 
-                            for (const node of paragraphs) {
-                              if (node.type === "paragraph" && node.content) {
-                                for (const content of node.content) {
-                                  if (content.type === "text" && content.text) {
-                                    textPreview += content.text + " ";
-                                  }
+                          for (const node of paragraphs) {
+                            if (node.type === "paragraph" && node.content) {
+                              for (const content of node.content) {
+                                if (content.type === "text" && content.text) {
+                                  textPreview += content.text + " ";
                                 }
-                              }
-
-                              if (textPreview.length > 100) {
-                                break;
                               }
                             }
 
-                            return textPreview.length > 0
-                              ? textPreview.substring(0, 100) +
-                                  (textPreview.length > 100 ? "..." : "")
-                              : project.description || "No content available";
-                          })()
+                            if (textPreview.length > 100) {
+                              break;
+                            }
+                          }
+
+                          return textPreview.length > 0
+                            ? textPreview.substring(0, 100) +
+                            (textPreview.length > 100 ? "..." : "")
+                            : project.description || "No content available";
+                        })()
                         : project.description || "No content available"}
                     </div>
                   </div>
@@ -386,11 +401,10 @@ export const DocumentList: React.FC<DocumentListProps> = ({
             {filteredProjects.map((project) => (
               <div
                 key={project.id}
-                className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
-                  selectedProjectId === project.id
-                    ? "bg-purple-100 border border-purple-300"
-                    : "hover:bg-gray-100 border border-gray-200"
-                }`}
+                className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${selectedProjectId === project.id
+                  ? "bg-purple-100 border border-purple-300"
+                  : "hover:bg-gray-100 border border-gray-200"
+                  }`}
                 onClick={() => handleListProjectClick(project)}>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-gray-900 truncate">
@@ -467,15 +481,30 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                           </button>
                           <button
                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation(); // Prevent card click event
+
+                              let contentToUse = project.content;
+                              // Lazy load content if missing
+                              if (!contentToUse) {
+                                try {
+                                  const res = await documentService.getProjectById(project.id);
+                                  if (res.success && res.data) {
+                                    contentToUse = res.data.content;
+                                  }
+                                } catch (err) {
+                                  console.error("Failed to fetch content for duplication", err);
+                                  return;
+                                }
+                              }
+
                               // Duplicate functionality - create a new project with same content
                               documentService
                                 .duplicateProject(
                                   project.id,
                                   `${project.title} (Copy)`,
                                   project.description || "",
-                                  project.content
+                                  contentToUse
                                 )
                                 .then((result) => {
                                   if (result.success) {

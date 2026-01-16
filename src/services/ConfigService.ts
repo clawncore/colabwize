@@ -8,31 +8,34 @@ export class ConfigService {
   /**
    * Get the backend API base URL
    */
+  private static logged = false;
+
+  /**
+   * Get the backend API base URL
+   */
   static getApiUrl(): string {
-    // Check various permutations found in the code base
-    return (
-      process.env.REACT_APP_API_URL ||
-      process.env.REACT_APP_BACKEND_URL ||
-      // Fallback for VITE/NEXT variables if they happen to be exposed/shimmed
-      process.env.VITE_BACKEND_URL ||
-      process.env.NEXT_PUBLIC_BACKEND_URL ||
-      "https://api.colabwize.com"
-    );
+    const url = process.env.REACT_APP_API_URL || "https://api.colabwize.com";
+
+    // Log resolved config once at boot
+    if (!this.logged) {
+      console.log("✅ [Config] Environment Loaded:", ConfigService.getNodeEnv());
+      console.log("✅ [Config] API URL:", url);
+      console.log("✅ [Config] Supabase URL:", process.env.REACT_APP_SUPABASE_URL ? "Set" : "Missing");
+      this.logged = true;
+    }
+
+    return url;
   }
 
   /**
    * Get Supabase configuration
    */
   static getSupabaseConfig() {
-    const url =
-      process.env.REACT_APP_SUPABASE_URL ||
-      process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const anonKey =
-      process.env.REACT_APP_SUPABASE_ANON_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const url = process.env.REACT_APP_SUPABASE_URL;
+    const anonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
     if (!url || !anonKey) {
-      console.warn("Supabase configuration missing in environment variables");
+      console.warn("❌ [Config] Supabase configuration missing in environment variables!");
     }
 
     return {

@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 interface ActionChecklistModalProps {
   isOpen: boolean;

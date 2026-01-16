@@ -89,45 +89,23 @@ class ProfileService {
   // Upload avatar
   static async uploadAvatar(file: File) {
     try {
-      // Get the authenticated user
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      if (!token) {
-        throw new Error("User not authenticated");
-      }
-
       // Create FormData object for file upload
       const formData = new FormData();
       formData.append("file", file);
 
-      // Upload file to the user avatar endpoint which handles Supabase Storage
-      const response = await fetch("/api/users/avatar", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      // Check if the response is successful
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Upload failed: ${errorText}`);
-      }
-
-      // Parse the response data
-      const data = await response.json();
+      // Use apiClient which handles Auth, 401s, and proper FormData headers automatically
+      const response = await apiClient.post("/api/users/avatar", formData);
 
       // Check if the upload was successful
-      if (!data.success) {
-        throw new Error(data.message || "Failed to upload avatar");
+      if (!response.success && response.success !== undefined) {
+        // If response has success field, check it. 
+        // Note: apiClient usually returns parsed JSON.
+        throw new Error(response.message || "Failed to upload avatar");
       }
+      // If apiClient returns the object directly and it lacks success=false, good.
+      // But let's act defensively based on typical successful response structure { success: true, fileUrl: ... }
 
-      // Return the public URL of the uploaded avatar
-      return data.fileUrl;
+      return response.fileUrl;
     } catch (error) {
       console.error("Error uploading avatar:", error);
       throw error;

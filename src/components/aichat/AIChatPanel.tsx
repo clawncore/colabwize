@@ -277,44 +277,24 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
     setIsLoading(true);
 
     try {
-      // Get current auth token for manual fetch
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      // Use apiClient.download to get raw response for streaming
+      // This handles auth headers, token refresh, and timeouts automatically
+      const response = await apiClient.download("/api/chat", {
+        messages: messages
+          .concat(userMessage)
+          .map((m) => ({ role: m.role, content: m.content })),
+        context: {
+          documentContent,
+          selectedText,
+          projectTitle,
+          projectDescription,
+          originalityResults,
+          citationSuggestions,
         },
-        body: JSON.stringify({
-          messages: messages
-            .concat(userMessage)
-            .map((m) => ({ role: m.role, content: m.content })),
-          context: {
-            documentContent,
-            selectedText,
-            projectTitle,
-            projectDescription,
-            originalityResults,
-            citationSuggestions,
-          },
-          sessionId: currentSessionId, // Send active session ID
-        }),
+        sessionId: currentSessionId, // Send active session ID
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Unauthorized - Please sign in");
-        }
-        throw new Error("Failed to send message");
-      }
+      // validation handled by apiClient.download (throws if not 2xx)
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error("No response body");

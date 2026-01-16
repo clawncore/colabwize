@@ -172,12 +172,19 @@ class ApiClient {
         if (
           errorData.message === "Authorization token missing" ||
           errorData.message === "Invalid or missing authentication token" ||
-          errorData.message === "Authentication required"
+          errorData.message === "Authentication required" ||
+          errorData.message === "Invalid or expired token" || // Added common Supabase/Backend error
+          errorData.message === "jwt expired"
         ) {
           // Clear any stored data
           console.log("Clearing session due to auth error:", errorData.message);
           localStorage.clear();
           sessionStorage.clear();
+
+          // Force redirect to login
+          if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {
+            window.location.href = "/auth/login";
+          }
         }
 
         throw new Error(errorData.message || "User not authenticated");

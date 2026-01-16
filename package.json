@@ -2,6 +2,7 @@
   "name": "colabwize",
   "version": "0.1.0",
   "private": true,
+  
   "proxy": "https://api.colabwize.com",
   "dependencies": {
     "@convex-dev/auth": "^0.0.90",

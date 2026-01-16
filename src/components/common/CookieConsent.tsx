@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { X, Cookie } from "lucide-react";
+import { Cookie } from "lucide-react";
 import { Button } from "../ui/button";
 
 export const CookieConsent: React.FC = () => {
@@ -41,25 +41,25 @@ export const CookieConsent: React.FC = () => {
               <span className="sm:hidden text-lg">🍪</span>
             </h3>
             <p className="text-sm text-gray-600 leading-relaxed">
-              We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. 
-              By clicking "Accept Non-Essential", you consent to our use of cookies. 
-              Only essential cookies are used if you reject. 
+              We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic.
+              By clicking "Accept Non-Essential", you consent to our use of cookies.
+              Only essential cookies are used if you reject.
               <Link to="/legal/cookies" className="text-indigo-600 hover:text-indigo-700 underline ml-1">
                 Read our Cookie Policy
               </Link>.
             </p>
           </div>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-shrink-0">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleReject}
             className="whitespace-nowrap border-gray-300 bg-blue-500 hover:bg-blue-700 text-gray-700"
           >
             Reject Non-Essential
           </Button>
-          <Button 
+          <Button
             onClick={handleAccept}
             className="whitespace-nowrap bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
           >

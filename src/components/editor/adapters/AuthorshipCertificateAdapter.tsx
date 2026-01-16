@@ -4,7 +4,6 @@ import { ShieldCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
   VisuallyHidden,
 } from "../../ui/dialog";
 import { AuthorshipCertificate } from "../../authorship/AuthorshipCertificate";

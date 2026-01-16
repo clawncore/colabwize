@@ -4,8 +4,6 @@ import {
   ArchiveRestore,
   FileText,
   BookOpen,
-  Globe,
-  Key,
   Search,
   HardDrive,
 } from "lucide-react";
