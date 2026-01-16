@@ -7,7 +7,6 @@ import {
   Zap,
   CheckCircle,
   BookOpen,
-  Play,
   ArrowRight,
   Sparkles,
 } from "lucide-react";

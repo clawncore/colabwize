@@ -10,7 +10,6 @@ import {
   Clock,
   Users,
   ArrowRight,
-  icons,
   Bot,
 } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";

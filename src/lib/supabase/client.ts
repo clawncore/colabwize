@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import ConfigService from "../../services/ConfigService";
 
 const { url: supabaseUrl, anonKey: supabaseAnonKey } =
@@ -55,7 +55,7 @@ class SessionManager {
   private static instance: SessionManager;
   private rememberMe: boolean = true; // Default to true (persistent session)
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): SessionManager {
     if (!SessionManager.instance) {

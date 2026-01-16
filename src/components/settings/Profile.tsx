@@ -226,8 +226,7 @@ export default function Profile() {
                       if (file) {
                         try {
                           // Upload the avatar
-                          const avatarUrl =
-                            await ProfileService.uploadAvatar(file);
+                          await ProfileService.uploadAvatar(file);
 
                           toast({
                             title: "Success",

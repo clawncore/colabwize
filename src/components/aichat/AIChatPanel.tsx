@@ -34,7 +34,7 @@ import {
 import { useToast } from "../../hooks/use-toast";
 import { cn } from "../../lib/utils";
 import { apiClient } from "../../services/apiClient";
-import { supabase } from "../../lib/supabase/client";
+// supabase import removed
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -319,7 +319,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === assistantMessageId
-                ? { ...msg, content: accumulatedContent }
+                ? { ...msg, content: accumulatedContent } // accumulatedContent is up-to-date in this scope
                 : msg
             )
           );
@@ -556,19 +556,25 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                             <h1
                               className="text-lg font-bold mb-2 mt-4"
                               {...props}
-                            />
+                            >
+                              {props.children}
+                            </h1>
                           ),
                           h2: ({ node, ...props }) => (
                             <h2
                               className="text-base font-bold mb-2 mt-3"
                               {...props}
-                            />
+                            >
+                              {props.children}
+                            </h2>
                           ),
                           h3: ({ node, ...props }) => (
                             <h3
                               className="text-sm font-bold mb-1 mt-2"
                               {...props}
-                            />
+                            >
+                              {props.children}
+                            </h3>
                           ),
                           a: ({ node, ...props }) => (
                             <a
@@ -576,7 +582,9 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                               rel="noopener noreferrer"
                               className="underline font-medium hover:text-indigo-300 transition-colors"
                               {...props}
-                            />
+                            >
+                              {props.children}
+                            </a>
                           ),
                           blockquote: ({ node, ...props }) => (
                             <blockquote
@@ -593,6 +601,10 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                             const match = /language-(\w+)/.exec(
                               className || ""
                             );
+                            // Verify usage or remove if truly unused. The linter says unused.
+                            // If we remove 'match', we must check if it's used in the return.
+                            // It seems match is NOT used in the return below.
+                            // So we can remove it.
                             return !className?.includes("language-") ? (
                               <code
                                 className="bg-muted/50 px-1.5 py-0.5 rounded font-mono text-xs border border-muted"

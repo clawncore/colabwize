@@ -31,15 +31,15 @@ import { useToast } from "../../hooks/use-toast";
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     originalityScore: undefined,
     citationStatus: undefined,
     authorshipVerified: undefined,
   });
-  const [loading, setLoading] = useState(true);
-  const [uploadingProject, setUploadingProject] = useState(false);
+  // const [loading, setLoading] = useState(true);
+  // const [uploadingProject, setUploadingProject] = useState(false);
 
   // State for chart data
   const [documentTrendData, setDocumentTrendData] = useState<any[]>([]);
@@ -65,7 +65,7 @@ export const Dashboard: React.FC = () => {
 
   // Subscription state
   const [userPlan, setUserPlan] = useState<string>("free");
-  const [loadingPlan, setLoadingPlan] = useState(true);
+  // const [loadingPlan, setLoadingPlan] = useState(true);
 
   // Onboarding state
   const {
@@ -384,7 +384,7 @@ export const Dashboard: React.FC = () => {
     filename?: string
   ) => {
     try {
-      setUploadingProject(true);
+      // setUploadingProject(true);
 
       // Convert plain text to TipTap JSON format
       const tipTapContent = {
@@ -423,7 +423,7 @@ export const Dashboard: React.FC = () => {
       console.error("Error creating project:", error);
       alert("An error occurred while creating your project.");
     } finally {
-      setUploadingProject(false);
+      // setUploadingProject(false);
     }
   };
 
@@ -434,7 +434,7 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        setLoading(true);
+        // setLoading(true);
         const data = await AnalyticsService.getDashboardData();
         setDashboardData(data);
       } catch (error) {
@@ -447,7 +447,7 @@ export const Dashboard: React.FC = () => {
           authorshipVerified: undefined,
         });
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 
@@ -458,7 +458,7 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchUserPlan = async () => {
       try {
-        setLoadingPlan(true);
+        // setLoadingPlan(true);
         const subscriptionData =
           await SubscriptionService.getCurrentSubscription();
         const plan = subscriptionData?.subscription?.plan;
@@ -476,7 +476,7 @@ export const Dashboard: React.FC = () => {
         console.error("Error fetching subscription:", error);
         setUserPlan("free"); // Default to free if error
       } finally {
-        setLoadingPlan(false);
+        // setLoadingPlan(false);
       }
     };
 
@@ -617,13 +617,12 @@ export const Dashboard: React.FC = () => {
                       ?.value || 0) +
                       (verifiedDocsData.find((d) => d.name === "Pending")
                         ?.value || 0) >
-                    0
-                      ? `${verifiedDocsData.find((d) => d.name === "Verified")?.value || 0} out of ${
-                          (verifiedDocsData.find((d) => d.name === "Verified")
-                            ?.value || 0) +
-                          (verifiedDocsData.find((d) => d.name === "Pending")
-                            ?.value || 0)
-                        }`
+                      0
+                      ? `${verifiedDocsData.find((d) => d.name === "Verified")?.value || 0} out of ${(verifiedDocsData.find((d) => d.name === "Verified")
+                        ?.value || 0) +
+                      (verifiedDocsData.find((d) => d.name === "Pending")
+                        ?.value || 0)
+                      }`
                       : "0 out of 0"}
                   </p>
                 </div>

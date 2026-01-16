@@ -1,13 +1,8 @@
 import {
-  FileText,
-  Link,
-  BookOpen,
-  Database,
   Check,
   Users,
   Target,
   Heart,
-  Zap,
 } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
@@ -67,68 +62,7 @@ function IntroHero() {
 }
 
 // Feature Detail Component
-interface FeatureDetailProps {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  benefits: string[];
-  imageUrl: string;
-  reverse?: boolean;
-  color: string;
-}
 
-function FeatureDetail({
-  icon: Icon,
-  title,
-  description,
-  benefits,
-  imageUrl,
-  reverse = false,
-  color,
-}: FeatureDetailProps) {
-  return (
-    <div
-      className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${reverse ? "lg:grid-flow-col-dense" : ""}`}>
-      {/* Content */}
-      <div className={reverse ? "lg:col-start-2" : ""}>
-        <div
-          className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${color} mb-6`}>
-          <Icon className="h-8 w-8 text-white" />
-        </div>
-
-        <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-          {title}
-        </h3>
-
-        <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-          {description}
-        </p>
-
-        <ul className="space-y-3">
-          {benefits.map((benefit, index) => (
-            <li key={index} className="flex items-start gap-3">
-              <div
-                className={`w-2 h-2 rounded-full bg-gradient-to-br ${color} mt-2.5 flex-shrink-0`}></div>
-              <span className="text-gray-600">{benefit}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Image */}
-      <div className={reverse ? "lg:col-start-1" : ""}>
-        <div className="relative">
-          <img
-            src={imageUrl}
-            alt={title}
-            className="rounded-2xl shadow-2xl w-full"
-          />
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-black/10 to-transparent"></div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Features Presentation Flow
 function FeaturesPresentationFlow() {

@@ -13,7 +13,7 @@ import AccountService from "../../services/accountService";
 import { useToast } from "../../hooks/use-toast";
 import { supabase } from "../../lib/supabase/client";
 
-interface User {
+interface UserAccount {
   id: string;
   email: string;
   full_name: string | null;
@@ -46,7 +46,7 @@ const AccountSettingsPage: React.FC = () => {
     user_type: "",
     field_of_study: "",
   });
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserAccount | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);

@@ -8,7 +8,7 @@ import {
   Target,
   ArrowRight,
 } from "lucide-react";
-import { Link as RouterLink, Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";

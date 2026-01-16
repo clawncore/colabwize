@@ -19,7 +19,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
   const [filename, setFilename] = useState("");
   const [title, setTitle] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  // const [isUploading, setIsUploading] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -66,7 +66,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
     }
 
     try {
-      setIsUploading(true);
+      // setIsUploading(true);
 
       // Check if user uploaded a file or pasted text
       if (uploadedFile) {
@@ -103,7 +103,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
       console.error("Upload error:", error);
       alert("An error occurred while processing your document");
     } finally {
-      setIsUploading(false);
+      // setIsUploading(false);
     }
   };
 
@@ -138,11 +138,10 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-                isDragging
-                  ? "border-indigo-500 bg-indigo-50"
-                  : "border-gray-300 bg-gray-50 hover:border-indigo-400"
-              }`}
+              className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${isDragging
+                ? "border-indigo-500 bg-indigo-50"
+                : "border-gray-300 bg-gray-50 hover:border-indigo-400"
+                }`}
             >
               <div className="text-6xl mb-4">📄</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">

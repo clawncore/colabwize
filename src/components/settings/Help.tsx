@@ -400,7 +400,7 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
     }
   };
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   // Define the paths for each help article
   const getArticlePath = (id: string) => {
@@ -683,11 +683,10 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
             {/* Copy Status Notification */}
             {copyStatus && (
               <div
-                className={`mb-4 p-3 rounded-lg text-sm ${
-                  copyStatus.type === "success"
+                className={`mb-4 p-3 rounded-lg text-sm ${copyStatus.type === "success"
                     ? "bg-green-50 text-green-700  "
                     : "bg-red-50 text-red-700  "
-                }`}>
+                  }`}>
                 {copyStatus.message}
               </div>
             )}
@@ -893,11 +892,10 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 </p>
                 <button
                   onClick={() => handleVote("dark-mode")}
-                  className={`mt-2 text-sm font-medium ${
-                    votedFeatures.includes("dark-mode")
+                  className={`mt-2 text-sm font-medium ${votedFeatures.includes("dark-mode")
                       ? "text-green-600 "
                       : "text-blue-600 hover:text-blue-700  "
-                  }`}
+                    }`}
                   disabled={votedFeatures.includes("dark-mode")}>
                   {votedFeatures.includes("dark-mode")
                     ? "Voted"
@@ -920,11 +918,10 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 </p>
                 <button
                   onClick={() => handleVote("offline-mode")}
-                  className={`mt-2 text-sm font-medium ${
-                    votedFeatures.includes("offline-mode")
+                  className={`mt-2 text-sm font-medium ${votedFeatures.includes("offline-mode")
                       ? "text-green-600 "
                       : "text-blue-600 hover:text-blue-700  "
-                  }`}
+                    }`}
                   disabled={votedFeatures.includes("offline-mode")}>
                   {votedFeatures.includes("offline-mode")
                     ? "Voted"
@@ -947,11 +944,10 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 </p>
                 <button
                   onClick={() => handleVote("mobile-app")}
-                  className={`mt-2 text-sm font-medium ${
-                    votedFeatures.includes("mobile-app")
+                  className={`mt-2 text-sm font-medium ${votedFeatures.includes("mobile-app")
                       ? "text-green-600 "
                       : "text-blue-600 hover:text-blue-700  "
-                  }`}
+                    }`}
                   disabled={votedFeatures.includes("mobile-app")}>
                   {votedFeatures.includes("mobile-app")
                     ? "Voted"

@@ -23,7 +23,7 @@ export type RightPanelType =
 const EditorWorkspacePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
+  // const [projects, setProjects] = useState<Project[]>([]);
 
   // Collapsible state
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
@@ -49,7 +49,7 @@ const EditorWorkspacePage: React.FC = () => {
   };
 
   const handleCreateNew = async () => {
-    const userId = localStorage.getItem("user_id") || "";
+    // const userId = localStorage.getItem("user_id") || "";
 
     const newProject: Partial<Project> = {
       title: "Untitled Document",
@@ -80,7 +80,7 @@ const EditorWorkspacePage: React.FC = () => {
 
       if (result.success && result.data) {
         setSelectedProject(result.data);
-        setProjects((prev) => [result.data!, ...prev]);
+        // setProjects((prev) => [result.data!, ...prev]);
       }
     } catch (error) {
       console.error("Failed to create new document:", error);
@@ -89,9 +89,9 @@ const EditorWorkspacePage: React.FC = () => {
 
   const handleProjectUpdate = (updatedProject: Project) => {
     setSelectedProject(updatedProject);
-    setProjects((prev) =>
-      prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
-    );
+    // setProjects((prev) =>
+    //   prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
+    // );
   };
 
   // Function to open right panel with specific type

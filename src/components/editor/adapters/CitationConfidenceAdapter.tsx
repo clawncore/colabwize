@@ -28,9 +28,7 @@ export const CitationConfidenceAdapter: React.FC<
 > = ({ projectId, editor, onContentScanComplete, onFindPapers }) => {
   const [isOpen, setIsOpen] = useState(false);
   // Removed local paper state since we redirect to main panel now
-  const [analysis, setAnalysis] = useState<CitationConfidenceAnalysis | null>(
-    null
-  );
+  // const [analysis, setAnalysis] = useState<CitationConfidenceAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [scanResults, setScanResults] = useState<{
     suggestions: {
@@ -39,15 +37,13 @@ export const CitationConfidenceAdapter: React.FC<
       type: "factual_claim" | "definition" | "statistic";
     }[];
   } | null>(null);
-  const [activeSignalSentence, setActiveSignalSentence] = useState<
-    string | null
-  >(null);
+  // const [activeSignalSentence, setActiveSignalSentence] = useState<string | null>(null);
 
   const fetchAnalysis = async () => {
     try {
       setLoading(true);
       const data = await CitationService.getConfidenceAnalysis(projectId);
-      setAnalysis(data);
+      // setAnalysis(data);
     } catch (error) {
       console.error("Failed to fetch analysis", error);
     } finally {
@@ -58,7 +54,7 @@ export const CitationConfidenceAdapter: React.FC<
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (!open) {
-      setActiveSignalSentence(null);
+      // setActiveSignalSentence(null);
     } else {
       fetchAnalysis();
     }
@@ -316,13 +312,12 @@ export const CitationConfidenceAdapter: React.FC<
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`text-xs px-2 py-0.5 rounded-full font-medium uppercase ${
-                              item.type === "statistic"
-                                ? "bg-orange-100 text-orange-700"
-                                : item.type === "factual_claim"
-                                  ? "bg-pink-100 text-pink-700"
-                                  : "bg-blue-100 text-blue-700"
-                            }`}>
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium uppercase ${item.type === "statistic"
+                              ? "bg-orange-100 text-orange-700"
+                              : item.type === "factual_claim"
+                                ? "bg-pink-100 text-pink-700"
+                                : "bg-blue-100 text-blue-700"
+                              }`}>
                             {item.type.replace("_", " ")}
                           </span>
                         </div>
@@ -331,7 +326,7 @@ export const CitationConfidenceAdapter: React.FC<
                             if (onFindPapers) {
                               // Extract smart keywords
                               const keywords = extractKeywords(item.sentence);
-                              setActiveSignalSentence(item.sentence);
+                              // setActiveSignalSentence(item.sentence);
                               setIsOpen(false); // Close this modal
                               onFindPapers(keywords); // Open side panel
                             }

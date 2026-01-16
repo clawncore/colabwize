@@ -145,14 +145,12 @@ const SignupPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = React.useState(false);
   const [showOtpStep, setShowOtpStep] = React.useState(false);
-  const [, setOtpSent] = React.useState(false);
   const [showSurveyStep, setShowSurveyStep] = React.useState(false);
   const [userId, setUserId] = React.useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = React.useState<string | null>(null);
   const [affiliateRef, setAffiliateRef] = React.useState<string | null>(null);
   const [redirectPath, setRedirectPath] = React.useState<string | null>(null);
-  const [requiresEmailVerification, setRequiresEmailVerification] =
-    React.useState(false);
+
 
   // Add state for validation errors
   const [validationErrors, setValidationErrors] = React.useState<{
@@ -575,7 +573,6 @@ const SignupPage: React.FC = () => {
           const needsVerification = (result as any).needsVerification || false;
 
           // Update state
-          setOtpSent(otpSent);
 
           return {
             success: true,
@@ -659,7 +656,6 @@ const SignupPage: React.FC = () => {
         const otpAlreadySent = (signupResult as any).otpSent || false;
         const needsVerification =
           (signupResult as any).needsVerification || false;
-        setRequiresEmailVerification(!!needsVerification);
 
         // Always go to OTP verification step if OTP was sent or if verification is needed
         if (otpAlreadySent || needsVerification) {
@@ -1102,7 +1098,7 @@ const SignupPage: React.FC = () => {
                 leftIcon={<User className="h-4 w-4" />}
                 error={
                   watchedFields.fullName !== undefined &&
-                  watchedFields.fullName !== ""
+                    watchedFields.fullName !== ""
                     ? errors.fullName?.message || validationErrors.fullName
                     : undefined
                 }
@@ -1124,7 +1120,7 @@ const SignupPage: React.FC = () => {
                 leftIcon={<Mail className="h-4 w-4" />}
                 error={
                   watchedFields.email !== undefined &&
-                  watchedFields.email !== ""
+                    watchedFields.email !== ""
                     ? errors.email?.message || validationErrors.email
                     : undefined
                 }
@@ -1148,7 +1144,7 @@ const SignupPage: React.FC = () => {
                   showPasswordToggle
                   error={
                     watchedFields.password !== undefined &&
-                    watchedFields.password !== ""
+                      watchedFields.password !== ""
                       ? errors.password?.message
                       : undefined
                   }
@@ -1170,7 +1166,7 @@ const SignupPage: React.FC = () => {
                 showPasswordToggle
                 error={
                   watchedFields.confirmPassword !== undefined &&
-                  watchedFields.confirmPassword !== ""
+                    watchedFields.confirmPassword !== ""
                     ? errors.confirmPassword?.message
                     : undefined
                 }

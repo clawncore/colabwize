@@ -69,11 +69,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   onEditorReady,
 }) => {
   const { toast } = useToast();
-  const [editorState, setEditorState] = useState(project.content);
+  // const [editorState, setEditorState] = useState(project.content);
   const [title, setTitle] = useState(project.title);
   const [description, setDescription] = useState(project.description || "");
-  const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  // const [isSaving, setIsSaving] = useState(false);
+  // const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Dialog States
   const [isComparisonSelectorOpen, setIsComparisonSelectorOpen] =
@@ -446,20 +446,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const handleSave = async () => {
     if (!editor) return;
 
-    setIsSaving(true);
+    // setIsSaving(true);
 
     try {
       // Get the current content from the editor
       const content = editor.getJSON();
 
       // Update the project in the database
-      const updatedProject = {
-        ...project,
-        title,
-        description,
-        content,
-        word_count: editor.storage.characterCount.words(),
-      };
+      // const updatedProject = {
+      //   ...project,
+      //   title,
+      //   description,
+      //   content,
+      //   word_count: editor.storage.characterCount.words(),
+      // };
 
       // Update the project via API
       const result = await documentService.updateProject(
@@ -485,11 +485,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         console.error("Failed to save document:", result.error);
       }
 
-      setLastSaved(new Date());
+      // setLastSaved(new Date());
     } catch (error) {
       console.error("Error saving document:", error);
     } finally {
-      setIsSaving(false);
+      // setIsSaving(false);
     }
   };
 
@@ -503,7 +503,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }, 30000); // Auto-save every 30 seconds
 
     return () => clearInterval(autoSaveInterval);
-  }, [editCount]);
+  }, [editCount, handleSave]);
 
   // Format time spent into human-readable format
   const formatTimeSpent = (seconds: number): string => {
