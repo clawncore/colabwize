@@ -23,7 +23,7 @@ function HeroSection() {
   const [loopNum, setLoopNum] = useState(0);
   const [typingSpeed, setTypingSpeed] = useState(50);
 
-  const phrases = [
+  const phrases = React.useMemo(() => [
     {
       text: "Your Academic Success, Defended.",
       gradientWord: "Defended.",
@@ -32,7 +32,7 @@ function HeroSection() {
       text: "A Platform for Original, Credible, and Human Work.",
       gradientWord: "Human Work.",
     },
-  ];
+  ], []);
 
   useEffect(() => {
     const currentPhrase = phrases[loopNum % phrases.length];

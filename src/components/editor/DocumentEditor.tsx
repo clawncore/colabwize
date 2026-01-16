@@ -443,7 +443,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     };
   }, []);
 
-  const handleSave = async () => {
+  const handleSave = React.useCallback(async () => {
     if (!editor) return;
 
     // setIsSaving(true);
@@ -491,7 +491,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     } finally {
       // setIsSaving(false);
     }
-  };
+  }, [editor, project.id, title, description, onProjectUpdate, toast]);
 
   // Auto-save every 30 seconds if there are changes
   useEffect(() => {

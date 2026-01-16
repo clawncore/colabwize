@@ -69,11 +69,7 @@ const FeedbackDashboard: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     try {
       const feedback = await FeedbackService.getUserFeedback();
       setFeedbackItems(feedback);
@@ -86,7 +82,11 @@ const FeedbackDashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleCreateFeedback = async () => {
     if (!newFeedback.title.trim() || !newFeedback.description.trim()) {

@@ -27,7 +27,7 @@ import {
 import { SubscriptionService } from "../../services/subscriptionService";
 import { OnboardingTour } from "../onboarding/OnboardingTour";
 import { useOnboarding } from "../../hooks/useOnboarding";
-import { useToast } from "../../hooks/use-toast";
+
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();

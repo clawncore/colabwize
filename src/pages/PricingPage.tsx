@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Check, Zap } from "lucide-react";
@@ -47,6 +47,88 @@ function FeaturesPresentationFlow() {
     "yearly"
   );
   const navigate = useNavigate();
+
+  const handleSelectPlan = useCallback(async (planId: string) => {
+    // Handle free tier - redirect to signup
+    if (planId === "free") {
+      navigate("/signup");
+      return;
+    }
+
+    // Handle pay-as-you-go - check authentication first
+    if (planId === "payg") {
+      const isAuthenticated = authService.isAuthenticated();
+
+      if (!isAuthenticated) {
+        // Save intended action for after login
+        localStorage.setItem(
+          "intended_action",
+          JSON.stringify({
+            type: "credits",
+            action: "/dashboard/billing/credits",
+          })
+        );
+
+        toast({
+          title: "Login Required",
+          description: "Please login to purchase credits",
+        });
+
+        navigate("/login");
+        return;
+      }
+
+      // User is authenticated, navigate to credits page
+      toast({
+        title: "Pay-As-You-Go",
+        description: "Select credit package on the next page",
+      });
+      navigate("/dashboard/billing/credits");
+      return;
+    }
+
+    // Check if user is authenticated
+    const isAuthenticated = authService.isAuthenticated();
+
+    if (!isAuthenticated) {
+      // Save intended subscription for after login
+      localStorage.setItem(
+        "intended_subscription",
+        JSON.stringify({
+          planId,
+          billingPeriod,
+        })
+      );
+
+      toast({
+        title: "Login Required",
+        description: "Please login to subscribe to this plan",
+      });
+
+      // Redirect to login
+      navigate("/login");
+      return;
+    }
+
+    // User is authenticated, proceed to checkout
+    try {
+      setCheckoutLoading(planId);
+      const checkoutUrl = await SubscriptionService.createCheckout(
+        planId,
+        billingPeriod
+      );
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast({
+        title: "Checkout Error",
+        description: "Failed to create checkout session. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCheckoutLoading(null);
+    }
+  }, [billingPeriod, navigate, toast]);
 
   useEffect(() => {
     // Define base monthly plans
@@ -208,89 +290,9 @@ function FeaturesPresentationFlow() {
     };
 
     resumeCredits();
-  }, []); // Only run once on mount
+  }, [handleSelectPlan]); // Only run once on mount (or when deps change)
 
-  const handleSelectPlan = async (planId: string) => {
-    // Handle free tier - redirect to signup
-    if (planId === "free") {
-      navigate("/signup");
-      return;
-    }
 
-    // Handle pay-as-you-go - check authentication first
-    if (planId === "payg") {
-      const isAuthenticated = authService.isAuthenticated();
-
-      if (!isAuthenticated) {
-        // Save intended action for after login
-        localStorage.setItem(
-          "intended_action",
-          JSON.stringify({
-            type: "credits",
-            action: "/dashboard/billing/credits",
-          })
-        );
-
-        toast({
-          title: "Login Required",
-          description: "Please login to purchase credits",
-        });
-
-        navigate("/login");
-        return;
-      }
-
-      // User is authenticated, navigate to credits page
-      toast({
-        title: "Pay-As-You-Go",
-        description: "Select credit package on the next page",
-      });
-      navigate("/dashboard/billing/credits");
-      return;
-    }
-
-    // Check if user is authenticated
-    const isAuthenticated = authService.isAuthenticated();
-
-    if (!isAuthenticated) {
-      // Save intended subscription for after login
-      localStorage.setItem(
-        "intended_subscription",
-        JSON.stringify({
-          planId,
-          billingPeriod,
-        })
-      );
-
-      toast({
-        title: "Login Required",
-        description: "Please login to subscribe to this plan",
-      });
-
-      // Redirect to login
-      navigate("/login");
-      return;
-    }
-
-    // User is authenticated, proceed to checkout
-    try {
-      setCheckoutLoading(planId);
-      const checkoutUrl = await SubscriptionService.createCheckout(
-        planId,
-        billingPeriod
-      );
-      window.location.href = checkoutUrl;
-    } catch (error) {
-      console.error("Checkout error:", error);
-      toast({
-        title: "Checkout Error",
-        description: "Failed to create checkout session. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setCheckoutLoading(null);
-    }
-  };
 
   if (loading) {
     return (
@@ -309,20 +311,18 @@ function FeaturesPresentationFlow() {
             <div className="inline-flex items-center bg-gray-100 rounded-full p-1 gap-1">
               <button
                 onClick={() => setBillingPeriod("monthly")}
-                className={`px-8 py-2.5 rounded-full font-medium transition-all ${
-                  billingPeriod === "monthly"
-                    ? "bg-white text-gray-900 shadow-md"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}>
+                className={`px-8 py-2.5 rounded-full font-medium transition-all ${billingPeriod === "monthly"
+                  ? "bg-white text-gray-900 shadow-md"
+                  : "text-gray-600 hover:text-gray-900"
+                  }`}>
                 Monthly
               </button>
               <button
                 onClick={() => setBillingPeriod("yearly")}
-                className={`px-8 py-2.5 rounded-full font-medium transition-all relative ${
-                  billingPeriod === "yearly"
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}>
+                className={`px-8 py-2.5 rounded-full font-medium transition-all relative ${billingPeriod === "yearly"
+                  ? "bg-indigo-600 text-white shadow-md"
+                  : "text-gray-600 hover:text-gray-900"
+                  }`}>
                 Annual
                 <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold">
                   20% OFF
@@ -337,13 +337,12 @@ function FeaturesPresentationFlow() {
               {plans.map((plan) => (
                 <div
                   key={plan.id}
-                  className={`relative rounded-2xl border-2 p-8 ${
-                    plan.researcher
-                      ? "border-red-500 shadow-xl scale-105"
-                      : plan.popular
-                        ? "border-green-500 shadow-xl scale-105"
-                        : "border-gray-300"
-                  }
+                  className={`relative rounded-2xl border-2 p-8 ${plan.researcher
+                    ? "border-red-500 shadow-xl scale-105"
+                    : plan.popular
+                      ? "border-green-500 shadow-xl scale-105"
+                      : "border-gray-300"
+                    }
                   hover:shadow-lg transition-all bg-white`}>
                   {plan.popular && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
@@ -393,13 +392,12 @@ function FeaturesPresentationFlow() {
                   <Button
                     onClick={() => handleSelectPlan(plan.id)}
                     disabled={checkoutLoading === plan.id}
-                    className={`w-full ${
-                      plan.researcher
-                        ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
-                        : plan.popular
-                          ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
-                          : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
-                    }`}
+                    className={`w-full ${plan.researcher
+                      ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
+                      : plan.popular
+                        ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
+                        : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                      }`}
                     size="lg">
                     {checkoutLoading === plan.id ? (
                       "Loading..."

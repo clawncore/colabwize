@@ -21,6 +21,14 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   // const [isUploading, setIsUploading] = useState(false);
 
+  const handleFileSelect = useCallback((file: File) => {
+    const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+    setFilename(file.name);
+    setTitle(fileNameWithoutExt); // Auto-fill title with filename
+    setUploadedFile(file);
+    setContent(""); // Clear any pasted content
+  }, []);
+
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -39,7 +47,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
     if (file) {
       handleFileSelect(file);
     }
-  }, []);
+  }, [handleFileSelect]);
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,16 +56,8 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
         handleFileSelect(file);
       }
     },
-    []
+    [handleFileSelect]
   );
-
-  const handleFileSelect = (file: File) => {
-    const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-    setFilename(file.name);
-    setTitle(fileNameWithoutExt); // Auto-fill title with filename
-    setUploadedFile(file);
-    setContent(""); // Clear any pasted content
-  };
 
   const handleSubmit = async () => {
     if (!title.trim()) {

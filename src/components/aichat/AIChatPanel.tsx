@@ -309,20 +309,23 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       let done = false;
       let accumulatedContent = "";
 
+      const updateMessage = (content: string) => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? { ...msg, content }
+              : msg
+          )
+        );
+      };
+
       while (!done) {
         const { value, done: readerDone } = await reader.read();
         done = readerDone;
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
           accumulatedContent += chunk;
-
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantMessageId
-                ? { ...msg, content: accumulatedContent } // accumulatedContent is up-to-date in this scope
-                : msg
-            )
-          );
+          updateMessage(accumulatedContent);
         }
       }
     } catch (error: any) {
@@ -598,13 +601,6 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                             children,
                             ...props
                           }: any) => {
-                            const match = /language-(\w+)/.exec(
-                              className || ""
-                            );
-                            // Verify usage or remove if truly unused. The linter says unused.
-                            // If we remove 'match', we must check if it's used in the return.
-                            // It seems match is NOT used in the return below.
-                            // So we can remove it.
                             return !className?.includes("language-") ? (
                               <code
                                 className="bg-muted/50 px-1.5 py-0.5 rounded font-mono text-xs border border-muted"

@@ -8,7 +8,7 @@ import {
   Zap,
   Shield,
   Clock,
-  Users,
+
   ArrowRight,
   Bot,
 } from "lucide-react";

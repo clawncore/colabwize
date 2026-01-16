@@ -7,6 +7,39 @@ interface DocumentUploadProps {
   projectId?: string;
 }
 
+// Helper function outside component
+const extractTextFromDocx = async (file: File): Promise<string> => {
+  try {
+    const zip = new JSZip();
+    const content = await zip.loadAsync(file);
+    const documentXml = await content
+      .file("word/document.xml")
+      ?.async("string");
+
+    if (documentXml) {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(documentXml, "text/xml");
+      const paragraphs = xmlDoc.getElementsByTagName("w:p");
+      let fullText = "";
+
+      for (let i = 0; i < paragraphs.length; i++) {
+        const texts = paragraphs[i].getElementsByTagName("w:t");
+        for (let j = 0; j < texts.length; j++) {
+          if (texts[j].textContent) {
+            fullText += texts[j].textContent;
+          }
+        }
+        fullText += "\n";
+      }
+      return fullText;
+    }
+    return "Could not extract text from document.";
+  } catch (err) {
+    console.error("Error parsing DOCX:", err);
+    return "Error reading document content. Please continue with upload.";
+  }
+};
+
 export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   onUploadSuccess,
   projectId,
@@ -17,6 +50,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // ... (keeping other handlers same but assume they are inside component)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -52,12 +87,12 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     }
   };
 
-  const isSubmittingRef = React.useRef(false); // Ref to strictly prevent double submission
+  const isSubmittingRef = React.useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isSubmittingRef.current) return; // Prevent double submission
+    if (isSubmittingRef.current) return;
 
     if (!file) {
       setError("Please select a document to upload");
@@ -90,7 +125,6 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
           onUploadSuccess(result.data);
         }
 
-        // Reset success message after 3 seconds
         setTimeout(() => {
           setSuccess(false);
         }, 3000);
@@ -109,7 +143,6 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [documentContent, setDocumentContent] = useState<string>("");
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
 
-  // Cleanup object URL on unmount or when file changes
   useEffect(() => {
     return () => {
       if (pdfPreviewUrl) {
@@ -118,40 +151,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     };
   }, [pdfPreviewUrl]);
 
-  const extractTextFromDocx = async (file: File): Promise<string> => {
-    try {
-      const zip = new JSZip();
-      const content = await zip.loadAsync(file);
-      const documentXml = await content
-        .file("word/document.xml")
-        ?.async("string");
-
-      if (documentXml) {
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(documentXml, "text/xml");
-        const paragraphs = xmlDoc.getElementsByTagName("w:p");
-        let fullText = "";
-
-        for (let i = 0; i < paragraphs.length; i++) {
-          const texts = paragraphs[i].getElementsByTagName("w:t");
-          for (let j = 0; j < texts.length; j++) {
-            if (texts[j].textContent) {
-              fullText += texts[j].textContent;
-            }
-          }
-          fullText += "\n";
-        }
-        return fullText;
-      }
-      return "Could not extract text from document.";
-    } catch (err) {
-      console.error("Error parsing DOCX:", err);
-      return "Error reading document content. Please continue with upload.";
-    }
-  };
-
   // Function to read and display file content
-  const readDocumentContent = async (selectedFile: File) => {
+  const readDocumentContent = React.useCallback(async (selectedFile: File) => {
     if (!selectedFile) return;
 
     // Reset states
@@ -179,7 +180,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
         "Preview not available for this file type. File will be processed after upload."
       );
     }
-  };
+  }, []);
 
   // Update document content when file changes
   useEffect(() => {
@@ -189,7 +190,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       setDocumentContent("");
       setPdfPreviewUrl(null);
     }
-  }, [file]);
+  }, [file, readDocumentContent]);
 
   return (
     <div className="w-full p-6 bg-white">
@@ -290,11 +291,10 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             <button
               type="submit"
               disabled={isUploading || !file || !title.trim()}
-              className={`w-full py-2 px-4 rounded-md text-white font-medium ${
-                isUploading || !file || !title.trim()
+              className={`w-full py-2 px-4 rounded-md text-white font-medium ${isUploading || !file || !title.trim()
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700"
-              }`}>
+                }`}>
               {isUploading
                 ? "Uploading..."
                 : projectId
