@@ -2,7 +2,6 @@ import React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import Layout from "../../components/Layout";
-import { useNavigate } from "react-router-dom";
 import {
   BarChart3,
   Target,

@@ -16,12 +16,6 @@ import { caseStudies } from "../../data/caseStudies";
 
 // Intro Hero Section
 function IntroHero() {
-  const navigate = useNavigate();
-
-  const handleGetStarted = () => {
-    navigate("/signup");
-  };
-
   return (
     <section className="section-padding bg-white relative overflow-hidden">
       {/* Background Image Overlay */}

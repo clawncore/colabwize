@@ -290,7 +290,7 @@ function FeaturesPresentationFlow() {
     };
 
     resumeCredits();
-  }, [handleSelectPlan]); // Only run once on mount (or when deps change)
+  }, [handleSelectPlan, navigate, toast]); // Only run once on mount (or when deps change)
 
 
 

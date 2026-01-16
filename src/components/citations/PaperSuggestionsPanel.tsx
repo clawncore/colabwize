@@ -97,7 +97,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     };
 
     fetchAndSearch();
-  }, [projectId]); // Re-run if projectId changes
+  }, [projectId, contextKeywords, initialSuggestions]); // Re-run if projectId changes
 
   const handleManualSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -214,9 +214,9 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
                       </h4>
                       <p className="text-xs text-gray-500 mb-2">
                         {Array.isArray(paper.authors) &&
-                        paper.authors.length > 0
+                          paper.authors.length > 0
                           ? paper.authors[0] +
-                            (paper.authors.length > 1 ? " et al." : "")
+                          (paper.authors.length > 1 ? " et al." : "")
                           : "Unknown"}{" "}
                         • {paper.year}
                       </p>

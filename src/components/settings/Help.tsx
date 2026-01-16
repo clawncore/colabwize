@@ -12,7 +12,7 @@ import {
   Star,
   Copy,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
 import apiClient from "../../services/apiClient";
 import WaitlistService from "../../services/waitlistService";
 import { SubscriptionService } from "../../services/subscriptionService";
@@ -684,8 +684,8 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
             {copyStatus && (
               <div
                 className={`mb-4 p-3 rounded-lg text-sm ${copyStatus.type === "success"
-                    ? "bg-green-50 text-green-700  "
-                    : "bg-red-50 text-red-700  "
+                  ? "bg-green-50 text-green-700  "
+                  : "bg-red-50 text-red-700  "
                   }`}>
                 {copyStatus.message}
               </div>
@@ -893,8 +893,8 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 <button
                   onClick={() => handleVote("dark-mode")}
                   className={`mt-2 text-sm font-medium ${votedFeatures.includes("dark-mode")
-                      ? "text-green-600 "
-                      : "text-blue-600 hover:text-blue-700  "
+                    ? "text-green-600 "
+                    : "text-blue-600 hover:text-blue-700  "
                     }`}
                   disabled={votedFeatures.includes("dark-mode")}>
                   {votedFeatures.includes("dark-mode")
@@ -919,8 +919,8 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 <button
                   onClick={() => handleVote("offline-mode")}
                   className={`mt-2 text-sm font-medium ${votedFeatures.includes("offline-mode")
-                      ? "text-green-600 "
-                      : "text-blue-600 hover:text-blue-700  "
+                    ? "text-green-600 "
+                    : "text-blue-600 hover:text-blue-700  "
                     }`}
                   disabled={votedFeatures.includes("offline-mode")}>
                   {votedFeatures.includes("offline-mode")
@@ -945,8 +945,8 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 <button
                   onClick={() => handleVote("mobile-app")}
                   className={`mt-2 text-sm font-medium ${votedFeatures.includes("mobile-app")
-                      ? "text-green-600 "
-                      : "text-blue-600 hover:text-blue-700  "
+                    ? "text-green-600 "
+                    : "text-blue-600 hover:text-blue-700  "
                     }`}
                   disabled={votedFeatures.includes("mobile-app")}>
                   {votedFeatures.includes("mobile-app")

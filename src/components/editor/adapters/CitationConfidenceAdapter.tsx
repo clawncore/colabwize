@@ -4,7 +4,6 @@ import { BarChart } from "lucide-react";
 import { Dialog, DialogContent, VisuallyHidden } from "../../ui/dialog";
 import {
   CitationService,
-  CitationConfidenceAnalysis,
 } from "../../../services/citationService";
 
 interface CitationConfidenceAdapterProps {
@@ -42,7 +41,7 @@ export const CitationConfidenceAdapter: React.FC<
   const fetchAnalysis = async () => {
     try {
       setLoading(true);
-      const data = await CitationService.getConfidenceAnalysis(projectId);
+      await CitationService.getConfidenceAnalysis(projectId);
       // setAnalysis(data);
     } catch (error) {
       console.error("Failed to fetch analysis", error);

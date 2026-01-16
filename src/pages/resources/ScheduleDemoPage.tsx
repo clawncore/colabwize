@@ -3,7 +3,7 @@ import { Link as RouterLink } from "react-router-dom";
 import ConfigService from "../../services/ConfigService";
 import { Button } from "../../components/ui/button";
 import Layout from "../../components/Layout";
-import { useNavigate } from "react-router-dom";
+
 import {
   Calendar,
   Clock,
@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 
 export default function ScheduleDemoPage() {
-  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error" | null;
@@ -473,11 +472,10 @@ ${formData.message || "No additional message provided."}
 
                 {submitStatus.message && (
                   <div
-                    className={`p-4 rounded-lg my-4 ${
-                      submitStatus.type === "success"
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                    }`}>
+                    className={`p-4 rounded-lg my-4 ${submitStatus.type === "success"
+                      ? "bg-green-50 text-green-700 border border-green-200"
+                      : "bg-red-50 text-red-700 border border-red-200"
+                      }`}>
                     {submitStatus.message}
                   </div>
                 )}

@@ -170,6 +170,25 @@ const SignupPage: React.FC = () => {
   // Add debounce timer ref
   const validationTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+    watch,
+    setValue,
+    setError,
+    clearErrors,
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    mode: "onTouched", // Change from "onChange" to "onTouched" to only validate after user interacts with field
+    defaultValues: {
+      agreeToTerms: false,
+      otpMethod: "email",
+    },
+  });
+
+  const watchedFields = watch();
+
   // Check for OAuth callback data when component mounts
   React.useEffect(() => {
     const oauthParam = searchParams.get("oauth");
@@ -239,7 +258,7 @@ const SignupPage: React.FC = () => {
         console.error("Error parsing OAuth user data:", error);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, setError]);
 
   // Check if user has a session but needs to complete signup (for OAuth users)
   React.useEffect(() => {
@@ -325,24 +344,7 @@ const SignupPage: React.FC = () => {
     );
   }, []);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isValid },
-    watch,
-    setValue,
-    setError,
-    clearErrors,
-  } = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
-    mode: "onTouched", // Change from "onChange" to "onTouched" to only validate after user interacts with field
-    defaultValues: {
-      agreeToTerms: false,
-      otpMethod: "email",
-    },
-  });
 
-  const watchedFields = watch();
 
   // Custom register function that clears validation errors when field changes
   const registerWithValidationClear = (name: any) => {
@@ -460,6 +462,7 @@ const SignupPage: React.FC = () => {
   ); // Remove API_BASE_URL as it's a constant
 
   // Debounced validation effect
+  const { fullName, email } = watchedFields;
   React.useEffect(() => {
     // Clear any existing timer
     if (validationTimerRef.current) {
@@ -469,12 +472,12 @@ const SignupPage: React.FC = () => {
     // Set a new timer to debounce validation
     validationTimerRef.current = setTimeout(() => {
       // Validate fields that have values
-      if (watchedFields.fullName) {
-        validateUserDetails("fullName", watchedFields.fullName);
+      if (fullName) {
+        validateUserDetails("fullName", fullName);
       }
 
-      if (watchedFields.email) {
-        validateUserDetails("email", watchedFields.email);
+      if (email) {
+        validateUserDetails("email", email);
       }
     }, 500); // 500ms debounce
 
@@ -484,12 +487,11 @@ const SignupPage: React.FC = () => {
         clearTimeout(validationTimerRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    watchedFields.fullName,
-    watchedFields.email,
-    // FIXED: Removed validateUserDetails from dependencies
-    // The function reference changes when selectedCountryCode changes,
-    // which would cause infinite loop. Instead, call it directly inside useCallback.
+    fullName,
+    email,
+    validateUserDetails,
   ]);
 
   const passwordValue = watch("password");
