@@ -5,7 +5,7 @@ import {
   DraftComparisonService,
   ComparisonResult,
 } from "../../services/draftComparisonService";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 export const DraftComparisonPage: React.FC = () => {
   const [isComparing, setIsComparing] = useState(false);
@@ -67,8 +67,8 @@ export const DraftComparisonPage: React.FC = () => {
                 Comparison Analysis
                 <span
                   className={`text-sm px-3 py-1 rounded-full ${result.similarityScore > 20
-                      ? "bg-red-100 text-red-800"
-                      : "bg-green-100 text-green-800"
+                    ? "bg-red-100 text-red-800"
+                    : "bg-green-100 text-green-800"
                     }`}>
                   {result.similarityScore.toFixed(1)}% Similarity
                 </span>

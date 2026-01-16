@@ -1,7 +1,4 @@
 import { apiClient } from "./apiClient";
-import ConfigService from "./ConfigService";
-
-const API_URL = ConfigService.getApiUrl();
 
 export interface RegisterData {
   email: string;
@@ -175,4 +172,5 @@ class AuthService {
   }
 }
 
-export default new AuthService();
+const authService = new AuthService();
+export default authService;

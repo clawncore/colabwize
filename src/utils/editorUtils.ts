@@ -2,12 +2,7 @@
  * Utility functions for editor content validation and sanitization
  */
 
-interface Node {
-  type: string;
-  content?: Node[];
-  text?: string;
-  attrs?: Record<string, any>;
-}
+
 
 /**
  * Recursively validates and cleans editor content to remove empty text nodes

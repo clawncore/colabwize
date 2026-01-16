@@ -2,7 +2,7 @@ import React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import LayoutWrapper from "../../components/Layout";
-import { useNavigate } from "react-router-dom";
+
 import {
   Search,
   Map,

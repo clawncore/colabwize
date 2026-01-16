@@ -140,4 +140,5 @@ class CertificateServiceImpl implements CertificateService {
   }
 }
 
-export default new CertificateServiceImpl();
+const certificateService = new CertificateServiceImpl();
+export default certificateService;
