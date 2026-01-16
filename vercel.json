@@ -5,6 +5,15 @@
         "REACT_APP_SUPABASE_URL": "https://emcjywwqlrxdjfxiwnxi.supabase.co",
         "REACT_APP_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtY2p5d3dxbHJ4ZGpmeGl3bnhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MjM2MDQsImV4cCI6MjA3NTQ5OTYwNH0.B-Rj52xJEeKynSBYDVrYNlmixqCN2ZyXfaPQi6oQYmY"
     },
+    "builds": [
+        {
+            "src": "package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "build"
+            }
+        }
+    ],
     "rewrites": [
         {
             "source": "/((?!static|manifest.json|favicon.ico|logo.*\\.png|robots.txt|asset-manifest.json).*)",

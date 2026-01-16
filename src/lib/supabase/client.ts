@@ -11,45 +11,89 @@ console.log("Supabase configuration:", {
   supabaseAnonKeyValue: supabaseAnonKey?.substring(0, 20) + "...",
 });
 
-// Validate configuration
-if (!supabaseUrl) {
-  throw new Error("Missing Supabase URL - Check environment configuration");
+// Validate configuration and handle missing env vars gracefully
+const isValidConfig = supabaseUrl && supabaseAnonKey &&
+  supabaseUrl !== "undefined" && supabaseAnonKey !== "undefined" &&
+  supabaseUrl.startsWith("http");
+
+if (!isValidConfig) {
+  console.error("CRITICAL: Supabase configuration missing or invalid. App will load in limited mode.");
 }
 
-if (!supabaseAnonKey) {
-  throw new Error(
-    "Missing Supabase Anon Key - Check environment configuration"
+// Check if we are in a crash-prone environment (production) vs dev
+// In dev we might want to crash, but user requested NO CRASH.
+
+let supabaseInstance;
+
+if (isValidConfig) {
+  // Store the initial client configuration
+  const initialSupabaseOptions = {
+    auth: {
+      // Enable automatic token refresh
+      autoRefreshToken: true,
+      // Persist session in local storage
+      persistSession: true,
+      // Detect session changes
+      detectSessionInUrl: true,
+    },
+    realtime: {
+      // Enable realtime connections
+      connect: true,
+      // Set heartbeat interval
+      heartbeatIntervalMs: 30000,
+      // Set timeout for reconnection attempts
+      reconnectDelayMs: 1000,
+      // Enable presence tracking
+      presence: true,
+    },
+  };
+
+  supabaseInstance = createClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    initialSupabaseOptions
   );
+} else {
+  // Fallback Proxy to prevent crash-at-import
+  // This allows the app shell to load even if Supabase is totally broken
+  supabaseInstance = new Proxy({} as any, {
+    get: (target, prop) => {
+      // Basic Auth stubs to satisfy AuthProvider mounting
+      if (prop === 'auth') {
+        return {
+          getSession: () => Promise.resolve({ data: { session: null }, error: new Error("Supabase not configured") }),
+          onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
+          getUser: () => Promise.resolve({ data: { user: null }, error: new Error("Supabase not configured") }),
+          signInWithPassword: () => Promise.reject(new Error("Supabase not configured")),
+          signUp: () => Promise.reject(new Error("Supabase not configured")),
+          signOut: () => Promise.resolve({ error: null }),
+        };
+      }
+      // Basic Realtime stubs
+      if (prop === 'channel') {
+        return () => ({
+          on: () => ({ subscribe: () => { } }),
+          subscribe: () => { }
+        });
+      }
+      if (prop === 'from') {
+        // Return a chainable query builder mock
+        const mockBuilder: any = new Proxy(() => { }, {
+          get: () => mockBuilder,
+          apply: () => Promise.reject(new Error("Supabase not configured"))
+        });
+        return () => mockBuilder;
+      }
+      return () => {
+        console.warn(`Supabase.${String(prop)} called but Supabase is not configured.`);
+        return Promise.reject(new Error("Supabase configuration missing"));
+      };
+    }
+  });
 }
-
-// Store the initial client configuration
-const initialSupabaseOptions = {
-  auth: {
-    // Enable automatic token refresh
-    autoRefreshToken: true,
-    // Persist session in local storage
-    persistSession: true,
-    // Detect session changes
-    detectSessionInUrl: true,
-  },
-  realtime: {
-    // Enable realtime connections
-    connect: true,
-    // Set heartbeat interval
-    heartbeatIntervalMs: 30000,
-    // Set timeout for reconnection attempts
-    reconnectDelayMs: 1000,
-    // Enable presence tracking
-    presence: true,
-  },
-};
 
 // Create Supabase client with proper session persistence and auto-refresh settings
-export const supabase = createClient(
-  supabaseUrl,
-  supabaseAnonKey,
-  initialSupabaseOptions
-);
+export const supabase = supabaseInstance;
 // Enhanced session management
 class SessionManager {
   private static instance: SessionManager;
