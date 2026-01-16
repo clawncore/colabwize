@@ -237,19 +237,33 @@ function FeaturesPresentationFlow() {
           const isAuthenticated = authService.isAuthenticated();
 
           if (isAuthenticated) {
-            // Update billing period if needed
-            if (savedPeriod !== billingPeriod) {
-              setBillingPeriod(savedPeriod);
-            }
+            // Update billing period unconditionally
+            setBillingPeriod(savedPeriod);
 
             toast({
               title: "Resuming Subscription",
               description: "Redirecting to checkout...",
             });
 
-            // Small delay to let toast show
-            setTimeout(() => {
-              handleSelectPlan(planId);
+            // Make sure we use the saved period for checkout, avoiding stale closures
+            setTimeout(async () => {
+              try {
+                setCheckoutLoading(planId);
+                const checkoutUrl = await SubscriptionService.createCheckout(
+                  planId,
+                  savedPeriod
+                );
+                window.location.href = checkoutUrl;
+              } catch (error) {
+                console.error("Resume checkout error:", error);
+                setCheckoutLoading(null);
+                toast({
+                  title: "Checkout Error",
+                  description:
+                    "Failed to create checkout session. Please try again.",
+                  variant: "destructive",
+                });
+              }
             }, 500);
           }
         } catch (error) {
@@ -290,7 +304,7 @@ function FeaturesPresentationFlow() {
     };
 
     resumeCredits();
-  }, [handleSelectPlan, navigate, toast]); // Only run once on mount (or when deps change)
+  }, [navigate, toast]); // Only run once on mount (navigate and toast are stable)
 
 
 
