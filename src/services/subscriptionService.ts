@@ -62,6 +62,7 @@ export class SubscriptionService {
     subscription: Subscription;
     limits: any;
     usage: Usage;
+    creditBalance: number;
   }> {
     const response = await apiClient.get("/api/subscription/current");
     return response;
@@ -193,9 +194,10 @@ export class SubscriptionService {
       certificate_retention_days: number;
     };
     remaining: number | string;
+    creditBalance: number;
   }> {
     const response = await apiClient.get("/api/subscription/current");
-    const { subscription, limits, usage } = response;
+    const { subscription, limits, usage, creditBalance } = response;
 
     // Calculate remaining scans
     const currentScans = usage.scan || 0;
@@ -216,6 +218,7 @@ export class SubscriptionService {
       },
       limits: limits,
       remaining,
+      creditBalance: creditBalance || 0,
     };
   }
 

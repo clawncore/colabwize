@@ -1,4 +1,5 @@
 import { apiClient } from "./apiClient";
+import { supabase } from "../lib/supabase/client";
 
 export interface RegisterData {
   email: string;
@@ -68,10 +69,9 @@ class AuthService {
     try {
       const response = await apiClient.post("/api/auth/login", data);
 
-      // Store token if login successful
-      if (response.success && response.token) {
-        localStorage.setItem("auth_token", response.token);
-      }
+      // We no longer manually set localStorage here. 
+      // The useAuth hook listens to Supabase auth state changes which 
+      // happens when the backend returns the session or when explicit signIn occurs.
 
       return response;
     } catch (error: any) {
@@ -88,12 +88,6 @@ class AuthService {
   async verifyOTP(data: VerifyOTPData): Promise<AuthResponse> {
     try {
       const response = await apiClient.post("/api/auth/verify-otp", data);
-
-      // Store token if verification successful
-      if (response.success && response.token) {
-        localStorage.setItem("auth_token", response.token);
-      }
-
       return response;
     } catch (error: any) {
       return {
@@ -153,14 +147,19 @@ class AuthService {
   /**
    * Logout user
    */
-  logout(): void {
+  async logout(): Promise<void> {
     localStorage.removeItem("auth_token");
+    await supabase.auth.signOut();
   }
 
   /**
    * Check if user is authenticated
+   * @deprecated Use useAuth() hook for reactive state
    */
   isAuthenticated(): boolean {
+    // Fallback to localStorage for legacy non-react code
+    // But prefer checking if Supabase has a session via synchronous local check if possible 
+    // (Supabase client doesn't expose synchronous checks easily without async)
     return !!localStorage.getItem("auth_token");
   }
 

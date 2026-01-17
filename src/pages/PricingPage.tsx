@@ -7,7 +7,7 @@ import { useToast } from "../hooks/use-toast";
 import Layout from "../components/Layout";
 import authService from "../services/authService";
 
-// Intro Hero Section
+import { useAuth } from "../hooks/useAuth";
 function IntroHero() {
   return (
     <section className="section-padding bg-white relative overflow-hidden">
@@ -46,20 +46,49 @@ function FeaturesPresentationFlow() {
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">(
     "yearly"
   );
+  const [currentPlanId, setCurrentPlanId] = useState<string>("free");
+
   const navigate = useNavigate();
+  const { user } = useAuth(); // Use the hook for reactive auth state
+
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      if (user) {
+        try {
+          const data = await SubscriptionService.getCurrentSubscription();
+          const plan = data?.subscription?.plan;
+          let planId = "free";
+          if (typeof plan === "string") {
+            planId = plan;
+          } else if (plan && typeof plan === "object" && "id" in plan) {
+            planId = (plan as any).id;
+          }
+          setCurrentPlanId(planId || "free");
+        } catch (error) {
+          console.error("Failed to fetch subscription", error);
+        }
+      }
+    };
+    fetchSubscription();
+  }, []);
 
   const handleSelectPlan = useCallback(async (planId: string) => {
     // Handle free tier - redirect to signup
     if (planId === "free") {
+      if (currentPlanId !== "free") {
+        // Downgrade logic? For now redirect to dashboard
+        navigate("/dashboard");
+        return;
+      }
       navigate("/signup");
       return;
     }
 
     // Handle pay-as-you-go - check authentication first
     if (planId === "payg") {
-      const isAuthenticated = authService.isAuthenticated();
+      // const isAuthenticated = authService.isAuthenticated();
 
-      if (!isAuthenticated) {
+      if (!user) {
         // Save intended action for after login
         localStorage.setItem(
           "intended_action",
@@ -87,10 +116,10 @@ function FeaturesPresentationFlow() {
       return;
     }
 
-    // Check if user is authenticated
-    const isAuthenticated = authService.isAuthenticated();
+    // Check if user is authenticated using the hook which is reactive
+    // const isAuthenticated = authService.isAuthenticated(); // DEPRECATED
 
-    if (!isAuthenticated) {
+    if (!user) { // useAuth provides user object if authenticated
       // Save intended subscription for after login
       localStorage.setItem(
         "intended_subscription",
@@ -234,9 +263,9 @@ function FeaturesPresentationFlow() {
           localStorage.removeItem("intended_subscription");
 
           // Check if user is now authenticated
-          const isAuthenticated = authService.isAuthenticated();
+          // const isAuthenticated = authService.isAuthenticated();
 
-          if (isAuthenticated) {
+          if (user) {
             // Update billing period unconditionally
             setBillingPeriod(savedPeriod);
 
@@ -286,7 +315,7 @@ function FeaturesPresentationFlow() {
           // Clear saved action immediately
           localStorage.removeItem("intended_action");
 
-          if (type === "credits" && authService.isAuthenticated()) {
+          if (type === "credits" && user) {
             toast({
               title: "Redirecting to Credits",
               description: "Taking you to purchase credits...",
@@ -405,7 +434,7 @@ function FeaturesPresentationFlow() {
 
                   <Button
                     onClick={() => handleSelectPlan(plan.id)}
-                    disabled={checkoutLoading === plan.id}
+                    disabled={checkoutLoading === plan.id || plan.id === currentPlanId}
                     className={`w-full ${plan.researcher
                       ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
                       : plan.popular
@@ -415,12 +444,14 @@ function FeaturesPresentationFlow() {
                     size="lg">
                     {checkoutLoading === plan.id ? (
                       "Loading..."
+                    ) : plan.id === currentPlanId ? (
+                      "Current Plan"
                     ) : plan.id === "free" ? (
                       "Start Free"
                     ) : (
                       <>
                         <Zap className="mr-2 h-5 w-5" />
-                        Get Started
+                        {currentPlanId !== "free" && plan.id !== "payg" ? "Switch Plan" : "Get Started"}
                       </>
                     )}
                   </Button>

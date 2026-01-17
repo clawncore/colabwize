@@ -23,6 +23,7 @@ import certificateService from "../../services/certificateService";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { ReactNode } from "react";
 import { Outlet } from "react-router-dom";
+import { UsageMeter } from "../../components/subscription/UsageMeter";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -46,15 +47,14 @@ export default function DashboardLayout({
   const [subscriptionData, setSubscriptionData] = useState<any>(null);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
+  // Add state for limits and usage
+  const [planLimits, setPlanLimits] = useState<any>(null);
+  const [planUsage, setPlanUsage] = useState<any>(null);
+  const [creditBalance, setCreditBalance] = useState<number>(0);
   const userId = useMemo(() => user?.id, [user?.id]);
   const hasFetchedData = useRef<string | null>(null);
 
-  // Debug user object
-  useEffect(() => {
-    if (user) {
-      console.log("DashboardLayout user:", user);
-    }
-  }, [user]);
+
 
   // Determine active tab based on current route
   const getActiveTab = () => {
@@ -101,10 +101,13 @@ export default function DashboardLayout({
         setLoadingProjects(true);
         setApiError(null); // Clear any previous errors
 
-        // Fetch subscription data
-        const { subscription } =
+        // Fetch subscription data with limits and usage
+        const { subscription, limits, usage, creditBalance } =
           await SubscriptionService.getCurrentSubscription();
         setSubscriptionData(subscription);
+        setPlanLimits(limits);
+        setPlanUsage(usage);
+        setCreditBalance(creditBalance || 0);
 
         // Fetch projects count
         const projectsResponse = await documentService.getProjects();
@@ -208,6 +211,7 @@ export default function DashboardLayout({
 
     if (id === "student") return "Student Pro";
     if (id === "researcher") return "Researcher";
+    if (id === "payg") return "Pay As You Go";
     if (id === "free") return "Free Plan";
 
     // Fallback
@@ -375,11 +379,11 @@ export default function DashboardLayout({
 
   // Helper to get display name
   const getDisplayName = () => {
+    if (user?.fullName) return user.fullName;
     if (user?.username) {
       // Capitalize first letter of username
       return user.username.charAt(0).toUpperCase() + user.username.slice(1);
     }
-    if (user?.fullName) return user.fullName;
     if (user?.email) {
       // Use part before @ and capitalize first letter
       const name = user.email.split("@")[0];
@@ -430,14 +434,13 @@ export default function DashboardLayout({
                       <span
                         className={`
                       ml-0.5 px-2 py-1 text-xs font-bold rounded-full shadow-sm
-                      ${
-                        userPlan.includes("Student") || userPlan.includes("Pro")
-                          ? "bg-blue-600 text-white"
-                          : "bg-purple-600 text-white"
-                      }
+                      ${userPlan.includes("Student") || userPlan.includes("Pro")
+                            ? "bg-blue-600 text-white"
+                            : "bg-purple-600 text-white"
+                          }
                     `}>
                         {userPlan.includes("Student") ||
-                        userPlan.includes("Pro")
+                          userPlan.includes("Pro")
                           ? "PRO"
                           : "RESEARCHER"}
                       </span>
@@ -512,18 +515,17 @@ export default function DashboardLayout({
                   <div
                     className={`
                     relative w-8 h-8 rounded-full flex items-center justify-center
-                    ${
-                      userPlan === "Free Plan" || !userPlan
+                    ${userPlan === "Free Plan" || !userPlan
                         ? "bg-gradient-to-br from-gray-400 to-gray-600"
                         : userPlan.includes("Student") ||
-                            userPlan.includes("Pro")
+                          userPlan.includes("Pro")
                           ? "bg-gradient-to-br from-blue-500 to-blue-700"
                           : "bg-gradient-to-br from-purple-500 to-purple-700"
-                    }
+                      }
                   `}>
                     <span className="text-white font-medium text-sm">
-                      {user?.fullName
-                        ? user.fullName.charAt(0).toUpperCase()
+                      {user?.user_metadata?.full_name
+                        ? user.user_metadata.full_name.charAt(0).toUpperCase()
                         : user?.email?.charAt(0).toUpperCase() || "U"}
                     </span>
                     {userPlan &&
@@ -532,12 +534,11 @@ export default function DashboardLayout({
                         <div
                           className={`
                         absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow-sm
-                        ${
-                          userPlan.includes("Student") ||
-                          userPlan.includes("Pro")
-                            ? "bg-blue-500 border-2 border-white"
-                            : "bg-purple-500 border-2 border-white"
-                        }
+                        ${userPlan.includes("Student") ||
+                              userPlan.includes("Pro")
+                              ? "bg-blue-500 border-2 border-white"
+                              : "bg-purple-500 border-2 border-white"
+                            }
                       `}>
                           <Crown className="w-2 h-2 text-white" />
                         </div>
@@ -555,18 +556,17 @@ export default function DashboardLayout({
                         <div
                           className={`
                           relative w-10 h-10 rounded-full flex items-center justify-center
-                          ${
-                            userPlan === "Free Plan" || !userPlan
+                          ${userPlan === "Free Plan" || !userPlan
                               ? "bg-gradient-to-br from-gray-400 to-gray-600"
                               : userPlan.includes("Student") ||
-                                  userPlan.includes("Pro")
+                                userPlan.includes("Pro")
                                 ? "bg-gradient-to-br from-blue-500 to-blue-700"
                                 : "bg-gradient-to-br from-purple-500 to-purple-700"
-                          }
+                            }
                         `}>
                           <span className="text-white font-medium">
-                            {user?.fullName
-                              ? user.fullName.charAt(0).toUpperCase()
+                            {user?.user_metadata?.full_name
+                              ? user.user_metadata.full_name.charAt(0).toUpperCase()
                               : user?.email?.charAt(0).toUpperCase() || "U"}
                           </span>
                           {userPlan &&
@@ -575,12 +575,11 @@ export default function DashboardLayout({
                               <div
                                 className={`
                               absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm
-                              ${
-                                userPlan.includes("Student") ||
-                                userPlan.includes("Pro")
-                                  ? "bg-blue-500 border-2 border-white"
-                                  : "bg-purple-500 border-2 border-white"
-                              }
+                              ${userPlan.includes("Student") ||
+                                    userPlan.includes("Pro")
+                                    ? "bg-blue-500 border-2 border-white"
+                                    : "bg-purple-500 border-2 border-white"
+                                  }
                             `}>
                                 <Crown className="w-2.5 h-2.5 text-white" />
                               </div>
@@ -588,7 +587,7 @@ export default function DashboardLayout({
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">
-                            {getDisplayName()}
+                            {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
                           </p>
                           <p className="text-xs text-gray-500 truncate">
                             {user?.email}
@@ -711,10 +710,9 @@ export default function DashboardLayout({
                     to={item.href}
                     className={`
                       flex items-center px-3 py-2 rounded-lg text-sm font-medium ${transitionClasses}
-                      ${
-                        isActive
-                          ? "bg-blue-100 text-blue-700"
-                          : "text-gray-700 hover:bg-gray-100"
+                      ${isActive
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-gray-700 hover:bg-gray-100"
                       }
                       ${sidebarCollapsed ? "justify-center" : ""}
                     `}>
@@ -737,15 +735,36 @@ export default function DashboardLayout({
                     <span className="text-sm font-medium text-gray-700 flex items-center">
                       <Crown className="mr-1 h-4 w-4" /> {userPlan}
                     </span>
-                    {projectsLimit !== Infinity && (
-                      <span className="text-xs text-gray-500">
-                        {projectsUsed}/{projectsLimit}
-                      </span>
-                    )}
-                    {projectsLimit === Infinity && (
-                      <span className="text-xs text-gray-500">
-                        {projectsUsed}/∞
-                      </span>
+                  </div>
+
+                  {/* Meter for Scans/Features */}
+                  {/* Meter for Scans/Features */}
+                  <div className="mb-4">
+                    {/* Plan Meter */}
+                    <UsageMeter
+                      current={planUsage?.scan || 0}
+                      limit={
+                        planLimits?.scans_per_month === -1 ||
+                          planLimits?.scans_per_month === "unlimited"
+                          ? "unlimited"
+                          : planLimits?.scans_per_month || 10
+                      }
+                      planName={userPlan}
+                      featureName="scans"
+                      mode="subscription"
+                    />
+
+                    {/* Credit Meter (Conditional) */}
+                    {creditBalance > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <UsageMeter
+                          current={creditBalance}
+                          limit={100} // Dummy limit for credits mode
+                          planName="PAYG"
+                          featureName="credits"
+                          mode="credits"
+                        />
+                      </div>
                     )}
                   </div>
 
