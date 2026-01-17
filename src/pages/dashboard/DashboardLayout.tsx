@@ -55,7 +55,7 @@ export default function DashboardLayout({
   const [creditBalance, setCreditBalance] = useState<number>(0);
   const [isUsageCollapsed, setIsUsageCollapsed] = useState(true);
   const userId = useMemo(() => user?.id, [user?.id]);
-  const hasFetchedData = useRef<string | null>(null);
+
 
 
 

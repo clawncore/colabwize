@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FileSearch, BookOpen, ShieldCheck, Lock, ArrowRight, Award, CheckCircle, Upload, Crown } from "lucide-react";
-import { ResultsSummary } from "./ResultsSummary";
-import { FeatureCard } from "./FeatureCard";
 import { DocumentUploadModal } from "./DocumentUploadModal";
 import AnalyticsService, {
   type DashboardData,
@@ -38,8 +36,8 @@ export const Dashboard: React.FC = () => {
     citationStatus: undefined,
     authorshipVerified: undefined,
   });
-  const [loading, setLoading] = useState(true);
-  const [uploadingProject, setUploadingProject] = useState(false);
+  // const [loading, setLoading] = useState(true);
+  // const [uploadingProject, setUploadingProject] = useState(false);
   const [latestProject, setLatestProject] = useState<Project | null>(null);
 
   // State for chart data
