@@ -43,7 +43,7 @@ export default function DashboardLayout({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [projectsCount, setProjectsCount] = useState(0);
+
   const [subscriptionData, setSubscriptionData] = useState<any>(null);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -109,13 +109,7 @@ export default function DashboardLayout({
         setPlanUsage(usage);
         setCreditBalance(creditBalance || 0);
 
-        // Fetch projects count
-        const projectsResponse = await documentService.getProjects();
-        if (projectsResponse.success && projectsResponse.data) {
-          setProjectsCount(projectsResponse.data.length);
-        } else {
-          setProjectsCount(0);
-        }
+
       } catch (error: any) {
         console.error("DashboardLayout: Error fetching data:", error);
         // Don't show error to user for background fetch failures, just log it
