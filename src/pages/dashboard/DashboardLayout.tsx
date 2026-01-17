@@ -219,8 +219,6 @@ export default function DashboardLayout({
   };
 
   const userPlan = getPlanDisplayName(subscriptionData?.plan);
-  const projectsUsed = projectsCount;
-  const projectsLimit = Infinity; // All plans have unlimited projects
 
   const handleSignOut = async () => {
     try {

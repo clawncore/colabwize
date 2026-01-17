@@ -5,7 +5,6 @@ import { Check, Zap } from "lucide-react";
 import { SubscriptionService, Plan } from "../services/subscriptionService";
 import { useToast } from "../hooks/use-toast";
 import Layout from "../components/Layout";
-import authService from "../services/authService";
 
 import { useAuth } from "../hooks/useAuth";
 function IntroHero() {
@@ -70,7 +69,7 @@ function FeaturesPresentationFlow() {
       }
     };
     fetchSubscription();
-  }, []);
+  }, [user]);
 
   const handleSelectPlan = useCallback(async (planId: string) => {
     // Handle free tier - redirect to signup
@@ -157,7 +156,7 @@ function FeaturesPresentationFlow() {
     } finally {
       setCheckoutLoading(null);
     }
-  }, [billingPeriod, navigate, toast]);
+  }, [billingPeriod, navigate, toast, currentPlanId, user]);
 
   useEffect(() => {
     // Define base monthly plans
@@ -333,7 +332,7 @@ function FeaturesPresentationFlow() {
     };
 
     resumeCredits();
-  }, [navigate, toast]); // Only run once on mount (navigate and toast are stable)
+  }, [navigate, toast, user]); // Only run once on mount (navigate and toast are stable)
 
 
 
