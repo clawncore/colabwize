@@ -9,6 +9,9 @@ import { DraftComparisonPanel } from "../originality/DraftComparisonPanel";
 import { CitationConfidencePanel } from "../citations/CitationConfidencePanel";
 import { AIChatPanel } from "../aichat/AIChatPanel";
 import { Project, documentService } from "../../services/documentService";
+import { SubscriptionService } from "../../services/subscriptionService";
+import { UsageMeter } from "../../components/subscription/UsageMeter";
+import { useAuth } from "../../hooks/useAuth";
 
 // Define panel types
 export type RightPanelType =
@@ -37,6 +40,11 @@ const EditorWorkspacePage: React.FC = () => {
   // Resizable widths
   const [leftSidebarWidth, setLeftSidebarWidth] = useState(280);
   const [rightSidebarWidth, setRightSidebarWidth] = useState(340);
+
+  // Subscription state
+  const [creditBalance, setCreditBalance] = useState<number>(0);
+  const [userPlan, setUserPlan] = useState<string>("Free Plan");
+  const { user } = useAuth();
 
   // Resize state
   const [isResizingLeft, setIsResizingLeft] = useState(false);
@@ -119,6 +127,33 @@ const EditorWorkspacePage: React.FC = () => {
     loadProjectById();
   }, [id]);
 
+  // Fetch subscription data for credits
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const { subscription, creditBalance } = await SubscriptionService.getCurrentSubscription();
+        setCreditBalance(creditBalance || 0);
+
+        // Get plan usage name logic
+        let planName = "Free Plan";
+        if (subscription?.plan) {
+          const planId = typeof subscription.plan === 'object' ? subscription.plan.id : subscription.plan;
+          if (planId === 'student') planName = "Student Pro";
+          else if (planId === 'researcher') planName = "Researcher";
+          else if (planId === 'payg') planName = "Pay As You Go";
+        }
+        setUserPlan(planName);
+
+      } catch (error) {
+        console.error("Failed to fetch subscription:", error);
+      }
+    };
+
+    if (user) {
+      fetchSubscription();
+    }
+  }, [user]);
+
   // Handle mouse move for resizing
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -194,7 +229,7 @@ const EditorWorkspacePage: React.FC = () => {
         <>
           <div
             style={{ width: `${leftSidebarWidth}px` }}
-            className="flex-shrink-0 h-full border-r border-gray-200 transition-all">
+            className="flex-shrink-0 h-full border-r border-gray-200 transition-all relative">
             <DocumentList
               onProjectSelect={handleProjectSelect}
               onCreateNew={handleCreateNew}
@@ -202,6 +237,17 @@ const EditorWorkspacePage: React.FC = () => {
               displayMode="list"
               showActions={false}
             />
+
+            {/* Credit Meter Fixed at Bottom */}
+            <div className="absolute bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 z-10 transition-all">
+              <UsageMeter
+                current={creditBalance}
+                limit={0}
+                planName={userPlan}
+                featureName="credits"
+                mode="credits"
+              />
+            </div>
           </div>
           {/* Left Resize Handle */}
           <div
@@ -209,7 +255,8 @@ const EditorWorkspacePage: React.FC = () => {
             className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors"
           />
         </>
-      )}
+      )
+      }
 
       {/* Toggle Left Sidebar Button */}
       <button
@@ -316,64 +363,66 @@ const EditorWorkspacePage: React.FC = () => {
       </button>
 
       {/* Right Sidebar - Feature-Specific Panels */}
-      {isRightSidebarOpen && activePanelType && (
-        <>
-          {/* Right Resize Handle */}
-          <div
-            onMouseDown={() => setIsResizingRight(true)}
-            className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors"
-          />
-          <div
-            style={{ width: `${rightSidebarWidth}px` }}
-            className="flex-shrink-0 h-full transition-all border-l border-gray-200">
-            {/* Render appropriate panel based on type */}
-            {activePanelType === "citations" && selectedProject && (
-              <PaperSuggestionsPanel
-                projectId={selectedProject.id}
-                onClose={() => setIsRightSidebarOpen(false)}
-                onInsertCitation={handleInsertCitation}
-                contextKeywords={panelData?.contextKeywords}
-              />
-            )}
-            {activePanelType === "rephrase" && (
-              <RephraseSuggestionsPanel
-                projectId={selectedProject?.id}
-                panelData={panelData}
-                onClose={() => setIsRightSidebarOpen(false)}
-              />
-            )}
-            {activePanelType === "reality-check" && panelData && (
-              <div className="p-4 h-full overflow-y-auto custom-scrollbar">
-                <AnxietyRealityCheckPanel stats={panelData} />
-              </div>
-            )}
-            {activePanelType === "draft-comparison" && panelData && (
-              <DraftComparisonPanel
-                result={panelData}
-                onClose={() => setIsRightSidebarOpen(false)}
-              />
-            )}
-            {activePanelType === "citation-confidence" && selectedProject && (
-              <div className="p-4 h-full overflow-y-auto custom-scrollbar">
-                <CitationConfidencePanel projectId={selectedProject.id} />
-              </div>
-            )}
-            {activePanelType === "ai-chat" && selectedProject && (
-              <AIChatPanel
-                documentContent={JSON.stringify(selectedProject.content)}
-                selectedText={panelData?.selectedText}
-                projectId={selectedProject.id}
-                projectTitle={selectedProject.title}
-                projectDescription={selectedProject.description}
-                originalityResults={panelData?.originalityResults}
-                citationSuggestions={panelData?.citationSuggestions}
-                onClose={() => setIsRightSidebarOpen(false)}
-              />
-            )}
-          </div>
-        </>
-      )}
-    </div>
+      {
+        isRightSidebarOpen && activePanelType && (
+          <>
+            {/* Right Resize Handle */}
+            <div
+              onMouseDown={() => setIsResizingRight(true)}
+              className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors"
+            />
+            <div
+              style={{ width: `${rightSidebarWidth}px` }}
+              className="flex-shrink-0 h-full transition-all border-l border-gray-200">
+              {/* Render appropriate panel based on type */}
+              {activePanelType === "citations" && selectedProject && (
+                <PaperSuggestionsPanel
+                  projectId={selectedProject.id}
+                  onClose={() => setIsRightSidebarOpen(false)}
+                  onInsertCitation={handleInsertCitation}
+                  contextKeywords={panelData?.contextKeywords}
+                />
+              )}
+              {activePanelType === "rephrase" && (
+                <RephraseSuggestionsPanel
+                  projectId={selectedProject?.id}
+                  panelData={panelData}
+                  onClose={() => setIsRightSidebarOpen(false)}
+                />
+              )}
+              {activePanelType === "reality-check" && panelData && (
+                <div className="p-4 h-full overflow-y-auto custom-scrollbar">
+                  <AnxietyRealityCheckPanel stats={panelData} />
+                </div>
+              )}
+              {activePanelType === "draft-comparison" && panelData && (
+                <DraftComparisonPanel
+                  result={panelData}
+                  onClose={() => setIsRightSidebarOpen(false)}
+                />
+              )}
+              {activePanelType === "citation-confidence" && selectedProject && (
+                <div className="p-4 h-full overflow-y-auto custom-scrollbar">
+                  <CitationConfidencePanel projectId={selectedProject.id} />
+                </div>
+              )}
+              {activePanelType === "ai-chat" && selectedProject && (
+                <AIChatPanel
+                  documentContent={JSON.stringify(selectedProject.content)}
+                  selectedText={panelData?.selectedText}
+                  projectId={selectedProject.id}
+                  projectTitle={selectedProject.title}
+                  projectDescription={selectedProject.description}
+                  originalityResults={panelData?.originalityResults}
+                  citationSuggestions={panelData?.citationSuggestions}
+                  onClose={() => setIsRightSidebarOpen(false)}
+                />
+              )}
+            </div>
+          </>
+        )
+      }
+    </div >
   );
 };
 

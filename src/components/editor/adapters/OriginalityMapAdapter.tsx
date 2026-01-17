@@ -58,8 +58,9 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
         error.message || "Could not complete originality scan.";
 
       if (
-        errorMessage.includes("Usage limit reached") ||
-        errorMessage.includes("not available on your current plan")
+        errorMessage.toLowerCase().includes("limit reached") ||
+        errorMessage.toLowerCase().includes("upgrade") ||
+        errorMessage.toLowerCase().includes("credits") // Handle credit exhaustion messages
       ) {
         setShowUpgradeModal(true);
       } else {
@@ -88,10 +89,9 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
         onClick={handleScan}
         disabled={isScanning}
         className={`px-4 py-2 border rounded-md text-sm font-medium transition-colors flex items-center gap-2
-          ${
-            isScanning
-              ? "bg-indigo-50 border-indigo-200 text-indigo-700 cursor-not-allowed"
-              : "border-gray-300 text-gray-700 hover:bg-gray-50 bg-white"
+          ${isScanning
+            ? "bg-indigo-50 border-indigo-200 text-indigo-700 cursor-not-allowed"
+            : "border-gray-300 text-gray-700 hover:bg-gray-50 bg-white"
           }`}
         title="Check Originality">
         {isScanning ? (

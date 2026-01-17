@@ -42,7 +42,8 @@ export const UsageMeter: React.FC<UsageMeterProps> = ({
 
   // Calculate percentage for Subscription Mode
   const isUnlimited = limit === "unlimited" || limit === -1 || limit === -2;
-  const percentage = isUnlimited ? 0 : Math.min((current / (limit as number)) * 100, 100);
+  const isZeroQuery = limit === 0;
+  const percentage = isUnlimited ? 0 : isZeroQuery ? 100 : Math.min((current / (limit as number)) * 100, 100);
 
   // Determine color based on usage
   const getColor = () => {
@@ -62,51 +63,50 @@ export const UsageMeter: React.FC<UsageMeterProps> = ({
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-2">
-        <div>
-          <span className="text-sm font-medium text-gray-700">
-            {featureName.charAt(0).toUpperCase() + featureName.slice(1)} Used
+        <span className="text-sm font-medium text-gray-700">
+          {featureName.charAt(0).toUpperCase() + featureName.slice(1)} Used
+        </span>
+      </div>
+      <div className={`text-sm font-semibold ${getTextColor()}`}>
+        {isUnlimited ? (
+          <span>Unlimited</span>
+        ) : (
+          <span>
+            {current} / {limit}
           </span>
-          <span className="text-xs text-gray-500 ml-2">({planName} Plan)</span>
-        </div>
-        <div className={`text-sm font-semibold ${getTextColor()}`}>
-          {isUnlimited ? (
-            <span>Unlimited</span>
-          ) : (
-            <span>
-              {current} / {limit}
-            </span>
-          )}
-        </div>
+        )}
       </div>
 
-      {!isUnlimited && (
-        <>
-          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-            <div
-              className={`h-full ${getColor()} transition-all duration-300 ease-in-out`}
-              style={{ width: `${percentage}%` }}
-            />
-          </div>
-
-          {percentage >= 80 && (
-            <div className="mt-2 flex items-center justify-between">
-              <p className={`text-xs ${getTextColor()}`}>
-                {percentage >= 100
-                  ? "Limit reached!"
-                  : `${Math.round(100 - percentage)}% remaining`}
-              </p>
-              {percentage >= 90 && (
-                <a
-                  href="/pricing"
-                  className="text-xs font-medium text-indigo-600 hover:text-indigo-500 underline"
-                >
-                  Upgrade Plan
-                </a>
-              )}
+      {
+        !isUnlimited && (
+          <>
+            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div
+                className={`h-full ${getColor()} transition-all duration-300 ease-in-out`}
+                style={{ width: `${percentage}%` }}
+              />
             </div>
-          )}
-        </>
-      )}
-    </div>
+
+            {percentage >= 80 && (
+              <div className="mt-2 flex items-center justify-between">
+                <p className={`text-xs ${getTextColor()}`}>
+                  {percentage >= 100
+                    ? "Limit reached!"
+                    : `${Math.round(100 - percentage)}% remaining`}
+                </p>
+                {percentage >= 90 && (
+                  <a
+                    href="/pricing"
+                    className="text-xs font-medium text-indigo-600 hover:text-indigo-500 underline"
+                  >
+                    Upgrade Plan
+                  </a>
+                )}
+              </div>
+            )}
+          </>
+        )
+      }
+    </div >
   );
 };

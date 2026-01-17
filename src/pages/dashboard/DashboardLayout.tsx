@@ -10,8 +10,9 @@ import {
   LogOut,
   Trash2,
   Crown,
-  ChevronDown,
   FileText,
+  ChevronDown,
+  ChevronUp,
   AlertCircle,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -50,7 +51,9 @@ export default function DashboardLayout({
   // Add state for limits and usage
   const [planLimits, setPlanLimits] = useState<any>(null);
   const [planUsage, setPlanUsage] = useState<any>(null);
+
   const [creditBalance, setCreditBalance] = useState<number>(0);
+  const [isUsageCollapsed, setIsUsageCollapsed] = useState(true);
   const userId = useMemo(() => user?.id, [user?.id]);
   const hasFetchedData = useRef<string | null>(null);
 
@@ -89,13 +92,9 @@ export default function DashboardLayout({
         return;
       }
 
-      // Prevent multiple calls for the same user
-      if (hasFetchedData.current === user.id) {
-        return;
-      }
-
       // Mark that we've fetched data for this user
-      hasFetchedData.current = user.id;
+      // hasFetchedData.current = user.id; // REMOVED: Causing stale data
+
 
       try {
         setLoadingProjects(true);
@@ -120,7 +119,8 @@ export default function DashboardLayout({
     };
 
     fetchData();
-  }, [userId, user, isAuthenticated, loading]);
+    fetchData();
+  }, [userId, user, isAuthenticated, loading, location.pathname]);
 
   // Close sidebar on mobile when route changes
   useEffect(() => {
@@ -722,48 +722,91 @@ export default function DashboardLayout({
             {/* Usage meter */}
             {!sidebarCollapsed && (
               <div className="p-4 border-t border-gray-200 mt-auto">
-                <div className="bg-gray-100 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                  <button
+                    onClick={() => setIsUsageCollapsed(!isUsageCollapsed)}
+                    className="w-full flex items-center justify-between mb-1 focus:outline-none"
+                  >
                     <span className="text-sm font-medium text-gray-700 flex items-center">
-                      <Crown className="mr-1 h-4 w-4" /> {userPlan}
+                      <Crown className="mr-2 h-4 w-4 text-purple-600" />
+                      {userPlan}
                     </span>
-                  </div>
+                    {isUsageCollapsed ? (
+                      <ChevronDown className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <ChevronUp className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
 
-                  {/* Meter for Scans/Features */}
-                  {/* Meter for Scans/Features */}
-                  <div className="mb-4">
-                    {/* Plan Meter */}
-                    <UsageMeter
-                      current={planUsage?.scan || 0}
-                      limit={
-                        planLimits?.scans_per_month === -1 ||
-                          planLimits?.scans_per_month === "unlimited"
-                          ? "unlimited"
-                          : planLimits?.scans_per_month || 10
-                      }
-                      planName={userPlan}
-                      featureName="scans"
-                      mode="subscription"
-                    />
-
-                    {/* Credit Meter (Conditional) */}
-                    {creditBalance > 0 && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className={`transition-all duration-300 overflow-hidden ${isUsageCollapsed ? 'max-h-0 opacity-0' : 'max-h-[300px] opacity-100 mt-3'}`}>
+                    <div className="space-y-3 pr-1 custom-scrollbar">
+                      {/* Credits Meter (Only for Free/PAYG) */}
+                      {(['Free Plan', 'Pay As You Go'].includes(userPlan) && creditBalance > 0) && (
                         <UsageMeter
                           current={creditBalance}
-                          limit={100} // Dummy limit for credits mode
-                          planName="PAYG"
+                          limit={0}
+                          planName={userPlan}
                           featureName="credits"
                           mode="credits"
                         />
-                      </div>
-                    )}
+                      )}
+
+                      {/* Scans Meter */}
+                      <UsageMeter
+                        current={planUsage?.scan || 0}
+                        limit={planLimits?.scans_per_month ?? 3}
+                        planName={userPlan}
+                        featureName="scans"
+                      />
+
+                      {/* Originality Meter */}
+                      <UsageMeter
+                        current={planUsage?.originality_scan || 0}
+                        limit={planLimits?.originality_scan ?? 3}
+                        planName={userPlan}
+                        featureName="originality"
+                      />
+
+                      {/* Citations Meter */}
+                      <UsageMeter
+                        current={planUsage?.citation_check || 0}
+                        limit={planLimits?.citation_check ?? 0}
+                        planName={userPlan}
+                        featureName="citations"
+                      />
+
+                      {/* Rephrase Meter */}
+                      <UsageMeter
+                        current={planUsage?.rephrase_suggestions || 0}
+                        limit={planLimits?.rephrase_suggestions ?? 3}
+                        planName={userPlan}
+                        featureName="rephrase"
+                      />
+                    </div>
                   </div>
 
-                  {/* Always show unlimited projects message */}
-                  <p className="text-xs text-gray-600 mb-3">
-                    Unlimited Documents
-                  </p>
+                  {isUsageCollapsed && (
+                    <div className="mt-1">
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-full bg-purple-500 rounded-full"
+                          style={{
+                            width: `${Math.min(((planUsage?.scan || 0) / (planLimits?.scans_per_month ?? 3)) * 100, 100)}%`
+                          }}
+                        />
+                      </div>
+                      <div className="flex justify-end items-center mt-1">
+                        <p className="text-[10px] text-gray-400">
+                          {(planUsage?.scan || 0)} / {(planLimits?.scans_per_month ?? 3)} Scans
+                        </p>
+                        <span className="text-[10px] text-gray-400 ml-1">
+                          ({Math.round(Math.min(((planUsage?.scan || 0) / (planLimits?.scans_per_month ?? 3)) * 100, 100))}%)
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+
 
                   {/* Show loading indicator when projects are loading */}
                   {loadingProjects && (

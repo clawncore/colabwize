@@ -136,7 +136,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   }
 
   return (
-    <div className="w-full min-h-screen flex flex-col bg-gray-50">
+    <div className="w-full h-full flex flex-col bg-gray-50">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between mb-3">

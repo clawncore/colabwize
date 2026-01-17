@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { FileSearch, BookOpen } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { FileSearch, BookOpen, ShieldCheck, Lock, ArrowRight, Award, CheckCircle, Upload, Crown } from "lucide-react";
 import { ResultsSummary } from "./ResultsSummary";
 import { FeatureCard } from "./FeatureCard";
 import { DocumentUploadModal } from "./DocumentUploadModal";
@@ -8,7 +8,7 @@ import AnalyticsService, {
   type DashboardData,
 } from "../../services/analyticsService";
 import { apiClient } from "../../services/apiClient";
-import { documentService } from "../../services/documentService";
+import { documentService, Project } from "../../services/documentService";
 import {
   LineChart,
   Line,
@@ -38,8 +38,9 @@ export const Dashboard: React.FC = () => {
     citationStatus: undefined,
     authorshipVerified: undefined,
   });
-  // const [loading, setLoading] = useState(true);
-  // const [uploadingProject, setUploadingProject] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [uploadingProject, setUploadingProject] = useState(false);
+  const [latestProject, setLatestProject] = useState<Project | null>(null);
 
   // State for chart data
   const [documentTrendData, setDocumentTrendData] = useState<any[]>([]);
@@ -454,6 +455,42 @@ export const Dashboard: React.FC = () => {
     fetchDashboardData();
   }, []);
 
+  // Fetch latest project
+  useEffect(() => {
+    const fetchLatestProject = async () => {
+      try {
+        const response = await documentService.getProjects();
+        if (response.success && response.data && response.data.length > 0) {
+          // Sort by updated_at descending
+          const sorted = response.data.sort(
+            (a, b) =>
+              new Date(b.updated_at).getTime() -
+              new Date(a.updated_at).getTime()
+          );
+          const latest = sorted[0];
+          setLatestProject(latest);
+
+          // Update dashboard data to reflect latest project
+          // If we have actual scan data, use it
+          const latestScan = latest.originality_scans?.[0]; // Assuming array is sorted or we pick first
+          // Note: In a real app, we might want to fetch the full analysis or verify this mapping
+
+          // We can also fetch confidence if needed, but for now we'll rely on what's available or defaults
+          if (latestScan) {
+            setDashboardData(prev => ({
+              ...prev,
+              originalityScore: latestScan.overallScore
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching latest project:", error);
+      }
+    };
+
+    fetchLatestProject();
+  }, []);
+
   // Fetch user's subscription plan
   useEffect(() => {
     const fetchUserPlan = async () => {
@@ -500,458 +537,650 @@ export const Dashboard: React.FC = () => {
           <button
             data-tour="upload-button"
             onClick={() => setShowUploadModal(true)}
-            className="px-4 py-2 bg-[#5B7CFA] text-white font-medium rounded-md hover:bg-[#4F6EEA] active:bg-[#445FD8] transition-colors">
-            Upload Document
+            className="flex items-center px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors shadow-sm">
+            <Upload className="w-3.5 h-3.5 mr-1.5" />
+            Upload
           </button>
           <button
             onClick={handleUpgradeClick}
-            className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 active:bg-indigo-800 transition-colors">
+            className="flex items-center px-3 py-1.5 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-sm font-bold rounded-lg hover:from-amber-500 hover:to-amber-700 active:bg-amber-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+            <Crown className="w-3.5 h-3.5 mr-1.5 text-amber-100" />
             Upgrade
           </button>
         </div>
       </div>
 
-      {/* Results Summary */}
-      <div className="mb-8">
-        <ResultsSummary
-          originalityScore={dashboardData.originalityScore}
-          citationStatus={dashboardData.citationStatus}
-          authorshipVerified={dashboardData.authorshipVerified}
-        />
+      {/* Latest Activity Section */}
+      {latestProject && (
+        <div className="mb-8">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 ring-1 ring-gray-50">
+            <div className="grid grid-cols-1 lg:grid-cols-3">
+              {/* Left: Document Preview (2/3 width) */}
+              <div className="lg:col-span-2 p-8 border-r border-gray-100 bg-gradient-to-br from-white to-gray-50/50">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                      <span className="w-2 h-2 bg-blue-600 rounded-full mr-2 animate-pulse"></span>
+                      Latest Activity
+                    </span>
+                    <span className="text-sm text-gray-500 font-medium">
+                      Edited {new Date(latestProject.updated_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <Link
+                    to={`/dashboard/editor/${latestProject.id}`}
+                    className="group flex items-center text-sm font-semibold text-gray-500 hover:text-indigo-600 transition-colors">
+                    Open in Editor
+                    <BookOpen className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+
+                <div className="mb-6">
+                  <h2 className="text-3xl font-bold text-gray-900 tracking-tight font-serif flex items-center mb-2">
+                    <FileSearch className="w-8 h-8 text-indigo-600 mr-3" />
+                    {latestProject.title}
+                  </h2>
+                </div>
+
+                {/* Visual Document Page Preview */}
+                <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200 mb-8 relative h-48 overflow-hidden group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 mx-4 max-w-xl">
+                  {/* Mini Page Header */}
+                  <div className="border-b border-gray-100 pb-4 mb-4 flex justify-between items-center">
+                    <div className="h-2 w-1/3 bg-gray-100 rounded"></div>
+                    <div className="h-2 w-8 bg-gray-100 rounded"></div>
+                  </div>
+
+                  {/* Actual Content Preview */}
+                  <div className="font-serif text-sm text-gray-600 leading-relaxed space-y-2 opacity-80">
+                    <p>{latestProject.description || "The analysis of the VPN market suggests a strong growth trajectory..."}</p>
+                    <p className="blur-[1px]">In the rapidly evolving digital landscape, virtual private networks (VPNs) have become essential tools for privacy and security. This document explores the key drivers behind...</p>
+                    <div className="space-y-2 pt-2 blur-[2px]">
+                      <div className="h-2 bg-gray-100 rounded w-full"></div>
+                      <div className="h-2 bg-gray-100 rounded w-5/6"></div>
+                      <div className="h-2 bg-gray-100 rounded w-full"></div>
+                    </div>
+                  </div>
+
+                  {/* Fade Overlay */}
+                  <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
+                </div>
+
+                <div className="flex space-x-4">
+                  <Link
+                    to={`/dashboard/editor/${latestProject.id}`}
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5 transition-all duration-200">
+                    Resume Editing
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </Link>
+                  <button className="inline-flex items-center px-6 py-3 border border-gray-200 text-sm font-bold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all duration-200">
+                    View Full Report
+                  </button>
+                </div>
+              </div>
+
+              {/* Right: Document Specific Analytics (1/3 width) - Enhanced & Restricted */}
+              <div className="p-8 bg-gray-50/80 flex flex-col justify-center">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 px-1">
+                  Document Metrics
+                </h3>
+                <div className="space-y-4">
+                  {/* Word Count - Free/Visible */}
+                  <div className="flex justify-between items-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                        <FileSearch className="h-5 w-5" />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-700">
+                        Word Count
+                      </span>
+                    </div>
+                    <span className="text-xl font-bold text-gray-900">
+                      {latestProject.word_count || 0}
+                    </span>
+                  </div>
+
+                  {/* Originality - Conditional Display */}
+                  <div className={`flex justify-between items-center p-4 rounded-xl border ${userPlan === 'researcher' ? 'bg-white border-gray-100 shadow-sm' : 'bg-white/60 border-gray-200 border-dashed'}`}>
+                    <div className={`flex items-center space-x-3 ${userPlan === 'researcher' ? '' : 'opacity-75'}`}>
+                      <div className={`p-2 rounded-lg ${userPlan === 'researcher' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                        <ShieldCheck className="h-5 w-5" />
+                      </div>
+                      <span className={`text-sm font-medium ${userPlan === 'researcher' ? 'text-gray-700' : 'text-gray-600'}`}>
+                        Originality
+                      </span>
+                    </div>
+                    {userPlan === 'researcher' ? (
+                      <span className={`text-xl font-bold ${(latestProject.originality_scans?.[0]?.overallScore || 0) > 75 ? "text-green-600" : "text-amber-600"}`}>
+                        {Math.round(latestProject.originality_scans?.[0]?.overallScore || 0)}%
+                      </span>
+                    ) : (
+                      <button onClick={handleUpgradeClick} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm hover:shadow-md hover:scale-105 transition-all">
+                        <Lock className="w-3 h-3 mr-1.5" />
+                        Unlock
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Citations - Conditional Display */}
+                  <div className={`flex justify-between items-center p-4 rounded-xl border ${userPlan === 'researcher' ? 'bg-white border-gray-100 shadow-sm' : 'bg-white/60 border-gray-200 border-dashed'}`}>
+                    <div className={`flex items-center space-x-3 ${userPlan === 'researcher' ? '' : 'opacity-75'}`}>
+                      <div className={`p-2 rounded-lg ${userPlan === 'researcher' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
+                        <BookOpen className="h-5 w-5" />
+                      </div>
+                      <span className={`text-sm font-medium ${userPlan === 'researcher' ? 'text-gray-700' : 'text-gray-600'}`}>
+                        Citations
+                      </span>
+                    </div>
+                    {userPlan === 'researcher' ? (
+                      <span className="text-sm font-bold text-gray-900 capitalize bg-gray-100 px-2 py-1 rounded">
+                        {dashboardData.citationStatus || "Pending"}
+                      </span>
+                    ) : (
+                      <button onClick={handleUpgradeClick} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm hover:shadow-md hover:scale-105 transition-all">
+                        <Lock className="w-3 h-3 mr-1.5" />
+                        Unlock
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Authorship - Conditional Display */}
+                  <div className={`flex justify-between items-center p-4 rounded-xl border ${userPlan === 'researcher' ? 'bg-white border-gray-100 shadow-sm' : 'bg-white/60 border-gray-200 border-dashed'}`}>
+                    <div className={`flex items-center space-x-3 ${userPlan === 'researcher' ? '' : 'opacity-75'}`}>
+                      <div className={`p-2 rounded-lg ${userPlan === 'researcher' ? 'bg-purple-50 text-purple-600' : 'bg-gray-100 text-gray-500'}`}>
+                        <Award className="h-5 w-5" />
+                      </div>
+                      <span className={`text-sm font-medium ${userPlan === 'researcher' ? 'text-gray-700' : 'text-gray-600'}`}>
+                        Authorship
+                      </span>
+                    </div>
+                    {userPlan === 'researcher' ? (
+                      <span className="text-sm font-bold text-gray-900 capitalize bg-gray-100 px-2 py-1 rounded">
+                        {dashboardData.authorshipVerified ? "Verified" : "Pending"}
+                      </span>
+                    ) : (
+                      <button onClick={handleUpgradeClick} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm hover:shadow-md hover:scale-105 transition-all">
+                        <Lock className="w-3 h-3 mr-1.5" />
+                        Unlock
+                      </button>
+                    )}
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Advanced Document Analytics Section (Blurred for Free) */}
+      <div className="mb-8 relative" data-tour="analytics">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center">
+            Advanced Document Analytics
+            <span className="ml-3 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center">
+              <Crown className="w-3 h-3 mr-1" />
+              Premium
+            </span>
+          </h2>
+        </div>
+
+        <div className="relative">
+          {/* Content wrapping for blur effect */}
+          <div className={`${(userPlan === "free" || userPlan === "Free Plan") ? "filter blur-sm select-none pointer-events-none opacity-60 transition-all duration-500" : ""}`}>
+
+            {/* Key Metrics Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              {/* Originality Overview */}
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <ShieldCheck className="w-16 h-16 text-indigo-600 transform rotate-12" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Aggregate Originality</h3>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-gray-900">{dashboardData.originalityScore ? Math.round(dashboardData.originalityScore) : 0}%</span>
+                  <span className="ml-2 text-sm font-medium text-green-600">Safe</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
+                  <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${dashboardData.originalityScore || 0}%` }}></div>
+                </div>
+              </div>
+
+              {/* Citation Health */}
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <BookOpen className="w-16 h-16 text-blue-600 transform -rotate-12" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Citation Health</h3>
+                <div className="flex items-baseline">
+                  <span className="text-3xl font-bold text-gray-900 capitalize">{dashboardData.citationStatus || "Pending"}</span>
+                </div>
+                <div className="flex items-center mt-4 space-x-2">
+                  <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className={`h-2 rounded-full ${dashboardData.citationStatus === 'strong' ? 'bg-green-500' : 'bg-amber-500'}`} style={{ width: '80%' }}></div>
+                  </div>
+                  <span className="text-xs text-gray-500">85/100</span>
+                </div>
+              </div>
+
+              {/* Authorship Verification */}
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Award className="w-16 h-16 text-purple-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Authorship Status</h3>
+                <div className="flex items-center mt-1">
+                  <CheckCircle className="w-6 h-6 text-green-500 mr-2" />
+                  <span className="text-2xl font-bold text-gray-900">Verified</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-3 flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  Certificate Active
+                </p>
+              </div>
+            </div>
+
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+              {/* Total Documents - Line Chart */}
+              <div className="bg-[#FFFAFA] rounded-lg p-6 border border-gray-200 shadow-sm">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">
+                      Total Documents
+                    </h3>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {documentTrendData.reduce(
+                        (acc, curr) => acc + curr.documents,
+                        0
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Total uploaded (last 6 months)
+                    </p>
+                  </div>
+                </div>
+                <div className="h-32">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={documentTrendData}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="documents"
+                        stroke="#5B7CFA"
+                        activeDot={{ r: 8 }}
+                        name="Documents"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Authorship Pie Chart */}
+              <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm flex flex-col">
+                <h3 className="text-gray-500 font-medium text-sm mb-4">Authorship Verification</h3>
+                <div className="h-32 relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={verifiedDocsData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={65}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        <Cell fill="#4F46E5" /> {/* Verified - Indigo */}
+                        <Cell fill="#E5E7EB" /> {/* Pending - Gray */}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* Center Stat */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-2xl font-bold text-gray-900">
+                      {verifiedDocsData.find(d => d.name === "Verified")?.value || 0}
+                    </span>
+                    <span className="text-xs text-gray-500">Verified</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Premium Overlay */}
+          {(userPlan === "free" || userPlan === "Free Plan") && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4">
+              {/* Simplified Overlay - No Box */}
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/90 backdrop-blur rounded-full mb-6 shadow-lg transform hover:scale-110 transition-transform duration-300">
+                  <Lock className="w-8 h-8 text-indigo-600" />
+                </div>
+                <h3 className="text-3xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">
+                  Unlock Advanced Analytics
+                </h3>
+                <p className="text-gray-700 font-medium mb-8 max-w-md mx-auto drop-shadow-sm">
+                  Get full visibility into your Originality, Citation Health, and Authorship Verification status.
+                </p>
+                <button
+                  onClick={handleUpgradeClick}
+                  className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-full shadow-xl shadow-indigo-500/40 transition-all duration-200 flex items-center justify-center mx-auto group ring-4 ring-white/30"
+                >
+                  <span>Upgrade to Researcher</span>
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+                <p className="text-sm text-gray-600 font-semibold mt-4 bg-white/60 inline-block px-3 py-1 rounded-full backdrop-blur-sm">
+                  Starting at $12/mo
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Feature Cards */}
-
-      <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8"
-        data-tour="feature-cards">
-        <FeatureCard
-          icon={<FileSearch className="w-10 h-10 text-indigo-600" />}
-          title="Originality Scan"
-          description="Check your document for plagiarism and similarity issues"
-          status={
-            dashboardData.originalityScore !== undefined ? "scanned" : "pending"
-          }
-          score={dashboardData.originalityScore || 0}
-        />
-
-        <FeatureCard
-          icon={<BookOpen className="w-10 h-10 text-indigo-600" />}
-          title="Citation Check"
-          description="Find missing citations and manage references"
-          status={
-            dashboardData.citationStatus !== undefined ? "scanned" : "pending"
-          }
-          score={
-            dashboardData.citationStatus === "strong"
-              ? 95
-              : dashboardData.citationStatus === "good"
-                ? 80
-                : dashboardData.citationStatus === "weak"
-                  ? 60
-                  : 40
-          }
-        />
-      </div>
-
-      {/* Analytics Section */}
-      <div className="mb-8" data-tour="analytics">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Document Analytics
-        </h2>
-        <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-            {/* Total Documents - Line Chart */}
+      {/* Advanced Analytics - Researcher Only */}
+      <div className="py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        {userPlan === "researcher" ? (
+          <>
+            {/* Most Active Day - Vertical Bar Chart */}
             <div className="bg-[#FFFAFA] rounded-lg p-6 border border-gray-200 shadow-sm">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">
-                    Total Documents
+                    Most Active Day
                   </h3>
                   <p className="text-2xl font-bold text-gray-900">
-                    {documentTrendData.reduce(
-                      (acc, curr) => acc + curr.documents,
-                      0
-                    )}
+                    {mostActiveDay}
                   </p>
                   <p className="text-sm text-gray-600 mt-1">
-                    Total uploaded (last 6 months)
+                    {mostActiveDayCount} uploads
+                  </p>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    className={`px-3 py-1 text-xs rounded-md ${timeRange === "week" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-700"}`}
+                    onClick={() => setTimeRange("week")}>
+                    Week
+                  </button>
+                  <button
+                    className={`px-3 py-1 text-xs rounded-md ${timeRange === "month" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-700"}`}
+                    onClick={() => setTimeRange("month")}>
+                    Month
+                  </button>
+                </div>
+              </div>
+              <div className="h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={activeDayData}
+                    margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                    layout="vertical">
+                    <Bar
+                      dataKey="count"
+                      name="Uploads"
+                      radius={[0, 4, 4, 0]}>
+                      {activeDayData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.isMostActive ? "#4F46E5" : "#D1D5DB"}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Weekly Upload Velocity - Bar Chart */}
+            <div className="bg-[#FFFAFA] rounded-lg p-6 border border-gray-200 shadow-sm">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">
+                    Weekly Upload Velocity
+                  </h3>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {currentUploadVelocity}{" "}
+                    <span className="text-sm font-normal text-gray-600">
+                      /week
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {uploadVelocityChange >= 0 ? "↑" : "↓"}{" "}
+                    {Math.abs(uploadVelocityChange)} from last week
+                  </p>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    className={`px-3 py-1 text-xs rounded-md ${timeRange === "week" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-700"}`}
+                    onClick={() => setTimeRange("week")}>
+                    Week
+                  </button>
+                  <button
+                    className={`px-3 py-1 text-xs rounded-md ${timeRange === "month" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-700"}`}
+                    onClick={() => setTimeRange("month")}>
+                    Month
+                  </button>
+                </div>
+              </div>
+              <div className="h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={uploadVelocityData}
+                    margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                    <Bar dataKey="uploads" name="Uploads" fill="#5B7CFA" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Citation Fix Rate - Progress Chart */}
+            <div className="bg-[#FFFAFA] rounded-lg p-6 border border-gray-200 shadow-sm">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">
+                    Citation Fix Rate
+                  </h3>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {citationFixRate}%
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {citationFixRateChange >= 0 ? "↑" : "↓"}{" "}
+                    {Math.abs(citationFixRateChange)}% from last period
+                  </p>
+                </div>
+              </div>
+              <div className="h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={[
+                      {
+                        name: "Rate",
+                        value: citationFixRate,
+                        remaining: 100 - citationFixRate,
+                      },
+                    ]}
+                    layout="vertical"
+                    margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                    <Bar
+                      dataKey="value"
+                      fill="#5B7CFA"
+                      radius={[0, 4, 4, 0]}>
+                      <Cell fill="#5B7CFA" />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Time to Verification - Trend Chart */}
+            <div className="bg-[#FFFAFA] rounded-lg p-6 border border-gray-200 shadow-sm">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">
+                    Time to Verification
+                  </h3>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {timeToVerification}m
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {timeToVerificationChange >= 0 ? "↑" : "↓"}{" "}
+                    {Math.abs(timeToVerificationChange)}m from last period
                   </p>
                 </div>
               </div>
               <div className="h-32">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={documentTrendData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Legend />
+                    data={verificationTrendData}
+                    margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                     <Line
                       type="monotone"
-                      dataKey="documents"
+                      dataKey="time"
                       stroke="#5B7CFA"
-                      activeDot={{ r: 8 }}
-                      name="Documents"
+                      strokeWidth={2}
+                      dot={{ r: 2 }}
+                      activeDot={{ r: 6 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
-
-            {/* Verified Documents - Donut Chart */}
-            <div className="bg-[#FFFAFA] rounded-lg p-6 border border-gray-200 shadow-sm">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">
-                    Verified Documents
-                  </h3>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {verifiedDocsData.find((d) => d.name === "Verified")
-                      ?.value || 0}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {(verifiedDocsData.find((d) => d.name === "Verified")
-                      ?.value || 0) +
-                      (verifiedDocsData.find((d) => d.name === "Pending")
-                        ?.value || 0) >
-                      0
-                      ? `${verifiedDocsData.find((d) => d.name === "Verified")?.value || 0} out of ${(verifiedDocsData.find((d) => d.name === "Verified")
-                        ?.value || 0) +
-                      (verifiedDocsData.find((d) => d.name === "Pending")
-                        ?.value || 0)
-                      }`
-                      : "0 out of 0"}
-                  </p>
+          </>
+        ) : (
+          /* Upgrade Prompt for Non-Researcher Users */
+          <div className="col-span-full bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-8 border-2 border-indigo-200 shadow-sm">
+            <div className="text-center max-w-2xl mx-auto">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
+                <svg
+                  className="w-8 h-8 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Advanced Analytics
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Unlock powerful insights with our Researcher plan! Get
+                access to:
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-6 text-left">
+                <div className="flex items-start">
+                  <svg
+                    className="w-5 h-5 text-green-500 mr-2 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-sm text-gray-700">
+                    Most Active Day Analytics
+                  </span>
+                </div>
+                <div className="flex items-start">
+                  <svg
+                    className="w-5 h-5 text-green-500 mr-2 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-sm text-gray-700">
+                    Weekly Upload Velocity
+                  </span>
+                </div>
+                <div className="flex items-start">
+                  <svg
+                    className="w-5 h-5 text-green-500 mr-2 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-sm text-gray-700">
+                    Citation Fix Rate Tracking
+                  </span>
+                </div>
+                <div className="flex items-start">
+                  <svg
+                    className="w-5 h-5 text-green-500 mr-2 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-sm text-gray-700">
+                    Time to Verification Trends
+                  </span>
                 </div>
               </div>
-              <div className="h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={verifiedDocsData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={60}
-                      fill="#8884d8"
-                      paddingAngle={5}
-                      dataKey="value"
-                      nameKey="name">
-                      <Cell key={`cell-0`} fill="#5B7CFA" />
-                      <Cell key={`cell-1`} fill="#E5E7EB" />
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+              <button
+                onClick={handleUpgradeClick}
+                className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors shadow-md">
+                Upgrade to Researcher Plan
+              </button>
+              <p className="text-xs text-gray-500 mt-4">
+                Current Plan:{" "}
+                <span className="font-semibold capitalize">{userPlan}</span>
+              </p>
             </div>
           </div>
-
-          {/* Advanced Analytics - Researcher Only */}
-          <div className="py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            {userPlan === "researcher" ? (
-              <>
-                {/* Most Active Day - Vertical Bar Chart */}
-                <div className="bg-[#FFFAFA] rounded-lg p-6 border border-gray-200 shadow-sm">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">
-                        Most Active Day
-                      </h3>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {mostActiveDay}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {mostActiveDayCount} uploads
-                      </p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        className={`px-3 py-1 text-xs rounded-md ${timeRange === "week" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-700"}`}
-                        onClick={() => setTimeRange("week")}>
-                        Week
-                      </button>
-                      <button
-                        className={`px-3 py-1 text-xs rounded-md ${timeRange === "month" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-700"}`}
-                        onClick={() => setTimeRange("month")}>
-                        Month
-                      </button>
-                    </div>
-                  </div>
-                  <div className="h-32">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={activeDayData}
-                        margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
-                        layout="vertical">
-                        <Bar
-                          dataKey="count"
-                          name="Uploads"
-                          radius={[0, 4, 4, 0]}>
-                          {activeDayData.map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={entry.isMostActive ? "#4F46E5" : "#D1D5DB"}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Weekly Upload Velocity - Bar Chart */}
-                <div className="bg-[#FFFAFA] rounded-lg p-6 border border-gray-200 shadow-sm">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">
-                        Weekly Upload Velocity
-                      </h3>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {currentUploadVelocity}{" "}
-                        <span className="text-sm font-normal text-gray-600">
-                          /week
-                        </span>
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {uploadVelocityChange >= 0 ? "↑" : "↓"}{" "}
-                        {Math.abs(uploadVelocityChange)} from last week
-                      </p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        className={`px-3 py-1 text-xs rounded-md ${timeRange === "week" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-700"}`}
-                        onClick={() => setTimeRange("week")}>
-                        Week
-                      </button>
-                      <button
-                        className={`px-3 py-1 text-xs rounded-md ${timeRange === "month" ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-700"}`}
-                        onClick={() => setTimeRange("month")}>
-                        Month
-                      </button>
-                    </div>
-                  </div>
-                  <div className="h-32">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={uploadVelocityData}
-                        margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                        <Bar dataKey="uploads" name="Uploads" fill="#5B7CFA" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Citation Fix Rate - Progress Chart */}
-                <div className="bg-[#FFFAFA] rounded-lg p-6 border border-gray-200 shadow-sm">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">
-                        Citation Fix Rate
-                      </h3>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {citationFixRate}%
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {citationFixRateChange >= 0 ? "↑" : "↓"}{" "}
-                        {Math.abs(citationFixRateChange)}% from last period
-                      </p>
-                    </div>
-                  </div>
-                  <div className="h-32">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={[
-                          {
-                            name: "Rate",
-                            value: citationFixRate,
-                            remaining: 100 - citationFixRate,
-                          },
-                        ]}
-                        layout="vertical"
-                        margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                        <Bar
-                          dataKey="value"
-                          fill="#5B7CFA"
-                          radius={[0, 4, 4, 0]}>
-                          <Cell fill="#5B7CFA" />
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Time to Verification - Trend Chart */}
-                <div className="bg-[#FFFAFA] rounded-lg p-6 border border-gray-200 shadow-sm">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">
-                        Time to Verification
-                      </h3>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {timeToVerification}m
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {timeToVerificationChange >= 0 ? "↑" : "↓"}{" "}
-                        {Math.abs(timeToVerificationChange)}m from last period
-                      </p>
-                    </div>
-                  </div>
-                  <div className="h-32">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={verificationTrendData}
-                        margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                        <Line
-                          type="monotone"
-                          dataKey="time"
-                          stroke="#5B7CFA"
-                          strokeWidth={2}
-                          dot={{ r: 2 }}
-                          activeDot={{ r: 6 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </>
-            ) : (
-              /* Upgrade Prompt for Non-Researcher Users */
-              <div className="col-span-full bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-8 border-2 border-indigo-200 shadow-sm">
-                <div className="text-center max-w-2xl mx-auto">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-                    <svg
-                      className="w-8 h-8 text-indigo-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 10V3L4 14h7v7l9-11h-7z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    Advanced Analytics
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Unlock powerful insights with our Researcher plan! Get
-                    access to:
-                  </p>
-                  <div className="grid grid-cols-2 gap-4 mb-6 text-left">
-                    <div className="flex items-start">
-                      <svg
-                        className="w-5 h-5 text-green-500 mr-2 mt-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span className="text-sm text-gray-700">
-                        Most Active Day Analytics
-                      </span>
-                    </div>
-                    <div className="flex items-start">
-                      <svg
-                        className="w-5 h-5 text-green-500 mr-2 mt-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span className="text-sm text-gray-700">
-                        Weekly Upload Velocity
-                      </span>
-                    </div>
-                    <div className="flex items-start">
-                      <svg
-                        className="w-5 h-5 text-green-500 mr-2 mt-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span className="text-sm text-gray-700">
-                        Citation Fix Rate Tracking
-                      </span>
-                    </div>
-                    <div className="flex items-start">
-                      <svg
-                        className="w-5 h-5 text-green-500 mr-2 mt-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span className="text-sm text-gray-700">
-                        Time to Verification Trends
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleUpgradeClick}
-                    className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors shadow-md">
-                    Upgrade to Researcher Plan
-                  </button>
-                  <p className="text-xs text-gray-500 mt-4">
-                    Current Plan:{" "}
-                    <span className="font-semibold capitalize">{userPlan}</span>
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Document Upload Modal */}
       <DocumentUploadModal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
         onContentReady={(content, title, filename) => {
           handleContentReady(content, title, filename);
-          // Complete onboarding on first document upload
           if (shouldShowTour) {
             completeOnboarding();
           }
         }}
         onDocumentUploaded={(projectId, title) => {
           setShowUploadModal(false);
-          // Complete onboarding on first document upload
           if (shouldShowTour) {
             completeOnboarding();
           }
-          // Navigate to editor with the new project
           navigate(`/dashboard/editor/${projectId}`);
         }}
       />
 
       {/* Onboarding Tour */}
-      {!onboardingLoading && (
-        <OnboardingTour
-          run={shouldShowTour}
-          onFinish={completeOnboarding}
-          onSkip={skipOnboarding}
-        />
-      )}
-    </div>
+      {
+        !onboardingLoading && (
+          <OnboardingTour
+            run={shouldShowTour}
+            onFinish={completeOnboarding}
+            onSkip={skipOnboarding}
+          />
+        )
+      }
+    </div >
   );
 };
 

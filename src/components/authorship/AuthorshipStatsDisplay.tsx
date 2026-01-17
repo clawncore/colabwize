@@ -117,27 +117,49 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
-          <div className="text-sm font-medium opacity-90">
-            Total Time Invested
-          </div>
-          <div className="text-3xl font-bold mt-2">
-            {formatTime(stats.totalTimeInvestedMinutes || 0)}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl p-6 border border-blue-100 shadow-sm relative overflow-hidden group hover:border-blue-200 transition-all">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">
+              Total Time
+            </div>
+            <div className="text-3xl font-bold text-gray-900">
+              {formatTime(stats.totalTimeInvestedMinutes || 0)}
+            </div>
+            <div className="mt-2 text-xs text-blue-600 font-medium bg-blue-50 inline-block px-2 py-1 rounded-md">
+              Verified Session Duration
+            </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white">
-          <div className="text-sm font-medium opacity-90">Manual Edits</div>
-          <div className="text-3xl font-bold mt-2">
-            {(stats.manualEditsCount || 0).toLocaleString()}
+        <div className="bg-white rounded-xl p-6 border border-green-100 shadow-sm relative overflow-hidden group hover:border-green-200 transition-all">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">
+              Manual Edits
+            </div>
+            <div className="text-3xl font-bold text-gray-900">
+              {(stats.manualEditsCount || 0).toLocaleString()}
+            </div>
+            <div className="mt-2 text-xs text-green-600 font-medium bg-green-50 inline-block px-2 py-1 rounded-md">
+              Human Keystrokes Tracked
+            </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-6 text-white">
-          <div className="text-sm font-medium opacity-90">AI Assistance</div>
-          <div className="text-3xl font-bold mt-2">
-            {Math.round(stats.aiAssistedPercentage || 0)}%
+        <div className="bg-white rounded-xl p-6 border border-orange-100 shadow-sm relative overflow-hidden group hover:border-orange-200 transition-all">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
+          <div className="relative">
+            <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">
+              AI Assistance
+            </div>
+            <div className="text-3xl font-bold text-gray-900">
+              {Math.round(stats.aiAssistedPercentage || 0)}%
+            </div>
+            <div className="mt-2 text-xs text-orange-600 font-medium bg-orange-50 inline-block px-2 py-1 rounded-md">
+              Generated Content Detected
+            </div>
           </div>
         </div>
       </div>
@@ -233,16 +255,10 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
           </strong>{" "}
           over <strong>{stats.activeDays || 0} days</strong>, with{" "}
           <strong>
-            {/* Show manual authorship percentage - never go below 70% if edits exist */}
-            {stats.manualEditsCount > 0
-              ? Math.max(
-                70,
-                Math.round(100 - (stats.aiAssistedPercentage || 0))
-              )
-              : Math.round(100 - (stats.aiAssistedPercentage || 0))}
-            % original work
+            {/* Show accurate manual authorship percentage */}
+            {Math.max(0, Math.round(100 - (stats.aiAssistedPercentage || 0)))}% original work
           </strong>
-          . Your authorship is well-documented and verifiable.
+          . Your authorship is detailed below.
         </p>
       </div>
     </div>

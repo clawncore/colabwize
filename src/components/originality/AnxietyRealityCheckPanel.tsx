@@ -15,6 +15,17 @@ interface AnxietyRealityCheckPanelProps {
 export const AnxietyRealityCheckPanel: React.FC<
   AnxietyRealityCheckPanelProps
 > = ({ stats }) => {
+  const [hasSeenTruth, setHasSeenTruth] = React.useState(false);
+
+  React.useEffect(() => {
+    const seen = localStorage.getItem("hasSeenAcademicTruth");
+    if (seen) {
+      setHasSeenTruth(true);
+    } else {
+      localStorage.setItem("hasSeenAcademicTruth", "true");
+    }
+  }, []);
+
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-6 shadow-sm mb-6">
       <div className="flex items-center justify-between mb-4">
@@ -94,53 +105,57 @@ export const AnxietyRealityCheckPanel: React.FC<
         </div>
       </div>
 
-      <div className="bg-blue-50 p-5 rounded-lg border-l-4 border-blue-500 mb-4">
-        <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-          <div>
-            <h4 className="font-bold text-blue-900 mb-2">
-              Academic Truth: Scores Don't Define Your Work
-            </h4>
-            <p className="text-sm text-blue-800 mb-3">{stats.message}</p>
-            <ul className="space-y-2 text-sm text-blue-800">
-              <li className="flex items-start gap-2">
-                <span className="text-green-600 font-bold">✓</span>
-                <span>
-                  Similarity ≠ Plagiarism (Context matters more than
-                  percentages)
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-600 font-bold">✓</span>
-                <span>
-                  References & quotes <i>increase</i> similarity scores (this is
-                  good!)
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-600 font-bold">✓</span>
-                <span>
-                  Common academic phrases are expected in scholarly writing
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-green-600 font-bold">✓</span>
-                <span>
-                  Professors evaluate substance, evidence, and critical thinking
-                </span>
-              </li>
-            </ul>
+      {!hasSeenTruth && (
+        <>
+          <div className="bg-blue-50 p-5 rounded-lg border-l-4 border-blue-500 mb-4">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h4 className="font-bold text-blue-900 mb-2">
+                  Academic Truth: Scores Don't Define Your Work
+                </h4>
+                <p className="text-sm text-blue-800 mb-3">Intent + citation matters more than %</p>
+                <ul className="space-y-2 text-sm text-blue-800">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✓</span>
+                    <span>
+                      Similarity ≠ Plagiarism (Context matters more than
+                      percentages)
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✓</span>
+                    <span>
+                      References & quotes <i>increase</i> similarity scores (this is
+                      good!)
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✓</span>
+                    <span>
+                      Common academic phrases are expected in scholarly writing
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold">✓</span>
+                    <span>
+                      Professors evaluate substance, evidence, and critical thinking
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-        <p className="text-sm text-yellow-800 font-medium">
-          <span className="font-bold">Remember:</span> Academic integrity is
-          about proper attribution, critical thinking, and honest
-          scholarship—not achieving 0% similarity.
-        </p>
-      </div>
+          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+            <p className="text-sm text-yellow-800 font-medium">
+              <span className="font-bold">Remember:</span> Academic integrity is
+              about proper attribution, critical thinking, and honest
+              scholarship—not achieving 0% similarity.
+            </p>
+          </div>
+        </>
+      )}
     </div>
   );
 };

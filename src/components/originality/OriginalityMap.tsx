@@ -11,6 +11,7 @@ import { SimilarityMatchCard } from "./SimilarityMatchCard";
 import { RephraseSuggestionsPanel } from "./RephraseSuggestionsPanel";
 import { AnxietyRealityCheckPanel } from "./AnxietyRealityCheckPanel";
 import { AnxietyRealityCheckBanner } from "./AnxietyRealityCheckBanner";
+import { UpgradeModal } from "../subscription/UpgradeModal";
 
 interface OriginalityMapProps {
   projectId: string;
@@ -29,6 +30,7 @@ export const OriginalityMap: React.FC<
   const [rephrases, setRephrases] = useState<RephraseSuggestion[]>([]);
   const [isLoadingRephrases, setIsLoadingRephrases] = useState(false);
   const [showRephrasePanel, setShowRephrasePanel] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Hybrid Realtime State
@@ -95,7 +97,19 @@ export const OriginalityMap: React.FC<
       lastScannedHashRef.current = currentHash;
       setScanStatus("protected");
     } catch (err: any) {
-      setError(err.message || "Failed to scan document");
+      const errorMessage = err.message || "Failed to scan document";
+      // Check for limit reached error (403 from backend)
+      if (
+        errorMessage.toLowerCase().includes("limit reached") ||
+        errorMessage.toLowerCase().includes("upgrade") ||
+        errorMessage.toLowerCase().includes("credits") // Handle credit exhaustion messages
+      ) {
+        setShowUpgradeModal(true);
+        // Don't show inline error if we show modal
+        setError(null);
+      } else {
+        setError(errorMessage);
+      }
       setScanStatus("idle");
     } finally {
       setIsScanning(false);
@@ -157,7 +171,18 @@ export const OriginalityMap: React.FC<
       setRephrases(suggestions);
       setShowRephrasePanel(true);
     } catch (err: any) {
-      setError(err.message || "Failed to get rephrase suggestions");
+      const errorMessage = err.message || "Failed to get rephrase suggestions";
+      if (
+        errorMessage.toLowerCase().includes("limit reached") ||
+        errorMessage.toLowerCase().includes("upgrade") ||
+        errorMessage.toLowerCase().includes("credits")
+      ) {
+        setShowUpgradeModal(true);
+        // setFeature("rephrase"); // ideally we'd set the feature prop on the modal
+        setError(null);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoadingRephrases(false);
     }
@@ -189,14 +214,12 @@ export const OriginalityMap: React.FC<
             <span className="text-sm font-medium text-gray-700">Auto-Scan</span>
             <button
               onClick={() => setAutoScanEnabled(!autoScanEnabled)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                autoScanEnabled ? "bg-indigo-600" : "bg-gray-200"
-              }`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${autoScanEnabled ? "bg-indigo-600" : "bg-gray-200"
+                }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  autoScanEnabled ? "translate-x-6" : "translate-x-1"
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoScanEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
               />
             </button>
           </div>
@@ -204,26 +227,24 @@ export const OriginalityMap: React.FC<
           {/* Status Badge */}
           {autoScanEnabled && (
             <div
-              className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 ${
-                scanStatus === "scanning"
-                  ? "bg-blue-100 text-blue-800"
-                  : scanStatus === "typing"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : scanStatus === "protected"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
-              }`}
+              className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 ${scanStatus === "scanning"
+                ? "bg-blue-100 text-blue-800"
+                : scanStatus === "typing"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : scanStatus === "protected"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
             >
               <span
-                className={`h-2 w-2 rounded-full ${
-                  scanStatus === "scanning"
-                    ? "bg-blue-500 animate-pulse"
-                    : scanStatus === "typing"
-                      ? "bg-yellow-500"
-                      : scanStatus === "protected"
-                        ? "bg-green-500"
-                        : "bg-gray-500"
-                }`}
+                className={`h-2 w-2 rounded-full ${scanStatus === "scanning"
+                  ? "bg-blue-500 animate-pulse"
+                  : scanStatus === "typing"
+                    ? "bg-yellow-500"
+                    : scanStatus === "protected"
+                      ? "bg-green-500"
+                      : "bg-gray-500"
+                  }`}
               ></span>
               {scanStatus === "scanning"
                 ? "Scanning..."
@@ -420,6 +441,14 @@ export const OriginalityMap: React.FC<
           isLoading={isLoadingRephrases}
         />
       )}
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        title="Scan Limit Reached"
+        message="You've reached your plan's scan limit. Upgrade to Pro for unlimited scans or buy a credit pack to continue."
+        feature="scans"
+      />
     </div>
   );
 };
