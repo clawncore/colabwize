@@ -140,15 +140,15 @@ export const findBestMatch = (doc: Node, searchText: string, estimatedPos: numbe
     // 3. Map back to PM position
     // We iterate the doc again to count valid text and separators until we reach `textIndex`.
 
-    let currentTextIndex = 0;
-    let fromPos = 0;
-    let toPos = 0;
+    // let currentTextIndex = 0;
+    // let fromPos = 0;
+    // let toPos = 0;
     let foundFrom = false;
 
     // We define a helper to advance positions
     // We walk the document structure linearly
 
-    let pmPos = 0; // Current PM position
+    // let pmPos = 0; // Current PM position
 
     // Using `nodesBetween` gives us nodes. 
     // But we need to account for opening/closing tags which `textBetween` handles implicitly via separator.

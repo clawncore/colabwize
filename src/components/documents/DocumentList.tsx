@@ -25,7 +25,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery] = useState("");
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [projectToRename, setProjectToRename] = useState<Project | null>(null);
 

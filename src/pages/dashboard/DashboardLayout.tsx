@@ -125,7 +125,7 @@ export default function DashboardLayout({
     };
 
     fetchData();
-  }, [userId, loading]);
+  }, [userId, loading, isAuthenticated, user]);
 
   // Close sidebar on mobile when route changes
   useEffect(() => {

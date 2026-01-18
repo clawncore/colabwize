@@ -2,26 +2,18 @@ import React, { useState, useEffect } from "react";
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
 } from "../ui/dialog";
 import {
     CheckCircle2,
-    Download,
-    FileText,
     ChevronRight,
     ChevronLeft,
     Loader2,
     AlertTriangle,
-    CreditCard,
-    Crown,
 } from "lucide-react";
 import { apiClient } from "../../services/apiClient";
 import { Project } from "../../services/documentService";
 import { useToast } from "../../hooks/use-toast";
 import { OriginalityService } from "../../services/originalityService";
-import { SubscriptionService } from "../../services/subscriptionService";
 
 interface ExportWorkflowModalProps {
     isOpen: boolean;
@@ -230,11 +222,12 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
         else if (currentStep === "preview") setCurrentStep("final");
     };
 
-    const goToPrevStep = () => {
-        if (currentStep === "format") setCurrentStep("checklist");
-        else if (currentStep === "preview") setCurrentStep("format");
-        else if (currentStep === "final") setCurrentStep("preview");
-    };
+    // Navigation helper (currently unused but kept for future use)
+    // const goToPrevStep = () => {
+    //     if (currentStep === "format") setCurrentStep("checklist");
+    //     else if (currentStep === "preview") setCurrentStep("format");
+    //     else if (currentStep === "final") setCurrentStep("preview");
+    // };
 
     // --- Render Steps (Content Only) ---
 
