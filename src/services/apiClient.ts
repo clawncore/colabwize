@@ -183,7 +183,7 @@ class ApiClient {
 
           // Force redirect to login
           if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {
-            window.location.href = "/auth/login";
+            window.location.href = "/login";
           }
         }
 

@@ -33,6 +33,89 @@ export function validateAndCleanContent(content: any): any {
       return content;
     }
 
+    // Check if this is an error message from document processing
+    if (content.includes("Unable to extract content") ||
+      content.includes("PDF appears to contain no extractable text") ||
+      content.includes("Unable to extract text from PDF")) {
+      // Display error message prominently
+      return {
+        type: "doc",
+        content: [
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "⚠️ Document Processing Issue: ",
+                marks: [{ type: "bold" }]
+              },
+              {
+                type: "text",
+                text: content
+              }
+            ]
+          },
+          {
+            type: "paragraph",
+            content: [
+              {
+                type: "text",
+                text: "Possible solutions:",
+                marks: [{ type: "bold" }]
+              }
+            ]
+          },
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "The PDF may be scanned or image-based - try converting to text first"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "The PDF may be password-protected or corrupted"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Try uploading a different format (DOCX, TXT) instead"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+    }
+
     // Otherwise wrap plain text in a paragraph
     return {
       type: "doc",

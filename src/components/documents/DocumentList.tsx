@@ -148,46 +148,6 @@ export const DocumentList: React.FC<DocumentListProps> = ({
             </button>
             <h2 className="text-lg font-semibold text-gray-900">Documents</h2>
           </div>
-          <button
-            onClick={onCreateNew}
-            className="p-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors"
-            title="Create new document">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Search Input */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search docs..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-3 py-2 pl-9 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          />
-          <svg
-            className="absolute left-3 top-2.5 w-4 h-4 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Editor } from "@tiptap/react";
 import { CitationService } from "../../../services/citationService";
-import { Loader2, Search, BarChart } from "lucide-react";
+import { Loader2, BarChart } from "lucide-react";
 import { useToast } from "../../../hooks/use-toast";
 
 interface CitationAuditAdapterProps {

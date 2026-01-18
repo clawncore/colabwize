@@ -91,6 +91,17 @@ export class SubscriptionService {
   }
 
   /**
+   * Get customer portal URL (Full response)
+   */
+  static async getCustomerPortalUrl(): Promise<{
+    success: boolean;
+    portalUrl: string;
+  }> {
+    const response = await apiClient.post("/api/subscription/portal", {});
+    return response;
+  }
+
+  /**
    * Cancel subscription
    */
   static async cancelSubscription(

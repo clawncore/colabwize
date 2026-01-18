@@ -2,4 +2,4 @@
 export { AuthorshipCertificate } from "./AuthorshipCertificate";
 export { AuthorshipStatsDisplay } from "./AuthorshipStatsDisplay";
 export { CertificateDownloadButton } from "./CertificateDownloadButton";
-export { default as DetailedActivityTracker } from "./DetailedActivityTracker";
+

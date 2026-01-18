@@ -747,7 +747,7 @@ export default function DashboardLayout({
                     )}
                   </button>
 
-                  <div className={`transition-all duration-300 overflow-hidden ${isUsageCollapsed ? 'max-h-0 opacity-0' : 'max-h-[300px] opacity-100 mt-3'}`}>
+                  <div className={`transition-all duration-300 ${isUsageCollapsed ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-[500px] opacity-100 mt-3 overflow-y-auto'}`}>
                     <div className="space-y-3 pr-1 custom-scrollbar">
                       {/* Credits Meter (Only for Free/PAYG) */}
                       {(['Free Plan', 'Pay As You Go'].includes(userPlan) && creditBalance > 0) && (
@@ -760,10 +760,14 @@ export default function DashboardLayout({
                         />
                       )}
 
-                      {/* Scans Meter */}
+                      {/* Scans Meter - Derived from sub-limits */}
                       <UsageMeter
-                        current={planUsage?.scan || 0}
-                        limit={planLimits?.scans_per_month ?? 3}
+                        current={
+                          ((planUsage?.originality_scan || 0) >= (planLimits?.originality_scan ?? 3) ? 1 : 0) +
+                          ((planUsage?.citation_check || 0) >= (typeof planLimits?.citation_check === 'number' ? planLimits.citation_check : 0) ? 1 : 0) +
+                          ((planUsage?.rephrase || 0) >= (planLimits?.rephrase_per_month ?? 3) ? 1 : 0)
+                        }
+                        limit={3}
                         planName={userPlan}
                         featureName="scans"
                       />
@@ -794,26 +798,35 @@ export default function DashboardLayout({
                     </div>
                   </div>
 
-                  {isUsageCollapsed && (
-                    <div className="mt-1">
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className="h-full bg-purple-500 rounded-full"
-                          style={{
-                            width: `${Math.min(((planUsage?.scan || 0) / (planLimits?.scans_per_month ?? 3)) * 100, 100)}%`
-                          }}
-                        />
+                  {isUsageCollapsed && (() => {
+                    const derivedCurrent =
+                      ((planUsage?.originality_scan || 0) >= (planLimits?.originality_scan ?? 3) ? 1 : 0) +
+                      ((planUsage?.citation_check || 0) >= (typeof planLimits?.citation_check === 'number' ? planLimits.citation_check : 0) ? 1 : 0) +
+                      ((planUsage?.rephrase || 0) >= (planLimits?.rephrase_per_month ?? 3) ? 1 : 0);
+
+                    const derivedLimit = 3; // Hardcoded to 3 as requested for typical plans
+                    const percent = Math.min((derivedCurrent / derivedLimit) * 100, 100);
+
+                    return (
+                      <div className="mt-1">
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="h-full bg-purple-500 rounded-full"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-end items-center mt-1">
+                          <p className="text-[10px] text-gray-400">
+                            {derivedCurrent} / {derivedLimit} Scans
+                          </p>
+                          <span className="text-[10px] text-gray-400 ml-1">
+                            ({Math.round(percent)}%)
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex justify-end items-center mt-1">
-                        <p className="text-[10px] text-gray-400">
-                          {(planUsage?.scan || 0)} / {(planLimits?.scans_per_month ?? 3)} Scans
-                        </p>
-                        <span className="text-[10px] text-gray-400 ml-1">
-                          ({Math.round(Math.min(((planUsage?.scan || 0) / (planLimits?.scans_per_month ?? 3)) * 100, 100))}%)
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
+
 
 
 

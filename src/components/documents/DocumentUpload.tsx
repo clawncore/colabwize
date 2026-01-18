@@ -292,8 +292,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
               type="submit"
               disabled={isUploading || !file || !title.trim()}
               className={`w-full py-2 px-4 rounded-md text-white font-medium ${isUploading || !file || !title.trim()
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
                 }`}>
               {isUploading
                 ? "Uploading..."
@@ -313,7 +313,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             {file ? (
               pdfPreviewUrl ? (
                 <iframe
-                  src={pdfPreviewUrl}
+                  src={`${pdfPreviewUrl}#toolbar=0&navpanes=0`}
                   title="PDF Preview"
                   className="w-full h-full border-none"
                 />

@@ -28,6 +28,7 @@ import {
   Quote,
   Minus,
   Link,
+  Image as ImageIcon,
   ChevronDown,
   Undo,
   Redo,
@@ -40,6 +41,7 @@ import {
   Split,
 } from "lucide-react";
 import { useState } from "react";
+import { ImageInsertModal } from "./ImageInsertModal";
 
 // Removed ImageUploadPopover import
 
@@ -49,6 +51,7 @@ interface EditorToolbarProps {
 
 export function EditorToolbar({ editor }: EditorToolbarProps) {
   const [linkUrl, setLinkUrl] = useState("");
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   if (!editor) return null;
 
@@ -366,6 +369,24 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           </div>
         </PopoverContent>
       </Popover>
+
+      <Toggle
+        size="sm"
+        title="Insert Image"
+        className="h-8 w-8"
+        onClick={() => setIsImageModalOpen(true)}>
+        <ImageIcon className="h-4 w-4" />
+      </Toggle>
+
+      {/* Image Insert Modal */}
+      <ImageInsertModal
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        onInsertImage={(imageUrl, alt) => {
+          editor.chain().focus().setImage({ src: imageUrl, alt }).run();
+        }}
+        projectId="temp-project-id"
+      />
     </div>
   );
 }

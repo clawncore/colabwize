@@ -1,15 +1,15 @@
 services:
   - type: web
     name: colabwize-backend
-    runtime: node
-    region: oregon # Recommended region
-    repo: https://github.com/yourusername/colabwize.git # Update with your actual repo
+    runtime: docker
+    region: oregon
+    repo: https://github.com/clawncore/colabwize.git
+    branch: main
     rootDir: backend
-    buildCommand: |
-      npm install
-      export NODE_OPTIONS="--max-old-space-size=4096"
-      npm run build
-    startCommand: npm start
+    dockerfilePath: ./Dockerfile
+    dockerContext: ./
+    plan: starter
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
@@ -27,3 +27,8 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         sync: false
+      # Puppeteer Configuration
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: "true"
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/google-chrome-stable

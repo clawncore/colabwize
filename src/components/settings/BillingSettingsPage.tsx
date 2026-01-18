@@ -95,13 +95,12 @@ const SubscriptionStatus = ({
           Current Subscription
         </h2>
         <div
-          className={`px-3 py-1 rounded-full text-sm font-medium ${
-            subscription.status === "active"
+          className={`px-3 py-1 rounded-full text-sm font-medium ${subscription.status === "active"
               ? "bg-green-100 text-green-800"
               : subscription.status === "canceled"
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-gray-100 text-gray-800"
-          }`}>
+            }`}>
           {subscription.status.toUpperCase()}
         </div>
       </div>
@@ -287,7 +286,28 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
 
             // Get usage using the mapped key or fallback to feature name
             const usageKey = config?.usageKey || feature;
-            const current = usage[usageKey] || 0;
+            let current = usage[usageKey] || 0;
+
+            console.log("Usage Check:", feature, usage, limits);
+
+            // Special handling for Scans Used - limits reached derived logic
+            if (feature === "scans_per_month") {
+              const origUsage = usage['originality_scan'] || 0;
+              const origLimit = limits['originality_scan'] ?? 3;
+
+              const citeUsage = usage['citation_check'] || 0;
+              // Default citation limit to 0 if undefined (for free plan) so 0/0 counts as used
+              const citeLimit = typeof limits['citation_check'] === 'number' ? limits['citation_check'] : 0;
+
+              // Note: Rephrase might not be in the usage object passed here if not in feature config, 
+              // but assuming it comes from the API response 'usage' object.
+              const rephraseUsage = usage['rephrase'] || 0;
+              const rephraseLimit = limits['rephrase_per_month'] ?? 3;
+
+              current = (origUsage >= origLimit ? 1 : 0) +
+                (citeUsage >= citeLimit ? 1 : 0) +
+                (rephraseUsage >= rephraseLimit ? 1 : 0);
+            }
 
             const percentage = isUnlimited
               ? 0
@@ -308,13 +328,12 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
                 {!isUnlimited && (
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${
-                        percentage > 90
+                      className={`h-full rounded-full ${percentage > 90
                           ? "bg-red-500"
                           : percentage > 75
                             ? "bg-yellow-500"
                             : "bg-blue-500"
-                      }`}
+                        }`}
                       style={{
                         width: `${percentage}%`,
                       }}
@@ -424,13 +443,12 @@ const PaymentHistory = () => {
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      invoice.status === "paid"
+                    className={`text-xs px-2 py-1 rounded-full ${invoice.status === "paid"
                         ? "bg-green-100 text-green-800"
                         : invoice.status === "pending"
                           ? "bg-yellow-100 text-yellow-800"
                           : "bg-red-100 text-red-800"
-                    }`}>
+                      }`}>
                     {invoice.status.toUpperCase()}
                   </span>
                   {invoice.receiptUrl && (

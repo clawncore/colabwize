@@ -22,7 +22,8 @@
     "noImplicitAny": false,
     "noUnusedParameters": false,
     "noUnusedLocals": false,
-    "strictNullChecks": false
+    "strictNullChecks": false,
+    "downlevelIteration": true
   },
   "include": [
     "src"

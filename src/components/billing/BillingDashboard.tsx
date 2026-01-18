@@ -24,14 +24,6 @@ const BillingSettingsPage: React.FC = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showAddPaymentMethod, setShowAddPaymentMethod] = useState(false);
-  const [newPaymentMethod, setNewPaymentMethod] = useState({
-    cardNumber: "",
-    expiryMonth: "",
-    expiryYear: "",
-    cvc: "",
-    name: "",
-  });
 
   useEffect(() => {
     let isMounted = true; // Flag to prevent state updates after component unmounts
@@ -97,146 +89,57 @@ const BillingSettingsPage: React.FC = () => {
 
   const handleAddPaymentMethod = async () => {
     try {
-      // Validate card number (simple validation)
-      if (newPaymentMethod.cardNumber.length < 16) {
-        toast({
-          title: "Error",
-          description: "Please enter a valid card number",
-          variant: "destructive",
-        });
-        return;
+      // Redirect to LemonSqueezy update payment method page
+      const result = await SubscriptionService.updatePaymentMethod().catch(
+        (err) => {
+          throw new Error(err.message || "Failed to get payment update URL");
+        }
+      );
+      if (result.success && result.redirectUrl) {
+        window.location.href = result.redirectUrl;
       }
-
-      // Validate expiry date
-      const month = parseInt(newPaymentMethod.expiryMonth);
-      const year = parseInt(newPaymentMethod.expiryYear);
-      const currentYear = new Date().getFullYear();
-      const currentMonth = new Date().getMonth() + 1;
-
-      if (isNaN(month) || month < 1 || month > 12) {
-        toast({
-          title: "Error",
-          description: "Please enter a valid expiry month",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (
-        isNaN(year) ||
-        year < currentYear ||
-        (year === currentYear && month < currentMonth)
-      ) {
-        toast({
-          title: "Error",
-          description: "Please enter a valid expiry date",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Determine card type based on number (simplified)
-      let cardType: "visa" | "mastercard" | "amex" | "paypal" = "visa";
-      if (newPaymentMethod.cardNumber.startsWith("4")) {
-        cardType = "visa";
-      } else if (newPaymentMethod.cardNumber.startsWith("5")) {
-        cardType = "mastercard";
-      } else if (newPaymentMethod.cardNumber.startsWith("3")) {
-        cardType = "amex";
-      }
-
-      // Add payment method through the service
-      const addedMethod = await SubscriptionService.addPaymentMethod({
-        type: cardType,
-        lastFour: newPaymentMethod.cardNumber.slice(-4),
-        expiryMonth: month,
-        expiryYear: year,
-      }).catch((err) => {
-        throw new Error(err.message || "Failed to add payment method");
-      });
-
-      setPaymentMethods([...paymentMethods, addedMethod]);
-      setShowAddPaymentMethod(false);
-      setNewPaymentMethod({
-        cardNumber: "",
-        expiryMonth: "",
-        expiryYear: "",
-        cvc: "",
-        name: "",
-      });
-
-      toast({
-        title: "Success",
-        description: "Payment method added successfully!",
-      });
     } catch (err: any) {
       console.error("Error adding payment method:", err);
       toast({
         title: "Error",
-        description: err.message || "Failed to add payment method",
+        description: err.message || "Failed to initiate payment method update",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewAllInvoices = async () => {
+    try {
+      const result = await SubscriptionService.getCustomerPortalUrl().catch((err) => {
+        throw new Error(err.message || "Failed to get portal URL");
+      });
+
+      if (result.success && result.portalUrl) {
+        window.location.href = result.portalUrl;
+      }
+    } catch (err: any) {
+      console.error("Error opening invoices:", err);
+      toast({
+        title: "Error",
+        description: "Could not open billing portal",
         variant: "destructive",
       });
     }
   };
 
   const handleSetDefault = async (id: string) => {
-    try {
-      // Set default payment method through the service
-      const updatedMethod = await SubscriptionService.setDefaultPaymentMethod(
-        id
-      ).catch((err) => {
-        throw new Error(
-          err.message || "Failed to update default payment method"
-        );
-      });
+    // LemonSqueezy manages default payment methods in their portal.
+    // This function is likely not needed if we fully delegate to LS, 
+    // but if we keep a local syncd list, we might want to guide them to LS.
+    // For now, removing the local logic or redirecting.
 
-      // Update local state
-      setPaymentMethods(
-        paymentMethods.map((pm) => ({
-          ...pm,
-          isDefault: pm.id === id,
-        }))
-      );
-
-      // Use the value of updatedMethod
-      console.log(updatedMethod);
-
-      toast({
-        title: "Success",
-        description: "Default payment method updated!",
-      });
-    } catch (err: any) {
-      console.error("Error setting default payment method:", err);
-      toast({
-        title: "Error",
-        description: err.message || "Failed to update default payment method",
-        variant: "destructive",
-      });
-    }
+    // Changing to redirect to portal for management
+    handleUpdatePaymentMethod();
   };
 
   const handleRemovePaymentMethod = async (id: string) => {
-    try {
-      // Remove payment method through the service
-      await SubscriptionService.removePaymentMethod(id).catch((err) => {
-        throw new Error(err.message || "Failed to remove payment method");
-      });
-
-      // Update local state
-      setPaymentMethods(paymentMethods.filter((pm) => pm.id !== id));
-
-      toast({
-        title: "Success",
-        description: "Payment method removed!",
-      });
-    } catch (err: any) {
-      console.error("Error removing payment method:", err);
-      toast({
-        title: "Error",
-        description: err.message || "Failed to remove payment method",
-        variant: "destructive",
-      });
-    }
+    // Similarly, remove via portal
+    handleUpdatePaymentMethod();
   };
 
   const handleChangePlan = async () => {
@@ -398,10 +301,10 @@ const BillingSettingsPage: React.FC = () => {
                 Payment Methods
               </h2>
               <button
-                onClick={() => setShowAddPaymentMethod(true)}
+                onClick={handleAddPaymentMethod}
                 className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700">
                 <Plus className="h-4 w-4 mr-1" />
-                Add Payment Method
+                Manage Payment Methods
               </button>
             </div>
           </div>
@@ -418,10 +321,10 @@ const BillingSettingsPage: React.FC = () => {
                 </p>
                 <div className="mt-6">
                   <button
-                    onClick={() => setShowAddPaymentMethod(true)}
+                    onClick={handleAddPaymentMethod}
                     className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Payment Method
+                    Manage Payment Methods
                   </button>
                 </div>
               </div>
@@ -472,123 +375,7 @@ const BillingSettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Add Payment Method Modal */}
-        {showAddPaymentMethod && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white  rounded-lg max-w-md w-full p-6">
-              <h3 className="text-lg font-medium text-gray-900  mb-4">
-                Add Payment Method
-              </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700  mb-1">
-                    Card Number
-                  </label>
-                  <input
-                    type="text"
-                    value={newPaymentMethod.cardNumber}
-                    onChange={(e) =>
-                      setNewPaymentMethod({
-                        ...newPaymentMethod,
-                        cardNumber: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white  text-gray-900 "
-                    placeholder="1234 5678 9012 3456"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Expiry Month
-                    </label>
-                    <input
-                      type="text"
-                      value={newPaymentMethod.expiryMonth}
-                      onChange={(e) =>
-                        setNewPaymentMethod({
-                          ...newPaymentMethod,
-                          expiryMonth: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white  text-gray-900 "
-                      placeholder="MM"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Expiry Year
-                    </label>
-                    <input
-                      type="text"
-                      value={newPaymentMethod.expiryYear}
-                      onChange={(e) =>
-                        setNewPaymentMethod({
-                          ...newPaymentMethod,
-                          expiryYear: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white  text-gray-900 "
-                      placeholder="YYYY"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    CVC
-                  </label>
-                  <input
-                    type="text"
-                    value={newPaymentMethod.cvc}
-                    onChange={(e) =>
-                      setNewPaymentMethod({
-                        ...newPaymentMethod,
-                        cvc: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white  text-gray-900 "
-                    placeholder="123"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cardholder Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newPaymentMethod.name}
-                    onChange={(e) =>
-                      setNewPaymentMethod({
-                        ...newPaymentMethod,
-                        name: e.target.value,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white  text-gray-900 "
-                    placeholder="John Doe"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowAddPaymentMethod(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50    ">
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddPaymentMethod}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
-                  Add Payment Method
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Add Payment Method Modal Removed */}
 
         {/* Billing History */}
         <div className="bg-white  rounded-xl shadow-sm border border-gray-200 ">
@@ -677,7 +464,7 @@ const BillingSettingsPage: React.FC = () => {
             )}
 
             <div className="mt-4 flex justify-center">
-              <button className="text-sm font-medium text-blue-600 hover:text-blue-700  ">
+              <button onClick={handleViewAllInvoices} className="text-sm font-medium text-blue-600 hover:text-blue-700  ">
                 View All Invoices
               </button>
             </div>

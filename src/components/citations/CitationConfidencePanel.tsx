@@ -89,9 +89,9 @@ export const CitationConfidencePanel: React.FC<
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        currentPlan="free"
-        usageStats={{ used: 1, limit: 0 }}
-        featureName="Citation Confidence Checks"
+        title="Check Limit Reached"
+        message="You have reached the limit for citation confidence checks on your current plan."
+        feature="Citation Confidence Checks"
       />
 
       {isLoading && (
@@ -233,28 +233,28 @@ export const CitationConfidencePanel: React.FC<
           {/* Warnings & Suggestions */}
           {(confidence.warnings.length > 0 ||
             confidence.suggestions.length > 0) && (
-            <div className="p-6 bg-orange-50 border-t border-orange-100">
-              <p className="text-sm font-semibold text-gray-800 mb-3">
-                Analysis & Recommendations
-              </p>
-              {confidence.warnings.map((w, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-2 text-orange-800 mb-2">
-                  <span className="mt-0.5">⚠️</span>
-                  <span className="text-sm">{w}</span>
-                </div>
-              ))}
-              {confidence.suggestions.map((s, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-2 text-blue-800 mt-2">
-                  <span className="mt-0.5">💡</span>
-                  <span className="text-sm">{s}</span>
-                </div>
-              ))}
-            </div>
-          )}
+              <div className="p-6 bg-orange-50 border-t border-orange-100">
+                <p className="text-sm font-semibold text-gray-800 mb-3">
+                  Analysis & Recommendations
+                </p>
+                {confidence.warnings.map((w, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2 text-orange-800 mb-2">
+                    <span className="mt-0.5">⚠️</span>
+                    <span className="text-sm">{w}</span>
+                  </div>
+                ))}
+                {confidence.suggestions.map((s, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2 text-blue-800 mt-2">
+                    <span className="mt-0.5">💡</span>
+                    <span className="text-sm">{s}</span>
+                  </div>
+                ))}
+              </div>
+            )}
         </div>
       )}
     </>

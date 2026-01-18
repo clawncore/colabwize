@@ -99,6 +99,7 @@ export function useSupabaseUser() {
       loading,
       token,
       refetch: refetchUser,
+      refreshUser: refetchUser,
     }),
     [loading, token, refetchUser]
   );

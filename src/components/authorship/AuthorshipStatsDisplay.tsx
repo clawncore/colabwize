@@ -3,6 +3,7 @@ import {
   AuthorshipService,
   AuthorshipStats,
 } from "../../services/authorshipService";
+import { Clock, FileEdit, ShieldCheck } from "lucide-react";
 
 interface AuthorshipStatsDisplayProps {
   projectId: string;
@@ -57,7 +58,7 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
     });
   };
 
-  if (isLoading) {
+  if (isLoading && !stats) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -78,10 +79,12 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with Refresh */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-900">Authorship Report</h2>
+    <div className="space-y-4">
+      {/* Header with Refresh - Inline */}
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+          Work Analysis
+        </h2>
         <button
           onClick={async () => {
             if (!isLoading) {
@@ -98,10 +101,10 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
             }
           }}
           disabled={isLoading}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
           title="Refresh Statistics">
           <svg
-            className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+            className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24">
@@ -116,150 +119,112 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
         </button>
       </div>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl p-6 border border-blue-100 shadow-sm relative overflow-hidden group hover:border-blue-200 transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">
+      {/* Metrics Grid - 3 Columns */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm flex flex-col justify-between h-full bg-gradient-to-br from-white to-blue-50/30">
+          <div className="flex items-start justify-between mb-2">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
               Total Time
             </div>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className="p-1.5 bg-blue-100 text-blue-600 rounded-md">
+              <Clock className="w-4 h-4" />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-gray-900">
               {formatTime(stats.totalTimeInvestedMinutes || 0)}
             </div>
-            <div className="mt-2 text-xs text-blue-600 font-medium bg-blue-50 inline-block px-2 py-1 rounded-md">
+            <div className="text-xs text-blue-600 font-medium mt-1">
               Verified Session Duration
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-green-100 shadow-sm relative overflow-hidden group hover:border-green-200 transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">
+        <div className="bg-white rounded-xl p-4 border border-green-100 shadow-sm flex flex-col justify-between h-full bg-gradient-to-br from-white to-green-50/30">
+          <div className="flex items-start justify-between mb-2">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
               Manual Edits
             </div>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className="p-1.5 bg-green-100 text-green-600 rounded-md">
+              <FileEdit className="w-4 h-4" />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-gray-900">
               {(stats.manualEditsCount || 0).toLocaleString()}
             </div>
-            <div className="mt-2 text-xs text-green-600 font-medium bg-green-50 inline-block px-2 py-1 rounded-md">
+            <div className="text-xs text-green-600 font-medium mt-1">
               Human Keystrokes Tracked
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 border border-orange-100 shadow-sm relative overflow-hidden group hover:border-orange-200 transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
-          <div className="relative">
-            <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">
+        <div className="bg-white rounded-xl p-4 border border-orange-100 shadow-sm flex flex-col justify-between h-full bg-gradient-to-br from-white to-orange-50/30">
+          <div className="flex items-start justify-between mb-2">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
               AI Assistance
             </div>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className="p-1.5 bg-orange-100 text-orange-600 rounded-md">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-gray-900">
               {Math.round(stats.aiAssistedPercentage || 0)}%
             </div>
-            <div className="mt-2 text-xs text-orange-600 font-medium bg-orange-50 inline-block px-2 py-1 rounded-md">
+            <div className="text-xs text-orange-600 font-medium mt-1">
               Generated Content Detected
             </div>
           </div>
         </div>
       </div>
 
-      {/* Detailed Stats */}
-      <div className="bg-white rounded-lg border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Detailed Statistics
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Time Metrics */}
-          <div>
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">
-              Time Metrics
-            </h4>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">First Edit:</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {stats.firstEditDate
-                    ? formatDate(stats.firstEditDate)
-                    : "N/A"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Last Edit:</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {stats.lastEditDate ? formatDate(stats.lastEditDate) : "N/A"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Active Days:</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {stats.activeDays || 0}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">
-                  Session Frequency:
-                </span>
-                <span className="text-sm font-medium text-gray-900">
-                  {stats.sessionFrequency || "N/A"}
-                </span>
-              </div>
+      {/* Details & Claim Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Detailed Stats */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+          <h3 className="text-xs font-semibold text-gray-900 mb-3 uppercase tracking-wider border-b border-gray-100 pb-2">
+            Session Details
+          </h3>
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-gray-500">First Edit:</span>
+              <span className="font-medium text-gray-900">
+                {stats.firstEditDate ? formatDate(stats.firstEditDate) : "N/A"}
+              </span>
             </div>
-          </div>
-
-          {/* Edit Metrics */}
-          <div>
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">
-              Edit Metrics
-            </h4>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Total Sessions:</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {stats.totalSessions || 0}
-                </span>
-              </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-gray-500">Last Edit:</span>
+              <span className="font-medium text-gray-900">
+                {stats.lastEditDate ? formatDate(stats.lastEditDate) : "N/A"}
+              </span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-gray-500">Active Days:</span>
+              <span className="font-medium text-gray-900">
+                {stats.activeDays || 0}
+              </span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-gray-500">Total Sessions:</span>
+              <span className="font-medium text-gray-900">
+                {stats.totalSessions || 0}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Peak Editing Hours */}
-        {stats.peakEditingHours && stats.peakEditingHours.length > 0 && (
-          <div className="mt-6">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">
-              Peak Editing Hours
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {stats.peakEditingHours.map((hour) => (
-                <span
-                  key={hour}
-                  className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
-                  {hour}:00 - {hour + 1}:00
-                </span>
-              ))}
-            </div>
+        {/* Authorship Claim */}
+        <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 flex flex-col justify-center">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+            <h3 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Authorship Summary</h3>
           </div>
-        )}
-      </div>
-
-      {/* Authorship Claim */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-indigo-900 mb-2">
-          ✓ Authorship Verified
-        </h3>
-        <p className="text-indigo-700">
-          This project shows{" "}
-          <strong>
-            {(stats.manualEditsCount || 0).toLocaleString()} manual edits
-          </strong>{" "}
-          over <strong>{stats.activeDays || 0} days</strong>, with{" "}
-          <strong>
-            {/* Show accurate manual authorship percentage */}
-            {Math.max(0, Math.round(100 - (stats.aiAssistedPercentage || 0)))}% original work
-          </strong>
-          . Your authorship is detailed below.
-        </p>
+          <p className="text-xs text-indigo-800 leading-relaxed">
+            This project contains <strong>{(stats.manualEditsCount || 0).toLocaleString()} manual edits</strong> recorded over <strong>{stats.activeDays || 0} days</strong> of activity.
+            The analysis indicates <strong>{Math.max(0, Math.round(100 - (stats.aiAssistedPercentage || 0)))}% original work contribution</strong> based on keystroke dynamics.
+          </p>
+        </div>
       </div>
     </div>
   );

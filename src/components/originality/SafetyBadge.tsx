@@ -2,16 +2,17 @@ import React from "react";
 
 interface SafetyBadgeProps {
   classification:
-    | "safe"
-    | "review"
-    | "action_required"
-    | "green"
-    | "yellow"
-    | "red"
-    | "common_phrase"
-    | "quoted_correctly"
-    | "needs_citation"
-    | "close_paraphrase";
+  | "safe"
+  | "review"
+  | "action_required"
+  | "green"
+  | "blue"
+  | "yellow"
+  | "red"
+  | "common_phrase"
+  | "quoted_correctly"
+  | "needs_citation"
+  | "close_paraphrase";
   score?: number;
   size?: "sm" | "md" | "lg";
 }
@@ -29,7 +30,9 @@ export const SafetyBadge: React.FC<SafetyBadgeProps> = ({
         ? "review"
         : classification === "red"
           ? "action_required"
-          : classification;
+          : classification === "blue"
+            ? "quoted_correctly"
+            : classification;
 
   // Color mapping
   const colors: Record<string, string> = {
@@ -73,9 +76,8 @@ export const SafetyBadge: React.FC<SafetyBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border font-medium ${
-        colors[normalizedClass]
-      } ${sizes[size]}`}>
+      className={`inline-flex items-center gap-1.5 rounded-full border font-medium ${colors[normalizedClass]
+        } ${sizes[size]}`}>
       <span className="font-bold">{icons[normalizedClass]}</span>
       <span>{labels[normalizedClass]}</span>
       {score !== undefined && (

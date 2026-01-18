@@ -96,7 +96,7 @@ const signupSchema = z
     email: z.string().email("Please enter a valid email address"),
     countryCode: z.string().optional(),
     phoneNumber: z.string().optional(),
-    otpMethod: z.enum(["sms", "email"]), // Default handled by useForm
+    otpMethod: z.union([z.literal("sms"), z.literal("email")]), // Default handled by useForm
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")

@@ -720,7 +720,7 @@ export const Dashboard: React.FC = () => {
 
         <div className="relative">
           {/* Content wrapping for blur effect */}
-          <div className={`${(userPlan === "free" || userPlan === "Free Plan") ? "filter blur-sm select-none pointer-events-none opacity-60 transition-all duration-500" : ""}`}>
+          <div className={`${userPlan !== "researcher" ? "filter blur-sm select-none pointer-events-none opacity-60 transition-all duration-500" : ""}`}>
 
             {/* Key Metrics Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -849,7 +849,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Premium Overlay */}
-          {(userPlan === "free" || userPlan === "Free Plan") && (
+          {userPlan !== "researcher" && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4">
               {/* Simplified Overlay - No Box */}
               <div className="text-center">
@@ -857,20 +857,22 @@ export const Dashboard: React.FC = () => {
                   <Lock className="w-8 h-8 text-indigo-600" />
                 </div>
                 <h3 className="text-3xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">
-                  Unlock Advanced Analytics
+                  {userPlan?.includes("student") ? "Upgrade to Researcher" : "Unlock Advanced Analytics"}
                 </h3>
                 <p className="text-gray-700 font-medium mb-8 max-w-md mx-auto drop-shadow-sm">
-                  Get full visibility into your Originality, Citation Health, and Authorship Verification status.
+                  {userPlan?.includes("student")
+                    ? "Get enhanced analytics, unlimited scans, and priority processing."
+                    : "Get full visibility into your Originality, Citation Health, and Authorship Verification status."}
                 </p>
                 <button
                   onClick={handleUpgradeClick}
                   className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-full shadow-xl shadow-indigo-500/40 transition-all duration-200 flex items-center justify-center mx-auto group ring-4 ring-white/30"
                 >
-                  <span>Upgrade to Researcher</span>
+                  <span>{userPlan?.includes("student") ? "Upgrade to Researcher" : "Unlock Premium Features"}</span>
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <p className="text-sm text-gray-600 font-semibold mt-4 bg-white/60 inline-block px-3 py-1 rounded-full backdrop-blur-sm">
-                  Starting at $12/mo
+                  {userPlan?.includes("student") ? "Starting at $12/mo" : "Starting at $4.99/mo"}
                 </p>
               </div>
             </div>

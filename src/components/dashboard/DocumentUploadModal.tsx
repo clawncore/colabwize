@@ -90,7 +90,28 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
             alert("Document uploaded successfully!");
           }
         } else {
-          alert(result.error || "Failed to upload document");
+          // Check if this is a content extraction error
+          const errorMessage = result.error || "Failed to upload document";
+
+          if (errorMessage.includes("Unable to extract content") ||
+            errorMessage.includes("PDF appears to contain no extractable text") ||
+            errorMessage.includes("Unable to extract text from PDF")) {
+
+            const detailedMessage = `
+Document Processing Issue
+
+${errorMessage}
+
+Possible solutions:
+• The PDF may be scanned or image-based - try converting to text first
+• The PDF may be password-protected or corrupted
+• Try uploading a different format (DOCX, TXT) instead
+            `;
+
+            alert(detailedMessage);
+          } else {
+            alert(errorMessage);
+          }
         }
       } else if (content.trim()) {
         // Direct text paste - use existing flow

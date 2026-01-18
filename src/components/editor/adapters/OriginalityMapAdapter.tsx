@@ -80,9 +80,9 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        currentPlan="free"
-        usageStats={{ used: 3, limit: 3 }}
-        featureName="Originality Scans"
+        title="Scan Limit Reached"
+        message="You have reached your limit of free originality scans."
+        feature="Originality Scans"
       />
 
       <button

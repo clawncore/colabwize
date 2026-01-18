@@ -19,6 +19,8 @@ export const ActionChecklistModal: React.FC<ActionChecklistModalProps> = ({
   onClose,
   onContinue,
 }) => {
+  const [checkedItems, setCheckedItems] = React.useState<number[]>([]);
+
   const checklistItems = [
     {
       id: 1,
@@ -42,6 +44,14 @@ export const ActionChecklistModal: React.FC<ActionChecklistModalProps> = ({
     },
   ];
 
+  const toggleItem = (id: number) => {
+    setCheckedItems((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const allChecked = checkedItems.length === checklistItems.length;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-white">
@@ -57,21 +67,53 @@ export const ActionChecklistModal: React.FC<ActionChecklistModalProps> = ({
         </DialogHeader>
 
         <div className="py-6 space-y-4">
-          {checklistItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-start gap-3 p-3 rounded-lg border border-indigo-50 bg-indigo-50/50 hover:bg-indigo-50 transition-colors">
-              <div className="mt-0.5">
-                <div className="w-5 h-5 rounded-full border-2 border-indigo-400 flex items-center justify-center">
-                  <div className="w-2.5 h-2.5 rounded-full bg-indigo-600 opacity-0 hover:opacity-100 transition-opacity" />
+          {checklistItems.map((item) => {
+            const isChecked = checkedItems.includes(item.id);
+            return (
+              <div
+                key={item.id}
+                onClick={() => toggleItem(item.id)}
+                className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer ${isChecked
+                    ? "border-indigo-200 bg-indigo-50"
+                    : "border-gray-200 bg-white hover:bg-gray-50"
+                  }`}>
+                <div className="mt-0.5">
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isChecked
+                        ? "border-indigo-600 bg-indigo-600"
+                        : "border-gray-300"
+                      }`}>
+                    {isChecked && (
+                      <svg
+                        className="w-3 h-3 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={3}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p
+                    className={`font-medium transition-colors ${isChecked ? "text-indigo-900" : "text-gray-900"
+                      }`}>
+                    {item.text}
+                  </p>
+                  <p
+                    className={`text-sm transition-colors ${isChecked ? "text-indigo-700" : "text-gray-500"
+                      }`}>
+                    {item.subtext}
+                  </p>
                 </div>
               </div>
-              <div>
-                <p className="font-medium text-gray-900">{item.text}</p>
-                <p className="text-sm text-gray-500">{item.subtext}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
@@ -82,7 +124,11 @@ export const ActionChecklistModal: React.FC<ActionChecklistModalProps> = ({
           </button>
           <button
             onClick={onContinue}
-            className="px-6 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 shadow-sm transition-all flex items-center gap-2">
+            disabled={!allChecked}
+            className={`px-6 py-2 text-sm font-medium rounded-md shadow-sm transition-all flex items-center gap-2 ${allChecked
+                ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              }`}>
             Looks Good, Continue
           </button>
         </div>

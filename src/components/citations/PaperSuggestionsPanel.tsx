@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useToast } from "../../hooks/use-toast";
 import { Search, Loader2 } from "lucide-react";
 import {
   SuggestedPaper,
   CitationService,
 } from "../../services/citationService";
-import { documentService } from "../../services/documentService";
+
 
 interface PaperSuggestionsPanelProps {
   projectId: string;
@@ -23,6 +24,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
   contextKeywords = [],
   onInsertCitation,
 }) => {
+  const { toast } = useToast();
   const [suggestedPapers, setSuggestedPapers] =
     useState<SuggestedPaper[]>(initialSuggestions);
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,8 +57,19 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     try {
       const results = await CitationService.searchPapers(searchQuery);
       setSuggestedPapers(results || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Search failed:", error);
+
+      const isLimitError = error.response?.status === 403 || error.message?.includes("limit");
+
+      toast({
+        title: isLimitError ? "Search Limit Reached" : "Search Failed",
+        description: isLimitError
+          ? "You have reached your monthly paper search limit. Please upgrade your plan or buy credits."
+          : "Failed to search for papers. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
     } finally {
       setIsSearching(false);
     }

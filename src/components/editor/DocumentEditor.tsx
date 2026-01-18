@@ -20,6 +20,7 @@ import {
 } from "../../services/originalityService";
 import { AuthorshipService } from "../../services/authorshipService";
 import "../../styles/highlight-styles.css";
+import "../../styles/image-styles.css";
 import { useToast } from "../../hooks/use-toast";
 import {
   OriginalityMapAdapter,
@@ -37,15 +38,13 @@ import { Table } from "@tiptap/extension-table";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableRow } from "@tiptap/extension-table-row";
-import Underline from "@tiptap/extension-underline";
-import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import { formatContentForTiptap } from "../../utils/editorUtils";
+import { findTextRange } from "../../utils/searchUtils";
 import { EditorToolbar } from "./editor-toolbar";
-import { ActionChecklistModal } from "../export/ActionChecklistModal";
-import { ExportFormatModal } from "../export/ExportFormatModal";
+import { ExportWorkflowModal } from "../export/ExportWorkflowModal";
 import {
   Download,
   GitCompare,
@@ -81,14 +80,13 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // Dialog States
   const [isComparisonSelectorOpen, setIsComparisonSelectorOpen] =
     useState(false);
-  const [isActionChecklistOpen, setIsActionChecklistOpen] = useState(false);
-  const [isExportFormatOpen, setIsExportFormatOpen] = useState(false);
+  const [isExportWorkflowOpen, setIsExportWorkflowOpen] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const [lastScanResult, setLastScanResult] = useState<OriginalityScan | null>(
     null
   );
-  const [citationSuggestions, setCitationSuggestions] = useState<any>(null);
+  const [citationSuggestions] = useState<any>(null);
   const [editCount, setEditCount] = useState(0);
   const [timeSpent, setTimeSpent] = useState(0); // in seconds
   const startTimeRef = useRef<Date | null>(null);
@@ -111,23 +109,21 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       HighlightExtension,
       CharacterCount,
       Image.configure({
-        inline: true,
-        allowBase64: true,
+        inline: false, // Support block-level images for text wrapping
+        allowBase64: false, // Force Supabase URLs for better performance
+        HTMLAttributes: {
+          class: "editor-image resizable", // Custom classes for styling
+        },
       }),
       Table.configure({
         resizable: true,
+        // resizable: true, // Duplicate property removed
       }),
       TableRow,
       TableHeader,
       TableCell,
-      Underline,
       TextAlign.configure({
         types: ["heading", "paragraph"],
-      }),
-      Link.configure({
-        openOnClick: false,
-        autolink: true,
-        linkOnPaste: true,
       }),
       TaskList,
       TaskItem.configure({
@@ -281,11 +277,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     // Clear existing highlights
     clearHighlights();
 
-    // Use text search to find precise positions, as backend offsets may drift
-    // due to differences in how block separators are counted (\n vs </p><p>)
+    // Import the utility dynamically or assumption it's available
+    // We added it to src/utils/searchUtils.ts
+    // For now we assume imports are handled or we need to add the import at top.
     const doc = editor.state.doc;
-    const docText = editor.getText(); // Get text representation with block separators
-    let searchCursor = 0;
+    let searchPos = 0;
 
     // Sort matches by position to ensure sequential search works best
     const sortedMatches = [...results.matches].sort(
@@ -295,27 +291,17 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     sortedMatches.forEach((match: SimilarityMatch) => {
       if (!match.sentenceText) return;
 
-      // Find the text in the document, starting near where we expect it
-      // We look ahead from the last cursor position
-      const foundIndex = docText.indexOf(match.sentenceText, searchCursor);
+      // Use robust search from utility
+      const range = findTextRange(doc, match.sentenceText, searchPos);
 
-      if (foundIndex === -1) {
-        // Fallback: simple position mapping if search fails (unlikely)
+      if (!range) {
+        // Match not found (possibly content changed significantly since scan)
+        console.warn("Could not find match text in document", match.sentenceText);
         return;
       }
 
-      // Advance cursor to avoid re-matching the same text
-      searchCursor = foundIndex + 1;
-
-      // Map the Text Index to a ProseMirror Node Position
-      // Tiptap's getText() usually separates blocks with \n\n (length 2)
-      // ProseMirror blocks are separated by closing/opening tags (length 2)
-      // So we just need to account for the initial position and ensure we map correctly across nodes
-      const fromPos = mapTextIndexToPos(doc, foundIndex);
-      const toPos = mapTextIndexToPos(
-        doc,
-        foundIndex + match.sentenceText.length
-      );
+      // Advance search position to avoid re-matching the same text earlier in doc
+      searchPos = range.to;
 
       // Determine color based on classification
       let color = "yellow";
@@ -361,67 +347,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
       // Apply the highlight mark
       try {
-        editor.commands.setTextSelection({ from: fromPos, to: toPos });
-        editor.commands.setHighlight({
+        // Use the specific range command
+        editor.chain().highlightRange(range.from, range.to, {
           color,
           type: "originality",
           similarity: match.similarityScore,
           message: message,
-        });
+        }).run();
+
       } catch (err) {
         console.error("Failed to highlight match:", match, err);
       }
     });
   };
 
-  // Helper to map a plain text index (from getText) to a ProseMirror position
-  const mapTextIndexToPos = (doc: any, targetIndex: number): number => {
-    // Tiptap's getText() usually separates blocks with \n\n (length 2)
-    // ProseMirror positions jump by 2 for each block boundary (</p><p>)
-    // Since getText() length aligns with Position length for block separators (2 chars vs 2 pos),
-    // we generally just need to account for the initial block opening tag (+1)
-    return targetIndex + 1;
-  };
-
-  // Function to highlight citation confidence signals
-  const highlightCitationSignals = (results: {
-    suggestions: {
-      sentence: string;
-      suggestion: string;
-      type: "factual_claim" | "definition" | "statistic";
-    }[];
-  }) => {
-    if (!editor || !results || !results.suggestions) return;
-
-    // Clear existing highlights
-    clearHighlights();
-
-    // Get full document text to find positions
-    const docText = editor.getText();
-
-    results.suggestions.forEach((item) => {
-      // Find position of sentence in document
-      // Note: This is a simple verification implementation. In production, we'd want more robust fuzzy matching.
-      const index = docText.indexOf(item.sentence);
-
-      if (index >= 0) {
-        const from = index + 1; // +1 to account for potential offset
-        const to = index + item.sentence.length + 1;
-
-        // Determine color based on type
-        let color = "purple"; // Default for definitions
-        if (item.type === "statistic") color = "orange";
-        if (item.type === "factual_claim") color = "pink";
-
-        editor.commands.setTextSelection({ from, to });
-        editor.commands.setHighlight({
-          color,
-          type: "citation_signal",
-          message: item.suggestion, // User requested output
-        });
-      }
-    });
-  };
 
   // Track time spent writing
   useEffect(() => {
@@ -576,7 +515,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           </div>
           <div className="flex items-center space-x-2 flex-wrap">
             <button
-              onClick={() => setIsActionChecklistOpen(true)}
+              onClick={() => setIsExportWorkflowOpen(true)}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
               title="Export Document">
               <Download className="w-4 h-4" />
@@ -776,20 +715,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         excludeProjectId={project.id}
       />
 
-      <ActionChecklistModal
-        isOpen={isActionChecklistOpen}
-        onClose={() => setIsActionChecklistOpen(false)}
-        onContinue={() => {
-          setIsActionChecklistOpen(false);
-          setIsExportFormatOpen(true);
-        }}
-      />
-
-      <ExportFormatModal
-        isOpen={isExportFormatOpen}
-        onClose={() => setIsExportFormatOpen(false)}
+      <ExportWorkflowModal
+        isOpen={isExportWorkflowOpen}
+        onClose={() => setIsExportWorkflowOpen(false)}
         project={{ ...project, title }}
         currentContent={editor?.getJSON()}
+        currentHtmlContent={editor?.getHTML()}
       />
     </div>
   );
