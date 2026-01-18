@@ -13,6 +13,7 @@ import { KeywordsExtension } from "../../extensions/KeywordsExtension";
 import { PricingTableExtension } from "../../extensions/PricingTableExtension";
 import { SectionExtension } from "../../extensions/SectionExtension";
 import { VisualElementExtension } from "../../extensions/VisualElementExtension";
+import { AITrackingExtension } from "../../extensions/AITrackingExtension";
 import { documentService, Project } from "../../services/documentService";
 import {
   OriginalityScan,
@@ -53,7 +54,11 @@ import {
   ShieldAlert,
   Bot,
   ShieldCheck,
+  Wand2,
+  Loader2,
 } from "lucide-react";
+import { OriginalityService } from "../../services/originalityService";
+
 
 interface DocumentEditorProps {
   project: Project;
@@ -93,7 +98,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasInitializedContentRef = useRef(false);
   const currentProjectIdRef = useRef<string | null>(null);
-
+  const [isHumanizing, setIsHumanizing] = useState(false);
   // Layout State
 
   // Sync state when project changes
@@ -137,9 +142,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       CustomCodeBlockExtension,
       FigureExtension,
       KeywordsExtension,
-
+      AITrackingExtension, // Add Custom AI Tracking Extension
       PricingTableExtension,
-
       SectionExtension,
       VisualElementExtension,
     ],
@@ -218,11 +222,13 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     const activityInterval = setInterval(async () => {
       const currentStats = statsRef.current;
 
+      // Get AI stats from extension storage if available
+      const aiEditCount = (editor?.storage as any).aiTracking?.aiEditCount || 0;
+
       // Only save if there's been some activity or if time has passed
-      // We check if we have a project ID and data to save
       if (
         project.id &&
-        (currentStats.editCount > 0 || currentStats.timeSpent > 0)
+        (currentStats.editCount > 0 || currentStats.timeSpent > 0 || aiEditCount > 0)
       ) {
         try {
           await AuthorshipService.recordActivity({
@@ -230,10 +236,13 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             timeSpent: currentStats.timeSpent,
             editCount: currentStats.editCount,
             wordCount: currentStats.wordCount,
+            manualEdits: currentStats.editCount,
+            aiAssistedEdits: aiEditCount,
           });
           console.log("Activity recorded (Auto-sync):", {
             timeSpent: currentStats.timeSpent,
             editCount: currentStats.editCount,
+            aiAssistedEdits: aiEditCount,
           });
         } catch (error) {
           console.error("Failed to record activity:", error);
@@ -384,6 +393,64 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       }
     };
   }, []);
+
+
+  const handleHumanize = async () => {
+    try {
+      const selection = editor.state.selection;
+      const text = selection.empty ? editor.getText() : editor.state.doc.textBetween(selection.from, selection.to);
+
+      if (!text || text.trim().length < 10) {
+        toast({
+          title: "Select Text",
+          description: "Please select at least 10 characters to humanize.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const MAX_CHARS = 5000;
+      if (text.length > MAX_CHARS) {
+        toast({
+          title: "Selection Too Long",
+          description: `Please select a specific section (max ${MAX_CHARS} chars) to sanitize. Current: ${text.length} chars.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsHumanizing(true);
+      toast({
+        title: "Humanizing...",
+        description: "Adversarial AI is rewriting your content to bypass detectors.",
+      });
+
+      const result = await OriginalityService.humanizeText(text);
+
+      if (selection.empty) {
+        // Replace all
+        editor.commands.setContent(result.text);
+      } else {
+        // Replace selection
+        editor.chain().focus().deleteSelection().insertContent(result.text).run();
+      }
+
+      toast({
+        title: "Humanization Complete",
+        description: `Rewritten by ${result.provider === 'anthropic' ? 'Claude 3.5' : 'GPT-4o'}.`,
+        variant: "default",
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Humanization Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsHumanizing(false);
+    }
+  };
 
   const handleSave = React.useCallback(async () => {
     if (!editor) return;
@@ -590,6 +657,21 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 }
               }}
             />
+
+            {/* Auto-Humanizer (Sanitize) Button */}
+            <button
+              title="Auto-Humanize (Adversarial AI)"
+              className="h-8 gap-1 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+              disabled={isHumanizing}
+              onClick={handleHumanize}>
+              {isHumanizing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="h-4 w-4" />
+              )}
+              <span className="text-xs font-medium">Sanitize</span>
+            </button>
+
             <button
               className="p-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
               title="More Options">

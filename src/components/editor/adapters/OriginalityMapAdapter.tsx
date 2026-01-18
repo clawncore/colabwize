@@ -39,7 +39,32 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
       setIsScanning(true);
 
       // Direct Service Call
-      const result = await OriginalityService.scanDocument(projectId, content);
+      // Initial call triggers Google Scan (Hybrid Step 1) and initiates Copyleaks (Hybrid Step 2)
+      let result = await OriginalityService.scanDocument(projectId, content);
+
+      // If status is Processing, it means Copyleaks (Deep Scan) is running.
+      // We poll until it's completed.
+      if (result.scanStatus === "processing") {
+        const pollInterval = 2000; // 2 seconds
+        const maxAttempts = 30; // 60 seconds max
+        let attempts = 0;
+
+        while (
+          result.scanStatus === "processing" ||
+          result.scanStatus === "pending"
+        ) {
+          if (attempts >= maxAttempts) break; // Timeout
+          await new Promise((resolve) => setTimeout(resolve, pollInterval));
+          attempts++;
+
+          // Poll for updates
+          try {
+            result = await OriginalityService.getScanResults(result.id);
+          } catch (e) {
+            console.warn("Polling error:", e);
+          }
+        }
+      }
 
       // Notify parent to highlight
       if (onScanComplete) {

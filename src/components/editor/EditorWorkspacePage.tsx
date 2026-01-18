@@ -415,6 +415,21 @@ const EditorWorkspacePage: React.FC = () => {
                   projectId={selectedProject?.id}
                   panelData={panelData}
                   onClose={() => setIsRightSidebarOpen(false)}
+                  onApply={(text: string) => {
+                    // Apply rephrase to editor
+                    if (editorInstance) {
+                      // Replace valid selection or insert
+                      editorInstance.chain().focus().insertContent(text).run();
+
+                      // Track AI Action for Authorship Certificate
+                      if (editorInstance.commands.trackAIAction) {
+                        editorInstance.commands.trackAIAction();
+                      }
+
+                      // Close panel after apply if desired, or keep open
+                      // setIsRightSidebarOpen(false); 
+                    }
+                  }}
                 />
               )}
               {activePanelType === "reality-check" && panelData && (

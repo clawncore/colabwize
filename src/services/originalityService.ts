@@ -9,14 +9,14 @@ export interface SimilarityMatch {
   positionStart: number;
   positionEnd: number;
   classification:
-    | "green"
-    | "yellow"
-    | "red"
-    | "blue"
-    | "common_phrase"
-    | "quoted_correctly"
-    | "needs_citation"
-    | "close_paraphrase";
+  | "green"
+  | "yellow"
+  | "red"
+  | "blue"
+  | "common_phrase"
+  | "quoted_correctly"
+  | "needs_citation"
+  | "close_paraphrase";
 }
 
 export interface OriginalityScan {
@@ -209,6 +209,21 @@ export class OriginalityService {
     } catch (error: any) {
       console.error("Error checking self-plagiarism:", error);
       throw new Error(error.message || "Failed to check self-plagiarism");
+    }
+  }
+
+  /**
+   * Humanize text using Adversarial AI (Auto-Humanizer)
+   */
+  static async humanizeText(content: string): Promise<{ text: string; provider: "anthropic" | "openai" }> {
+    try {
+      const response = await apiClient.post("/api/originality/humanize", {
+        content,
+      });
+      return response.data.data;
+    } catch (error: any) {
+      console.error("Error humanizing text:", error);
+      throw new Error(error.message || "Failed to humanize text");
     }
   }
 }

@@ -42,6 +42,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     const [selfPlagiarismWarning, setSelfPlagiarismWarning] = useState<
         string | null
     >(null);
+    const [includeAuthorshipCertificate, setIncludeAuthorshipCertificate] = useState(true);
     // Removed hasCredit state usage for UI, but keeping logic internal if needed later
 
     const { toast } = useToast();
@@ -144,6 +145,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     title: project.title,
                     content: currentContent,
                     citations: project.citations || [],
+                    includeAuthorshipCertificate,
                 },
                 fileType: `export-${selectedFormat}`,
                 userId: userId,
@@ -317,6 +319,25 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                         {selectedFormat === fmt.id && <div className="ml-auto"><CheckCircle2 className="w-6 h-6 text-indigo-600" /></div>}
                     </button>
                 ))}
+            </div>
+
+            {/* Smart Export Options */}
+            <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <h4 className="font-semibold text-gray-900 mb-3">Smart Export Options</h4>
+                <div className="space-y-3">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={includeAuthorshipCertificate}
+                            onChange={(e) => setIncludeAuthorshipCertificate(e.target.checked)}
+                            className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <div>
+                            <p className="font-medium text-gray-900">Include Authorship Certificate</p>
+                            <p className="text-xs text-gray-500">Append verifiable proof of authorship to your document.</p>
+                        </div>
+                    </label>
+                </div>
             </div>
         </div>
     );

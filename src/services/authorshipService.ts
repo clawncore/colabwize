@@ -89,6 +89,8 @@ export class AuthorshipService {
     timeSpent: number;
     editCount: number;
     wordCount: number;
+    manualEdits?: number;
+    aiAssistedEdits?: number;
   }): Promise<void> {
     try {
       await apiClient.post("/api/authorship/record-activity", activityData);

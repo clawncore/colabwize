@@ -38,11 +38,22 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
       if (contextKeywords && contextKeywords.length > 0) {
         const query = contextKeywords.join(" ");
         setSearchQuery(query);
-        setIsLoadingInitial(false); // Stop loading, wait for user
+        // Auto-search!
+        setIsSearching(true);
+        try {
+          // Use the service which now routes to Semantic Scholar/OpenAlex
+          const results = await CitationService.searchPapers(query);
+          setSuggestedPapers(results || []);
+        } catch (error) {
+          console.error("Auto-search failed", error);
+        } finally {
+          setIsSearching(false);
+          setIsLoadingInitial(false);
+        }
         return;
       }
 
-      // 2. Fallback: Do NOT pre-fill with title. Leave empty for user to type.
+      // 2. Fallback: Do NOT pre-fill with title.
       setIsLoadingInitial(false);
     };
 
@@ -85,7 +96,8 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
           paper.authors.length > 0
             ? paper.authors[0] + (paper.authors.length > 1 ? " et al." : "")
             : "Unknown";
-        const citationText = ` (${authorText}, ${paper.year}) `;
+        // User requested paper name to be added
+        const citationText = ` "${paper.title}" (${authorText}, ${paper.year}) `;
         onInsertCitation(citationText);
       }
 
