@@ -59,7 +59,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
         }
 
         // Remove very specific punctuation that might break search (though usually fine)
-        query = query.replace(/[\[\]\(\)]/g, "");
+        query = query.replace(/[()[\]]/g, "");
 
         return [query];
     };

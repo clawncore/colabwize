@@ -269,6 +269,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         }).catch(console.error);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.id]); // Only re-run if project ID changes
 
   // Function to clear all highlights
