@@ -208,7 +208,7 @@ export const ExportFormatModal: React.FC<ExportFormatModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-white">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-xl p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <Download className="w-5 h-5" />
@@ -241,9 +241,9 @@ export const ExportFormatModal: React.FC<ExportFormatModalProps> = ({
               key={fmt.id}
               onClick={() => handleDownload(fmt.id as ExportFormat)}
               disabled={downloading !== null}
-              className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-indigo-500 hover:bg-gray-50 transition-all text-left group disabled:opacity-50">
+              className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border border-gray-200 hover:border-indigo-500 hover:bg-gray-50 transition-all text-left group disabled:opacity-50">
               <div
-                className={`w-10 h-10 rounded-lg ${fmt.color} text-white flex items-center justify-center font-bold text-lg shadow-sm group-hover:shadow-md transition-shadow`}>
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${fmt.color} text-white flex items-center justify-center font-bold text-base sm:text-lg shadow-sm group-hover:shadow-md transition-shadow flex-shrink-0`}>
                 {downloading === fmt.id ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (

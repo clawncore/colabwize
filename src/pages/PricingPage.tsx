@@ -168,11 +168,10 @@ function FeaturesPresentationFlow() {
         yearlyPrice: 0,
         features: [
           "3 document scans per month",
-          "3 Rephrase Suggestions for improvement",
+          "3 Rephrase Suggestions",
           "Max 100,000 characters (~15k words)",
           "Basic originality check",
-          "Export to PDF/Word",
-          "Watermarked certificate",
+          "Certificate",
         ],
       },
       {
@@ -198,13 +197,11 @@ function FeaturesPresentationFlow() {
         yearlyPrice: 47.9, // 20% discount
         features: [
           "50 document scans per month",
-          "50 Rephrase Suggestions for improvement",
+          "50 Rephrase Suggestions",
           "Max 300,000 characters (~50k words)",
           "Full originality map",
           "Citation confidence auditor",
-          "Export to PDF/Word",
-          "Professional certificate (no watermark)",
-          "Email support",
+          "Professional certificate",
         ],
         popular: true,
       },
@@ -214,16 +211,12 @@ function FeaturesPresentationFlow() {
         monthlyPrice: 12.99,
         yearlyPrice: 124.7, // 20% discount
         features: [
-          "Unlimited document scans",
-          "Unlimited Rephrase Suggestions for improvement",
+          "Everything in Student Unlimited",
           "Max 500,000 characters (~80k words)",
-          "Everything in Student plan",
           "Priority scanning",
-          "Advanced citation suggestions",
+          "Advanced Analytics",
           "Draft comparison",
           "Safe AI Integrity Assistant",
-          "Export to multiple formats",
-          "Priority support",
         ],
         researcher: true,
       },

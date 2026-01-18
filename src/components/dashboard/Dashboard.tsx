@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FileSearch, BookOpen, ShieldCheck, Lock, ArrowRight, Award, CheckCircle, Upload, Crown } from "lucide-react";
+import { FileSearch, BookOpen, ShieldCheck, Lock, ArrowRight, Award, CheckCircle, Upload, Crown, Zap, Quote, GraduationCap } from "lucide-react";
 import { DocumentUploadModal } from "./DocumentUploadModal";
 import AnalyticsService, {
   type DashboardData,
@@ -552,9 +552,9 @@ export const Dashboard: React.FC = () => {
       {latestProject && (
         <div className="mb-8">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 ring-1 ring-gray-50">
-            <div className="grid grid-cols-1 lg:grid-cols-3">
+            <div className="grid grid-cols-1 xl:grid-cols-3">
               {/* Left: Document Preview (2/3 width) */}
-              <div className="lg:col-span-2 p-8 border-r border-gray-100 bg-gradient-to-br from-white to-gray-50/50">
+              <div className="xl:col-span-2 p-8 border-r border-gray-100 bg-gradient-to-br from-white to-gray-50/50">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-3">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
@@ -610,9 +610,6 @@ export const Dashboard: React.FC = () => {
                     Resume Editing
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Link>
-                  <button className="inline-flex items-center px-6 py-3 border border-gray-200 text-sm font-bold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all duration-200">
-                    View Full Report
-                  </button>
                 </div>
               </div>
 
@@ -1051,100 +1048,89 @@ export const Dashboard: React.FC = () => {
           </>
         ) : (
           /* Upgrade Prompt for Non-Researcher Users */
-          <div className="col-span-full bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-8 border-2 border-indigo-200 shadow-sm">
-            <div className="text-center max-w-2xl mx-auto">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-                <svg
-                  className="w-8 h-8 text-indigo-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Advanced Analytics
+          /* Premium Features Grid */
+          <div className="col-span-full mt-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                <Crown className="w-5 h-5 text-amber-500 mr-2" />
+                Unlock Professional Power
               </h3>
-              <p className="text-gray-600 mb-6">
-                Unlock powerful insights with our Researcher plan! Get
-                access to:
-              </p>
-              <div className="grid grid-cols-2 gap-4 mb-6 text-left">
-                <div className="flex items-start">
-                  <svg
-                    className="w-5 h-5 text-green-500 mr-2 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-sm text-gray-700">
-                    Most Active Day Analytics
-                  </span>
-                </div>
-                <div className="flex items-start">
-                  <svg
-                    className="w-5 h-5 text-green-500 mr-2 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-sm text-gray-700">
-                    Weekly Upload Velocity
-                  </span>
-                </div>
-                <div className="flex items-start">
-                  <svg
-                    className="w-5 h-5 text-green-500 mr-2 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-sm text-gray-700">
-                    Citation Fix Rate Tracking
-                  </span>
-                </div>
-                <div className="flex items-start">
-                  <svg
-                    className="w-5 h-5 text-green-500 mr-2 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-sm text-gray-700">
-                    Time to Verification Trends
-                  </span>
-                </div>
-              </div>
               <button
                 onClick={handleUpgradeClick}
-                className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors shadow-md">
-                Upgrade to Researcher Plan
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 flex items-center"
+              >
+                View Plans <ArrowRight className="w-4 h-4 ml-1" />
               </button>
-              <p className="text-xs text-gray-500 mt-4">
-                Current Plan:{" "}
-                <span className="font-semibold capitalize">{userPlan}</span>
-              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Feature 1: Deep AI Scanner */}
+              <div
+                onClick={handleUpgradeClick}
+                className="group relative bg-white/80 rounded-xl p-5 border border-indigo-100 hover:border-indigo-300 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Lock className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <Zap className="w-5 h-5 text-indigo-600" />
+                </div>
+                <h4 className="font-bold text-gray-900 mb-1">Deep AI Scanner</h4>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Detect AI-generated text with industry-leading precision and multi-model analysis.
+                </p>
+              </div>
+
+              {/* Feature 2: Smart Citation */}
+              <div
+                onClick={handleUpgradeClick}
+                className="group relative bg-white/80 rounded-xl p-5 border border-blue-100 hover:border-blue-300 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Lock className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <Quote className="w-5 h-5 text-blue-600" />
+                </div>
+                <h4 className="font-bold text-gray-900 mb-1">Smart Citations</h4>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Auto-generate and verify citations in APA, MLA, and Chicago styles instantly.
+                </p>
+              </div>
+
+              {/* Feature 3: Academic Tone */}
+              <div
+                onClick={handleUpgradeClick}
+                className="group relative bg-white/80 rounded-xl p-5 border border-purple-100 hover:border-purple-300 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Lock className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <GraduationCap className="w-5 h-5 text-purple-600" />
+                </div>
+                <h4 className="font-bold text-gray-900 mb-1">Academic Tone</h4>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Get real-time feedback on scholarly tone, vocabulary, and readability.
+                </p>
+              </div>
+
+              {/* Feature 4: Plagiarism Shield */}
+              <div
+                onClick={handleUpgradeClick}
+                className="group relative bg-white/80 rounded-xl p-5 border border-green-100 hover:border-green-300 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Lock className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <ShieldCheck className="w-5 h-5 text-green-600" />
+                </div>
+                <h4 className="font-bold text-gray-900 mb-1">Plagiarism Shield</h4>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Compare your work against billions of web sources and academic journals.
+                </p>
+              </div>
             </div>
           </div>
         )}

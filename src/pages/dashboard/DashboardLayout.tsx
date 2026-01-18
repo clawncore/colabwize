@@ -25,6 +25,8 @@ import { SubscriptionService } from "../../services/subscriptionService";
 import { ReactNode } from "react";
 import { Outlet } from "react-router-dom";
 import { UsageMeter } from "../../components/subscription/UsageMeter";
+import { useIsMobile } from "../../hooks/useIsMobile";
+import MobileRestrictedPage from "../MobileRestrictedPage";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -38,6 +40,10 @@ export default function DashboardLayout({
   const { loading, isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile(); // Check for mobile device
+
+
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -119,8 +125,7 @@ export default function DashboardLayout({
     };
 
     fetchData();
-    fetchData();
-  }, [userId, user, isAuthenticated, loading, location.pathname]);
+  }, [userId, loading]);
 
   // Close sidebar on mobile when route changes
   useEffect(() => {
@@ -383,6 +388,10 @@ export default function DashboardLayout({
     }
     return "User";
   };
+
+  if (isMobile) {
+    return <MobileRestrictedPage />;
+  }
 
   return (
     <div className="min-h-screen bg-white">

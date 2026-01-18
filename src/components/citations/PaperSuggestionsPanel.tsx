@@ -29,75 +29,23 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
 
-  // Auto-search based on document content when panel opens
+  // Initialize search query (Auto-fill but DO NOT Auto-search)
   useEffect(() => {
-    const fetchAndSearch = async () => {
-      // Skip if we already have initial suggestions
-      if (initialSuggestions.length > 0) {
-        setIsLoadingInitial(false);
+    const initializeSearchInput = async () => {
+      // 1. If we have explicit context keywords, use them to pre-fill input
+      if (contextKeywords && contextKeywords.length > 0) {
+        const query = contextKeywords.join(" ");
+        setSearchQuery(query);
+        setIsLoadingInitial(false); // Stop loading, wait for user
         return;
       }
 
-      try {
-        setIsLoadingInitial(true);
-
-        // Fetch project to get document content
-        const projectResult = await documentService.getProjectById(projectId);
-
-        if (projectResult.success && projectResult.data) {
-          const content = projectResult.data.content;
-
-          // Extract text from JSON content (Tiptap format)
-          let documentText = "";
-          if (typeof content === "object" && content !== null) {
-            // Simple extraction - get text from nodes
-            const extractText = (node: any): string => {
-              if (node.text) return node.text;
-              if (node.content) {
-                return node.content.map(extractText).join(" ");
-              }
-              return "";
-            };
-            documentText = extractText(content);
-          } else if (typeof content === "string") {
-            documentText = content;
-          }
-
-          // Extract keywords from document (simple approach: get meaningful words)
-          const words = documentText
-            .split(/\s+/)
-            .filter((w) => w.length > 4) // Words longer than 4 chars
-            .filter(
-              (w) =>
-                !/^(that|this|with|from|have|about|would|their|there|which|these|those|been|were|when|what|where)$/i.test(
-                  w
-                )
-            )
-            .slice(0, 20)
-            .join(" ");
-
-          // Use context keywords if provided, otherwise use extracted words
-          let query = words || "academic research";
-          if (contextKeywords && contextKeywords.length > 0) {
-            query = contextKeywords.join(" ");
-          }
-
-          // Search for papers
-          if (query.trim()) {
-            const results = await CitationService.searchPapers(query);
-            setSuggestedPapers(results || []);
-            setSearchQuery(query.split(" ").slice(0, 5).join(" ")); // Show shortened query
-          }
-        }
-      } catch (error) {
-        console.error("Auto-search failed:", error);
-      } finally {
-        setIsLoadingInitial(false);
-      }
+      // 2. Fallback: Do NOT pre-fill with title. Leave empty for user to type.
+      setIsLoadingInitial(false);
     };
 
-    fetchAndSearch();
-  }, [projectId, contextKeywords, initialSuggestions]); // Re-run if projectId changes
+    initializeSearchInput();
+  }, [projectId, contextKeywords]);
 
   const handleManualSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();

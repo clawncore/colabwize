@@ -172,7 +172,7 @@ const LoginPage: React.FC = () => {
         } else {
           setError(
             error.message ||
-              "Login failed. Please check your credentials and try again."
+            "Login failed. Please check your credentials and try again."
           );
         }
       }
@@ -198,7 +198,7 @@ const LoginPage: React.FC = () => {
       console.error("Resend verification failed:", error);
       setError(
         error.message ||
-          "Failed to resend verification email. Please try again."
+        "Failed to resend verification email. Please try again."
       );
     } finally {
       setIsLoading(false);
@@ -210,14 +210,14 @@ const LoginPage: React.FC = () => {
       {/* Error Message */}
       {error && (
         <div
-          className={`rounded-lg p-3 ${isEmailNotConfirmed ? "bg-blue-900/50 border border-blue-800" : "bg-red-900/50 border border-red-800"}`}>
+          className={`rounded-lg p-3 ${isEmailNotConfirmed ? "bg-blue-50 border border-blue-200" : "bg-red-50 border border-red-200"}`}>
           <div className="flex items-start">
             <AlertCircle
-              className={`h-5 w-5 mr-2 ${isEmailNotConfirmed ? "text-blue-300" : "text-red-300"}`}
+              className={`h-5 w-5 mr-2 ${isEmailNotConfirmed ? "text-blue-600" : "text-red-600"}`}
             />
             <div className="flex-1">
               <p
-                className={`text-sm ${isEmailNotConfirmed ? "text-blue-300" : "text-red-300"}`}>
+                className={`text-sm font-medium ${isEmailNotConfirmed ? "text-blue-800" : "text-red-800"}`}>
                 {error}
               </p>
 
@@ -307,7 +307,7 @@ const LoginPage: React.FC = () => {
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-gray-500 font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+          className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
           disabled={!isValid || isLoading}>
           {isLoading ? (
             <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

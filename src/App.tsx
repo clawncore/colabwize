@@ -78,8 +78,16 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 import CallbackPage from "./pages/auth/CallbackPage";
 import AuthInitializer from "./components/auth/AuthInitializer";
+import { useIsMobile } from "./hooks/useIsMobile";
+import MobileRestrictedPage from "./pages/MobileRestrictedPage";
 
 function App() {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return <MobileRestrictedPage />;
+  }
+
   return (
     <ThemeProvider>
       <BillingProvider>

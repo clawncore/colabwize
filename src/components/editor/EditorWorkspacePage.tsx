@@ -13,6 +13,8 @@ import { SubscriptionService } from "../../services/subscriptionService";
 import { UsageMeter } from "../../components/subscription/UsageMeter";
 import { useAuth } from "../../hooks/useAuth";
 
+import { CitationAuditSidebar } from "../citations/CitationAuditSidebar";
+
 // Define panel types
 export type RightPanelType =
   | "citations"
@@ -28,9 +30,13 @@ const EditorWorkspacePage: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   // const [projects, setProjects] = useState<Project[]>([]);
 
-  // Collapsible state
-  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+  // Collapsible state - Responsive defaults
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(() => window.innerWidth >= 1280);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(() => window.innerWidth >= 1024);
+
+  // Left Panel State
+  const [activeLeftPanel, setActiveLeftPanel] = useState<"documents" | "audit">("documents");
+  const [leftPanelData, setLeftPanelData] = useState<any>(null);
 
   // Right panel type state
   const [activePanelType, setActivePanelType] =
@@ -39,7 +45,7 @@ const EditorWorkspacePage: React.FC = () => {
 
   // Resizable widths
   const [leftSidebarWidth, setLeftSidebarWidth] = useState(280);
-  const [rightSidebarWidth, setRightSidebarWidth] = useState(340);
+  const [rightSidebarWidth, setRightSidebarWidth] = useState(300); // Reduced from 340 for better fit
 
   // Subscription state
   const [creditBalance, setCreditBalance] = useState<number>(0);
@@ -224,30 +230,46 @@ const EditorWorkspacePage: React.FC = () => {
     <div
       ref={containerRef}
       className="h-screen w-full flex overflow-hidden bg-white">
-      {/* Left Sidebar - Documents List */}
+      {/* Left Sidebar - Documents List or Audit Panel */}
       {isLeftSidebarOpen && (
         <>
           <div
             style={{ width: `${leftSidebarWidth}px` }}
-            className="flex-shrink-0 h-full border-r border-gray-200 transition-all relative">
-            <DocumentList
-              onProjectSelect={handleProjectSelect}
-              onCreateNew={handleCreateNew}
-              selectedProjectId={selectedProject?.id}
-              displayMode="list"
-              showActions={false}
-            />
+            className="flex-shrink-0 h-full border-r border-gray-200 transition-all relative flex flex-col bg-white">
 
-            {/* Credit Meter Fixed at Bottom */}
-            <div className="absolute bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 z-10 transition-all">
-              <UsageMeter
-                current={creditBalance}
-                limit={0}
-                planName={userPlan}
-                featureName="credits"
-                mode="credits"
+            {activeLeftPanel === "documents" ? (
+              <>
+                <div className="flex-1 overflow-hidden flex flex-col">
+                  <DocumentList
+                    onProjectSelect={handleProjectSelect}
+                    onCreateNew={handleCreateNew}
+                    selectedProjectId={selectedProject?.id}
+                    displayMode="list"
+                    showActions={false}
+                  />
+                </div>
+                {/* Credit Meter Fixed at Bottom */}
+                <div className="flex-shrink-0 w-full bg-white border-t border-gray-200 p-4 z-10">
+                  <UsageMeter
+                    current={creditBalance}
+                    limit={0}
+                    planName={userPlan}
+                    featureName="credits"
+                    mode="credits"
+                  />
+                </div>
+              </>
+            ) : (
+              <CitationAuditSidebar
+                projectId={selectedProject?.id || ""}
+                editor={editorInstance}
+                onClose={() => setActiveLeftPanel("documents")}
+                onFindPapers={(keywords) => {
+                  openPanel("citations", { contextKeywords: keywords });
+                }}
+                initialResults={leftPanelData}
               />
-            </div>
+            )}
           </div>
           {/* Left Resize Handle */}
           <div
@@ -265,7 +287,7 @@ const EditorWorkspacePage: React.FC = () => {
         style={{
           left: isLeftSidebarOpen ? `${leftSidebarWidth - 16}px` : "16px",
         }}
-        title={isLeftSidebarOpen ? "Hide Documents" : "Show Documents"}>
+        title={isLeftSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}>
         <svg
           className="w-4 h-4"
           fill="none"
@@ -296,6 +318,11 @@ const EditorWorkspacePage: React.FC = () => {
             project={selectedProject}
             onProjectUpdate={handleProjectUpdate}
             onOpenPanel={openPanel}
+            onOpenLeftPanel={(panel, data) => {
+              setLeftPanelData(data);
+              setActiveLeftPanel(panel);
+              if (!isLeftSidebarOpen) setIsLeftSidebarOpen(true);
+            }}
             onEditorReady={setEditorInstance}
           />
         ) : (

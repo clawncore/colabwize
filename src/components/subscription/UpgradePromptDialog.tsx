@@ -11,10 +11,10 @@ interface UpgradePromptDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   feature:
-    | "originality_scan"
-    | "citation_check"
-    | "certificate"
-    | "rephrase_suggestions";
+  | "originality_scan"
+  | "citation_check"
+  | "certificate"
+  | "rephrase_suggestions";
   limit?: number;
 }
 
@@ -81,7 +81,7 @@ export const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl bg-white">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-xl p-4 sm:p-6">
         <div className="text-center">
           <div className="mx-auto w-16 h-16 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center mb-4">
             <span className="text-3xl">🔒</span>
@@ -126,22 +126,22 @@ export const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={() => onOpenChange(false)}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            className="order-2 sm:order-1 flex-1 px-4 py-3 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
             Maybe Later
           </button>
           <button
             onClick={handleUpgrade}
-            className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all font-semibold shadow-md hover:shadow-lg">
+            className="order-1 sm:order-2 flex-1 px-4 py-3 sm:py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all font-semibold shadow-md hover:shadow-lg">
             Upgrade Now
           </button>
         </div>
 
         {/* Plan Comparison */}
         <div className="mt-6 pt-6 border-t border-gray-200">
-          <div className="grid grid-cols-3 gap-4 text-center text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center text-sm">
             <div>
               <div className="font-semibold text-gray-900">Free</div>
               <div className="text-gray-600">{limit}/month</div>

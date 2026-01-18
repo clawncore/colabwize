@@ -342,12 +342,28 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                 <div className="mt-6 mb-4">
                   <div className="bg-gray-100 border border-gray-200 rounded-md p-3 h-32 overflow-hidden">
                     <div className="text-xs text-gray-600 h-28 overflow-hidden">
-                      {project.content &&
-                        project.content.type === "doc" &&
-                        project.content.content
-                        ? (() => {
+                      {(() => {
+                        let contentObj = project.content;
+
+                        const getFallback = () => {
+                          if (project.description && project.description.trim().length > 0) return project.description;
+                          const dateStr = new Date(project.updated_at).toLocaleDateString();
+                          if (project.word_count > 0) return `${project.word_count} words • ${dateStr}`;
+                          return `Document created on ${dateStr}`;
+                        };
+
+                        // Parse string content if needed
+                        if (typeof contentObj === 'string') {
+                          try {
+                            contentObj = JSON.parse(contentObj);
+                          } catch (e) {
+                            return getFallback();
+                          }
+                        }
+
+                        if (contentObj && contentObj.type === "doc" && contentObj.content) {
                           // Extract text from content for preview
-                          const paragraphs = project.content.content;
+                          const paragraphs = contentObj.content;
                           let textPreview = "";
 
                           for (const node of paragraphs) {
@@ -358,18 +374,28 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                                 }
                               }
                             }
+                            // Also check for headings or other blocks if needed
+                            if (node.content && !node.type.includes("paragraph")) {
+                              for (const content of node.content) {
+                                if (content.type === "text" && content.text) {
+                                  textPreview += content.text + " ";
+                                }
+                              }
+                            }
 
-                            if (textPreview.length > 100) {
+                            if (textPreview.length > 150) {
                               break;
                             }
                           }
 
                           return textPreview.length > 0
-                            ? textPreview.substring(0, 100) +
-                            (textPreview.length > 100 ? "..." : "")
-                            : project.description || "No content available";
-                        })()
-                        : project.description || "No content available"}
+                            ? textPreview.substring(0, 140) +
+                            (textPreview.length > 140 ? "..." : "")
+                            : getFallback();
+                        }
+
+                        return getFallback();
+                      })()}
                     </div>
                   </div>
                 </div>

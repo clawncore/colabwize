@@ -23,10 +23,11 @@ import "../../styles/highlight-styles.css";
 import { useToast } from "../../hooks/use-toast";
 import {
   OriginalityMapAdapter,
-  CitationConfidenceAdapter,
+  // CitationConfidenceAdapter, // Removed/Replaced
   AuthorshipCertificateAdapter,
   RephraseAdapter,
 } from "./adapters";
+import { CitationAuditAdapter } from "./adapters/CitationAuditAdapter";
 import { UpgradeModal } from "../subscription/UpgradeModal";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { DraftComparisonSelector } from "../originality/DraftComparisonSelector";
@@ -59,6 +60,7 @@ interface DocumentEditorProps {
   project: Project;
   onProjectUpdate?: (updatedProject: Project) => void;
   onOpenPanel?: (panelType: RightPanelType, data?: any) => void;
+  onOpenLeftPanel?: (panelType: "documents" | "audit", data?: any) => void;
   onEditorReady?: (editor: any) => void;
 }
 
@@ -66,6 +68,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   project,
   onProjectUpdate,
   onOpenPanel,
+  onOpenLeftPanel,
   onEditorReady,
 }) => {
   const { toast } = useToast();
@@ -555,9 +558,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        currentPlan="free"
-        usageStats={{ used: 1, limit: 1 }}
-        featureName="Draft Comparison"
+        feature="Draft Comparison"
+        title="Premium Feature"
+        message="Draft Comparison is available on paid plans. Upgrade to unlock accurate version comparison."
       />
       {/* Editor Header */}
       <div className="border-b border-gray-200 p-4 bg-white z-10 flex-shrink-0">
@@ -589,6 +592,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   title: "Highlights Cleared",
                   description: "All highlights have been cleared",
                   variant: "default",
+
                 });
               }}>
               <Eraser className="w-4 h-4" />
@@ -677,7 +681,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           <div className="flex-1 overflow-auto p-8">
             <EditorContent
               editor={editor}
-              className="max-w-4xl mx-auto prose prose-lg min-h-full focus:outline-none p-4 bg-white rounded-lg"
+              className="max-w-[816px] mx-auto prose prose-lg min-h-full focus:outline-none p-8 bg-white rounded-lg "
             />
           </div>
         </div>
@@ -697,20 +701,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           <span className="text-gray-600">Edits: {editCount}</span>
         </div>
         <div className="w-px h-6 bg-gray-300"></div>
-        <CitationConfidenceAdapter
+
+        {/* Citation Audit Sidebar Trigger - Replaces CitationConfidenceAdapter modal */}
+        {/* Citation Audit Sidebar Trigger - Replaces CitationConfidenceAdapter modal */}
+        <CitationAuditAdapter
           projectId={project.id}
           editor={editor}
-          onContentScanComplete={(result) => {
-            highlightCitationSignals(result);
-            setCitationSuggestions(result);
-            // Open the confidence panel to show the score
-            if (onOpenPanel) {
-              onOpenPanel("citation-confidence");
-            }
-          }}
-          onFindPapers={(keywords) => {
-            if (onOpenPanel) {
-              onOpenPanel("citations", { contextKeywords: keywords });
+          onScanComplete={(results) => {
+            if (onOpenLeftPanel) {
+              onOpenLeftPanel("audit", results);
             }
           }}
         />
