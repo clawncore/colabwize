@@ -872,7 +872,20 @@ export default function DashboardLayout({
 
         {/* Main content */}
         <main className={positionClasses.mainContent}>
-          {children ? children : <Outlet />}
+          {loadingProjects ? (
+            <div className="flex h-[50vh] items-center justify-center">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+                <p className="text-sm font-medium text-gray-500">
+                  Loading workspace...
+                </p>
+              </div>
+            </div>
+          ) : children ? (
+            children
+          ) : (
+            <Outlet />
+          )}
         </main>
       </div>
     </div>
