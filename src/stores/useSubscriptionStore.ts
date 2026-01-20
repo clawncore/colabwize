@@ -54,7 +54,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     lastFetched: 0,
 
     fetchSubscription: async (isAuthSettled: boolean, force = false) => {
-        const { lastFetched, loading, status } = get();
+        const { lastFetched, status } = get();
         const now = Date.now();
 
         // 1. AUTH-SETTLED GATE (Hard Requirement)
