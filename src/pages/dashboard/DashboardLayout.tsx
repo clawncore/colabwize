@@ -15,7 +15,7 @@ import {
   ChevronUp,
   AlertCircle,
 } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 // Note: These imports need to be updated based on your actual auth implementation
 import { useAuth } from "../../hooks/useAuth";
@@ -27,6 +27,7 @@ import { Outlet } from "react-router-dom";
 import { UsageMeter } from "../../components/subscription/UsageMeter";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import MobileRestrictedPage from "../MobileRestrictedPage";
+import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -44,6 +45,18 @@ export default function DashboardLayout({
 
 
 
+  // Global Subscription Store
+  const {
+    plan,
+    limits: planLimits,
+    usage: planUsage,
+    creditBalance,
+    fetchSubscription,
+    loading: subscriptionLoading,
+    error: subscriptionError,
+    subscription
+  } = useSubscriptionStore();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -51,19 +64,10 @@ export default function DashboardLayout({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
-  const [subscriptionData, setSubscriptionData] = useState<any>(null);
-  const [loadingProjects, setLoadingProjects] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
-  // Add state for limits and usage
-  const [planLimits, setPlanLimits] = useState<any>(null);
-  const [planUsage, setPlanUsage] = useState<any>(null);
+  // Removed local subscription states in favor of store
 
-  const [creditBalance, setCreditBalance] = useState<number>(0);
   const [isUsageCollapsed, setIsUsageCollapsed] = useState(true);
   const userId = useMemo(() => user?.id, [user?.id]);
-
-
-
 
   // Determine active tab based on current route
   const getActiveTab = () => {
@@ -87,45 +91,19 @@ export default function DashboardLayout({
   // Recalculate active tab whenever location changes
   const currentActiveTab = getActiveTab();
 
+  const [searchParams] = useSearchParams();
+
   // Fetch real project count and subscription data
   useEffect(() => {
-    const fetchData = async () => {
-      // Wait for auth check to complete
-      if (loading) return;
+    // Only trigger fetch if authenticated
+    const isAuthSettled = !loading && isAuthenticated() && !!user;
 
-      if (!isAuthenticated() || !user) {
-        setLoadingProjects(false);
-        return;
-      }
-
-      // Mark that we've fetched data for this user
-      // hasFetchedData.current = user.id; // REMOVED: Causing stale data
-
-
-      try {
-        setLoadingProjects(true);
-        setApiError(null); // Clear any previous errors
-
-        // Fetch subscription data with limits and usage
-        const { subscription, limits, usage, creditBalance } =
-          await SubscriptionService.getCurrentSubscription();
-        setSubscriptionData(subscription);
-        setPlanLimits(limits);
-        setPlanUsage(usage);
-        setCreditBalance(creditBalance || 0);
-
-
-      } catch (error: any) {
-        console.error("DashboardLayout: Error fetching data:", error);
-        // Don't show error to user for background fetch failures, just log it
-        // and keep default "Free" state if needed
-      } finally {
-        setLoadingProjects(false);
-      }
-    };
-
-    fetchData();
-  }, [userId, loading, isAuthenticated, user]);
+    if (isAuthSettled) {
+      // Force refresh if returning from checkout (success=true or invoice id present)
+      const isCheckoutReturn = searchParams.get('success') === 'true' || searchParams.has('checkout_success');
+      fetchSubscription(isAuthSettled, isCheckoutReturn);
+    }
+  }, [loading, isAuthenticated, user, fetchSubscription, searchParams]);
 
   // Close sidebar on mobile when route changes
   useEffect(() => {
@@ -217,7 +195,7 @@ export default function DashboardLayout({
     return planId.charAt(0).toUpperCase() + planId.slice(1);
   };
 
-  const userPlan = getPlanDisplayName(subscriptionData?.plan);
+  const userPlan = getPlanDisplayName(plan);
 
   const handleSignOut = async () => {
     try {
@@ -831,7 +809,7 @@ export default function DashboardLayout({
 
 
                   {/* Show loading indicator when projects are loading */}
-                  {loadingProjects && (
+                  {subscriptionLoading && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <p className="text-xs text-gray-500 flex items-center">
                         <span className="h-3 w-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></span>
@@ -841,11 +819,11 @@ export default function DashboardLayout({
                   )}
 
                   {/* Show error message if there was an API error */}
-                  {apiError && (
+                  {subscriptionError && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <p className="text-xs text-red-500 flex items-center">
                         <AlertCircle className="h-3 w-3 mr-1" />
-                        {apiError}
+                        {typeof subscriptionError === 'string' ? subscriptionError : 'Error loading subscription'}
                       </p>
                     </div>
                   )}
@@ -872,7 +850,7 @@ export default function DashboardLayout({
 
         {/* Main content */}
         <main className={positionClasses.mainContent}>
-          {loadingProjects ? (
+          {subscriptionLoading && !children ? (
             <div className="flex h-[50vh] items-center justify-center">
               <div className="flex flex-col items-center space-y-4">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>

@@ -60,7 +60,7 @@ const ALLOWED_DOMAINS = [
 const fetchWithTimeout = (
   url: string,
   options: RequestInit = {},
-  timeout = 15000
+  timeout = 60000
 ): Promise<Response> => {
   return Promise.race([
     fetch(url, options),
