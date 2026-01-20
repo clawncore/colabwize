@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Menu,
@@ -21,11 +21,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { useAuth } from "../../hooks/useAuth";
 import { documentService } from "../../services/documentService";
 import certificateService from "../../services/certificateService";
-import {
-  Subscription,
-  // PaymentMethod,
-  // Invoice,
-} from "../../services/subscriptionService";
+// PaymentMethod, Invoice removed as unused
 import { ReactNode } from "react";
 import { Outlet } from "react-router-dom";
 import { UsageMeter } from "../../components/subscription/UsageMeter";
@@ -58,7 +54,6 @@ export default function DashboardLayout({
     fetchSubscription,
     loading: subscriptionLoading,
     error: subscriptionError,
-    // subscription
   } = useSubscriptionStore();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -71,7 +66,6 @@ export default function DashboardLayout({
   // Removed local subscription states in favor of store
 
   const [isUsageCollapsed, setIsUsageCollapsed] = useState(true);
-  // const userId = useMemo(() => user?.id, [user?.id]);
 
   // Determine active tab based on current route
   const getActiveTab = () => {
