@@ -666,21 +666,9 @@ const SignupPage: React.FC = () => {
           );
           setShowOtpStep(true);
         } else {
-          // If not, we need to send it now
-          console.log("Sending OTP after signup");
-          try {
-            // Pass the user ID directly from the signup result instead of relying on state
-            await sendOTP(data, finalUserId);
-            console.log(
-              "OTP sent successfully, moving to OTP verification step"
-            );
-            setShowOtpStep(true);
-          } catch (otpError: any) {
-            console.error("Failed to send OTP after signup:", otpError);
-            throw new Error(
-              `Failed to send verification code: ${otpError.message || "Unknown error"}`
-            );
-          }
+          // Should not happen for email signup with confirmation enabled
+          console.log("Signup successful, but no OTP needed?");
+          setShowOtpStep(true);
         }
       } catch (error: unknown) {
         console.error("Signup failed:", error);
@@ -721,7 +709,8 @@ const SignupPage: React.FC = () => {
       setIsLoading(true);
       try {
         // The verifyOTP function returns true on success or throws on error
-        await verifyOTP(data.otp || "");
+        // Now requires email and OTP
+        await verifyOTP(data.email, data.otp || "");
         console.log("OTP verified, signing in user...");
 
         // Sign in user to allow survey submission (establishes Supabase session)
