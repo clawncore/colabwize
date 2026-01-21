@@ -24,7 +24,12 @@ export function useSupabaseUser() {
       console.log("Fetching user from Supabase");
       const { data, error } = await supabase.auth.getUser();
       if (error) {
-        console.error("Error fetching user:", error);
+        // "Auth session missing!" is normal for guests/first load, don't spam console
+        if (error.name === "AuthSessionMissingError" || error.message.includes("Auth session missing")) {
+          console.log("No active user session");
+        } else {
+          console.error("Error fetching user:", error);
+        }
         setUser(null);
         setToken(null);
       } else {
