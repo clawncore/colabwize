@@ -622,28 +622,31 @@ export async function resendVerificationEmail(
   email: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // Use Supabase resend
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    // Send request to our hybrid backend endpoint which uses Supabase signInWithOtp
+    const response = await fetchWithTimeout(
+      `${API_BASE_URL}/api/auth/hybrid/send-otp`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+        }),
+      }
+    );
 
-    if (error) {
-      logger.error("Resend verification email error", {
-        error: error.message,
-      });
-      throw error;
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      logger.info("Verification email/OTP sent via backend", { email });
+      return {
+        success: true,
+        message: "Verification code sent successfully. Please check your inbox.",
+      };
+    } else {
+      throw new Error(result.error || "Failed to send verification email");
     }
-
-    logger.info("Verification email resent via Supabase");
-    return {
-      success: true,
-      message:
-        "Verification email sent successfully. Please check your inbox for the confirmation link.",
-    };
   } catch (error: any) {
     logger.error("Resend verification email error", {
       error: error.message,

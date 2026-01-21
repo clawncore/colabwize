@@ -18,6 +18,7 @@ import {
   signInWithEmail,
   signUpWithGoogle,
   signUpWithMicrosoft,
+  resendVerificationEmail,
 } from "../../services/hybridAuth";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { useToast } from "../../hooks/use-toast";
