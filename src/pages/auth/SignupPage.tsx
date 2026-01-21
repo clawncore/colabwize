@@ -870,10 +870,10 @@ const SignupPage: React.FC = () => {
   };
 
   // Function to verify OTP
-  const verifyOTP = async (otp: string) => {
+  const verifyOTP = async (email: string, otp: string) => {
     try {
-      if (!userId) {
-        const error = new Error("User ID is required to verify OTP");
+      if (!email) {
+        const error = new Error("Email is required to verify OTP");
         console.error("OTP verify error:", error.message);
         throw error;
       }
@@ -884,10 +884,10 @@ const SignupPage: React.FC = () => {
         throw error;
       }
 
-      console.log("Verifying OTP:", { userId: userId, otp });
+      console.log("Verifying OTP:", { email, otp });
 
-      // Use the hybrid OTP verification function
-      const result = await hybridVerifyOTP(userId, otp);
+      // Use the hybrid OTP verification function (now calls Supabase)
+      const result = await hybridVerifyOTP(email, otp);
 
       if (result.success) {
         console.log("OTP verified successfully");
