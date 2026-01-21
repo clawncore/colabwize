@@ -22,33 +22,51 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   showActions = true,
 }) => {
   const navigate = useNavigate();
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "failed">("idle");
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery] = useState("");
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [projectToRename, setProjectToRename] = useState<Project | null>(null);
 
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    // Basic fetch on mount, no auto-retries if failed
+    if (status === "idle") {
+      fetchProjects();
+    }
+  }, [status]);
 
   const fetchProjects = async () => {
     try {
-      setLoading(true);
+      setStatus("loading");
+      setError(null);
+
       const result = await documentService.getProjects();
+
+      // Check for backend "Unavailable" signal
+      if ((result as any).status === "unavailable") {
+        console.warn("Backend reported service unavailable");
+        setStatus("failed");
+        setError("Service temporarily unavailable. Please try again later.");
+        return;
+      }
 
       if (result.success && result.data) {
         setProjects(result.data);
+        setStatus("success");
       } else {
+        setStatus("failed");
         setError(result.error || "Failed to fetch projects");
       }
     } catch (err) {
+      setStatus("failed");
       setError("An error occurred while fetching projects");
       console.error("Fetch projects error:", err);
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    setStatus("idle"); // This will trigger the effect to fetch again
   };
 
   const handleProjectClick = (project: Project) => {
@@ -122,7 +140,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     }
   };
 
-  if (loading) {
+  if (status === "loading") {
     return (
       <div className="w-full min-h-screen flex flex-col bg-gray-50">
         <div className="p-4 border-b border-gray-200">
@@ -153,11 +171,38 @@ export const DocumentList: React.FC<DocumentListProps> = ({
 
       {/* Document List/Grid */}
       <div className="flex-1 overflow-y-auto p-4">
-        {error ? (
-          <div className="p-4">
-            <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm">
-              Error: {error}
+        {status === "failed" ? (
+          <div className="p-6 text-center bg-white rounded-lg border border-gray-200 shadow-sm mx-auto max-w-lg mt-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-yellow-100 mb-4">
+              <svg
+                className="w-6 h-6 text-yellow-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
             </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Service Temporarily Unavailable</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              We're having trouble connecting to the database. Your documents are safe, but we can't load them right now.
+            </p>
+            <button
+              onClick={handleRetry}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Retry Connection
+            </button>
+            {error && (
+              <p className="mt-4 text-xs text-gray-400">
+                Error details: {error}
+              </p>
+            )}
           </div>
         ) : filteredProjects.length === 0 ? (
           <div className="p-4 text-center">
