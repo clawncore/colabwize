@@ -809,58 +809,19 @@ const SignupPage: React.FC = () => {
     }
   };
 
-  // Function to send OTP
+  // Function to send OTP (now uses client-side Supabase resend)
   const sendOTP = async (data: SignupFormData, userIdParam?: string) => {
     try {
-      // Use the passed userIdParam if provided, otherwise use the state userId
-      const effectiveUserId = userIdParam || userId;
+      console.log("Sending OTP to:", data.email);
 
-      if (!effectiveUserId) {
-        const error = new Error(
-          "User ID is required to send OTP. Please complete signup first."
-        );
-        console.error("OTP send error:", error.message);
-        throw error;
-      }
+      // Use the service function which wraps supabase.auth.resend
+      const result = await resendVerificationEmail(data.email);
 
-      console.log("Sending OTP with data:", {
-        userId: effectiveUserId,
-        method: data.otpMethod,
-        email: data.email,
-        phoneNumber: data.phoneNumber,
-        fullName: data.fullName,
-      });
-
-      // Combine country code and phone number for SMS
-      // Only add country code if phone number doesn't already start with +
-
-      const response = await fetch(`${API_BASE_URL}/api/auth/hybrid/send-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: effectiveUserId,
-          method: data.otpMethod,
-          email: data.email,
-          fullName: data.fullName,
-        }),
-      });
-
-      const result = await response.json();
-      console.log("OTP send response:", {
-        status: response.status,
-        result,
-      });
-
-      if (response.ok && (result.success || result.message)) {
-        console.log("OTP sent successfully via hybrid system");
+      if (result.success) {
+        console.log("OTP sent successfully via Supabase");
         return true;
       } else {
-        const errorMessage =
-          result.message || result.error || "Failed to send OTP";
-        console.error("OTP send failed:", errorMessage);
-        throw new Error(errorMessage);
+        throw new Error(result.message || "Failed to send OTP");
       }
     } catch (error: unknown) {
       console.error("Failed to send OTP:", error);

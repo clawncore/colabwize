@@ -622,58 +622,28 @@ export async function resendVerificationEmail(
   email: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // First, try to resend via the hybrid backend endpoint which handles OTP
-    const response = await fetchWithTimeout(
-      `${API_BASE_URL}/api/auth/hybrid/resend-verification`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-        }),
-      }
-    );
+    // Use Supabase resend
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
 
-    const result = await response.json();
-
-    if (response.ok && result.success) {
-      logger.info("Verification email/OTP resent successfully", { email });
-      return {
-        success: true,
-        message:
-          "Verification code sent successfully. Please check your email for the 6-digit code.",
-      };
-    } else {
-      // If backend resend fails, fall back to Supabase resend
-      logger.warn("Backend resend failed, falling back to Supabase resend", {
-        email,
-        error: result.error,
+    if (error) {
+      logger.error("Resend verification email error", {
+        error: error.message,
       });
-
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email: email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        logger.error("Resend verification email error", {
-          error: error.message,
-        });
-        throw error;
-      }
-
-      logger.info("Verification email resent via Supabase");
-      return {
-        success: true,
-        message:
-          "Verification email sent successfully. Please check your inbox for the confirmation link.",
-      };
+      throw error;
     }
+
+    logger.info("Verification email resent via Supabase");
+    return {
+      success: true,
+      message:
+        "Verification email sent successfully. Please check your inbox for the confirmation link.",
+    };
   } catch (error: any) {
     logger.error("Resend verification email error", {
       error: error.message,
