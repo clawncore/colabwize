@@ -869,7 +869,7 @@ const SignupPage: React.FC = () => {
     }
   };
 
-  // Function to verify OTP
+  // Function to verify OTP - Signature updated for Supabase
   const verifyOTP = async (email: string, otp: string) => {
     try {
       if (!email) {
