@@ -593,7 +593,7 @@ export async function verifyOTP(
   try {
     // Verify using Supabase SDK
     // type: 'signup' is used for email verification token
-    const { data, error } = await supabase.auth.verifyOtp({
+    const { error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
       type: 'signup',
