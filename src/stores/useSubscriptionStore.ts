@@ -15,7 +15,7 @@ export interface UsageFunc {
 
 export interface SubscriptionState {
     // Data
-    status: 'active' | 'inactive' | 'unknown';
+    status: 'active' | 'inactive' | 'unknown' | 'failed';
     plan: string;
     limits: PlanLimits;
     usage: UsageFunc;
@@ -57,7 +57,13 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         const { lastFetched, status } = get();
         const now = Date.now();
 
-        // 1. AUTH-SETTLED GATE (Hard Requirement)
+        // 1. TERMINAL FAILURE GATE (Stop Retries)
+        if (status === 'failed' && !force) {
+            console.log("🛑 Subscription fetch blocked: In terminal FAILED state. Manual retry required.");
+            return;
+        }
+
+        // 2. AUTH-SETTLED GATE (Hard Requirement)
         if (!isAuthSettled) {
             console.log("⏹ Subscription fetch blocked: Auth not settled.");
             return;
@@ -69,19 +75,19 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
             return;
         }
 
-        // 2. TTL GATE
+        // 3. TTL GATE
         if (!force && lastFetched > 0 && (now - lastFetched < TTL_MS) && status !== 'unknown') {
             console.log("♻️  Subscription fetch skipped: Cache valid.");
             return;
         }
 
-        // 3. REQUEST DEDUPLICATION (Request Locking)
+        // 4. REQUEST DEDUPLICATION (Request Locking)
         if (inFlightPromise) {
             console.log("🔒 Subscription fetch deduplicated: Awaiting in-flight request.");
             return inFlightPromise;
         }
 
-        // 4. EXECUTION
+        // 5. EXECUTION
         console.log("🚀 Fetching Subscription...");
         set({ loading: true, error: null });
 
@@ -110,16 +116,20 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
                     });
                     console.log("✅ Subscription updated:", response.status);
                 } else {
-                    throw new Error(response.message || 'Failed to fetch subscription');
+                    // Backend returned soft failure/unavailable
+                    console.warn("⚠️ Subscription fetch soft failure:", response.message);
+                    set({
+                        status: 'failed',
+                        error: response.message || 'Service unavailable',
+                        loading: false
+                    });
                 }
             } catch (err: any) {
-                console.error("❌ Subscription fetch failed:", err);
+                console.error("❌ Subscription fetch critical failure:", err);
                 set({
+                    status: 'failed', // TERMINAL STATE
                     error: err.message,
                     loading: false,
-                    // On error, we keep 'unknown' status or whatever was there, 
-                    // but we effectively "stop" loading. 
-                    // We do NOT reset data to blank to avoid flashing.
                 });
             } finally {
                 inFlightPromise = null;
