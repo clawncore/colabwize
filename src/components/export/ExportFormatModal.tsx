@@ -13,7 +13,7 @@ interface ExportFormatModalProps {
   currentContent: any; // TipTap content
 }
 
-type ExportFormat = "docx" | "pdf" | "latex" | "rtf" | "txt";
+type ExportFormat = "docx" | "latex" | "rtf" | "txt";
 
 export const ExportFormatModal: React.FC<ExportFormatModalProps> = ({
   isOpen,
@@ -88,7 +88,6 @@ export const ExportFormatModal: React.FC<ExportFormatModalProps> = ({
 
       const extensionMap = {
         docx: "docx",
-        pdf: "pdf",
         latex: "tex",
         rtf: "rtf",
         txt: "txt",
@@ -176,13 +175,7 @@ export const ExportFormatModal: React.FC<ExportFormatModalProps> = ({
       icon: "W",
       color: "bg-blue-600",
     },
-    {
-      id: "pdf",
-      label: "PDF Document (.pdf)",
-      description: "Best for printing and sharing.",
-      icon: "P",
-      color: "bg-red-600",
-    },
+
     {
       id: "latex",
       label: "LaTeX Source (.tex)",

@@ -21,6 +21,7 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
 }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
   const { toast } = useToast();
 
   const handleScan = async () => {
@@ -87,6 +88,7 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
         errorMessage.toLowerCase().includes("upgrade") ||
         errorMessage.toLowerCase().includes("credits") // Handle credit exhaustion messages
       ) {
+        setUpgradeMessage(errorMessage);
         setShowUpgradeModal(true);
       } else {
         toast({
@@ -106,7 +108,7 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
         title="Scan Limit Reached"
-        message="You have reached your limit of free originality scans."
+        message={upgradeMessage || "You have reached your usage limit. Please upgrade or top up credits."}
         feature="Originality Scans"
       />
 

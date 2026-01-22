@@ -7,11 +7,13 @@ import { RephraseSuggestionsPanel } from "../originality/RephraseSuggestionsPane
 import { AnxietyRealityCheckPanel } from "../originality/AnxietyRealityCheckPanel";
 import { DraftComparisonPanel } from "../originality/DraftComparisonPanel";
 import { CitationConfidencePanel } from "../citations/CitationConfidencePanel";
+import { SourcesLibraryPanel } from "../citations/SourcesLibraryPanel";
 import { AIChatPanel } from "../aichat/AIChatPanel";
 import { Project, documentService } from "../../services/documentService";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { UsageMeter } from "../../components/subscription/UsageMeter";
 import { useAuth } from "../../hooks/useAuth";
+import { FileText, Book, BarChart2 } from "lucide-react";
 
 import { CitationAuditSidebar } from "../citations/CitationAuditSidebar";
 
@@ -35,7 +37,7 @@ const EditorWorkspacePage: React.FC = () => {
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(() => window.innerWidth >= 1024);
 
   // Left Panel State
-  const [activeLeftPanel, setActiveLeftPanel] = useState<"documents" | "audit">("documents");
+  const [activeLeftPanel, setActiveLeftPanel] = useState<"documents" | "audit" | "sources">("documents");
   const [leftPanelData, setLeftPanelData] = useState<any>(null);
 
   // Right panel type state
@@ -204,7 +206,7 @@ const EditorWorkspacePage: React.FC = () => {
   const getPanelTitle = () => {
     switch (activePanelType) {
       case "citations":
-        return "Paper Suggestions";
+        return "Sources";
       case "rephrase":
         return "Rephrase Suggestions";
       case "reality-check":
@@ -220,9 +222,44 @@ const EditorWorkspacePage: React.FC = () => {
 
   const [editorInstance, setEditorInstance] = useState<any>(null);
 
-  const handleInsertCitation = (text: string) => {
+  const handleInsertCitation = (text: string, trackingInfo?: any) => {
     if (editorInstance) {
+      // 1. Insert in-text citation at cursor
       editorInstance.chain().focus().insertContent(text).run();
+
+      // 2. Append reference entry if provided
+      if (trackingInfo && trackingInfo.fullReferenceEntry) {
+        const fullRef = trackingInfo.fullReferenceEntry;
+        const widthRef = editorInstance.getText();
+
+        // Simple duplicate check
+        if (!widthRef.includes(fullRef)) {
+          let chain = editorInstance.chain().focus('end');
+
+          // Check if References header exists (heuristic)
+          // We look for "References" on its own line or loosely. 
+          // Better: search for the node, but getText is safer for now.
+          if (!widthRef.includes("References")) {
+            chain = chain.insertContent([
+              { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'References' }] }
+            ]);
+          }
+
+          // Append the reference entry
+          chain.insertContent({
+            type: 'paragraph',
+            content: [{ type: 'text', text: fullRef }]
+          }).run();
+        }
+      }
+
+      if (trackingInfo) {
+        console.groupCollapsed("[Authorship] Citation Event");
+        console.log("Metadata:", trackingInfo);
+        console.log("This event contributes to the Authorship Certificate verification.");
+        console.groupEnd();
+        // Future: dispatch to Authorship Certificate service
+      }
     }
   };
 
@@ -237,7 +274,33 @@ const EditorWorkspacePage: React.FC = () => {
             style={{ width: `${leftSidebarWidth}px` }}
             className="flex-shrink-0 h-full border-r border-gray-200 transition-all relative flex flex-col bg-white">
 
-            {activeLeftPanel === "documents" ? (
+            {/* Sidebar Tabs (Only visible if not in Audit mode or if we want persistent navigation) */}
+            {activeLeftPanel !== 'audit' && (
+              <div className="flex items-center border-b border-gray-200 bg-gray-50/50">
+                <button
+                  onClick={() => setActiveLeftPanel("documents")}
+                  className={`flex-1 py-3 text-xs font-medium flex items-center justify-center gap-2 border-b-2 transition-colors ${activeLeftPanel === "documents"
+                    ? "border-blue-600 text-blue-600 bg-white"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                    }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  Documents
+                </button>
+                <button
+                  onClick={() => setActiveLeftPanel("sources")}
+                  className={`flex-1 py-3 text-xs font-medium flex items-center justify-center gap-2 border-b-2 transition-colors ${activeLeftPanel === "sources"
+                    ? "border-blue-600 text-blue-600 bg-white"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                    }`}
+                >
+                  <Book className="w-4 h-4" />
+                  Sources library
+                </button>
+              </div>
+            )}
+
+            {activeLeftPanel === "documents" && (
               <>
                 <div className="flex-1 overflow-hidden flex flex-col">
                   <DocumentList
@@ -259,7 +322,19 @@ const EditorWorkspacePage: React.FC = () => {
                   />
                 </div>
               </>
-            ) : (
+            )}
+
+            {activeLeftPanel === "sources" && (
+              <div className="flex-1 overflow-hidden flex flex-col">
+                <SourcesLibraryPanel
+                  citations={selectedProject?.citations || []}
+                  onInsertCitation={handleInsertCitation}
+                  onFindMore={() => openPanel('citations')}
+                />
+              </div>
+            )}
+
+            {activeLeftPanel === "audit" && (
               <CitationAuditSidebar
                 projectId={selectedProject?.id || ""}
                 editor={editorInstance}
@@ -307,7 +382,8 @@ const EditorWorkspacePage: React.FC = () => {
               strokeWidth={2}
               d="M13 5l7 7-7 7M5 5l7 7-7 7"
             />
-          )}
+          )
+          }
         </svg>
       </button>
 
@@ -407,6 +483,13 @@ const EditorWorkspacePage: React.FC = () => {
                   projectId={selectedProject.id}
                   onClose={() => setIsRightSidebarOpen(false)}
                   onInsertCitation={handleInsertCitation}
+                  onSourceAdded={async () => {
+                    // Refresh project to get updated citations
+                    const result = await documentService.getProjectById(selectedProject.id);
+                    if (result.success && result.data) {
+                      setSelectedProject(result.data);
+                    }
+                  }}
                   contextKeywords={panelData?.contextKeywords}
                 />
               )}

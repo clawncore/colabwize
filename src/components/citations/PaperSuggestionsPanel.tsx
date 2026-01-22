@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useToast } from "../../hooks/use-toast";
 import { Search, Loader2 } from "lucide-react";
 import {
@@ -15,6 +15,7 @@ interface PaperSuggestionsPanelProps {
   // Context keywords if we want to auto-search
   contextKeywords?: string[];
   onInsertCitation?: (text: string) => void;
+  onSourceAdded?: () => void;
 }
 
 export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
@@ -23,42 +24,17 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
   initialSuggestions = [],
   contextKeywords = [],
   onInsertCitation,
+  onSourceAdded,
 }) => {
   const { toast } = useToast();
   const [suggestedPapers, setSuggestedPapers] =
     useState<SuggestedPaper[]>(initialSuggestions);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [isLoadingInitial, setIsLoadingInitial] = useState(true);
 
-  // Initialize search query (Auto-fill but DO NOT Auto-search)
-  useEffect(() => {
-    const initializeSearchInput = async () => {
-      // 1. If we have explicit context keywords, use them to pre-fill input
-      if (contextKeywords && contextKeywords.length > 0) {
-        const query = contextKeywords.join(" ");
-        setSearchQuery(query);
-        // Auto-search!
-        setIsSearching(true);
-        try {
-          // Use the service which now routes to Semantic Scholar/OpenAlex
-          const results = await CitationService.searchPapers(query);
-          setSuggestedPapers(results || []);
-        } catch (error) {
-          console.error("Auto-search failed", error);
-        } finally {
-          setIsSearching(false);
-          setIsLoadingInitial(false);
-        }
-        return;
-      }
+  const [addedPaperIds, setAddedPaperIds] = useState<Set<string>>(new Set());
 
-      // 2. Fallback: Do NOT pre-fill with title.
-      setIsLoadingInitial(false);
-    };
-
-    initializeSearchInput();
-  }, [projectId, contextKeywords]);
+  // Removed auto-search useEffect and isLoadingInitial as per requirements to make this a passive "Sources" panel.
 
   const handleManualSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -86,26 +62,33 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     }
   };
 
-  const handleAddCitation = async (paper: SuggestedPaper) => {
+  const handleAddSource = async (paper: SuggestedPaper) => {
     try {
-      await CitationService.addCitation(projectId, paper);
+      // Use DOI as ID if available, else title
+      const paperId = paper.doi || paper.title;
 
-      // Insert in-text citation if callback provided
-      if (onInsertCitation) {
-        const authorText =
-          paper.authors.length > 0
-            ? paper.authors[0] + (paper.authors.length > 1 ? " et al." : "")
-            : "Unknown";
-        // User requested paper name to be added
-        const citationText = ` "${paper.title}" (${authorText}, ${paper.year}) `;
-        onInsertCitation(citationText);
+      await CitationService.addCitation(projectId, {
+        ...paper,
+        citationCount: paper.citationCount
+      });
+
+      // Mark as added
+      setAddedPaperIds(prev => new Set(prev).add(paperId));
+
+      if (onSourceAdded) {
+        onSourceAdded();
       }
 
-      // Remove from suggestions list to indicate success/prevent duplicates
-      setSuggestedPapers((prev) => prev.filter((p) => p.title !== paper.title));
+      toast({
+        title: "Source Added",
+        description: "Citation metadata saved to Sources library.",
+      });
+
+      // We do NOT remove it from the list, just mark as added.
+      // We do NOT insert it into the text.
     } catch (error) {
       console.error("Failed to add citation", error);
-      alert("Failed to add citation. Please try again.");
+      alert("Failed to add source. Please try again.");
     }
   };
 
@@ -118,9 +101,9 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
       <div className="px-4 py-3 border-b bg-gradient-to-r from-blue-600 to-cyan-600 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-white">Suggested Papers</h2>
+            <h2 className="text-lg font-bold text-white">Sources</h2>
             <p className="text-blue-100 text-xs mt-1">
-              Boost your citation confidence
+              Manage and verify references used in this document.
             </p>
           </div>
           <button
@@ -135,9 +118,9 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
       <div className="flex-1 overflow-y-auto p-4">
         {/* Manual Search */}
         <form onSubmit={handleManualSearch} className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Search for papers
-          </label>
+          <p className="text-xs text-gray-500 mb-2">
+            Search scholarly databases to locate existing publications and store citation metadata.
+          </p>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -163,17 +146,10 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
         </form>
 
         {/* Results */}
-        {isLoadingInitial ? (
-          <div className="text-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600 mb-3" />
-            <p className="text-gray-600 text-sm">
-              Analyzing your document and finding relevant papers...
-            </p>
-          </div>
-        ) : hasSuggestions ? (
+        {hasSuggestions ? (
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Found {suggestedPapers!.length} Papers
+              Found {suggestedPapers!.length} Sources
             </h3>
             <div className="space-y-4">
               {suggestedPapers!.map((paper, index) => (
@@ -192,28 +168,29 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
                           (paper.authors.length > 1 ? " et al." : "")
                           : "Unknown"}{" "}
                         • {paper.year}
+                        {paper.journal && ` • ${paper.journal}`}
                       </p>
 
-                      {paper.abstract && (
-                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                          {paper.abstract}
-                        </p>
-                      )}
-
                       <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-2">
+                        {/* Allowed badges: Peer-reviewed / Preprint, Open Access */}
                         <span className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-medium uppercase">
-                          {paper.source}
+                          {paper.source === 'arxiv' ? 'Preprint' : 'Peer-Reviewed'}
                         </span>
-                        <span className="text-green-600 font-medium">
-                          {Math.round(paper.relevanceScore || 0)}% Match
-                        </span>
+                        {/* We don't have open access info in generic SuggestedPaper interface blindly, so omitting unless source implies it or we just stick to metadata available. 
+                            If open access data isn't in SuggestedPaper, we can't display it purely. 
+                            However, the previous code showed paper.source. I've updated it to be more descriptive based on the source 'type' usually associated (arxiv=preprint). */}
                       </div>
                     </div>
 
                     <button
-                      onClick={() => handleAddCitation(paper)}
-                      className="w-full py-1.5 bg-blue-50 text-blue-600 text-xs font-medium rounded hover:bg-blue-100 transition-colors">
-                      + Add to Project
+                      onClick={() => handleAddSource(paper)}
+                      disabled={addedPaperIds.has(paper.doi || paper.title)}
+                      className={`w-full py-1.5 text-xs font-medium rounded transition-colors ${addedPaperIds.has(paper.doi || paper.title)
+                        ? "bg-green-50 text-green-700 cursor-default"
+                        : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                        }`}
+                    >
+                      {addedPaperIds.has(paper.doi || paper.title) ? "✓ In Sources" : "+ Add to Sources"}
                     </button>
                   </div>
                 </div>
@@ -223,8 +200,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-400 text-sm">
-              No suggestions yet. Click specific text or use the search button
-              above.
+              No sources added yet. Search by title, author, or DOI to add reference metadata.
             </p>
           </div>
         )}

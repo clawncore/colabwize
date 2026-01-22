@@ -13,6 +13,8 @@ import { KeywordsExtension } from "../../extensions/KeywordsExtension";
 import { PricingTableExtension } from "../../extensions/PricingTableExtension";
 import { SectionExtension } from "../../extensions/SectionExtension";
 import { VisualElementExtension } from "../../extensions/VisualElementExtension";
+import { ColumnLayoutExtension } from "../../extensions/ColumnLayoutExtension";
+import { ImageExtension } from "../../extensions/AdvancedImageExtension";
 import { AITrackingExtension } from "../../extensions/AITrackingExtension";
 import { documentService, Project } from "../../services/documentService";
 import {
@@ -22,7 +24,9 @@ import {
 import { AuthorshipService } from "../../services/authorshipService";
 import "../../styles/highlight-styles.css";
 import "../../styles/image-styles.css";
+import "../../styles/column-styles.css";
 import { useToast } from "../../hooks/use-toast";
+import { TableBubbleMenu } from "./TableBubbleMenu";
 import {
   OriginalityMapAdapter,
   // CitationConfidenceAdapter, // Removed/Replaced
@@ -34,7 +38,7 @@ import { UpgradeModal } from "../subscription/UpgradeModal";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { DraftComparisonSelector } from "../originality/DraftComparisonSelector";
 import { RightPanelType } from "./EditorWorkspacePage";
-import Image from "@tiptap/extension-image";
+// import Image from "@tiptap/extension-image"; // Replaced
 import { Table } from "@tiptap/extension-table";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
@@ -42,6 +46,8 @@ import { TableRow } from "@tiptap/extension-table-row";
 import TextAlign from "@tiptap/extension-text-align";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
+import { TextStyle } from "@tiptap/extension-text-style";
+import FontFamily from "@tiptap/extension-font-family";
 import { formatContentForTiptap } from "../../utils/editorUtils";
 import { findTextRange } from "../../utils/searchUtils";
 import { EditorToolbar } from "./editor-toolbar";
@@ -113,13 +119,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       StarterKit,
       HighlightExtension,
       CharacterCount,
-      Image.configure({
-        inline: false, // Support block-level images for text wrapping
-        allowBase64: false, // Force Supabase URLs for better performance
-        HTMLAttributes: {
-          class: "editor-image resizable", // Custom classes for styling
-        },
-      }),
+      CharacterCount,
+      // Image.configure({ ... }), // Replaced by ImageExtension
       Table.configure({
         resizable: true,
         // resizable: true, // Duplicate property removed
@@ -134,6 +135,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       TaskItem.configure({
         nested: true,
       }),
+      TextStyle,
+      FontFamily,
       // Custom Extensions
       AuthorBlockExtension,
       AuthorExtension,
@@ -146,6 +149,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       PricingTableExtension,
       SectionExtension,
       VisualElementExtension,
+      ImageExtension,
+      ColumnLayoutExtension,
     ],
     content: formatContentForTiptap(project.content),
     onUpdate: () => {
@@ -154,8 +159,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     },
     editorProps: {
       attributes: {
-        class:
-          "focus:outline-none min-h-full prose-table:w-full prose-img:rounded-md prose-img:shadow-md",
+        class: `focus:outline-none min-h-full prose-table:w-full prose-img:rounded-md prose-img:shadow-md`,
       },
     },
   });
@@ -701,6 +705,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
           {/* Main Editor Area */}
           <div className="flex-1 overflow-auto p-8">
+            {editor && <TableBubbleMenu editor={editor} />}
             <EditorContent
               editor={editor}
               className="max-w-[816px] mx-auto prose prose-lg min-h-full focus:outline-none p-8 bg-white rounded-lg "

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Search, Upload, Link as LinkIcon, Loader2 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { useToast } from "../../hooks/use-toast";
+import apiClient from "../../services/apiClient";
 
 interface ImageInsertModalProps {
     isOpen: boolean;
@@ -94,19 +95,19 @@ export const ImageInsertModal: React.FC<ImageInsertModalProps> = ({
             formData.append("image", file);
             formData.append("projectId", projectId);
 
-            const response = await fetch("/api/images/upload", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-                },
-                body: formData,
-            });
+            const response = await apiClient.post("/api/images/upload", formData);
 
-            if (!response.ok) {
-                throw new Error("Upload failed");
-            }
+            // apiClient handles response.ok check and parsing, or throws
+            // But apiClient.post returns the parsed data directly if successful (usually).
+            // Let's assume standard behavior: returns parsed JSON.
+            // However, apiClient signature depends on implementation.
+            // Let's verify apiClient.ts implementation.
+            // It returns `response.json ? await response.json() : response`.
+            // So `response` here is the DATA object.
 
-            const data = await response.json();
+            const data = response;
+
+            // if (!response.ok) check is handled by apiClient throwing error
             onInsertImage(data.url, file.name);
             onClose();
 

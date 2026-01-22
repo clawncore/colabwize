@@ -1,4 +1,5 @@
 import { apiClient } from "./apiClient";
+import { generatePrecomputedCitations, PrecomputedCitations } from "../utils/citationFormatter";
 
 export interface SuggestedPaper {
   title: string;
@@ -156,9 +157,29 @@ export class CitationService {
       doi?: string;
       url?: string;
       source?: string;
+      journal?: string;
+      volume?: string;
+      issue?: string;
+      pages?: string;
+      citationCount?: number;
     }
   ): Promise<any> {
     try {
+      // Generate precomputed citations
+      const formattedCitations = generatePrecomputedCitations({
+        title: citation.title,
+        authors: citation.authors,
+        author: citation.authors.join(", "), // Fallback string
+        year: citation.year,
+        journal: citation.journal,
+        volume: citation.volume,
+        issue: citation.issue,
+        pages: citation.pages,
+        doi: citation.doi,
+        url: citation.url,
+        source: citation.source
+      });
+
       const response = await apiClient.post(`/api/citations/${projectId}`, {
         title: citation.title,
         author: citation.authors.join(", "),
@@ -167,6 +188,13 @@ export class CitationService {
         doi: citation.doi,
         url: citation.url,
         source: citation.source,
+        journal: citation.journal,
+        volume: citation.volume,
+        issue: citation.issue,
+        pages: citation.pages,
+        citation_count: citation.citationCount,
+        formatted_citations: formattedCitations,
+        added_at: new Date().toISOString(),
       });
 
       return response;
@@ -175,6 +203,7 @@ export class CitationService {
       throw new Error(error.message || "Failed to add citation");
     }
   }
+
   /**
    * Scan content for missing citations
    */

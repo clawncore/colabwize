@@ -17,6 +17,14 @@ export const UsageMeter: React.FC<UsageMeterProps> = ({
 }) => {
   // Logic for Credit Mode
   if (mode === "credits") {
+    // Hide credits for paid plans - strict check
+    const normalizedPlan = planName.toLowerCase();
+    const paidPlans = ["researcher", "student"];
+
+    if (paidPlans.some(p => normalizedPlan.includes(p))) {
+      return null;
+    }
+
     return (
       <div className="w-full">
         <div className="flex justify-between items-center mb-2">

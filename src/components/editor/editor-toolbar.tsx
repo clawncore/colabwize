@@ -52,6 +52,7 @@ interface EditorToolbarProps {
 export function EditorToolbar({ editor }: EditorToolbarProps) {
   const [linkUrl, setLinkUrl] = useState("");
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [savedSelection, setSavedSelection] = useState<any>(null);
 
   if (!editor) return null;
 
@@ -142,6 +143,50 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
+      {/* Font Family Selector */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Toggle size="sm" title="Font Family" className="gap-1 px-2 h-8 w-24 justify-between">
+            <span className="text-xs truncate">
+              {editor.getAttributes('textStyle').fontFamily || "Default"}
+            </span>
+            <ChevronDown className="h-3 w-3 opacity-50" />
+          </Toggle>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="bg-white">
+          <DropdownMenuItem onClick={() => editor.chain().focus().unsetFontFamily().run()}>
+            <span className="text-sm font-sans">Default (San Serif)</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setFontFamily('Times New Roman').run()}>
+            <span className="text-sm font-serif">Times New Roman</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setFontFamily('Arial').run()}>
+            <span className="text-sm font-sans">Arial</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setFontFamily('Courier New').run()}>
+            <span className="text-sm font-mono">Courier New</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setFontFamily('Georgia').run()}>
+            <span className="text-sm font-serif">Georgia</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      {/* Column Layout Toggle */}
+      <Toggle
+        size="sm"
+        title="Two Columns"
+        pressed={editor.isActive("columnLayout")}
+        onPressedChange={() => editor.chain().focus().toggleColumnLayout().run()}
+        className="h-8 w-8"
+      >
+        <ColumnsIcon className="h-4 w-4" />
+      </Toggle>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
       <Toggle
         size="sm"
         title="Bold"
@@ -177,13 +222,36 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onPressedChange={() => editor.chain().focus().toggleCode().run()}>
         <Code className="h-4 w-4" />
       </Toggle>
-      <Toggle
-        size="sm"
-        title="Highlight"
-        pressed={editor.isActive("highlight")}
-        onPressedChange={() => editor.chain().focus().toggleHighlight().run()}>
-        <Highlighter className="h-4 w-4" />
-      </Toggle>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Toggle size="sm" title="Highlight" pressed={editor.isActive("highlight")} className="gap-1 px-2 h-8 w-12 justify-between">
+            <Highlighter className="h-4 w-4" />
+            <ChevronDown className="h-3 w-3 opacity-50" />
+          </Toggle>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="bg-white min-w-[3rem] p-1">
+          <div className="flex gap-1">
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHighlight({ color: 'yellow' }).run()} className="p-1 focus:bg-gray-100 cursor-pointer" title="Yellow">
+              <div className="w-4 h-4 rounded-full bg-yellow-300 border border-gray-200"></div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHighlight({ color: '#86efac' }).run()} className="p-1 focus:bg-gray-100 cursor-pointer" title="Green">
+              <div className="w-4 h-4 rounded-full bg-green-300 border border-gray-200"></div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHighlight({ color: '#fca5a5' }).run()} className="p-1 focus:bg-gray-100 cursor-pointer" title="Red">
+              <div className="w-4 h-4 rounded-full bg-red-300 border border-gray-200"></div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHighlight({ color: '#93c5fd' }).run()} className="p-1 focus:bg-gray-100 cursor-pointer" title="Blue">
+              <div className="w-4 h-4 rounded-full bg-blue-300 border border-gray-200"></div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHighlight({ color: '#d8b4fe' }).run()} className="p-1 focus:bg-gray-100 cursor-pointer" title="Purple">
+              <div className="w-4 h-4 rounded-full bg-purple-300 border border-gray-200"></div>
+            </DropdownMenuItem>
+          </div>
+          <DropdownMenuItem onClick={() => editor.chain().focus().unsetHighlight().run()} className="mt-1 text-xs justify-center cursor-pointer">
+            Clear
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
@@ -374,16 +442,48 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         size="sm"
         title="Insert Image"
         className="h-8 w-8"
-        onClick={() => setIsImageModalOpen(true)}>
+        onClick={() => {
+          // Store the full JSON selection state
+          const selectionJSON = editor.state.selection.toJSON();
+          setSavedSelection(selectionJSON);
+          setIsImageModalOpen(true);
+        }}>
         <ImageIcon className="h-4 w-4" />
       </Toggle>
 
       {/* Image Insert Modal */}
       <ImageInsertModal
         isOpen={isImageModalOpen}
-        onClose={() => setIsImageModalOpen(false)}
+        onClose={() => {
+          setIsImageModalOpen(false);
+          // Restore selection
+          if (savedSelection) {
+            editor.chain().focus().setTextSelection(savedSelection).run();
+          }
+        }}
         onInsertImage={(imageUrl, alt) => {
-          editor.chain().focus().setImage({ src: imageUrl, alt }).run();
+          // Restore selection specifically for insertion
+          if (savedSelection) {
+            // Restore selection and insert in one chain to ensure atomicity
+            editor
+              .chain()
+              .focus()
+              // Restore selection by parsing JSON if needed, or if setSavedSelection stores raw selection object
+              // Note: setTextSelection accepts a range or stored JSON in some versions, but safest is to rely on commands
+              .command(({ tr, dispatch }) => {
+                if (dispatch) {
+                  const { from, to } = savedSelection; // Assuming savedSelection is simplified or we use resolving
+                  // JSON selection from tiptap is { type, anchor, head }
+                  const selection = (editor.state.selection.constructor as any).fromJSON(editor.state.doc, savedSelection);
+                  tr.setSelection(selection);
+                }
+                return true;
+              })
+              .setImage({ src: imageUrl, alt })
+              .run();
+          } else {
+            editor.chain().focus().setImage({ src: imageUrl, alt }).run();
+          }
         }}
         projectId="temp-project-id"
       />

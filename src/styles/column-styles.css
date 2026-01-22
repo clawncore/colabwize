@@ -1,0 +1,37 @@
+/* Basic Column Layout Styles */
+.columns-wrapper {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem; /* Space between columns */
+  width: 100%;
+  margin: 1rem 0;
+}
+
+/* Responsive adjustment for small screens */
+@media (max-width: 640px) {
+  .columns-wrapper {
+    grid-template-columns: 1fr; /* Stack on mobile */
+  }
+}
+
+/* Explicit column counts if using data attribute */
+.columns-wrapper[data-columns="1"] {
+  grid-template-columns: 1fr;
+}
+
+.columns-wrapper[data-columns="2"] {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.columns-wrapper[data-columns="3"] {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Add dotted border in editor to visualize columns if needed */
+/* 
+.ProseMirror .columns-wrapper > div {
+  border: 1px dashed #e5e7eb;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+} 
+*/

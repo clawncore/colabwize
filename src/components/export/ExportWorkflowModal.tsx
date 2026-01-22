@@ -24,7 +24,7 @@ interface ExportWorkflowModalProps {
 }
 
 type Step = "checklist" | "format" | "preview" | "final";
-type ExportFormat = "docx" | "pdf" | "latex" | "rtf" | "txt";
+type ExportFormat = "docx" | "latex" | "rtf" | "txt";
 
 export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     isOpen,
@@ -98,13 +98,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             icon: "W",
             color: "bg-blue-600",
         },
-        {
-            id: "pdf",
-            label: "PDF Document (.pdf)",
-            description: "Best for printing and sharing.",
-            icon: "P",
-            color: "bg-red-600",
-        },
+
         {
             id: "latex",
             label: "LaTeX Source (.tex)",
@@ -167,7 +161,6 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             a.href = url;
             const extensionMap: Record<string, string> = {
                 docx: "docx",
-                pdf: "pdf",
                 latex: "tex",
                 rtf: "rtf",
                 txt: "txt",
