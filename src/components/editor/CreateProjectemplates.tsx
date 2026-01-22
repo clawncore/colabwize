@@ -9,7 +9,6 @@ import TemplateService from "../../services/templateService";
 import { documentService } from "../../services/documentService";
 import { SubscriptionService } from "../../services/subscriptionService";
 import {
-  X,
   Calendar,
   Beaker,
   BookOpen,
@@ -41,10 +40,6 @@ export default function CreateProjectTemplates({
     "free",
   );
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
-
-  // Derive user plan flags from the actual user plan state
-  const isStudentUser = userPlan === "student";
-  const isResearcherUser = userPlan === "researcher";
 
   const {
     register,
