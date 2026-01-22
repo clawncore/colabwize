@@ -36,9 +36,6 @@ export default function CreateProjectTemplates({
   const { user, loading: userLoading } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userPlan, setUserPlan] = useState<"free" | "student" | "researcher">(
-    "free",
-  );
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
 
   const {
@@ -60,46 +57,11 @@ export default function CreateProjectTemplates({
   });
 
   const watchedFields = watch();
-  // Load user's current plan
-  useEffect(() => {
-    const loadUserPlan = async () => {
-      if (user && !userLoading) {
-        try {
-          const { subscription } = await SubscriptionService.getCurrentSubscription();
-          setUserPlan(
-            subscription?.plan?.id as "free" | "student" | "researcher" || "free"
-          );
-        } catch (err) {
-          console.error("Failed to load subscription data:", err);
-          setUserPlan("free");
-        }
-      }
-    };
-
-    loadUserPlan();
-  }, [user, userLoading]);
 
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
       setError(null);
-
-      // Refresh subscription data when modal opens
-      const refreshSubscriptionData = async () => {
-        if (user && !userLoading) {
-          try {
-            const { subscription } = await SubscriptionService.getCurrentSubscription();
-            setUserPlan(
-              subscription?.plan?.id as "free" | "student" | "researcher" || "free"
-            );
-          } catch (err) {
-            console.error("Failed to refresh subscription data:", err);
-            setUserPlan("free");
-          }
-        }
-      };
-
-      refreshSubscriptionData();
 
       // Reset form to default values when modal opens
       const defaultValues = {
@@ -111,7 +73,7 @@ export default function CreateProjectTemplates({
       };
       reset(defaultValues);
     }
-  }, [isOpen, reset, user, userLoading]);
+  }, [isOpen, reset]);
 
   const projectTypes = [
     {
