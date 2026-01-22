@@ -1,16 +1,12 @@
 import React, { useState, useMemo } from "react";
 import {
     Quote,
-    ArrowRight,
     Search,
     FileText,
     Filter,
     Plus,
-    Lock,
     Unlock,
-    MoreHorizontal,
-    ExternalLink,
-    ChevronDown
+    MoreHorizontal
 } from "lucide-react";
 import { StoredCitation, SourceDetailPanel } from "./SourceDetailPanel";
 import { CitationStylePopover } from "./CitationStylePopover";
@@ -30,10 +26,6 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
     const [selectedSource, setSelectedSource] = useState<StoredCitation | null>(null);
     const [filterQuery, setFilterQuery] = useState("");
     const [activeTab, setActiveTab] = useState<"sources" | "collections">("sources");
-
-    // Modal State
-    const [citationModalOpen, setCitationModalOpen] = useState(false);
-    const [sourceForCitation, setSourceForCitation] = useState<StoredCitation | null>(null);
 
     // Deduplicate and process citations
     const processedCitations = useMemo(() => {
@@ -67,27 +59,6 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
             (Array.isArray(c.authors) && c.authors.some((a: string) => a.toLowerCase().includes(q)))
         );
     }, [processedCitations, filterQuery]);
-
-    const handleCiteClick = (source: StoredCitation, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setSourceForCitation(source);
-        setCitationModalOpen(true);
-    };
-
-    const handleConfirmInsert = (text: string, style: CitationStyle) => {
-        if (onInsertCitation && sourceForCitation) {
-            // Track the event
-            const trackingInfo = {
-                eventId: "citation_inserted",
-                sourceId: sourceForCitation.doi || sourceForCitation.title, // Use best available ID
-                style: style,
-                timestamp: new Date().toISOString()
-            };
-            onInsertCitation(text, trackingInfo);
-            setCitationModalOpen(false);
-            setSourceForCitation(null);
-        }
-    };
 
     const handleVisitSource = (source: StoredCitation, e: React.MouseEvent) => {
         e.stopPropagation();

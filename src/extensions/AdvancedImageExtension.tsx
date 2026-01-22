@@ -1,9 +1,8 @@
-import { mergeAttributes, Node, nodeInputRule } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { Image as TiptapImage } from "@tiptap/extension-image";
-import { NodeViewWrapper, NodeViewContent } from "@tiptap/react";
-import React, { useState, useRef, useEffect } from "react";
-import { Maximize2, RotateCw, AlignLeft, AlignCenter, AlignRight, Trash2 } from "lucide-react";
+import { NodeViewWrapper } from "@tiptap/react";
+import React, { useState, useRef } from "react";
+import { RotateCw, AlignLeft, AlignCenter, AlignRight, Trash2 } from "lucide-react";
 
 // Image Component for Node View
 const ImageComponent = (props: any) => {

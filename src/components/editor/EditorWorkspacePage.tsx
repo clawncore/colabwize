@@ -13,7 +13,7 @@ import { Project, documentService } from "../../services/documentService";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { UsageMeter } from "../../components/subscription/UsageMeter";
 import { useAuth } from "../../hooks/useAuth";
-import { FileText, Book, BarChart2 } from "lucide-react";
+import { FileText, Book } from "lucide-react";
 
 import { CitationAuditSidebar } from "../citations/CitationAuditSidebar";
 

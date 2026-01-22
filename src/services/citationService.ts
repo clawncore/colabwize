@@ -1,5 +1,5 @@
 import { apiClient } from "./apiClient";
-import { generatePrecomputedCitations, PrecomputedCitations } from "../utils/citationFormatter";
+import { generatePrecomputedCitations } from "../utils/citationFormatter";
 
 export interface SuggestedPaper {
   title: string;
