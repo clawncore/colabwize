@@ -41,7 +41,7 @@ export async function signUpWithEmail(
   userData: {
     full_name?: string;
     phone_number?: string;
-    otp_method?: string; // 'email' or 'sms' - Supabase handles this via type
+    otp_method?: string;
     user_type?: string;
     field_of_study?: string;
     selected_plan?: string;
@@ -55,17 +55,8 @@ export async function signUpWithEmail(
   needsVerification?: boolean;
 }> {
   try {
-    console.log("Starting hybrid signup process for:", email);
-
-    // Construct the payload matching backend expectation
-    // Backend expects { email, password, ...userData }
-    const payload = {
-      email,
-      password,
-      ...userData
-    };
-
-    // Call our backend hybrid endpoint which handles everything atomically
+    // Send user data directly to our hybrid backend endpoint
+    // The backend will handle creating the user in both Supabase Auth and database
     const response = await fetchWithTimeout(
       `${API_BASE_URL}/api/auth/hybrid/signup`,
       {
@@ -73,38 +64,31 @@ export async function signUpWithEmail(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          email,
+          password,
+          ...userData,
+        }),
       }
     );
 
     const result = await response.json();
 
-    if (!response.ok) {
-      throw new Error(result.message || "Signup failed");
+    if (response.ok && result.success) {
+      logger.info("User signed up with hybrid auth", {
+        email,
+        uid: result.user?.id,
+      });
+      return result;
+    } else {
+      // Throw an error with the message from the backend
+      throw new Error(result.message || "Failed to complete signup process");
     }
-
-    console.log("Hybrid signup successful:", result);
-    return {
-      success: true,
-      user: result.user,
-      message: result.message,
-      otpSent: result.otpSent,
-      needsVerification: result.needsVerification || true
-    };
-
   } catch (error: any) {
-    console.error("Hybrid signup error:", error);
-    // Return error structure matching Promise return type
-    return {
-      success: false,
-      user: null,
-      message: error.message || "Signup failed",
-      otpSent: false,
-      needsVerification: false
-    };
+    logger.error("Hybrid sign up error", { error: error.message, email });
+    throw error;
   }
 }
-
 
 /**
  * Sign in with email and password using hybrid approach
@@ -122,39 +106,46 @@ export async function signInWithEmail(
 
     console.log("Hybrid sign in with rememberMe:", rememberMe);
 
-    // Retry logic for "Email not confirmed" race condition
-    // When backend verifies email via admin API, Supabase might take a moment to propagate
-    let attempt = 0;
-    const maxRetries = 3;
-    let authData = { data: null as any, error: null as any };
-
-    while (attempt < maxRetries) {
-      const result = await supabase.auth.signInWithPassword({
-        email: sanitizedEmail,
-        password,
-      });
-      authData = result;
-
-      if (!result.error) break; // Success
-
-      // Check if error is related to unconfirmed email
-      const isEmailNotConfirmed =
-        result.error.message.toLowerCase().includes("email not confirmed") ||
-        (result.error as any).code === "EMAIL_NOT_CONFIRMED";
-
-      if (isEmailNotConfirmed && attempt < maxRetries - 1) {
-        // Wait 1 second before retrying
-        console.log(`Login failed with unconfirmed email, retrying... (${attempt + 1}/${maxRetries})`);
-        await new Promise(r => setTimeout(r, 1000));
-        attempt++;
-        continue;
+    // Pre-check email confirmation status via backend to avoid 400 from Supabase
+    try {
+      const precheckResp = await fetchWithTimeout(
+        `${API_BASE_URL}/api/auth/hybrid/check-email`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: sanitizedEmail }),
+        }
+      );
+      const precheck = await precheckResp.json();
+      if (
+        precheckResp.ok &&
+        precheck.success &&
+        precheck.exists &&
+        precheck.confirmed === false
+      ) {
+        const err: any = new Error(
+          "Email not confirmed. Please check your email for a verification code."
+        );
+        err.code = "EMAIL_NOT_CONFIRMED";
+        err.email = sanitizedEmail; // Add email to error for UI handling
+        err.needsVerification = true; // Flag to indicate user needs to verify email
+        logger.warn("Prevented password sign-in for unconfirmed email", {
+          email: sanitizedEmail,
+        });
+        throw err;
       }
-
-      // If other error or max retries reached, break
-      break;
+    } catch (preErr: any) {
+      // Non-blocking: if the check fails, proceed to sign-in; log for debugging
+      logger.warn("Email confirmation precheck failed; proceeding to sign-in", {
+        email: sanitizedEmail,
+        error: preErr?.message,
+      });
     }
 
-    const { data, error } = authData;
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: sanitizedEmail,
+      password,
+    });
 
     if (error) {
       // Normalize AuthApiError for UI handling
@@ -183,41 +174,16 @@ export async function signInWithEmail(
     // Get Supabase ID token (access token)
     const idToken = data.session?.access_token;
 
-    // CRITICAL FIX: Ensure session is actually available for ApiClient before proceeding
-    // Sometimes there is a delay between signIn returning and getSession returning the session
-    if (!idToken) {
-      console.warn("Sign in successful but no session returned immediately. Waiting for session...");
-      let sessionAttempts = 0;
-      while (sessionAttempts < 5) {
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData.session?.access_token) {
-          console.log("Session established successfully after wait");
-          break;
-        }
-        await new Promise(r => setTimeout(r, 500));
-        sessionAttempts++;
-      }
-    }
-
     // Then, verify token with our hybrid backend endpoint
-    // We use data.session.access_token from the initial call if available, or fetch fresh
-    const currentSession = await supabase.auth.getSession();
-    const tokenToUse = idToken || currentSession.data.session?.access_token;
-
-    if (!tokenToUse) {
-      throw new Error("Failed to establish session after login");
-    }
-
     const response = await fetchWithTimeout(
       `${API_BASE_URL}/api/auth/hybrid/signin`,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${tokenToUse}` // Explicitly pass headers for this call too
         },
         body: JSON.stringify({
-          idToken: tokenToUse,
+          idToken,
         }),
       }
     );
@@ -647,58 +613,32 @@ export async function verifyEmailOTP(
  * Verify OTP
  */
 export async function verifyOTP(
-  email: string,
-  otp: string,
-  userId?: string // Made optional for backward compatibility but required for backend verification
+  userId: string,
+  otp: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // If userId is provided, verify with our backend (Hybrid/Resend approach)
-    if (userId) {
-      const response = await fetchWithTimeout(
-        `${API_BASE_URL}/api/auth/hybrid/verify-otp`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId,
-            otp,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        logger.info("OTP verified successfully via Backend");
-        return {
-          success: true,
-          message:
-            result.message || "Email verified successfully.",
-        };
-      } else {
-        throw new Error(result.message || "Failed to verify OTP with backend");
+    const response = await fetchWithTimeout(
+      `${API_BASE_URL}/api/auth/hybrid/verify-otp`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          otp,
+        }),
       }
+    );
+
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      logger.info("OTP verified successfully");
+      return result;
+    } else {
+      throw new Error(result.message || "Failed to verify OTP");
     }
-
-    // Fallback to Supabase SDK if no userId provided (Legacy/Pure Supabase)
-    // type: 'signup' is used for email verification token
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: 'signup',
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    logger.info("OTP verified successfully via Supabase SDK");
-    return {
-      success: true,
-      message: "Email verified successfully.",
-    };
   } catch (error: any) {
     logger.error("OTP verification error", { error: error.message });
     throw error;
@@ -710,69 +650,61 @@ export async function verifyOTP(
  * This function can be used to resend the OTP verification email
  */
 export async function resendVerificationEmail(
-  email: string,
-  userId?: string, // Added userId param
-  fullName?: string // Added fullName param
+  email: string
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // If userId is provided, use our backend (Hybrid/Resend approach)
-    if (userId) {
-      const payload = {
-        userId,
-        email,
-        method: "email",
-        fullName: fullName || "",
-      };
-
-      console.log("DEBUG: Sending OTP payload:", payload);
-
-      const response = await fetchWithTimeout(
-        `${API_BASE_URL}/api/auth/hybrid/send-otp`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const result = await response.json();
-
-      if (response.ok && result?.success) { // Check for result.success explicitly or just 200 OK if structure differs, but typically we return {success:true}
-        logger.info("Verification email resent via Backend");
-        return {
-          success: true,
-          message: "Verification email sent successfully.",
-        };
-      } else {
-        // If backend fails, we might want to throw or fall back, but let's error for now to respect "Secret Services" usage
-        throw new Error(result.message || "Failed to send verification email via backend");
+    // First, try to resend via the hybrid backend endpoint which handles OTP
+    const response = await fetchWithTimeout(
+      `${API_BASE_URL}/api/auth/hybrid/resend-verification`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+        }),
       }
-    }
+    );
 
-    // Fallback to Supabase resend if no userId (Legacy)
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    const result = await response.json();
 
-    if (error) {
-      logger.error("Resend verification email error", {
-        error: error.message,
+    if (response.ok && result.success) {
+      logger.info("Verification email/OTP resent successfully", { email });
+      return {
+        success: true,
+        message:
+          "Verification code sent successfully. Please check your email for the 6-digit code.",
+      };
+    } else {
+      // If backend resend fails, fall back to Supabase resend
+      logger.warn("Backend resend failed, falling back to Supabase resend", {
+        email,
+        error: result.error,
       });
-      throw error;
-    }
 
-    logger.info("Verification email resent via Supabase SDK");
-    return {
-      success: true,
-      message:
-        "Verification email sent successfully. Please check your inbox for the confirmation link.",
-    };
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        logger.error("Resend verification email error", {
+          error: error.message,
+        });
+        throw error;
+      }
+
+      logger.info("Verification email resent via Supabase");
+      return {
+        success: true,
+        message:
+          "Verification email sent successfully. Please check your inbox for the confirmation link.",
+      };
+    }
   } catch (error: any) {
     logger.error("Resend verification email error", {
       error: error.message,

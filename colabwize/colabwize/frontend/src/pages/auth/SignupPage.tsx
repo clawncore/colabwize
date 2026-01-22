@@ -18,7 +18,6 @@ import {
   signInWithEmail,
   signUpWithGoogle,
   signUpWithMicrosoft,
-  resendVerificationEmail,
 } from "../../services/hybridAuth";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { useToast } from "../../hooks/use-toast";
@@ -61,7 +60,7 @@ const ALLOWED_DOMAINS = [
 const fetchWithTimeout = (
   url: string,
   options: RequestInit = {},
-  timeout = 60000
+  timeout = 15000
 ): Promise<Response> => {
   return Promise.race([
     fetch(url, options),
@@ -97,7 +96,7 @@ const signupSchema = z
     email: z.string().email("Please enter a valid email address"),
     countryCode: z.string().optional(),
     phoneNumber: z.string().optional(),
-    otpMethod: z.union([z.literal("sms"), z.literal("email")]), // Default handled by useForm
+    otpMethod: z.enum(["sms", "email"]), // Default handled by useForm
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -146,12 +145,14 @@ const SignupPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = React.useState(false);
   const [showOtpStep, setShowOtpStep] = React.useState(false);
+  const [, setOtpSent] = React.useState(false);
   const [showSurveyStep, setShowSurveyStep] = React.useState(false);
   const [userId, setUserId] = React.useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = React.useState<string | null>(null);
   const [affiliateRef, setAffiliateRef] = React.useState<string | null>(null);
   const [redirectPath, setRedirectPath] = React.useState<string | null>(null);
-
+  const [requiresEmailVerification, setRequiresEmailVerification] =
+    React.useState(false);
 
   // Add state for validation errors
   const [validationErrors, setValidationErrors] = React.useState<{
@@ -170,25 +171,6 @@ const SignupPage: React.FC = () => {
   const [socialLoading, setSocialLoading] = React.useState(false);
   // Add debounce timer ref
   const validationTimerRef = React.useRef<NodeJS.Timeout | null>(null);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isValid },
-    watch,
-    setValue,
-    setError,
-    clearErrors,
-  } = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
-    mode: "onTouched", // Change from "onChange" to "onTouched" to only validate after user interacts with field
-    defaultValues: {
-      agreeToTerms: false,
-      otpMethod: "email",
-    },
-  });
-
-  const watchedFields = watch();
 
   // Check for OAuth callback data when component mounts
   React.useEffect(() => {
@@ -259,7 +241,7 @@ const SignupPage: React.FC = () => {
         console.error("Error parsing OAuth user data:", error);
       }
     }
-  }, [searchParams, setError]);
+  }, [searchParams]);
 
   // Check if user has a session but needs to complete signup (for OAuth users)
   React.useEffect(() => {
@@ -345,7 +327,24 @@ const SignupPage: React.FC = () => {
     );
   }, []);
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+    watch,
+    setValue,
+    setError,
+    clearErrors,
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    mode: "onTouched", // Change from "onChange" to "onTouched" to only validate after user interacts with field
+    defaultValues: {
+      agreeToTerms: false,
+      otpMethod: "email",
+    },
+  });
 
+  const watchedFields = watch();
 
   // Custom register function that clears validation errors when field changes
   const registerWithValidationClear = (name: any) => {
@@ -463,7 +462,6 @@ const SignupPage: React.FC = () => {
   ); // Remove API_BASE_URL as it's a constant
 
   // Debounced validation effect
-  const { fullName, email } = watchedFields;
   React.useEffect(() => {
     // Clear any existing timer
     if (validationTimerRef.current) {
@@ -473,12 +471,12 @@ const SignupPage: React.FC = () => {
     // Set a new timer to debounce validation
     validationTimerRef.current = setTimeout(() => {
       // Validate fields that have values
-      if (fullName) {
-        validateUserDetails("fullName", fullName);
+      if (watchedFields.fullName) {
+        validateUserDetails("fullName", watchedFields.fullName);
       }
 
-      if (email) {
-        validateUserDetails("email", email);
+      if (watchedFields.email) {
+        validateUserDetails("email", watchedFields.email);
       }
     }, 500); // 500ms debounce
 
@@ -488,11 +486,12 @@ const SignupPage: React.FC = () => {
         clearTimeout(validationTimerRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    fullName,
-    email,
-    validateUserDetails,
+    watchedFields.fullName,
+    watchedFields.email,
+    // FIXED: Removed validateUserDetails from dependencies
+    // The function reference changes when selectedCountryCode changes,
+    // which would cause infinite loop. Instead, call it directly inside useCallback.
   ]);
 
   const passwordValue = watch("password");
@@ -576,6 +575,7 @@ const SignupPage: React.FC = () => {
           const needsVerification = (result as any).needsVerification || false;
 
           // Update state
+          setOtpSent(otpSent);
 
           return {
             success: true,
@@ -659,6 +659,7 @@ const SignupPage: React.FC = () => {
         const otpAlreadySent = (signupResult as any).otpSent || false;
         const needsVerification =
           (signupResult as any).needsVerification || false;
+        setRequiresEmailVerification(!!needsVerification);
 
         // Always go to OTP verification step if OTP was sent or if verification is needed
         if (otpAlreadySent || needsVerification) {
@@ -667,9 +668,21 @@ const SignupPage: React.FC = () => {
           );
           setShowOtpStep(true);
         } else {
-          // Should not happen for email signup with confirmation enabled
-          console.log("Signup successful, but no OTP needed?");
-          setShowOtpStep(true);
+          // If not, we need to send it now
+          console.log("Sending OTP after signup");
+          try {
+            // Pass the user ID directly from the signup result instead of relying on state
+            await sendOTP(data, finalUserId);
+            console.log(
+              "OTP sent successfully, moving to OTP verification step"
+            );
+            setShowOtpStep(true);
+          } catch (otpError: any) {
+            console.error("Failed to send OTP after signup:", otpError);
+            throw new Error(
+              `Failed to send verification code: ${otpError.message || "Unknown error"}`
+            );
+          }
         }
       } catch (error: unknown) {
         console.error("Signup failed:", error);
@@ -710,8 +723,7 @@ const SignupPage: React.FC = () => {
       setIsLoading(true);
       try {
         // The verifyOTP function returns true on success or throws on error
-        // Now requires email and OTP
-        await verifyOTP(data.email, data.otp || "");
+        await verifyOTP(data.otp || "");
         console.log("OTP verified, signing in user...");
 
         // Sign in user to allow survey submission (establishes Supabase session)
@@ -810,25 +822,58 @@ const SignupPage: React.FC = () => {
     }
   };
 
-  // Function to send OTP (now uses client-side Supabase resend)
+  // Function to send OTP
   const sendOTP = async (data: SignupFormData, userIdParam?: string) => {
     try {
-      console.log("Sending OTP to:", data.email);
+      // Use the passed userIdParam if provided, otherwise use the state userId
+      const effectiveUserId = userIdParam || userId;
 
-      // Use the service function which wraps supabase.auth.resend
-      // Now passing userId and fullName to support backend (Resend) implementation
-      const currentUserId = userIdParam || userId || "";
-      const result = await resendVerificationEmail(
-        data.email,
-        currentUserId,
-        data.fullName
-      );
+      if (!effectiveUserId) {
+        const error = new Error(
+          "User ID is required to send OTP. Please complete signup first."
+        );
+        console.error("OTP send error:", error.message);
+        throw error;
+      }
 
-      if (result.success) {
-        console.log("OTP sent successfully via Supabase/Backend");
+      console.log("Sending OTP with data:", {
+        userId: effectiveUserId,
+        method: data.otpMethod,
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        fullName: data.fullName,
+      });
+
+      // Combine country code and phone number for SMS
+      // Only add country code if phone number doesn't already start with +
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/hybrid/send-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: effectiveUserId,
+          method: data.otpMethod,
+          email: data.email,
+          fullName: data.fullName,
+        }),
+      });
+
+      const result = await response.json();
+      console.log("OTP send response:", {
+        status: response.status,
+        result,
+      });
+
+      if (response.ok && (result.success || result.message)) {
+        console.log("OTP sent successfully via hybrid system");
         return true;
       } else {
-        throw new Error(result.message || "Failed to send OTP");
+        const errorMessage =
+          result.message || result.error || "Failed to send OTP";
+        console.error("OTP send failed:", errorMessage);
+        throw new Error(errorMessage);
       }
     } catch (error: unknown) {
       console.error("Failed to send OTP:", error);
@@ -837,11 +882,11 @@ const SignupPage: React.FC = () => {
     }
   };
 
-  // Function to verify OTP - Signature updated for Supabase/Hybrid
-  const verifyOTP = async (email: string, otp: string) => {
+  // Function to verify OTP
+  const verifyOTP = async (otp: string) => {
     try {
-      if (!email) {
-        const error = new Error("Email is required to verify OTP");
+      if (!userId) {
+        const error = new Error("User ID is required to verify OTP");
         console.error("OTP verify error:", error.message);
         throw error;
       }
@@ -852,22 +897,29 @@ const SignupPage: React.FC = () => {
         throw error;
       }
 
-      console.log("Verifying OTP for:", email);
+      console.log("Verifying OTP:", { userId: userId, otp });
 
-      // Call the hybrid verification service
-      // Pass userId if we have it to use the backend verification flow
-      const result = await hybridVerifyOTP(email, otp, userId || undefined);
+      // Use the hybrid OTP verification function
+      const result = await hybridVerifyOTP(userId, otp);
 
       if (result.success) {
         console.log("OTP verified successfully");
         return true;
       } else {
-        throw new Error(result.message || "Failed to verify OTP");
+        const errorMessage = result.message || "Failed to verify OTP";
+        console.error("OTP verify failed:", errorMessage);
+        throw new Error(errorMessage);
       }
     } catch (error: unknown) {
       console.error("Failed to verify OTP:", error);
-      // Re-throw the error so the calling function can handle it properly (showing error in UI)
-      throw error instanceof Error ? error : new Error(String(error));
+      setError("root", {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to verify OTP. Please try again.",
+      });
+      // Re-throw the error so the calling function can handle it properly
+      throw error;
     }
   };
 
@@ -1050,7 +1102,7 @@ const SignupPage: React.FC = () => {
                 leftIcon={<User className="h-4 w-4" />}
                 error={
                   watchedFields.fullName !== undefined &&
-                    watchedFields.fullName !== ""
+                  watchedFields.fullName !== ""
                     ? errors.fullName?.message || validationErrors.fullName
                     : undefined
                 }
@@ -1072,7 +1124,7 @@ const SignupPage: React.FC = () => {
                 leftIcon={<Mail className="h-4 w-4" />}
                 error={
                   watchedFields.email !== undefined &&
-                    watchedFields.email !== ""
+                  watchedFields.email !== ""
                     ? errors.email?.message || validationErrors.email
                     : undefined
                 }
@@ -1096,7 +1148,7 @@ const SignupPage: React.FC = () => {
                   showPasswordToggle
                   error={
                     watchedFields.password !== undefined &&
-                      watchedFields.password !== ""
+                    watchedFields.password !== ""
                       ? errors.password?.message
                       : undefined
                   }
@@ -1118,7 +1170,7 @@ const SignupPage: React.FC = () => {
                 showPasswordToggle
                 error={
                   watchedFields.confirmPassword !== undefined &&
-                    watchedFields.confirmPassword !== ""
+                  watchedFields.confirmPassword !== ""
                     ? errors.confirmPassword?.message
                     : undefined
                 }
