@@ -816,10 +816,16 @@ const SignupPage: React.FC = () => {
       console.log("Sending OTP to:", data.email);
 
       // Use the service function which wraps supabase.auth.resend
-      const result = await resendVerificationEmail(data.email);
+      // Now passing userId and fullName to support backend (Resend) implementation
+      const currentUserId = userIdParam || userId || "";
+      const result = await resendVerificationEmail(
+        data.email,
+        currentUserId,
+        data.fullName
+      );
 
       if (result.success) {
-        console.log("OTP sent successfully via Supabase");
+        console.log("OTP sent successfully via Supabase/Backend");
         return true;
       } else {
         throw new Error(result.message || "Failed to send OTP");
@@ -848,8 +854,9 @@ const SignupPage: React.FC = () => {
 
       console.log("Verifying OTP:", { email, otp });
 
-      // Use the hybrid OTP verification function (now calls Supabase)
-      const result = await hybridVerifyOTP(email, otp);
+      // Use the hybrid OTP verification function (now calls Supabase or Backend)
+      // Passing userId if available to support backend implementation
+      const result = await hybridVerifyOTP(email, otp, userId || undefined);
 
       if (result.success) {
         console.log("OTP verified successfully");

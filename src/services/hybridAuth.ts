@@ -83,11 +83,55 @@ export async function signUpWithEmail(
     // If successful, data.user should be present. 
     // If email confirmation is enabled, data.session might be null.
 
+    let otpSent = false;
+    if (data.user) {
+      // 1. Explicitly register user in backend (Prisma)
+      // This is required because OTP mechanism needs a User record for foreign key constraints
+      try {
+        const registerResponse = await fetch(`${API_BASE_URL}/api/auth/hybrid/register-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: data.user.id,
+            email: email,
+            fullName: userData.full_name,
+            fieldOfStudy: userData.field_of_study,
+            userType: userData.user_type,
+            selectedPlan: userData.selected_plan,
+            affiliateRef: userData.affiliate_ref,
+            otpMethod: userData.otp_method,
+          }),
+        });
+
+        if (!registerResponse.ok) {
+          const errText = await registerResponse.text();
+          logger.error("Backend registration failed", { error: errText });
+          // If registration fails, OTP might fail too due to FK constraints, but we proceed anyway
+        } else {
+          logger.info("Backend registration successful");
+        }
+      } catch (regError) {
+        logger.error("Backend registration network error", { error: regError });
+      }
+
+      // 2. Trigger our custom Resend email immediately
+      try {
+        await resendVerificationEmail(email, data.user.id, userData.full_name);
+        otpSent = true;
+        logger.info("Custom Resend OTP email triggered after signup");
+      } catch (emailError) {
+        logger.error("Failed to trigger Resend email after signup", { error: emailError });
+        // We don't fail the whole signup if email fails, but we should inform the user
+      }
+    }
+
     return {
       success: true,
       user: data.user,
       message: "Signup successful. Please verify your email.",
-      otpSent: true, // Supabase sends it automatically
+      otpSent: otpSent, // Now reflects if OUR email was sent
       needsVerification: !data.session, // If no session, verification needed
     };
 
@@ -583,15 +627,43 @@ export async function verifyEmailOTP(
 /**
  * Verify OTP
  */
-/**
- * Verify OTP
- */
 export async function verifyOTP(
-  email: string, // Changed from userId to email
-  otp: string
+  email: string,
+  otp: string,
+  userId?: string // Made optional for backward compatibility but required for backend verification
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // Verify using Supabase SDK
+    // If userId is provided, verify with our backend (Hybrid/Resend approach)
+    if (userId) {
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/api/auth/hybrid/verify-otp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId,
+            otp,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        logger.info("OTP verified successfully via Backend");
+        return {
+          success: true,
+          message:
+            result.message || "Email verified successfully.",
+        };
+      } else {
+        throw new Error(result.message || "Failed to verify OTP with backend");
+      }
+    }
+
+    // Fallback to Supabase SDK if no userId provided (Legacy/Pure Supabase)
     // type: 'signup' is used for email verification token
     const { error } = await supabase.auth.verifyOtp({
       email,
@@ -603,7 +675,7 @@ export async function verifyOTP(
       throw new Error(error.message);
     }
 
-    logger.info("OTP verified successfully via Supabase");
+    logger.info("OTP verified successfully via Supabase SDK");
     return {
       success: true,
       message: "Email verified successfully.",
@@ -619,34 +691,69 @@ export async function verifyOTP(
  * This function can be used to resend the OTP verification email
  */
 export async function resendVerificationEmail(
-  email: string
+  email: string,
+  userId?: string, // Added userId param
+  fullName?: string // Added fullName param
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // Send request to our hybrid backend endpoint which uses Supabase signInWithOtp
-    const response = await fetchWithTimeout(
-      `${API_BASE_URL}/api/auth/hybrid/send-otp`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-        }),
-      }
-    );
-
-    const result = await response.json();
-
-    if (response.ok && result.success) {
-      logger.info("Verification email/OTP sent via backend", { email });
-      return {
-        success: true,
-        message: "Verification code sent successfully. Please check your inbox.",
+    // If userId is provided, use our backend (Hybrid/Resend approach)
+    if (userId) {
+      const payload = {
+        userId,
+        email,
+        method: "email",
+        fullName: fullName || "",
       };
-    } else {
-      throw new Error(result.error || "Failed to send verification email");
+
+      console.log("DEBUG: Sending OTP payload:", payload);
+
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/api/auth/hybrid/send-otp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok && result?.success) { // Check for result.success explicitly or just 200 OK if structure differs, but typically we return {success:true}
+        logger.info("Verification email resent via Backend");
+        return {
+          success: true,
+          message: "Verification email sent successfully.",
+        };
+      } else {
+        // If backend fails, we might want to throw or fall back, but let's error for now to respect "Secret Services" usage
+        throw new Error(result.message || "Failed to send verification email via backend");
+      }
     }
+
+    // Fallback to Supabase resend if no userId (Legacy)
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      logger.error("Resend verification email error", {
+        error: error.message,
+      });
+      throw error;
+    }
+
+    logger.info("Verification email resent via Supabase SDK");
+    return {
+      success: true,
+      message:
+        "Verification email sent successfully. Please check your inbox for the confirmation link.",
+    };
   } catch (error: any) {
     logger.error("Resend verification email error", {
       error: error.message,
