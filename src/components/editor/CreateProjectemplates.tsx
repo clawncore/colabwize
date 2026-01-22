@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import FormInput from "../auth/FormInput";
 import TemplateService from "../../services/templateService";
 import { documentService } from "../../services/documentService";
-import { SubscriptionService } from "../../services/subscriptionService";
 import {
   Calendar,
   Beaker,
@@ -33,7 +32,7 @@ export default function CreateProjectTemplates({
   onClose,
   onProjectCreate,
 }: CreateProjectTemplatesProps) {
-  const { user, loading: userLoading } = useUser();
+  const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
