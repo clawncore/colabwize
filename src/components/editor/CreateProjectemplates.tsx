@@ -15,9 +15,6 @@ import {
   BookOpen,
   File,
   FileText,
-  Crown,
-  Rocket,
-  Zap,
   AlertCircle,
 } from "lucide-react";
 
@@ -40,7 +37,6 @@ export default function CreateProjectTemplates({
   const { user, loading: userLoading } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [userPlan, setUserPlan] = useState<"free" | "student" | "researcher">(
     "free",
   );
@@ -369,29 +365,6 @@ export default function CreateProjectTemplates({
     fetchTemplate();
   };
 
-  // Get plan-specific styling
-  const getPlanStyling = () => {
-    if (isResearcherUser) {
-      return {
-        headerBg: "bg-gradient-to-r from-purple-500 to-indigo-600 text-white",
-        button:
-          "bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700",
-      };
-    } else if (isStudentUser) {
-      return {
-        headerBg: "bg-gradient-to-r from-blue-500 to-cyan-600 text-white",
-        button:
-          "bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-500 hover:to-cyan-700",
-      };
-    } else {
-      return {
-        headerBg: "bg-white text-gray-900 border-b border-gray-200",
-        button: "bg-blue-600 hover:bg-blue-700",
-      };
-    }
-  };
-
-  const planStyling = getPlanStyling();
 
   if (!isOpen) return null;
 
