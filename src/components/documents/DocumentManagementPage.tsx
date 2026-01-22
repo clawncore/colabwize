@@ -1,16 +1,24 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DocumentUpload, DocumentList } from ".";
+import CreateProjectTemplates from "../editor/CreateProjectemplates";
 
 const DocumentManagementPage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"list" | "upload">("list");
+  const [activeTab, setActiveTab] = useState<"list" | "upload" | "create">("list");
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
   const handleUploadSuccess = (project: any) => {
     setSelectedProject(project);
     setActiveTab("list");
     // Navigate to editor with the newly uploaded project
+    navigate(`/dashboard/editor/${project.id}`);
+  };
+
+  const handleCreateProject = (project: any) => {
+    setSelectedProject(project);
+    setActiveTab("list");
+    // Navigate to editor with the newly created project
     navigate(`/dashboard/editor/${project.id}`);
   };
 
@@ -37,29 +45,35 @@ const DocumentManagementPage: React.FC = () => {
           <div className="border-b border-gray-200">
             <nav className="flex">
               <button
-                className={`px-6 py-4 font-medium text-sm ${
-                  activeTab === "list"
+                className={`px-6 py-4 font-medium text-sm ${activeTab === "list"
                     ? "text-blue-600 border-b-2 border-blue-600"
                     : "text-gray-500 hover:text-gray-700"
-                }`}
+                  }`}
                 onClick={() => setActiveTab("list")}>
                 My Documents
               </button>
               <button
-                className={`px-6 py-4 font-medium text-sm ${
-                  activeTab === "upload"
+                className={`px-6 py-4 font-medium text-sm ${activeTab === "upload"
                     ? "text-blue-600 border-b-2 border-blue-600"
                     : "text-gray-500 hover:text-gray-700"
-                }`}
+                  }`}
                 onClick={() => setActiveTab("upload")}>
                 Upload Document
+              </button>
+              <button
+                className={`px-6 py-4 font-medium text-sm ${activeTab === "create"
+                    ? "text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                  }`}
+                onClick={() => setActiveTab("create")}>
+                Create New Document
               </button>
             </nav>
           </div>
 
           {/* Tab Content */}
           <div className="p-6">
-            {activeTab === "list" ? (
+            {activeTab === "list" && (
               <div>
                 <DocumentList
                   onProjectSelect={handleProjectSelect}
@@ -84,7 +98,9 @@ const DocumentManagementPage: React.FC = () => {
                   </div>
                 )}
               </div>
-            ) : (
+            )}
+
+            {activeTab === "upload" && (
               <div>
                 <DocumentUpload onUploadSuccess={handleUploadSuccess} />
                 {selectedProject && (
@@ -96,6 +112,14 @@ const DocumentManagementPage: React.FC = () => {
                   </div>
                 )}
               </div>
+            )}
+
+            {activeTab === "create" && (
+              <CreateProjectTemplates
+                isOpen={true}
+                onClose={() => setActiveTab("list")}
+                onProjectCreate={handleCreateProject}
+              />
             )}
           </div>
         </div>

@@ -119,7 +119,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       StarterKit,
       HighlightExtension,
       CharacterCount,
-      CharacterCount,
       // Image.configure({ ... }), // Replaced by ImageExtension
       Table.configure({
         resizable: true,

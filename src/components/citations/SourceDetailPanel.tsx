@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowLeft, ExternalLink, BookOpen, Calendar, MapPin, Hash, ShieldCheck, Lock, Globe } from "lucide-react";
+import { ArrowLeft, ExternalLink, BookOpen, Calendar, MapPin, Hash, ShieldCheck, Globe } from "lucide-react";
 
 export interface StoredCitation {
     id?: string;
@@ -45,7 +45,7 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
         }
     };
 
-    const isPeerReviewed = source.source === "crossref" || source.source === "pubmed";
+
     const isOpenAccess = false; // We don't have this metadata explicitly yet, but could check type.
 
     return (

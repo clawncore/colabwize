@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { StoredCitation, SourceDetailPanel } from "./SourceDetailPanel";
 import { CitationStylePopover } from "./CitationStylePopover";
-import { CitationStyle } from "../../utils/citationFormatter";
 
 interface SourcesLibraryPanelProps {
     citations: any[]; // The raw citations from the project object

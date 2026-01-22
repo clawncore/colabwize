@@ -472,7 +472,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               // Note: setTextSelection accepts a range or stored JSON in some versions, but safest is to rely on commands
               .command(({ tr, dispatch }) => {
                 if (dispatch) {
-                  const { from, to } = savedSelection; // Assuming savedSelection is simplified or we use resolving
                   // JSON selection from tiptap is { type, anchor, head }
                   const selection = (editor.state.selection.constructor as any).fromJSON(editor.state.doc, savedSelection);
                   tr.setSelection(selection);
