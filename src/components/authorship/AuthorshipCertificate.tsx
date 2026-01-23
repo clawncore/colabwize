@@ -1,7 +1,7 @@
 import React from "react";
 import { AuthorshipStatsDisplay } from "./AuthorshipStatsDisplay";
 import { CertificateDownloadButton } from "./CertificateDownloadButton";
-import { Award, Clock, FileEdit, ShieldCheck } from "lucide-react";
+import { Award, ShieldCheck } from "lucide-react";
 
 interface AuthorshipCertificateProps {
   projectId: string;

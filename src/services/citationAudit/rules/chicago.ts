@@ -31,7 +31,7 @@ export const chicagoRules: AuditRule[] = [
         validate: (content: EditorContent, allText: string): AuditFinding[] => {
             const findings: AuditFinding[] = [];
             // Regex for (Smith, 2023)
-            const authorYearRegex = /\([A-Za-z\s&\.]+,?\s*(19|20)\d{2}\)/g;
+            const authorYearRegex = /\([A-Za-z\s&.]+,?\s*(19|20)\d{2}\)/g;
 
             let match;
             while ((match = authorYearRegex.exec(allText)) !== null) {

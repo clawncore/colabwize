@@ -8,7 +8,7 @@ export const ieeeRules: AuditRule[] = [
             const findings: AuditFinding[] = [];
             // Regex: (Smith, 1999) or (Smith 1999) or (Smith et al., 1999)
             // Looks for parantheses containing a year
-            const authorYearRegex = /\([A-Za-z\s&\.]+,?\s*(19|20)\d{2}\)/g;
+            const authorYearRegex = /\([A-Za-z\s&.]+,?\s*(19|20)\d{2}\)/g;
 
             let match;
             while ((match = authorYearRegex.exec(allText)) !== null) {

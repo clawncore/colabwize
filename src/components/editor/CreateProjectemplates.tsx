@@ -14,7 +14,7 @@ import {
   FileText,
   AlertCircle,
   GraduationCap,
-  Library,
+
   ScrollText,
 } from "lucide-react";
 
@@ -49,7 +49,7 @@ export default function CreateProjectTemplates({
     setValue,
     watch,
     reset,
-    formState: { errors, isValid },
+    formState: { isValid },
   } = useForm<FormData>({
     defaultValues: {
       name: "",
@@ -128,7 +128,7 @@ export default function CreateProjectTemplates({
 
     try {
       // Logic to handle "blank" mode actually using "blank" type
-      const finalType = startMode === 'blank' ? 'blank' : data.type;
+
 
       // CRITICAL FIX: Ensure template is loaded if in template mode
       if (startMode === 'template' && !selectedTemplate) {
@@ -208,16 +208,7 @@ export default function CreateProjectTemplates({
     }
   };
 
-  // Helper for Skeleton Preview - Made smaller/compact
-  const TemplatePreviewSkeleton = () => (
-    <div className="w-full h-24 bg-gray-50 border-b border-gray-100 flex flex-col gap-1.5 p-2 overflow-hidden opacity-50">
-      <div className="h-1.5 w-1/3 bg-gray-200 rounded-sm"></div>
-      <div className="h-1 w-full bg-gray-100 rounded-sm mt-1"></div>
-      <div className="h-1 w-full bg-gray-100 rounded-sm"></div>
-      <div className="h-1 w-2/3 bg-gray-100 rounded-sm"></div>
-      <div className="mt-auto h-1 w-1/4 bg-gray-200 rounded-sm"></div>
-    </div>
-  );
+
 
 
   if (!isOpen) return null;

@@ -524,7 +524,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     } finally {
       // setIsSaving(false);
     }
-  }, [editor, project.id, title, description, onProjectUpdate, toast]);
+  }, [editor, project.id, title, description, onProjectUpdate]);
 
   // Auto-save every 30 seconds if there are changes
   useEffect(() => {

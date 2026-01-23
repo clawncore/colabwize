@@ -5,7 +5,7 @@
  * Provides utility functions to access templates without backend API calls.
  */
 
-import { Template, TemplateType } from "./types";
+import { Template } from "./types";
 import { researchPaperTemplate } from "./researchPaper";
 import { literatureReviewTemplate } from "./literatureReview";
 import { researchProposalTemplate } from "./researchProposal";

@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    FileText, Calendar, Clock, Type, Activity, Search, Filter,
-    ArrowUpDown, Laptop, AlertCircle, CheckCircle, MoreVertical,
-    ChevronLeft, BarChart2, TrendingUp, History, Shield, AlertTriangle
+    FileText, Clock, Laptop, AlertCircle, ChevronLeft, BarChart2, TrendingUp, Shield, Search
 } from 'lucide-react';
 import { documentService, Project } from '../../services/documentService';
-import { toast } from 'sonner';
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     LineChart, Line, AreaChart, Area
 } from "recharts";
 
@@ -33,7 +30,6 @@ export const DocumentAnalyticsPage: React.FC = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'overview' | 'trends' | 'history'>('overview');
     const [documents, setDocuments] = useState<DocumentMetric[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
     // Mock Trend Data
@@ -77,8 +73,6 @@ export const DocumentAnalyticsPage: React.FC = () => {
                 }
             } catch (error) {
                 console.error('Error fetching documents:', error);
-            } finally {
-                setLoading(false);
             }
         };
         fetchDocuments();

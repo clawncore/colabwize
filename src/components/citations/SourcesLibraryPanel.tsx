@@ -9,7 +9,7 @@ import {
     MoreHorizontal
 } from "lucide-react";
 import { CitationStyleFloatingPanel } from "./CitationStyleFloatingPanel";
-import { documentService } from "../../services/documentService";
+
 import { CitationStyle } from "../../utils/citationFormatter";
 import { CitationStylePopover } from "./CitationStylePopover";
 import { SourceDetailPanel } from "./SourceDetailPanel";

@@ -87,7 +87,7 @@ export const CertificateDownloadButton: React.FC<
         <button
           onClick={handleDownload}
           disabled={isGenerating}
-          className={`${baseClasses} ${className}`}>
+          className={buttonClasses}>
           {isGenerating ? (
             <>
               <svg

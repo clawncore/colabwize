@@ -1,16 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
-  FileText,
-  Search,
-  Plus,
-  Filter,
   ArrowRight,
-  MoreVertical,
-  Clock,
-  Sparkles,
   BarChart as BarChartIcon,
-  Calendar,
   ShieldCheck,
   Zap,
   BookOpen,
@@ -20,26 +12,19 @@ import {
   Lock,
   Upload,
   CheckCircle,
-  Quote,
-  GraduationCap
 } from 'lucide-react';
 
-import { useAuth } from '../../contexts/AuthContext';
+
 import { apiClient } from "../../services/apiClient";
 import { documentService, Project } from "../../services/documentService";
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
   Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { SubscriptionService } from "../../services/subscriptionService";
@@ -64,25 +49,7 @@ export const Dashboard: React.FC = () => {
 
   // State for chart data
   const [documentTrendData, setDocumentTrendData] = useState<any[]>([]);
-  const [verifiedDocsData, setVerifiedDocsData] = useState<any[]>([]);
-
-  const [activeDayData, setActiveDayData] = useState<any[]>([]);
-  const [mostActiveDay, setMostActiveDay] = useState<string>("No data");
-  const [mostActiveDayCount, setMostActiveDayCount] = useState<number>(0);
-  const [timeRange, setTimeRange] = useState<"week" | "month">("week");
-
-  // State for new analytics cards
-  const [uploadVelocityData, setUploadVelocityData] = useState<any[]>([]);
-  const [currentUploadVelocity, setCurrentUploadVelocity] = useState<number>(0);
-  const [uploadVelocityChange, setUploadVelocityChange] = useState<number>(0);
-
-  const [citationFixRate, setCitationFixRate] = useState<number>(0);
-  const [citationFixRateChange, setCitationFixRateChange] = useState<number>(0);
-
-  const [timeToVerification, setTimeToVerification] = useState<number>(0);
-  const [timeToVerificationChange, setTimeToVerificationChange] =
-    useState<number>(0);
-  const [verificationTrendData, setVerificationTrendData] = useState<any[]>([]);
+  const [documentTrendData, setDocumentTrendData] = useState<any[]>([]);
 
   // Subscription state
   const [userPlan, setUserPlan] = useState<string>("free");
@@ -127,264 +94,12 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Function to fetch verified documents data from backend
-  const fetchVerifiedDocsData = async () => {
-    try {
-      // Get all certificates to determine verification status
-      const response = await apiClient.get("/api/authorship/certificates");
-      // The API returns { certificates: [], pagination: {} }
-      const certificates = response.certificates || [];
 
-      // Count completed certificates (verified) and pending ones
-      const completedCount = certificates.filter(
-        (cert: any) => cert.status === "completed"
-      ).length;
-      const pendingCount = certificates.filter(
-        (cert: any) => cert.status === "pending"
-      ).length;
-
-      // Create data for the pie chart
-      setVerifiedDocsData([
-        { name: "Verified", value: completedCount },
-        { name: "Pending", value: pendingCount },
-      ]);
-    } catch (error) {
-      console.error("Error fetching verified documents data:", error);
-      // Fallback to empty data
-      setVerifiedDocsData([]);
-    }
-  };
-
-  // Function to fetch most active day data from backend
-  const fetchMostActiveDayData = async () => {
-    try {
-      // Get analytics summary to get real activity data
-      const response = await apiClient.get(`/api/analytics/summary`);
-      const analyticsData = response.data?.[0] || {};
-
-      const daysOfWeek = ["M", "T", "W", "T", "F", "S", "S"];
-      const totalDocuments = analyticsData.total_documents_uploaded || 0;
-      const totalScans =
-        (analyticsData.originality_scans_count || 0) +
-        (analyticsData.ai_detection_scans_count || 0) +
-        (analyticsData.citation_checks_count || 0);
-
-      // Use real total activity to distribute across days
-      // In production, you'd have a daily breakdown endpoint
-      const totalActivity = Math.max(totalDocuments, totalScans, 1);
-
-      // Calculate average daily activity
-      const avgPerDay = Math.floor(totalActivity / 7);
-
-      // Distribute activity across the week with realistic variance
-      // Weekdays typically have more activity than weekends
-      const weekdayMultiplier = [1.2, 1.1, 1.3, 1.0, 0.9, 0.6, 0.5]; // M-Sun
-
-      const dayData = daysOfWeek.map((dayName, index) => {
-        const baseCount =
-          avgPerDay > 0
-            ? Math.max(1, Math.floor(avgPerDay * weekdayMultiplier[index]))
-            : 0;
-        return {
-          day: dayName,
-          count: baseCount,
-          isMostActive: false,
-        };
-      });
-
-      // Find the day with the highest count
-      let maxCount = 0;
-      let mostActiveDayIndex = 0;
-
-      dayData.forEach((day, index) => {
-        if (day.count > maxCount) {
-          maxCount = day.count;
-          mostActiveDayIndex = index;
-        }
-      });
-
-      // Update the most active day flag and set the state values
-      dayData[mostActiveDayIndex].isMostActive = true;
-
-      // Set the most active day and count
-      const daysFull = [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-      ];
-      setMostActiveDay(daysFull[mostActiveDayIndex]);
-      setMostActiveDayCount(maxCount);
-
-      setActiveDayData(dayData);
-    } catch (error) {
-      console.error("Error fetching most active day data:", error);
-
-      // Set default values
-      const daysOfWeek = ["M", "T", "W", "T", "F", "S"];
-      const defaultData = daysOfWeek.map((day, index) => ({
-        day,
-        count: Math.floor(Math.random() * 3),
-        isMostActive: false,
-      }));
-
-      setActiveDayData(defaultData);
-      setMostActiveDay("No data");
-      setMostActiveDayCount(0);
-    }
-  };
-
-  // Function to fetch weekly upload velocity data
-  const fetchUploadVelocityData = async () => {
-    try {
-      // Get analytics summary to get document upload data
-      const response = await apiClient.get("/api/analytics/summary");
-      const analyticsSummary = response.data || {};
-
-      // Calculate weekly upload velocity
-      const totalDocuments = analyticsSummary.total_documents_uploaded || 0;
-      const weeksCount = 4; // Last 4 weeks
-      const weeklyAvg = Math.floor(totalDocuments / weeksCount);
-
-      // Generate data for the last 4 weeks
-      const weeksData = [];
-      for (let i = 3; i >= 0; i--) {
-        const weekDate = new Date();
-        weekDate.setDate(weekDate.getDate() - i * 7);
-        const weekNumber = Math.ceil((weekDate.getDate() - 1) / 7) + 1;
-        const weekName = `W${weekNumber}`;
-
-        // Use actual weekly average without random variance
-        const baseCount = weeklyAvg;
-        // Realistic distribution: current week slightly higher
-        const count =
-          i === 0 ? Math.min(baseCount + 1, totalDocuments) : baseCount;
-
-        weeksData.push({
-          name: weekName,
-          uploads: count,
-        });
-      }
-
-      // Calculate current velocity and change from previous period
-      const currentVelocity = weeksData[3]?.uploads || 0;
-      const previousVelocity = weeksData[2]?.uploads || 0;
-      const change = currentVelocity - previousVelocity;
-
-      setCurrentUploadVelocity(currentVelocity);
-      setUploadVelocityChange(change);
-      setUploadVelocityData(weeksData);
-    } catch (error) {
-      console.error("Error fetching upload velocity data:", error);
-
-      // Set default values
-      setUploadVelocityData([
-        { name: "W1", uploads: 0 },
-        { name: "W2", uploads: 0 },
-        { name: "W3", uploads: 0 },
-        { name: "W4", uploads: 0 },
-      ]);
-      setCurrentUploadVelocity(0);
-      setUploadVelocityChange(0);
-    }
-  };
-
-  // Function to fetch citation fix rate data
-  const fetchCitationFixRateData = async () => {
-    try {
-      // Get citation data from the citations API
-      const response = await apiClient.get("/api/citations/summary");
-      const citationSummary = response.data || {};
-
-      // Calculate citation fix rate
-      const fixedCitations = citationSummary.fixed_citations_count || 0;
-      const totalCitations = citationSummary.total_citations_count || 1;
-      const fixRate =
-        totalCitations > 0
-          ? Math.round((fixedCitations / totalCitations) * 100)
-          : 0;
-
-      // Calculate change from previous period
-      const previousFixRate = citationSummary.previous_fix_rate || 0;
-      const change = fixRate - previousFixRate;
-
-      setCitationFixRate(fixRate);
-      setCitationFixRateChange(change);
-    } catch (error) {
-      console.error("Error fetching citation fix rate data:", error);
-
-      // Try fallback to analytics summary if citations API fails
-      try {
-        const response = await apiClient.get("/api/analytics/summary");
-        const analyticsSummary = response.data || {};
-
-        // Calculate based on citation checks
-        const citationChecks = analyticsSummary.citation_checks_count || 0;
-        const fixRate =
-          citationChecks > 0
-            ? Math.min(100, Math.floor(citationChecks * 15))
-            : 0;
-
-        setCitationFixRate(fixRate);
-        setCitationFixRateChange(0);
-      } catch (fallbackError) {
-        console.error("Error in fallback citation data fetch:", fallbackError);
-        setCitationFixRate(0);
-        setCitationFixRateChange(0);
-      }
-    }
-  };
-
-  // Function to fetch time to verification data
-  const fetchTimeToVerificationData = async () => {
-    try {
-      // Get verification data from the authorship API
-      const response = await apiClient.get("/api/authorship/verification-time");
-      const verificationData = response.data || {};
-
-      // Calculate average time to verification
-      const avgVerificationTime =
-        verificationData.avg_verification_time_minutes || 0;
-      const previousVerificationTime =
-        verificationData.previous_avg_verification_time || avgVerificationTime;
-      const change = avgVerificationTime - previousVerificationTime;
-
-      setTimeToVerification(avgVerificationTime);
-      setTimeToVerificationChange(change);
-
-      // Generate trend data for visualization
-      const trendData = verificationData.verification_trend || [];
-
-      setVerificationTrendData(trendData);
-    } catch (error) {
-      console.error("Error fetching time to verification data:", error);
-
-      // Set default values
-      setTimeToVerification(0);
-      setTimeToVerificationChange(0);
-      setVerificationTrendData([
-        { day: "Mon", time: 0 },
-        { day: "Tue", time: 0 },
-        { day: "Wed", time: 0 },
-        { day: "Thu", time: 0 },
-        { day: "Fri", time: 0 },
-      ]);
-    }
-  };
 
   // Fetch chart data when dashboard data changes
   useEffect(() => {
     fetchDocumentTrendData();
-    fetchVerifiedDocsData();
-
-    fetchMostActiveDayData();
-    fetchUploadVelocityData();
-    fetchCitationFixRateData();
-    fetchTimeToVerificationData();
-  }, [dashboardData, timeRange]);
+  }, [dashboardData]);
 
   const handleContentReady = async (
     content: string,
