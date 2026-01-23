@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 
-import { apiClient } from "../../services/apiClient";
+
 import { documentService, Project } from "../../services/documentService";
 import {
   BarChart,
