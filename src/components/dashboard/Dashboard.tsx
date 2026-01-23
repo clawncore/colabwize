@@ -49,7 +49,7 @@ export const Dashboard: React.FC = () => {
 
   // State for chart data
   const [documentTrendData, setDocumentTrendData] = useState<any[]>([]);
-  const [documentTrendData, setDocumentTrendData] = useState<any[]>([]);
+
 
   // Subscription state
   const [userPlan, setUserPlan] = useState<string>("free");
