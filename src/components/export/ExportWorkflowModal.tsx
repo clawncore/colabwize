@@ -24,7 +24,7 @@ interface ExportWorkflowModalProps {
 }
 
 type Step = "checklist" | "format" | "preview" | "final";
-type ExportFormat = "docx" | "latex" | "rtf" | "txt";
+type ExportFormat = "docx" | "pdf" | "latex" | "rtf" | "txt";
 
 export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     isOpen,
@@ -98,6 +98,13 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             icon: "W",
             color: "bg-blue-600",
         },
+        {
+            id: "pdf",
+            label: "PDF Document (.pdf)",
+            description: "Best for sharing and printing.",
+            icon: "PDF",
+            color: "bg-red-600",
+        },
 
         {
             id: "latex",
@@ -129,9 +136,6 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
         try {
             setDownloading(true);
 
-            // Self-Plagiarism Guard Check (if confirmed in step 2, we might skip re-check or just warn)
-            // Here we assume the check ran or user bypassed it.
-
             const userId = localStorage.getItem("user_id") || "";
             const response = await apiClient.download("/api/files", {
                 fileData: {
@@ -152,23 +156,14 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                 throw new Error(data.message || "Failed to generate download URL");
             }
 
-            const fileResponse = await fetch(data.result.downloadUrl);
-            if (!fileResponse.ok) throw new Error("Failed to download file");
-
-            const blob = await fileResponse.blob();
-            const url = window.URL.createObjectURL(blob);
+            // Direct download using the signed URL (which now has Content-Disposition set)
             const a = document.createElement("a");
-            a.href = url;
-            const extensionMap: Record<string, string> = {
-                docx: "docx",
-                latex: "tex",
-                rtf: "rtf",
-                txt: "txt",
-            };
-            a.download = `${project.title.replace(/\s+/g, "_")}.${extensionMap[selectedFormat]}`;
+            a.href = data.result.downloadUrl;
+            // No need to set download attribute as the URL itself enforces it, 
+            // but setting it doesn't hurt for fallback
+            a.download = `${project.title}.${selectedFormat}`;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
             toast({

@@ -91,6 +91,7 @@ export class AuthorshipService {
     wordCount: number;
     manualEdits?: number;
     aiAssistedEdits?: number;
+    isDelta?: boolean;
   }): Promise<void> {
     try {
       await apiClient.post("/api/authorship/record-activity", activityData);

@@ -59,6 +59,7 @@ import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import RecycleBinPage from "./components/recyclebin/RecycleBin";
 import CreditsPage from "./pages/dashboard/CreditsPage";
 import BillingDashboard from "./components/billing/BillingDashboard";
+import { DocumentAnalyticsPage } from "./components/dashboard/DocumentAnalyticsPage";
 
 // Add imports for new settings pages
 import ProfileSettingsPage from "./components/settings/Profile";
@@ -240,6 +241,7 @@ function App() {
                       element={<BillingDashboard />}
                     />
                     <Route path="billing/credits" element={<CreditsPage />} />
+                    <Route path="analytics" element={<DocumentAnalyticsPage />} />
                     <Route path="recycle-bin" element={<RecycleBinPage />} />
                     {/* Settings routes with layout */}
                     <Route path="settings" element={<SettingsLayout />}>

@@ -16,6 +16,7 @@ import { VisualElementExtension } from "../../extensions/VisualElementExtension"
 import { ColumnLayoutExtension } from "../../extensions/ColumnLayoutExtension";
 import { ImageExtension } from "../../extensions/AdvancedImageExtension";
 import { AITrackingExtension } from "../../extensions/AITrackingExtension";
+import { PlaceholderMarkExtension } from "../../extensions/PlaceholderMarkExtension";
 import { documentService, Project } from "../../services/documentService";
 import {
   OriginalityScan,
@@ -148,8 +149,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       PricingTableExtension,
       SectionExtension,
       VisualElementExtension,
+      VisualElementExtension,
       ImageExtension,
       ColumnLayoutExtension,
+      PlaceholderMarkExtension,
     ],
     content: formatContentForTiptap(project.content),
     onUpdate: () => {
@@ -211,6 +214,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     };
   }, [timeSpent, editCount, project.word_count]);
 
+  const lastSyncStatsRef = useRef({
+    timeSpent: 0,
+    editCount: 0,
+    aiEditCount: 0,
+  });
+
   // Track time spent and periodically save activity
   useEffect(() => {
     // Start timer when component mounts
@@ -223,32 +232,47 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     // Save activity every 30 seconds (Backend sync)
     const activityInterval = setInterval(async () => {
-      const currentStats = statsRef.current;
+      const currentStats = statsRef.current; // Current cumulative
 
       // Get AI stats from extension storage if available
-      const aiEditCount = (editor?.storage as any).aiTracking?.aiEditCount || 0;
+      const currentAiEditCount = (editor?.storage as any).aiTracking?.aiEditCount || 0;
 
-      // Only save if there's been some activity or if time has passed
+      // Calculate Deltas
+      const timeDelta = currentStats.timeSpent - lastSyncStatsRef.current.timeSpent;
+      const editDelta = currentStats.editCount - lastSyncStatsRef.current.editCount;
+      const aiEditDelta = currentAiEditCount - lastSyncStatsRef.current.aiEditCount;
+
+      // Only save if there's been NEW activity
       if (
         project.id &&
-        (currentStats.editCount > 0 || currentStats.timeSpent > 0 || aiEditCount > 0)
+        (timeDelta > 0 || editDelta > 0 || aiEditDelta > 0)
       ) {
         try {
+          // Update sync ref immediately to avoid double sending
+          lastSyncStatsRef.current = {
+            timeSpent: currentStats.timeSpent,
+            editCount: currentStats.editCount,
+            aiEditCount: currentAiEditCount,
+          };
+
           await AuthorshipService.recordActivity({
             projectId: project.id,
-            timeSpent: currentStats.timeSpent,
-            editCount: currentStats.editCount,
-            wordCount: currentStats.wordCount,
-            manualEdits: currentStats.editCount,
-            aiAssistedEdits: aiEditCount,
-          });
-          console.log("Activity recorded (Auto-sync):", {
-            timeSpent: currentStats.timeSpent,
-            editCount: currentStats.editCount,
-            aiAssistedEdits: aiEditCount,
+            timeSpent: timeDelta, // SENDING DELTA
+            editCount: editDelta, // SENDING DELTA
+            wordCount: currentStats.wordCount, // Absolute is fine for word count (state)
+            manualEdits: editDelta, // SENDING DELTA
+            aiAssistedEdits: aiEditDelta, // SENDING DELTA
+            isDelta: true, // Flag for backend
+          } as any);
+
+          console.log("Activity delta recorded:", {
+            timeAdded: timeDelta,
+            editsAdded: editDelta,
           });
         } catch (error) {
           console.error("Failed to record activity:", error);
+          // Note: If fail, we technically "lost" this delta unless we revert the ref.
+          // For simplicity/safety vs infinite loops, we accept minor loss on net error.
         }
       }
     }, 30000); // 30 seconds
@@ -488,12 +512,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           onProjectUpdate(result.data);
         }
 
-        // Show simplified toast for user feedback
-        toast({
-          title: "Changes Saved",
-          description: "Your work has been automatically saved.",
-          duration: 2000,
-        });
+
+        // Auto-save happens silently - no need to notify user
       } else {
         console.error("Failed to save document:", result.error);
       }

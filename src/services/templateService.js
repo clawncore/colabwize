@@ -64,7 +64,8 @@ class TemplateService {
   static async getTemplateByType(type) {
     try {
       const response = await apiClient.get(`/api/templates/type/${type}`);
-      return response.template;
+      // Fix: Backend returns { templates: [...] } array, so we take the first one
+      return response.template || (response.templates && response.templates[0]) || null;
     } catch (error) {
       console.error("Error fetching template by type:", error);
       throw error;

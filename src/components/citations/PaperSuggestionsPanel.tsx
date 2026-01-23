@@ -79,10 +79,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
         onSourceAdded();
       }
 
-      toast({
-        title: "Source Added",
-        description: "Citation metadata saved to Sources library.",
-      });
+      // Source added silently - no need to confirm obvious actions
 
       // We do NOT remove it from the list, just mark as added.
       // We do NOT insert it into the text.

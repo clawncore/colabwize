@@ -60,8 +60,20 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
 
   if (isLoading && !stats) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-gray-50 rounded-xl p-4 h-24 animate-pulse border border-gray-100">
+              <div className="w-8 h-8 bg-gray-200 rounded mb-2"></div>
+              <div className="h-6 w-16 bg-gray-200 rounded mb-1"></div>
+              <div className="h-3 w-24 bg-gray-200 rounded"></div>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="h-32 bg-gray-50 rounded-lg border border-gray-100 animate-pulse"></div>
+          <div className="h-32 bg-gray-50 rounded-lg border border-gray-100 animate-pulse"></div>
+        </div>
       </div>
     );
   }
@@ -69,7 +81,7 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <p className="text-red-800">{error}</p>
+        <p className="text-red-800 text-sm">{error}</p>
       </div>
     );
   }
@@ -80,45 +92,6 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Header with Refresh - Inline */}
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-          Work Analysis
-        </h2>
-        <button
-          onClick={async () => {
-            if (!isLoading) {
-              setIsLoading(true);
-              setError(null);
-              try {
-                const data = await AuthorshipService.getStats(projectId);
-                setStats(data);
-              } catch (err: any) {
-                setError(err.message || "Failed to load statistics");
-              } finally {
-                setIsLoading(false);
-              }
-            }
-          }}
-          disabled={isLoading}
-          className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
-          title="Refresh Statistics">
-          <svg
-            className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
-          Refresh
-        </button>
-      </div>
-
       {/* Metrics Grid - 3 Columns */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm flex flex-col justify-between h-full bg-gradient-to-br from-white to-blue-50/30">

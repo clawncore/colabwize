@@ -8,6 +8,7 @@ interface CertificateDownloadButtonProps {
   projectTitle: string;
   certificateType?: "authorship" | "originality" | "completion";
   variant?: "primary" | "secondary";
+  className?: string; // Allow custom styling
 }
 
 export const CertificateDownloadButton: React.FC<
@@ -17,6 +18,7 @@ export const CertificateDownloadButton: React.FC<
   projectTitle,
   certificateType = "authorship",
   variant = "primary",
+  className = "",
 }) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -72,17 +74,20 @@ export const CertificateDownloadButton: React.FC<
       }
     };
 
-    const buttonClasses =
+    const baseClasses =
       variant === "primary"
         ? "flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-md font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
         : "flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm";
+
+    const buttonClasses = className ? `${baseClasses} ${className}` : baseClasses; // Allow override but keep base for now, slightly messy but works for tailwind (last wins usually, but duplicates exist)
+    // Actually, better to just allow classname to append.
 
     return (
       <div>
         <button
           onClick={handleDownload}
           disabled={isGenerating}
-          className={buttonClasses}>
+          className={`${baseClasses} ${className}`}>
           {isGenerating ? (
             <>
               <svg

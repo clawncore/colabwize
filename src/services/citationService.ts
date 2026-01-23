@@ -46,6 +46,27 @@ export interface RecencyAnalysis {
   warning: string | null;
 }
 
+export interface StoredCitation {
+  id?: string;
+  title: string;
+  authors?: string[];
+  author?: string;
+  year?: number | string;
+  journal?: string;
+  doi?: string;
+  url?: string;
+  type?: string;
+  volume?: string;
+  issue?: string;
+  pages?: string;
+  abstract?: string;
+  citationCount?: number;
+  impactFactor?: string | number; // Added based on usage
+  openAccess?: boolean; // Added based on usage
+  formatted_citations?: Record<string, string>;
+  added_at?: string;
+}
+
 export class CitationService {
   /**
    * Find missing link - suggest relevant papers

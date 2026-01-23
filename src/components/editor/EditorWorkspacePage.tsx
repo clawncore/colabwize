@@ -110,6 +110,28 @@ const EditorWorkspacePage: React.FC = () => {
     // );
   };
 
+  const handleStyleSet = async (style: string) => {
+    if (!selectedProject) return;
+
+    // Optimistic update
+    const updatedProject = { ...selectedProject, citation_style: style };
+    setSelectedProject(updatedProject);
+
+    try {
+      await documentService.updateProject(
+        selectedProject.id,
+        selectedProject.title,
+        selectedProject.description || "",
+        selectedProject.content,
+        updatedProject.word_count,
+        style
+      );
+    } catch (error) {
+      console.error("Failed to persist citation style:", error);
+      // Revert if needed, but for now we keep optimistic state
+    }
+  };
+
   // Function to open right panel with specific type
   const openPanel = (panelType: RightPanelType, data?: any) => {
     setActivePanelType(panelType);
@@ -124,6 +146,8 @@ const EditorWorkspacePage: React.FC = () => {
         try {
           const result = await documentService.getProjectById(id);
           if (result.success && result.data) {
+            // Editor simply loads what backend gives it
+            // No template injection logic - content is already set at creation time
             setSelectedProject(result.data);
           }
         } catch (error) {
@@ -330,6 +354,9 @@ const EditorWorkspacePage: React.FC = () => {
                   citations={selectedProject?.citations || []}
                   onInsertCitation={handleInsertCitation}
                   onFindMore={() => openPanel('citations')}
+                  projectId={selectedProject?.id}
+                  citationStyle={selectedProject?.citation_style}
+                  onStyleSet={handleStyleSet}
                 />
               </div>
             )}
@@ -343,6 +370,7 @@ const EditorWorkspacePage: React.FC = () => {
                   openPanel("citations", { contextKeywords: keywords });
                 }}
                 initialResults={leftPanelData}
+                citationStyle={selectedProject?.citation_style}
               />
             )}
           </div>
