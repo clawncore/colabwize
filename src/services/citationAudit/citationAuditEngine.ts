@@ -179,7 +179,7 @@ async function runSimulatedAudit(
         }
 
         // Check for numeric brackets
-        const bracketMatches = fullText.match(/\[\s*\d+(?:[\s,\-]+\d+)*\s*]/g);
+        const bracketMatches = fullText.match(/\[\s*\d+(?:[\s,-]+\d+)*\s*]/g);
         if (bracketMatches && bracketMatches.length > 0) {
             violations.push({
                 type: "FORMAT_VIOLATION",

@@ -65,7 +65,7 @@ import {
   Bot,
   ShieldCheck,
 } from "lucide-react";
-import { OriginalityService } from "../../services/originalityService";
+
 
 
 interface DocumentEditorProps {

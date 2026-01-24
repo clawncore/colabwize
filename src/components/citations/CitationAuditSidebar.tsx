@@ -6,18 +6,6 @@ import { useToast } from "../../hooks/use-toast";
 import { VerificationResultsPanel } from "./VerificationResultsPanel";
 
 
-interface CitationFlag {
-    type: string;
-    ruleId: string;
-    message: string;
-    anchor?: {
-        start: number;
-        end: number;
-        text: string;
-    };
-    expected?: string;
-}
-
 interface CitationAuditSidebarProps {
     projectId: string;
     editor: Editor | null;
@@ -46,7 +34,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
         if (!auditResult && !loading) {
             handleRunStyleAudit();
         }
-    }, [auditResult, loading]);
+    }, [auditResult, loading, handleRunStyleAudit]);
 
     // Helper to map Rule IDs to new Badge Codes and Colors
     const mapRuleToCodeAndColor = (ruleId: string): { code: string, color: string, label: string } => {

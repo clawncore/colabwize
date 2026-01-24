@@ -57,7 +57,7 @@ export const Dashboard: React.FC = () => {
   });
   // const [loading, setLoading] = useState(true);
   // const [uploadingProject, setUploadingProject] = useState(false);
-  const [latestProject, _setLatestProject] = useState<Project | null>(null);
+  const latestProject: Project | null = null;
 
   // Mock data for the bar chart
   const documentTrendData = [
