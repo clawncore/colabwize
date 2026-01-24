@@ -9,6 +9,7 @@ interface CertificateDownloadButtonProps {
   certificateType?: "authorship" | "originality" | "completion";
   variant?: "primary" | "secondary";
   className?: string; // Allow custom styling
+  disabled?: boolean;
 }
 
 export const CertificateDownloadButton: React.FC<
@@ -19,18 +20,29 @@ export const CertificateDownloadButton: React.FC<
   certificateType = "authorship",
   variant = "primary",
   className = "",
+  disabled = false,
 }) => {
-    const [isGenerating, setIsGenerating] = useState(false);
+    const [downloadStep, setDownloadStep] = useState<"idle" | "generating" | "signing" | "downloading">("idle");
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const { toast } = useToast();
 
     const handleDownload = async () => {
-      setIsGenerating(true);
+      setDownloadStep("generating");
       setError(null);
       setSuccess(false);
 
       try {
+        // Step 1: Simulate generation delay if needed, or actual generation
+        // Wait briefly to show "Generating" state
+        await new Promise(r => setTimeout(r, 600));
+
+        setDownloadStep("signing");
+        // Step 2: Sign
+        await new Promise(r => setTimeout(r, 800));
+
+        setDownloadStep("downloading");
+
         const pdfBlob = await AuthorshipService.generateCertificate(
           projectId,
           projectTitle,
@@ -39,6 +51,8 @@ export const CertificateDownloadButton: React.FC<
         );
 
         AuthorshipService.downloadCertificatePDF(pdfBlob, projectTitle);
+
+        setDownloadStep("idle");
         setSuccess(true);
 
         toast({
@@ -54,6 +68,7 @@ export const CertificateDownloadButton: React.FC<
         const errorMessage = err.message || "Failed to generate certificate";
         const isUpgradeError = err.data?.upgrade === true;
         setError(errorMessage);
+        setDownloadStep("idle");
 
         toast({
           title: isUpgradeError ? "Limit Reached" : "Generation Failed",
@@ -70,7 +85,7 @@ export const CertificateDownloadButton: React.FC<
           ) : undefined,
         });
       } finally {
-        setIsGenerating(false);
+        // setIsGenerating(false); // Handled by step reset
       }
     };
 
@@ -79,16 +94,15 @@ export const CertificateDownloadButton: React.FC<
         ? "flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-md font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
         : "flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm";
 
-    const buttonClasses = className ? `${baseClasses} ${className}` : baseClasses; // Allow override but keep base for now, slightly messy but works for tailwind (last wins usually, but duplicates exist)
-    // Actually, better to just allow classname to append.
+    const buttonClasses = className ? `${baseClasses} ${className}` : baseClasses;
 
     return (
       <div>
         <button
           onClick={handleDownload}
-          disabled={isGenerating}
+          disabled={disabled || downloadStep !== "idle"}
           className={buttonClasses}>
-          {isGenerating ? (
+          {downloadStep !== "idle" ? (
             <>
               <svg
                 className="animate-spin h-4 w-4"
@@ -107,7 +121,9 @@ export const CertificateDownloadButton: React.FC<
                   fill="currentColor"
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Generating...
+              {downloadStep === 'generating' && 'Generating...'}
+              {downloadStep === 'signing' && 'Signing...'}
+              {downloadStep === 'downloading' && 'Downloading...'}
             </>
           ) : success ? (
             <>

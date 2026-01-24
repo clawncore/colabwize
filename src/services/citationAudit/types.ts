@@ -1,25 +1,88 @@
-export type FindingType = "error" | "warning";
+// Frontend Types matching Backend Contract
 
-export interface AuditFinding {
-    type: FindingType;
-    code: string;
+export type CitationStyle = "APA" | "MLA" | "IEEE" | "Chicago";
+
+export type PatternType =
+    | "NUMERIC_BRACKET"   // [1]
+    | "AUTHOR_YEAR"       // (Smith, 2023)
+    | "AUTHOR_PAGE"       // (Smith 24)
+    | "et_al_no_period"   // et al
+    | "et_al_with_period" // et al.
+    | "AMPERSAND_IN_PAREN" // (Smith & Jones)
+    | "AND_IN_PAREN";      // (Smith and Jones)
+
+export interface DocumentMeta {
+    language: string;
+    editor: string;
+}
+
+export type SectionType = "BODY" | "REFERENCE_SECTION";
+
+export interface DocumentSection {
+    title: string;
+    type: SectionType;
+    range?: { start: number; end: number };
+}
+
+export interface ExtractedPattern {
+    patternType: PatternType;
+    text: string;
+    start: number;
+    end: number;
+    section: SectionType;
+}
+
+export interface RawExtractedPattern {
+    patternType: PatternType;
+    text: string;
+    start: number;
+    end: number;
+}
+
+export interface ReferenceEntry {
+    index: number;
+    rawText: string;
+    start: number;
+    end: number;
+}
+
+export interface ReferenceListExtraction {
+    sectionTitle: string;
+    entries: ReferenceEntry[];
+}
+
+// Backend Request Payload
+export interface AuditRequest {
+    declaredStyle: CitationStyle;
+    documentMeta: DocumentMeta;
+    sections: DocumentSection[];
+    patterns: ExtractedPattern[];
+    referenceList: ReferenceListExtraction | null;
+}
+
+export type CitationViolationType = "INLINE_STYLE" | "REF_LIST_ENTRY" | "STRUCTURAL";
+
+export interface CitationFlag {
+    type: CitationViolationType;
+    ruleId: string;
     message: string;
-    location?: {
-        blockId?: string; // Tiptap block ID if available
-        textSnippet?: string; // Context text
-        startIndex?: number;
-        endIndex?: number;
+    anchor?: {
+        start: number;
+        end: number;
+        text: string;
     };
-    suggestion?: string;
+    section?: string;
+    expected?: string;
 }
 
-export interface AuditResult {
-    style: string;
-    findings: AuditFinding[];
+export interface AuditReport {
+    style: CitationStyle;
     timestamp: string;
+    flags: CitationFlag[];
+    detectedStyles?: string[];
 }
 
-// Minimal representation of editor content for audit
+// Editor Interface (Frontend only helper)
 export interface EditorContent {
     type: string;
     content?: EditorContent[];
@@ -27,8 +90,21 @@ export interface EditorContent {
     attrs?: Record<string, any>;
 }
 
+// LEGACY TYPES (To support old rule files until deletion)
 export interface AuditRule {
     id: string;
     description: string;
     validate: (content: EditorContent, allText: string) => AuditFinding[];
+}
+
+export interface AuditFinding {
+    type: "error" | "warning";
+    code: string;
+    message: string;
+    location?: {
+        start?: number;
+        end?: number;
+        textSnippet?: string;
+    };
+    suggestion?: string;
 }

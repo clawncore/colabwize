@@ -17,8 +17,8 @@ export const ieeeRules: AuditRule[] = [
                     code: "IEEE_INVALID_PARENTHETICAL",
                     message: "IEEE uses numeric citations [1], not parenthetical (Author, Year).",
                     location: {
-                        startIndex: match.index,
-                        endIndex: match.index + match[0].length,
+                        start: match.index,
+                        end: match.index + match[0].length,
                         textSnippet: match[0]
                     },
                     suggestion: "Convert to [Number] format."
@@ -43,8 +43,8 @@ export const ieeeRules: AuditRule[] = [
                     code: "IEEE_INVALID_MLA",
                     message: "IEEE uses numeric citations [1], not parenthetical (Author Page).",
                     location: {
-                        startIndex: match.index,
-                        endIndex: match.index + match[0].length,
+                        start: match.index,
+                        end: match.index + match[0].length,
                         textSnippet: match[0]
                     },
                     suggestion: "Convert to [Number] format."

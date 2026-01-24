@@ -10,6 +10,9 @@ export interface HighlightAttributes {
   similarity?: number;
   aiProbability?: number;
   message?: string;
+  ruleId?: string;
+  expected?: string;
+  badgeCode?: string;
 }
 
 declare module "@tiptap/core" {
@@ -44,12 +47,12 @@ declare module "@tiptap/core" {
 }
 
 export const HighlightExtension = Mark.create<HighlightOptions>({
-  name: "highlight",
+  name: "citation-highlight",
 
   addOptions() {
     return {
       HTMLAttributes: {
-        class: "highlight",
+        class: "citation-highlight",
       },
     };
   },
@@ -63,19 +66,15 @@ export const HighlightExtension = Mark.create<HighlightOptions>({
             typeof node === "string"
               ? node
               : (node as HTMLElement).getAttribute("class");
-          return nodeClass?.includes("highlight") ? {} : false;
+          return nodeClass?.includes("citation-highlight") ? {} : false;
         },
-      },
-      {
-        style: "background-color",
-        getAttrs: (value) => (value === "yellow" ? {} : false),
       },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
     return [
-      "span",
+      "mark",
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
       0,
     ];
@@ -128,7 +127,36 @@ export const HighlightExtension = Mark.create<HighlightOptions>({
           if (!attributes.message) return {};
           return {
             "data-message": attributes.message,
-            title: attributes.message,
+          };
+        },
+      },
+      ruleId: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-rule-id"),
+        renderHTML: (attributes) => {
+          if (!attributes.ruleId) return {};
+          return {
+            "data-rule-id": attributes.ruleId,
+          };
+        },
+      },
+      expected: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-expected"),
+        renderHTML: (attributes) => {
+          if (!attributes.expected) return {};
+          return {
+            "data-expected": attributes.expected,
+          };
+        },
+      },
+      badgeCode: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-badge-code"),
+        renderHTML: (attributes) => {
+          if (!attributes.badgeCode) return {};
+          return {
+            "data-badge-code": attributes.badgeCode,
           };
         },
       },
@@ -139,54 +167,54 @@ export const HighlightExtension = Mark.create<HighlightOptions>({
     return {
       setHighlight:
         (attributes) =>
-        ({ commands }) => {
-          return commands.setMark(this.name, attributes);
-        },
+          ({ commands }) => {
+            return commands.setMark(this.name, attributes);
+          },
       toggleHighlight:
         (attributes) =>
-        ({ commands }) => {
-          return commands.toggleMark(this.name, attributes);
-        },
+          ({ commands }) => {
+            return commands.toggleMark(this.name, attributes);
+          },
       unsetHighlight:
         () =>
-        ({ commands }) => {
-          return commands.unsetMark(this.name);
-        },
+          ({ commands }) => {
+            return commands.unsetMark(this.name);
+          },
       clearAllHighlights:
         () =>
-        ({ state, dispatch }) => {
-          const { doc } = state;
-          const from = 0;
-          const to = doc.content.size;
+          ({ state, dispatch }) => {
+            const { doc } = state;
+            const from = 0;
+            const to = doc.content.size;
 
-          const transaction = state.tr;
+            const transaction = state.tr;
 
-          doc.nodesBetween(from, to, (node, pos) => {
-            if (node.marks) {
-              const highlightMark = node.marks.find(
-                (mark) => mark.type.name === this.name
-              );
-              if (highlightMark) {
-                transaction.removeMark(pos, pos + node.nodeSize, this.type);
+            doc.nodesBetween(from, to, (node, pos) => {
+              if (node.marks) {
+                const highlightMark = node.marks.find(
+                  (mark) => mark.type.name === this.name
+                );
+                if (highlightMark) {
+                  transaction.removeMark(pos, pos + node.nodeSize, this.type);
+                }
               }
+            });
+
+            if (transaction.steps.length > 0) {
+              dispatch?.(transaction);
+              return true;
             }
-          });
 
-          if (transaction.steps.length > 0) {
-            dispatch?.(transaction);
-            return true;
-          }
-
-          return false;
-        },
+            return false;
+          },
       highlightRange:
         (from: number, to: number, attributes: HighlightAttributes) =>
-        ({ tr, dispatch }) => {
-          if (dispatch) {
-            tr.addMark(from, to, this.type.create(attributes));
-          }
-          return true;
-        },
+          ({ tr, dispatch }) => {
+            if (dispatch) {
+              tr.addMark(from, to, this.type.create(attributes));
+            }
+            return true;
+          },
     };
   },
 });

@@ -17,6 +17,9 @@ import { ColumnLayoutExtension } from "../../extensions/ColumnLayoutExtension";
 import { ImageExtension } from "../../extensions/AdvancedImageExtension";
 import { AITrackingExtension } from "../../extensions/AITrackingExtension";
 import { PlaceholderMarkExtension } from "../../extensions/PlaceholderMarkExtension";
+import { MathExtension } from "../../extensions/MathExtension";
+import Superscript from "@tiptap/extension-superscript";
+import Subscript from "@tiptap/extension-subscript";
 import { documentService, Project } from "../../services/documentService";
 import {
   OriginalityScan,
@@ -121,6 +124,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       HighlightExtension,
       CharacterCount,
       // Image.configure({ ... }), // Replaced by ImageExtension
+      MathExtension,
       Table.configure({
         resizable: true,
         // resizable: true, // Duplicate property removed
@@ -149,10 +153,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       PricingTableExtension,
       SectionExtension,
       VisualElementExtension,
-      VisualElementExtension,
       ImageExtension,
       ColumnLayoutExtension,
       PlaceholderMarkExtension,
+      Superscript,
+      Subscript,
     ],
     content: formatContentForTiptap(project.content),
     onUpdate: () => {
@@ -681,20 +686,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 }
               }}
             />
-
-            {/* Auto-Humanizer (Sanitize) Button */}
-            <button
-              title="Auto-Humanize (Adversarial AI)"
-              className="h-8 gap-1 px-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-              disabled={isHumanizing}
-              onClick={handleHumanize}>
-              {isHumanizing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Wand2 className="h-4 w-4" />
-              )}
-              <span className="text-xs font-medium">Sanitize</span>
-            </button>
 
             <button
               className="p-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"

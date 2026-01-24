@@ -15,8 +15,8 @@ export const mlaRules: AuditRule[] = [
                     code: "MLA_INVALID_NUMERIC",
                     message: "MLA uses parenthetical citations (Author Page), not numeric brackets like [1].",
                     location: {
-                        startIndex: match.index,
-                        endIndex: match.index + match[0].length,
+                        start: match.index,
+                        end: match.index + match[0].length,
                         textSnippet: match[0]
                     },
                     suggestion: "Convert to (Author Page) format."
@@ -40,8 +40,8 @@ export const mlaRules: AuditRule[] = [
                     code: "MLA_YEAR_IN_CITATION",
                     message: "MLA internal citations typically include Author and Page Number, but NOT the Year.",
                     location: {
-                        startIndex: match.index,
-                        endIndex: match.index + match[0].length,
+                        start: match.index,
+                        end: match.index + match[0].length,
                         textSnippet: match[0]
                     },
                     suggestion: "Remove the year."
@@ -69,8 +69,8 @@ export const mlaRules: AuditRule[] = [
                         code: "MLA_COMMA_SEPARATOR",
                         message: "MLA citations do not use a comma between Author and Page Number.",
                         location: {
-                            startIndex: match.index,
-                            endIndex: match.index + match[0].length,
+                            start: match.index,
+                            end: match.index + match[0].length,
                             textSnippet: match[0]
                         },
                         suggestion: inside.replace(",", "")

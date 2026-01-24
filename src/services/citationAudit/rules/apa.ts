@@ -16,8 +16,8 @@ export const apaRules: AuditRule[] = [
                     code: "APA_INVALID_NUMERIC",
                     message: "APA uses parenthetical citations (Author, Year), not numeric brackets like [1].",
                     location: {
-                        startIndex: match.index,
-                        endIndex: match.index + match[0].length,
+                        start: match.index,
+                        end: match.index + match[0].length,
                         textSnippet: match[0]
                     },
                     suggestion: "Convert to (Author, Year) format."
@@ -41,8 +41,8 @@ export const apaRules: AuditRule[] = [
                     code: "APA_ET_AL_PERIOD",
                     message: "'et al' should be followed by a period: 'et al.'",
                     location: {
-                        startIndex: match.index,
-                        endIndex: match.index + match[0].length,
+                        start: match.index,
+                        end: match.index + match[0].length,
                         textSnippet: match[0]
                     },
                     suggestion: `${match[1]} et al.`
@@ -58,8 +58,6 @@ export const apaRules: AuditRule[] = [
             const findings: AuditFinding[] = [];
             // Naive check: (Smith and Jones, 2023) -> Should be (Smith & Jones, 2023)
             // Regex: parenthetical with Year, containing " and "
-            // \([^\)]+\d{4}[^\)]+\) checks strictly for parens containing 4 digit year
-            // Optimization: Find all parentheticals first
             const parenRegex = /\(([^)]+)\)/g;
 
             let match;
@@ -74,8 +72,8 @@ export const apaRules: AuditRule[] = [
                             code: "APA_AMPERSAND",
                             message: "Use '&' instead of 'and' inside parenthetical citations.",
                             location: {
-                                startIndex: match.index,
-                                endIndex: match.index + match[0].length,
+                                start: match.index,
+                                end: match.index + match[0].length,
                                 textSnippet: match[0]
                             },
                             suggestion: match[0].replace(" and ", " & ")

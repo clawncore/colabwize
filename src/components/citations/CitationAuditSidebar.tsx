@@ -1,9 +1,28 @@
 import React, { useState } from "react";
 import { Editor } from "@tiptap/react";
-import { BarChart, ArrowLeft, Search, AlertCircle, BookOpen } from "lucide-react";
-import { CitationService } from "../../services/citationService";
+import { ArrowLeft, ShieldAlert, ChevronDown } from "lucide-react";
 import { runCitationAudit } from "../../services/citationAudit/citationAuditEngine";
-import { AuditResult } from "../../services/citationAudit/types";
+import { useToast } from "../../hooks/use-toast";
+import { VerificationResultsPanel } from "./VerificationResultsPanel";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "../ui/dialog";
+
+interface CitationFlag {
+    type: string;
+    ruleId: string;
+    message: string;
+    anchor?: {
+        start: number;
+        end: number;
+        text: string;
+    };
+    expected?: string;
+}
 
 interface CitationAuditSidebarProps {
     projectId: string;
@@ -19,249 +38,380 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     editor,
     onClose,
     onFindPapers,
-    initialResults,
     citationStyle
 }) => {
     const [loading, setLoading] = useState(false);
-    const [styleAuditResults, setStyleAuditResults] = useState<AuditResult | null>(null);
-    const [scanResults, setScanResults] = useState<{
-        suggestions: {
-            sentence: string;
-            suggestion: string;
-            type: "factual_claim" | "definition" | "statistic";
-        }[];
-    } | null>(initialResults || null);
+    const [auditResult, setAuditResult] = useState<any>(null);
+    const [activeDetail, setActiveDetail] = useState<string | null>(null);
+    const [isLegendOpen, setIsLegendOpen] = useState(false);
+    const selectedStyle = citationStyle || "APA";
+    const { toast } = useToast();
 
-    // Update results if initialResults changes
+    // Auto-run audit on mount
     React.useEffect(() => {
-        if (initialResults) {
-            setScanResults(initialResults);
+        if (!auditResult && !loading) {
+            handleRunStyleAudit();
         }
-    }, [initialResults]);
+    }, []);
 
-    const handleRunStyleAudit = () => {
-        if (!citationStyle) return;
-        const jsonContent = editor?.getJSON();
-        if (jsonContent) {
-            console.group("🔍 Citation Style Audit");
-            console.log(`Analyzing for style: ${citationStyle}`);
-            const results = runCitationAudit(jsonContent, citationStyle);
-            console.log("Findings:", results.findings);
-            console.groupEnd();
-            setStyleAuditResults(results);
-        }
+    // Helper to map Rule IDs to new Badge Codes and Colors
+    const mapRuleToCodeAndColor = (ruleId: string): { code: string, color: string, label: string } => {
+        const r = ruleId.toUpperCase();
+
+        // Strict mapping logic
+        if (r.includes("VERIFICATION")) return { code: "VER", color: "red", label: "Source Verification" };
+        if (r.includes("REF") || r.includes("MISMATCH") || r.includes("LIST")) return { code: "REF", color: "blue", label: "Reference Match" };
+        if (r.includes("MIXED") || r.includes("CONSISTENCY")) return { code: "MIX", color: "amber", label: "Style Inconsistency" };
+
+        // Default to Style Violation
+        return { code: "STY", color: "amber", label: "Style Rule" };
     };
 
-    const handleScanContent = async () => {
+    const filterViolationsByCode = (violations: any[], targetCode: string) => {
+        if (!violations) return [];
+        return violations.filter((v: any) => mapRuleToCodeAndColor(v.ruleId).code === targetCode);
+    };
+
+    const handleRunStyleAudit = async () => {
+        if (!editor) return;
+
         try {
             setLoading(true);
-            const content = editor?.getText() || "";
-            if (!content) return;
+            setAuditResult(null);
 
-            const results = await CitationService.scanContent(content, projectId);
-            setScanResults(results);
-        } catch (error) {
-            console.error("Scan failed", error);
+            // Clear existing headers/highlights
+            editor.commands.clearAllHighlights();
+
+            // Direct execution - No simulation/progress delays allowed by Strict Rules
+            const result = await runCitationAudit(editor.getJSON(), selectedStyle);
+            setAuditResult(result);
+
+            if (result.state === "COMPLETED_SUCCESS" && result.violations.length > 0) {
+                // Apply highlights with new Badge Codes
+                result.violations.forEach((flag: any) => {
+                    if (flag.anchor) {
+                        const { code, color, label } = mapRuleToCodeAndColor(flag.ruleId);
+
+                        // Validate range
+                        const docSize = editor.state.doc.content.size;
+                        const start = Math.max(0, Math.min(flag.anchor.start, docSize));
+                        const end = Math.max(start, Math.min(flag.anchor.end, docSize));
+
+                        if (start < end) {
+                            editor.chain().highlightRange(start, end, {
+                                type: label, // Use friendly label instead of "violation"
+                                color: color,
+                                message: flag.message,
+                                ruleId: flag.ruleId,
+                                expected: flag.expected,
+                                badgeCode: code
+                            }).run();
+                        }
+                    }
+                });
+
+                toast({
+                    title: "⚠️ Citation issues detected",
+                    description: "Review highlighted markers in the document.",
+                    variant: "default"
+                });
+            } else if (result.state === "COMPLETED_SUCCESS") {
+                // Determine if we found ANY citations (even if no violations)
+                const hasVerified = result.verificationResults && result.verificationResults.length > 0;
+
+                if (hasVerified) {
+                    toast({
+                        title: "✅ Citations Verified",
+                        description: `Found ${result.verificationResults.length} citations. All passed checks.`,
+                        variant: "default"
+                    });
+                } else {
+                    toast({
+                        title: "✅ Citation audit completed",
+                        description: "No citations found to check.",
+                        variant: "default"
+                    });
+                }
+            } else {
+                toast({
+                    title: "⚠️ Citation audit could not be completed",
+                    description: result.errorMessage || "Unknown error",
+                    variant: "destructive"
+                });
+            }
+
+            // ALWAYS apply Blue Highlights for Verified Citations (if available)
+            // This runs regardless of violations state
+            if (result.verificationResults) {
+                result.verificationResults.forEach((ver: any) => {
+                    // Only highlight if verified (and presuming no overlap with major errors, OR overlay them)
+                    // Logic: If status is PASSED or similar positive status
+                    const isViolation = ver.status === "VERIFICATION_FAILED" || ver.status === "UNMATCHED_REFERENCE";
+
+                    if (!isViolation && ver.inlineLocation) {
+                        const start = ver.inlineLocation.start;
+                        const end = ver.inlineLocation.end;
+
+                        // Check if there is already a violation highlight at this position?
+                        // Tiptap marks can stack. If we want blue text, we can apply it.
+                        // If there is a violation (red/amber), it might have background color.
+                        // Blue text (foreground) + Background color is fine.
+
+                        editor.chain().highlightRange(start, end, {
+                            type: "Verified Citation",
+                            color: "citation-blue", // TEXT ONLY BLUE
+                            message: `Verified: ${ver.title || 'Source confirmed'}`,
+                            badgeCode: "VER"
+                        }).run();
+                    }
+                });
+            }
+
+        } catch (error: any) {
+            console.error("Audit failed", error);
+            toast({
+                variant: "destructive",
+                title: "⚠️ Citation audit could not be completed",
+                description: error.message
+            });
         } finally {
             setLoading(false);
         }
     };
 
-    const extractKeywords = (sentence: string): string[] => {
-        // Semantic Search engines (Semantic Scholar) work best with natural language queries.
-        // We'll pass the sentence directly, truncated to ~200 chars.
+    // Calculate stats for navigation
+    const getStats = () => {
+        if (!auditResult || !auditResult.violations) return {};
+        const stats: Record<string, number> = {};
+        auditResult.violations.forEach((v: any) => {
+            const { code } = mapRuleToCodeAndColor(v.ruleId);
+            stats[code] = (stats[code] || 0) + 1;
+        });
+        return stats;
+    };
 
-        let query = sentence.trim();
-        if (query.length > 200) {
-            query = query.substring(0, 200) + "...";
+    const violationStats = getStats();
+
+    // Toggle expansion handler
+    const toggleDetail = (code: string) => {
+        if (activeDetail === code) {
+            setActiveDetail(null);
+        } else {
+            setActiveDetail(code);
         }
-
-        // Remove very specific punctuation that might break search
-        query = query.replace(/[()[\]]/g, "");
-
-        return [query];
     };
 
     return (
         <div className="flex flex-col h-full bg-white border-r border-gray-200">
-            {/* ... Header ... */}
+            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
                 <div className="flex items-center gap-2">
-                    <button
-                        onClick={onClose}
-                        className="mr-1 p-1 hover:bg-gray-200 rounded text-gray-500"
-                        title="Back to Documents"
-                    >
+                    <button onClick={onClose} className="mr-1 p-1 hover:bg-gray-200 rounded text-gray-500">
                         <ArrowLeft className="w-4 h-4" />
                     </button>
                     <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <BarChart className="w-5 h-5 text-purple-600" />
+                        <ShieldAlert className="w-5 h-5 text-gray-700" />
                         Citation Audit
                     </h2>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                {/* --- STYLE AUDIT SECTION --- */}
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 mb-6">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-semibold text-blue-900">
-                            Style Compliance
-                        </h3>
-                        {citationStyle && (
-                            <span className="text-[10px] font-bold uppercase bg-blue-200 text-blue-800 px-2 py-0.5 rounded">
-                                {citationStyle}
-                            </span>
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
+
+                {/* Section 1: Audit Status */}
+                <section>
+                    <div className="mb-4">
+                        {loading ? (
+                            <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-center text-sm text-gray-600">
+                                Running audit...
+                            </div>
+                        ) : !auditResult ? (
+                            null
+                        ) : auditResult.violations.length > 0 ? (
+                            <div className="text-amber-800 bg-amber-50 p-4 rounded-md border border-amber-200">
+                                <div className="flex items-center gap-2 font-bold mb-1">
+                                    <ShieldAlert className="w-4 h-4" />
+                                    <span>Citation issues detected</span>
+                                </div>
+                                <p className="text-sm">Review highlighted markers below.</p>
+                                <button onClick={handleRunStyleAudit} className="mt-3 text-xs font-semibold uppercase tracking-wider hover:underline">
+                                    Rerun Audit
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="text-green-800 bg-green-50 p-4 rounded-md border border-green-200">
+                                <div className="flex items-center gap-2 font-bold mb-1">
+                                    <span>✅</span>
+                                    <span>Citation audit completed</span>
+                                </div>
+                                <p className="text-sm">No issues found.</p>
+                                <button onClick={handleRunStyleAudit} className="mt-3 text-xs font-semibold uppercase tracking-wider hover:underline">
+                                    Rerun Audit
+                                </button>
+                            </div>
                         )}
                     </div>
+                </section>
 
-                    <p className="text-xs text-blue-700 mb-3">
-                        Check for formatting errors and inconsistencies with the {citationStyle || "selected"} style.
-                    </p>
+                {/* Section 2: Accordion Reports */}
+                {auditResult && (
+                    <section className="border-t border-gray-100 pt-6">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
+                            Audit Reports
+                        </h3>
+                        <div className="space-y-3">
+                            {/* Style Report Accordion */}
+                            <AuditReportCard
+                                title="Citation Style"
+                                code="STY"
+                                count={violationStats['STY'] || 0}
+                                passed={(violationStats['STY'] || 0) === 0}
+                                expanded={activeDetail === 'STY'}
+                                onClick={() => toggleDetail('STY')}
+                            >
+                                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                                    <p className="text-xs text-gray-500 mb-2">
+                                        Reviewing formatting against {selectedStyle}.
+                                    </p>
+                                    {filterViolationsByCode(auditResult?.violations, 'STY').map((v: any, i: number) => (
+                                        <div key={i} className="p-2 border rounded bg-white/50 border-amber-100 hover:border-amber-300 transition-colors">
+                                            <div className="flex justify-between font-medium text-amber-900 text-xs">
+                                                <span>Violation</span>
+                                                <button className="text-xs text-amber-700 underline" onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    editor?.commands.setTextSelection(v.anchor.start);
+                                                    editor?.commands.scrollIntoView();
+                                                }}>Jump</button>
+                                            </div>
+                                            <p className="text-xs mt-1 text-gray-700">{v.message}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AuditReportCard>
 
+                            {/* Reference Report Accordion */}
+                            <AuditReportCard
+                                title="Reference List"
+                                code="REF"
+                                count={violationStats['REF'] || 0}
+                                passed={(violationStats['REF'] || 0) === 0}
+                                expanded={activeDetail === 'REF'}
+                                onClick={() => toggleDetail('REF')}
+                            >
+                                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                                    {filterViolationsByCode(auditResult?.violations, 'REF').map((v: any, i: number) => (
+                                        <div key={i} className="p-2 border rounded bg-white/50 border-blue-100 hover:border-blue-300 transition-colors">
+                                            <div className="flex justify-between font-medium text-blue-900 text-xs">
+                                                <span>Missing Reference</span>
+                                                <button className="text-xs text-blue-700 underline" onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    editor?.commands.setTextSelection(v.anchor.start);
+                                                    editor?.commands.scrollIntoView();
+                                                }}>Jump</button>
+                                            </div>
+                                            <p className="text-xs mt-1 text-gray-700">{v.message}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AuditReportCard>
+
+                            {/* Verification Report Accordion */}
+                            <AuditReportCard
+                                title="Source Verification"
+                                code="VER"
+                                count={violationStats['VER'] || 0}
+                                passed={(violationStats['VER'] || 0) === 0}
+                                expanded={activeDetail === 'VER'}
+                                onClick={() => toggleDetail('VER')}
+                            >
+                                <div className="mt-3 pt-3 border-t border-gray-100">
+                                    {auditResult?.verificationResults && (
+                                        <VerificationResultsPanel results={auditResult.verificationResults} />
+                                    )}
+                                </div>
+                            </AuditReportCard>
+                        </div>
+                    </section>
+                )}
+
+                {/* Section 3: Marker Guide (Collapsible) */}
+                <section className="border-t border-gray-100 pt-6">
                     <button
-                        onClick={handleRunStyleAudit}
-                        disabled={!citationStyle}
-                        title={!citationStyle ? "Select a citation style first" : "Run check"}
-                        className="w-full py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        onClick={() => setIsLegendOpen(!isLegendOpen)}
+                        className="w-full flex items-center justify-between group mb-4"
                     >
-                        Run Style Audit
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-600 transition-colors">
+                            Citation Marker Guide
+                        </h3>
+                        <div className={`transform transition-transform duration-200 ${isLegendOpen ? 'rotate-180' : ''}`}>
+                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                        </div>
                     </button>
 
-                    {/* Findings Display */}
-                    {styleAuditResults && (
-                        <div className="mt-4 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                            <div className="flex items-center justify-between text-xs font-medium text-blue-900 border-b border-blue-200 pb-1 mb-2">
-                                <span>Results</span>
-                                <span>{styleAuditResults.findings.length} Issues</span>
+                    {isLegendOpen && (
+                        <div className="space-y-3 text-sm text-gray-600 animate-in slide-in-from-top-2 duration-200">
+                            <div className="flex items-center gap-3">
+                                <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white min-w-[28px]">STY</span>
+                                <span>Citation style violation</span>
                             </div>
-
-                            {styleAuditResults.findings.length === 0 ? (
-                                <div className="text-xs text-green-700 flex items-center gap-2 bg-green-50 p-2 rounded border border-green-100">
-                                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                                    No style issues found.
-                                </div>
-                            ) : (
-                                styleAuditResults.findings.map((finding, idx) => (
-                                    <div key={idx} className="bg-white p-2.5 rounded border border-red-100 shadow-sm text-xs">
-                                        <div className="flex items-start gap-2">
-                                            {finding.type === 'error' ? (
-                                                <div className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 mt-0.5" title="Error">
-                                                    <span className="font-bold">!</span>
-                                                </div>
-                                            ) : (
-                                                <div className="w-4 h-4 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 mt-0.5" title="Warning">
-                                                    <span className="font-bold">i</span>
-                                                </div>
-                                            )}
-
-                                            <div className="flex-1">
-                                                <p className="text-gray-900 font-medium leading-snug mb-1">
-                                                    {finding.message}
-                                                </p>
-                                                {finding.location?.textSnippet && (
-                                                    <div className="bg-gray-50 px-2 py-1 rounded text-gray-500 font-mono text-[10px] truncate max-w-[200px] mb-1">
-                                                        "{finding.location.textSnippet}"
-                                                    </div>
-                                                )}
-                                                {finding.suggestion && (
-                                                    <p className="text-blue-600 italic">
-                                                        Tip: {finding.suggestion}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
+                            <div className="flex items-center gap-3">
+                                <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white min-w-[28px]">VER</span>
+                                <span>Source could not be verified</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500 text-white min-w-[28px]">REF</span>
+                                <span>Reference list mismatch</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold text-blue-600 min-w-[28px] border border-blue-200 bg-blue-50">Link</span>
+                                <span>Verified Citation</span>
+                            </div>
                         </div>
                     )}
-                </div>
-
-                {/* --- EXISTING MISSING CITATIONS SECTION --- */}
-                <div className="bg-purple-50 rounded-lg p-4 border border-purple-100 mb-6">
-                    <h3 className="text-sm font-semibold text-purple-900 mb-2">
-                        Find Missing Citations
-                    </h3>
-                    {/* ... existing content ... */}
-
-                    <p className="text-xs text-purple-700 mb-3">
-                        Scan your content for factual claims, definitions, and statistics that may need citations.
-                    </p>
-                    <button
-                        onClick={handleScanContent}
-                        disabled={loading}
-                        className="w-full py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                        {loading ? (
-                            <>Scanning...</>
-                        ) : (
-                            <>
-                                <Search className="w-4 h-4" />
-                                Scan Document
-                            </>
-                        )}
-                    </button>
-                </div>
-
-                {scanResults ? (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-bold text-gray-900">
-                                Audit Results ({scanResults.suggestions.length})
-                            </h3>
-                        </div>
-
-                        {scanResults.suggestions.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500 text-sm">
-                                No missing citation signals found. Great job!
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                {scanResults.suggestions.map((item, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow text-sm">
-                                        <div className="flex flex-wrap gap-2 mb-2">
-                                            <span
-                                                className={`text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide border ${item.type === "statistic"
-                                                    ? "bg-orange-50 text-orange-700 border-orange-100"
-                                                    : item.type === "factual_claim"
-                                                        ? "bg-pink-50 text-pink-700 border-pink-100"
-                                                        : "bg-blue-50 text-blue-700 border-blue-100"
-                                                    }`}>
-                                                {item.type.replace("_", " ")}
-                                            </span>
-                                        </div>
-
-                                        <p className="text-gray-800 font-medium mb-2 leading-relaxed border-l-2 border-purple-300 pl-2">
-                                            "{item.sentence}"
-                                        </p>
-
-                                        <div className="flex items-start gap-2 mb-3 bg-gray-50 p-2 rounded text-xs text-gray-600">
-                                            <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0 text-amber-500" />
-                                            <span>{item.suggestion}</span>
-                                        </div>
-
-                                        <button
-                                            onClick={() => {
-                                                const keywords = extractKeywords(item.sentence);
-                                                onFindPapers(keywords);
-                                            }}
-                                            className="w-full py-1.5 bg-white border border-purple-200 text-purple-700 rounded text-xs font-medium hover:bg-purple-50 transition-colors flex items-center justify-center gap-1.5">
-                                            <BookOpen className="w-3 h-3" />
-                                            Find Papers
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="text-center py-12 text-gray-400 text-sm">
-                        Click "Scan Document" to analyze your text for potential missing citations.
-                    </div>
-                )}
+                </section>
             </div>
         </div>
     );
 };
+
+// Expanded Helper Component with Accordion Support
+const AuditReportCard = ({ title, code, count, passed, onClick, expanded, children }: any) => (
+    <div
+        className={`flex flex-col p-4 rounded-lg border transition-all ${passed ? 'bg-white border-gray-200' :
+            code === 'VER' ? 'bg-red-50 border-red-200' :
+                code === 'REF' ? 'bg-blue-50 border-blue-200' :
+                    'bg-amber-50 border-amber-200'
+            } `}
+    >
+        <div
+            onClick={onClick}
+            className="flex items-center justify-between cursor-pointer"
+        >
+            <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${passed ? 'bg-green-100 text-green-700' :
+                    code === 'VER' ? 'bg-red-100 text-red-700' :
+                        code === 'REF' ? 'bg-blue-100 text-blue-700' :
+                            'bg-amber-100 text-amber-900'
+                    } `}>
+                    {code}
+                </div>
+                <div>
+                    <h4 className="font-medium text-sm text-gray-900">{title}</h4>
+                    <p className="text-xs text-gray-500">
+                        {passed ? 'Passed check' : `${count} issue${count > 1 ? 's' : ''} found`}
+                    </p>
+                </div>
+            </div>
+            <div className={`transform transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+            </div>
+        </div>
+
+        {/* Accordion Content */}
+        {expanded && (
+            <div className="animate-in slide-in-from-top-2 duration-200">
+                {children}
+            </div>
+        )}
+    </div>
+);

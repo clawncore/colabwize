@@ -30,6 +30,7 @@ export type RightPanelType =
 const EditorWorkspacePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isEditorLoading, setIsEditorLoading] = useState(false);
   // const [projects, setProjects] = useState<Project[]>([]);
 
   // Collapsible state - Responsive defaults
@@ -60,8 +61,27 @@ const EditorWorkspacePage: React.FC = () => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleProjectSelect = (project: Project) => {
+  const handleProjectSelect = async (project: Project) => {
+    // 1. Set loading state to true immediately to clear content
+    setIsEditorLoading(true);
+
+    // Optimistically set selected project, but UI will show spinner
     setSelectedProject(project);
+
+    // 2. Fetch full project content from backend
+    try {
+      // Add artificial delay if needed to prevent glitchy flash, but usually not needed
+      // await new Promise(r => setTimeout(r, 200)); 
+
+      const result = await documentService.getProjectById(project.id);
+      if (result.success && result.data) {
+        setSelectedProject(result.data);
+      }
+    } catch (error) {
+      console.error("Failed to load full project content:", error);
+    } finally {
+      setIsEditorLoading(false);
+    }
   };
 
   const handleCreateNew = async () => {
@@ -417,7 +437,12 @@ const EditorWorkspacePage: React.FC = () => {
 
       {/* Center Panel - Document Editor */}
       <div className="flex-1 h-full overflow-hidden min-w-0">
-        {selectedProject ? (
+        {isEditorLoading ? (
+          <div className="h-full flex flex-col items-center justify-center bg-gray-50">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
+            <p className="text-gray-500 font-medium">Loading Document...</p>
+          </div>
+        ) : selectedProject ? (
           <DocumentEditor
             project={selectedProject}
             onProjectUpdate={handleProjectUpdate}

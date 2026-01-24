@@ -39,9 +39,14 @@ import {
   Columns as ColumnsIcon,
   Combine,
   Split,
+  Superscript,
+  Subscript,
+  ListTodo,
+  RemoveFormatting,
 } from "lucide-react";
 import { useState } from "react";
 import { ImageInsertModal } from "./ImageInsertModal";
+import { MathInsertModal } from "./MathInsertModal";
 
 // Removed ImageUploadPopover import
 
@@ -52,6 +57,7 @@ interface EditorToolbarProps {
 export function EditorToolbar({ editor }: EditorToolbarProps) {
   const [linkUrl, setLinkUrl] = useState("");
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isMathModalOpen, setIsMathModalOpen] = useState(false);
   const [savedSelection, setSavedSelection] = useState<any>(null);
 
   if (!editor) return null;
@@ -217,6 +223,20 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       </Toggle>
       <Toggle
         size="sm"
+        title="Superscript"
+        pressed={editor.isActive("superscript")}
+        onPressedChange={() => editor.chain().focus().toggleSuperscript().run()}>
+        <Superscript className="h-4 w-4" />
+      </Toggle>
+      <Toggle
+        size="sm"
+        title="Subscript"
+        pressed={editor.isActive("subscript")}
+        onPressedChange={() => editor.chain().focus().toggleSubscript().run()}>
+        <Subscript className="h-4 w-4" />
+      </Toggle>
+      <Toggle
+        size="sm"
         title="Code"
         pressed={editor.isActive("code")}
         onPressedChange={() => editor.chain().focus().toggleCode().run()}>
@@ -252,6 +272,23 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Toggle
+        size="sm"
+        title="Insert Logic / Math"
+        pressed={editor.isActive("math")}
+        className="h-8 w-8 font-serif italic font-bold"
+        onClick={() => setIsMathModalOpen(true)}
+      >
+        Tx
+      </Toggle>
+
+      <Toggle
+        size="sm"
+        title="Clear Formatting"
+        onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}>
+        <RemoveFormatting className="h-4 w-4" />
+      </Toggle>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
@@ -485,6 +522,19 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           }
         }}
         projectId="temp-project-id"
+      />
+
+      {/* Math Insert Modal */}
+      <MathInsertModal
+        isOpen={isMathModalOpen}
+        onClose={() => setIsMathModalOpen(false)}
+        onInsert={(latex) => {
+          // Insert math node
+          editor.chain().focus().insertContent({
+            type: 'math',
+            attrs: { latex }
+          }).run();
+        }}
       />
     </div>
   );
