@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Editor } from "@tiptap/react";
 import { ArrowLeft, ShieldAlert, ChevronDown } from "lucide-react";
 import { runCitationAudit } from "../../services/citationAudit/citationAuditEngine";
@@ -29,8 +29,9 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     const selectedStyle = citationStyle || "APA";
     const { toast } = useToast();
 
-    // Define the audit function first to avoid hoisting issues
-    const handleRunStyleAudit = async () => {
+    // Helper to map Rule IDs to Badge Codes and Colors (Moved inside but could be outside if no external deps)
+    // Actually, let's keep it pure and move it outside the component entirely to be safe.
+    const handleRunStyleAudit = useCallback(async () => {
         if (!editor) return;
 
         try {
@@ -99,25 +100,17 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
             }
 
             // ALWAYS apply Blue Highlights for Verified Citations (if available)
-            // This runs regardless of violations state
             if (result.verificationResults) {
                 result.verificationResults.forEach((ver: any) => {
-                    // Only highlight if verified (and presuming no overlap with major errors, OR overlay them)
-                    // Logic: If status is PASSED or similar positive status
                     const isViolation = ver.status === "VERIFICATION_FAILED" || ver.status === "UNMATCHED_REFERENCE";
 
                     if (!isViolation && ver.inlineLocation) {
                         const start = ver.inlineLocation.start;
                         const end = ver.inlineLocation.end;
 
-                        // Check if there is already a violation highlight at this position?
-                        // Tiptap marks can stack. If we want blue text, we can apply it.
-                        // If there is a violation (red/amber), it might have background color.
-                        // Blue text (foreground) + Background color is fine.
-
                         editor.chain().highlightRange(start, end, {
                             type: "Verified Citation",
-                            color: "citation-blue", // TEXT ONLY BLUE
+                            color: "citation-blue",
                             message: `Verified: ${ver.title || 'Source confirmed'}`,
                             badgeCode: "VER"
                         }).run();
@@ -135,7 +128,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, [editor, selectedStyle, toast]);
 
     // Auto-run audit on mount
     React.useEffect(() => {
@@ -144,26 +137,8 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
         }
     }, [auditResult, loading, handleRunStyleAudit]);
 
-    // Helper to map Rule IDs to new Badge Codes and Colors
-    const mapRuleToCodeAndColor = (ruleId: string): { code: string, color: string, label: string } => {
-        const r = ruleId.toUpperCase();
-
-        // Strict mapping logic
-        if (r.includes("VERIFICATION")) return { code: "VER", color: "red", label: "Source Verification" };
-        if (r.includes("REF") || r.includes("MISMATCH") || r.includes("LIST")) return { code: "REF", color: "blue", label: "Reference Match" };
-        if (r.includes("MIXED") || r.includes("CONSISTENCY")) return { code: "MIX", color: "amber", label: "Style Inconsistency" };
-
-        // Default to Style Violation
-        return { code: "STY", color: "amber", label: "Style Rule" };
-    };
-
-    const filterViolationsByCode = (violations: any[], targetCode: string) => {
-        if (!violations) return [];
-        return violations.filter((v: any) => mapRuleToCodeAndColor(v.ruleId).code === targetCode);
-    };
-
     // Calculate stats for navigation
-    const getStats = () => {
+    const violationStats = useMemo(() => {
         if (!auditResult || !auditResult.violations) return {};
         const stats: Record<string, number> = {};
         auditResult.violations.forEach((v: any) => {
@@ -171,17 +146,11 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
             stats[code] = (stats[code] || 0) + 1;
         });
         return stats;
-    };
-
-    const violationStats = getStats();
+    }, [auditResult]);
 
     // Toggle expansion handler
     const toggleDetail = (code: string) => {
-        if (activeDetail === code) {
-            setActiveDetail(null);
-        } else {
-            setActiveDetail(code);
-        }
+        setActiveDetail(prev => prev === code ? null : code);
     };
 
     return (
@@ -355,6 +324,25 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
             </div>
         </div>
     );
+};
+
+// --- Pure Helper Functions (Outside Component) ---
+
+const mapRuleToCodeAndColor = (ruleId: string): { code: string, color: string, label: string } => {
+    const r = ruleId.toUpperCase();
+
+    // Strict mapping logic
+    if (r.includes("VERIFICATION")) return { code: "VER", color: "red", label: "Source Verification" };
+    if (r.includes("REF") || r.includes("MISMATCH") || r.includes("LIST")) return { code: "REF", color: "blue", label: "Reference Match" };
+    if (r.includes("MIXED") || r.includes("CONSISTENCY")) return { code: "MIX", color: "amber", label: "Style Inconsistency" };
+
+    // Default to Style Violation
+    return { code: "STY", color: "amber", label: "Style Rule" };
+};
+
+const filterViolationsByCode = (violations: any[], targetCode: string) => {
+    if (!violations) return [];
+    return violations.filter((v: any) => mapRuleToCodeAndColor(v.ruleId).code === targetCode);
 };
 
 // Expanded Helper Component with Accordion Support
