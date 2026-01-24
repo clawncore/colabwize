@@ -1,19 +1,16 @@
 import {
     EditorContent,
-    AuditReport,
     CitationStyle,
     ExtractedPattern,
     AuditRequest,
     DocumentSection,
     ReferenceListExtraction,
-    SectionType,
-    ReferenceEntry,
-    RawExtractedPattern
+    SectionType
 } from "./types";
 import { extractPatterns } from "./patterns";
 import { apiClient } from "../apiClient";
 import { DocumentExtractor } from "../../utils/documentExtractor";
-import { EnhancedCitationProcessor } from "./EnhancedCitationProcessor";
+
 import { CitationAuditStateMachine, CitationAuditResult } from "./CitationAuditStateMachine";
 
 /**
@@ -182,7 +179,7 @@ async function runSimulatedAudit(
         }
 
         // Check for numeric brackets
-        const bracketMatches = fullText.match(/\[\s*\d+(?:[\s,\-]+\d+)*\s*\]/g);
+        const bracketMatches = fullText.match(/\[\s*\d+(?:[\s,\-]+\d+)*\s*]/g);
         if (bracketMatches && bracketMatches.length > 0) {
             violations.push({
                 type: "FORMAT_VIOLATION",
@@ -353,11 +350,4 @@ function extractTextFromNode(node: EditorContent): string {
     return "";
 }
 
-function normalizeStyle(style: string): CitationStyle | null {
-    const s = style.toLowerCase();
-    if (s.includes("apa")) return "APA";
-    if (s.includes("mla")) return "MLA";
-    if (s.includes("ieee")) return "IEEE";
-    if (s.includes("chicago")) return "Chicago";
-    return null;
-}
+

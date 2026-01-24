@@ -27,23 +27,7 @@ export const VerificationResultsPanel: React.FC<VerificationResultsPanelProps> =
     const verified = results.filter(r => r.status === "VERIFIED");
     const failed = results.filter(r => r.status === "VERIFICATION_FAILED");
     const unmatched = results.filter(r => r.status === "UNMATCHED_REFERENCE");
-    const insufficient = results.filter(r => r.status === "INSUFFICIENT_INFO");
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "VERIFIED": return "bg-green-100 border-green-300 text-green-800";
-            case "VERIFICATION_FAILED": return "bg-red-100 border-red-300 text-red-800";
-            case "UNMATCHED_REFERENCE": return "bg-yellow-100 border-yellow-300 text-yellow-800";
-            case "INSUFFICIENT_INFO": return "bg-gray-100 border-gray-300 text-gray-700";
-            default: return "bg-gray-100 border-gray-300";
-        }
-    };
-
-    const getScoreColor = (score: number) => {
-        if (score >= 70) return "text-green-600 bg-green-50";
-        if (score >= 50) return "text-yellow-600 bg-yellow-50";
-        return "text-red-600 bg-red-50";
-    };
 
     return (
         <section className="pt-2">

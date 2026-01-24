@@ -41,7 +41,6 @@ import {
   Split,
   Superscript,
   Subscript,
-  ListTodo,
   RemoveFormatting,
 } from "lucide-react";
 import { useState } from "react";

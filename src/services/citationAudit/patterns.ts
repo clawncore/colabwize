@@ -7,13 +7,13 @@ import { EditorContent } from "./types";
  */
 const PATTERNS: Record<PatternType, RegExp> = {
     // [1], [12], [1, 2], [1-3]
-    "NUMERIC_BRACKET": /\[\s*\d+(?:[\s,\-]+\d+)*\s*\]/g,
+    "NUMERIC_BRACKET": /\[\s*\d+(?:[\s,-]+\d+)*\s*\]/g,
 
     // (Smith, 2023) or (Smith et al., 2023)
-    "AUTHOR_YEAR": /\([A-Z][a-zA-Z\s\.\-']+,?\s*\d{4}[a-z]?\)/g,
+    "AUTHOR_YEAR": /\([A-Z][a-zA-Z\s.'-]+,?\s*\d{4}[a-z]?\)/g,
 
     // (Smith 24) or (Smith et al. 24)
-    "AUTHOR_PAGE": /\([A-Z][a-zA-Z\s\.\-']+\s+\d+(?:-\d+)?\)/g,
+    "AUTHOR_PAGE": /\([A-Z][a-zA-Z\s.'-']+\s+\d+(?:-\d+)?\)/g,
 
     // et al NOT followed by period
     "et_al_no_period": /\bet\s+al(?!\.)/g,

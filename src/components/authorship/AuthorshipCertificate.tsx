@@ -2,7 +2,7 @@ import React from "react";
 import { AuthorshipStatsDisplay } from "./AuthorshipStatsDisplay";
 import { CertificateDownloadButton } from "./CertificateDownloadButton";
 import { ShieldCheck } from "lucide-react";
-import { AnimatedLogo } from "../common/AnimatedLogo";
+
 
 interface AuthorshipCertificateProps {
   projectId: string;

@@ -64,8 +64,6 @@ import {
   ShieldAlert,
   Bot,
   ShieldCheck,
-  Wand2,
-  Loader2,
 } from "lucide-react";
 import { OriginalityService } from "../../services/originalityService";
 
@@ -108,7 +106,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasInitializedContentRef = useRef(false);
   const currentProjectIdRef = useRef<string | null>(null);
-  const [isHumanizing, setIsHumanizing] = useState(false);
+
+
   // Layout State
 
   // Sync state when project changes
@@ -428,62 +427,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   }, []);
 
 
-  const handleHumanize = async () => {
-    try {
-      const selection = editor.state.selection;
-      const text = selection.empty ? editor.getText() : editor.state.doc.textBetween(selection.from, selection.to);
 
-      if (!text || text.trim().length < 10) {
-        toast({
-          title: "Select Text",
-          description: "Please select at least 10 characters to humanize.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const MAX_CHARS = 5000;
-      if (text.length > MAX_CHARS) {
-        toast({
-          title: "Selection Too Long",
-          description: `Please select a specific section (max ${MAX_CHARS} chars) to sanitize. Current: ${text.length} chars.`,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setIsHumanizing(true);
-      toast({
-        title: "Humanizing...",
-        description: "Adversarial AI is rewriting your content to bypass detectors.",
-      });
-
-      const result = await OriginalityService.humanizeText(text);
-
-      if (selection.empty) {
-        // Replace all
-        editor.commands.setContent(result.text);
-      } else {
-        // Replace selection
-        editor.chain().focus().deleteSelection().insertContent(result.text).run();
-      }
-
-      toast({
-        title: "Humanization Complete",
-        description: `Rewritten by ${result.provider === 'anthropic' ? 'Claude 3.5' : 'GPT-4o'}.`,
-        variant: "default",
-      });
-
-    } catch (error: any) {
-      toast({
-        title: "Humanization Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsHumanizing(false);
-    }
-  };
 
   const handleSave = React.useCallback(async () => {
     if (!editor) return;

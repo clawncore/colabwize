@@ -68,7 +68,7 @@ export const MathExtension = Node.create({
         return [
             // Regex to match $...$ for inline math (simple implementation)
             nodeInputRule({
-                find: /\$([^\$]+)\$/,
+                find: /\$([^$]+)\$/,
                 type: this.type,
                 getAttributes: (match) => {
                     return {

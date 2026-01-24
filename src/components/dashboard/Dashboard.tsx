@@ -27,7 +27,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { SubscriptionService } from "../../services/subscriptionService";
+
 import { OnboardingTour } from "../onboarding/OnboardingTour";
 import { DocumentUploadModal } from "./DocumentUploadModal";
 import AnalyticsService, { type DashboardData } from "../../services/analyticsService";
@@ -57,7 +57,7 @@ export const Dashboard: React.FC = () => {
   });
   // const [loading, setLoading] = useState(true);
   // const [uploadingProject, setUploadingProject] = useState(false);
-  const [latestProject, setLatestProject] = useState<Project | null>(null);
+  const [latestProject, _setLatestProject] = useState<Project | null>(null);
 
   // Mock data for the bar chart
   const documentTrendData = [

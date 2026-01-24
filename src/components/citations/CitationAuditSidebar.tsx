@@ -4,13 +4,7 @@ import { ArrowLeft, ShieldAlert, ChevronDown } from "lucide-react";
 import { runCitationAudit } from "../../services/citationAudit/citationAuditEngine";
 import { useToast } from "../../hooks/use-toast";
 import { VerificationResultsPanel } from "./VerificationResultsPanel";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "../ui/dialog";
+
 
 interface CitationFlag {
     type: string;
@@ -52,7 +46,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
         if (!auditResult && !loading) {
             handleRunStyleAudit();
         }
-    }, []);
+    }, [auditResult, loading]);
 
     // Helper to map Rule IDs to new Badge Codes and Colors
     const mapRuleToCodeAndColor = (ruleId: string): { code: string, color: string, label: string } => {
