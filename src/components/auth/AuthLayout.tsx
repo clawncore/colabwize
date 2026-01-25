@@ -68,7 +68,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
                   <div className="flex items-center space-x-3">
                     <Users className="h-5 w-5 text-green-400" />
                     <span className="text-lg text-gray-200">
-                      Trusted by 10,000+ students
+                      Empowering academic excellence
                     </span>
                   </div>
                   <div className="flex items-center space-x-3">

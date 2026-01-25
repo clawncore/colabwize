@@ -99,9 +99,15 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, []);
 
-  const isFreeUser = subscription?.plan?.id === "free";
-  const isStudentUser = subscription?.plan?.id === "student";
-  const isResearcherUser = subscription?.plan?.id === "researcher";
+  const getPlanId = (sub: Subscription | null) => {
+    if (!sub?.plan) return "free";
+    return typeof sub.plan === "string" ? sub.plan : sub.plan.id;
+  };
+
+  const planId = getPlanId(subscription);
+  const isFreeUser = planId === "free";
+  const isStudentUser = planId === "student";
+  const isResearcherUser = planId === "researcher";
 
   return (
     <BillingContext.Provider

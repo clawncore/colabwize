@@ -1068,102 +1068,108 @@ mark.citation-highlight[data-type="violation"] {
 
 /* Base Highlight: Remove background, use distinct underline */
 .citation-highlight {
-    background-color: transparent !important;
-    text-decoration: underline wavy;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 4px;
-    cursor: help;
-    transition: all 0.2s ease;
+  background-color: transparent !important;
+  text-decoration: underline wavy;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: help;
+  transition: all 0.2s ease;
 }
 
 /* Color Semantics */
 .citation-highlight[data-color="amber"] {
-    text-decoration-color: #f59e0b;
+  text-decoration-color: #f59e0b;
 }
 
 .citation-highlight[data-color="red"] {
-    text-decoration-color: #ef4444;
+  text-decoration-color: #ef4444;
 }
 
 .citation-highlight[data-color="blue"] {
-    text-decoration-color: #3b82f6;
+  text-decoration-color: #3b82f6;
 }
 
 /* Hover Effect: Stronger underline */
 .citation-highlight:hover {
-    text-underline-offset: 2px;
-    background-color: rgba(255, 255, 255, 0.1) !important;
+  text-underline-offset: 2px;
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* BADGE (::after) - Modern Flat Pill */
 .citation-highlight[data-badge-code]::after {
-    content: attr(data-badge-code);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 6px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: 0.5px;
-    color: white;
-    vertical-align: middle;
-    white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transform: translateY(-1px);
-    /* Make it unselectable so it doesn't mess up cursor */
-    user-select: none;
-    pointer-events: none;
-    font-family: 'Inter', system-ui, sans-serif;
+  content: attr(data-badge-code);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  color: white;
+  vertical-align: middle;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  /* Make it unselectable so it doesn't mess up cursor */
+  user-select: none;
+  pointer-events: none;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 /* Badge Colors - solid, vibrant */
 .citation-highlight[data-color="amber"][data-badge-code]::after {
-    background-color: #d97706; /* Amber-600 */
+  background-color: #d97706;
+  /* Amber-600 */
 }
 
 .citation-highlight[data-color="red"][data-badge-code]::after {
-    background-color: #dc2626; /* Red-600 */
+  background-color: #dc2626;
+  /* Red-600 */
 }
 
 .citation-highlight[data-color="blue"][data-badge-code]::after {
-    background-color: #2563eb; /* Blue-600 */
+  background-color: #2563eb;
+  /* Blue-600 */
 }
 
 /* TOOLTIP (::before) - Clean, Modern Card */
 .citation-highlight:hover::before {
-    /* Format: Header | Type | Rule | Found | Expected */
-    /* Note: data-type is now a nice label like "Style Rule" */
-    content: " " attr(data-type) "\A Rule: " attr(data-rule-id) "\A\A Found: " attr(data-message) "\A Expected: " attr(data-expected);
-    
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    
-    /* Modern Flat Design */
-    background: #1f2937; /* Gray-900 */
-    color: #f9fafb; /* Gray-50 */
-    padding: 12px 14px;
-    border-radius: 8px;
-    font-size: 12px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    width: max-content;
-    max-width: 300px;
-    text-align: left;
-    
-    /* Shadows & Border */
-    box-shadow: 
-        0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-        0 2px 4px -1px rgba(0, 0, 0, 0.06),
-        0 0 0 1px rgba(255,255,255,0.1); /* Subtle border */
-    
-    z-index: 9999;
-    font-family: 'Inter', system-ui, sans-serif;
-    font-weight: 400;
+  /* Format: Header | Type | Rule | Found | Expected */
+  /* Note: data-type is now a nice label like "Style Rule" */
+  content: " " attr(data-type) "\A Rule: " attr(data-rule-id) "\A\A Found: " attr(data-message) "\A Expected: " attr(data-expected);
+
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+
+  /* Modern Flat Design */
+  background: #1f2937;
+  /* Gray-900 */
+  color: #f9fafb;
+  /* Gray-50 */
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  width: max-content;
+  max-width: 300px;
+  text-align: left;
+
+  /* Shadows & Border */
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  /* Subtle border */
+
+  z-index: 9999;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 400;
 }
 
 /* Tooltip Severity Color Strips (Optional, using border-left logic if possible, but ::before is single element) */
@@ -1171,17 +1177,39 @@ mark.citation-highlight[data-type="violation"] {
 
 /* Remove any old styles */
 mark.citation-highlight[data-type="violation"] {
-    border: none !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
 
 /* Hide ::before/triangle from old triangle implem */
 .citation-highlight[data-type="violation"]::before {
-    display: none; /* We are re-using ::before for tooltip now */
+  display: none;
+  /* We are re-using ::before for tooltip now */
 }
 
 /* Wait, if I use ::before for tooltip, I lose the triangle. */
 /* The user requested a "flagin badge". The ::after IS the badge. */
 /* The tooltip is the hover state. */
 /* This setup (::after = badge, ::before = tooltip) works perfectly. */
+
+/* Infinite Scroll Animation for Logo Ticker */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  display: flex;
+  width: max-content;
+  animation: scroll 40s linear infinite;
+}
+
+.animate-scroll:hover {
+  animation-play-state: paused;
+}

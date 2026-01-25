@@ -238,433 +238,225 @@ const FeedbackDashboard: React.FC = () => {
   }
 
   return (
-    <div className="w-full">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Feedback Center
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Share your thoughts, report bugs, and request features
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <MessageSquare className="w-8 h-8 text-blue-600" />
-            </div>
+    <div className="w-full mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      {/* Header Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <div className="bg-blue-100 p-2 rounded-xl">
+            <MessageSquare className="w-8 h-8 text-blue-600" />
           </div>
-        </div>
+          Feedback Center
+        </h1>
+        <p className="text-gray-500 mt-2 text-lg">
+          Your voice matters. Help us shape the future of ColabWize.
+        </p>
+      </div>
 
-        <div className="p-6">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 bg-[#FFFAFA]">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="submit">Submit Feedback</TabsTrigger>
-              <TabsTrigger value="my-feedback">My Feedback</TabsTrigger>
-            </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <TabsList className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 inline-flex">
+          <TabsTrigger
+            value="overview"
+            className="px-6 py-2.5 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none transition-all">
+            Overview
+          </TabsTrigger>
+          <TabsTrigger
+            value="submit"
+            className="px-6 py-2.5 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none transition-all">
+            Submit Feedback
+          </TabsTrigger>
+          <TabsTrigger
+            value="my-feedback"
+            className="px-6 py-2.5 rounded-lg data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none transition-all">
+            My Feedback
+          </TabsTrigger>
+        </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="bg-gray-50 border border-gray-200">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-900">
-                      Total Feedback
-                    </CardTitle>
-                    <MessageSquare className="w-4 h-4 text-gray-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {feedbackItems.length}
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      All your feedback submissions
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gray-50 border border-gray-200">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-900">
-                      Open Feedback
-                    </CardTitle>
-                    <Clock className="w-4 h-4 text-gray-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {feedbackItems.filter((f) => f.status === "open").length}
-                    </div>
-                    <p className="text-xs text-gray-600">Awaiting review</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gray-50 border border-gray-200">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-900">
-                      In Progress
-                    </CardTitle>
-                    <AlertTriangle className="w-4 h-4 text-gray-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {
-                        feedbackItems.filter((f) => f.status === "in_progress")
-                          .length
-                      }
-                    </div>
-                    <p className="text-xs text-gray-600">Being worked on</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gray-50 border border-gray-200">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-900">
-                      Resolved
-                    </CardTitle>
-                    <CheckCircle className="w-4 h-4 text-gray-500" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-gray-900">
-                      {
-                        feedbackItems.filter((f) => f.status === "resolved")
-                          .length
-                      }
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      Successfully addressed
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2">
-                <Card className="bg-gray-50 border border-gray-200">
-                  <CardHeader>
-                    <CardTitle className="text-gray-900">
-                      Quick Actions
-                    </CardTitle>
-                    <CardDescription className="text-gray-600">
-                      Submit common types of feedback
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white w-full"
-                      onClick={() => {
-                        setNewFeedback({
-                          ...newFeedback,
-                          type: "bug_report",
-                          title: "",
-                          description: "",
-                        });
-                        setActiveTab("submit");
-                      }}>
-                      <Bug className="w-4 h-4 mr-2" />
-                      Report a Bug
-                    </Button>
-
-                    <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white w-full"
-                      onClick={() => {
-                        setNewFeedback({
-                          ...newFeedback,
-                          type: "feature_request",
-                          title: "",
-                          description: "",
-                        });
-                        setActiveTab("submit");
-                      }}>
-                      <Lightbulb className="w-4 h-4 mr-2" />
-                      Request a Feature
-                    </Button>
-
-                    <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white w-full"
-                      onClick={() => {
-                        setNewFeedback({
-                          ...newFeedback,
-                          type: "feedback",
-                          title: "",
-                          description: "",
-                        });
-                        setActiveTab("submit");
-                      }}>
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Share General Feedback
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gray-50 border border-gray-200">
-                  <CardHeader>
-                    <CardTitle className="text-gray-900">
-                      Feedback Types
-                    </CardTitle>
-                    <CardDescription className="text-gray-600">
-                      Different ways to contribute to ColabWize
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <Bug className="w-5 h-5 text-red-600 mt-0.5" />
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          Bug Reports
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          Report issues or unexpected behavior
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start space-x-3">
-                      <Lightbulb className="w-5 h-5 text-yellow-600 mt-0.5" />
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          Feature Requests
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          Suggest new features or improvements
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start space-x-3">
-                      <MessageSquare className="w-5 h-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          General Feedback
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          Share your thoughts and suggestions
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="submit" className="space-y-6">
-              <Card className="bg-gray-50 border border-gray-200">
-                <CardHeader>
-                  <CardTitle className="text-gray-900">
-                    Submit Feedback
-                  </CardTitle>
-                  <CardDescription className="text-gray-600">
-                    Help us improve ColabWize by sharing your experience
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="feedbackType" className="text-gray-900">
-                        Feedback Type *
-                      </Label>
-                      <Select
-                        value={newFeedback.type}
-                        onValueChange={(value) =>
-                          setNewFeedback({ ...newFeedback, type: value })
-                        }>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select feedback type" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white text-gray-900">
-                          <SelectItem value="feedback">
-                            <div className="flex items-center">
-                              <MessageSquare className="w-4 h-4 mr-2" />
-                              General Feedback
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="bug_report">
-                            <div className="flex items-center">
-                              <Bug className="w-4 h-4 mr-2" />
-                              Bug Report
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="feature_request">
-                            <div className="flex items-center">
-                              <Lightbulb className="w-4 h-4 mr-2" />
-                              Feature Request
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="feedbackCategory"
-                        className="text-gray-900">
-                        Category
-                      </Label>
-                      <Select
-                        value={newFeedback.category}
-                        onValueChange={(value) =>
-                          setNewFeedback({ ...newFeedback, category: value })
-                        }>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category (optional)" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white text-gray-900">
-                          <SelectItem value="ui">UI/UX</SelectItem>
-                          <SelectItem value="functionality">
-                            Functionality
-                          </SelectItem>
-                          <SelectItem value="performance">
-                            Performance
-                          </SelectItem>
-                          <SelectItem value="content">Content</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="feedbackPriority"
-                        className="text-gray-900">
-                        Priority
-                      </Label>
-                      <Select
-                        value={newFeedback.priority}
-                        onValueChange={(value) =>
-                          setNewFeedback({ ...newFeedback, priority: value })
-                        }>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white text-gray-900">
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="critical">Critical</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="feedbackTitle" className="text-gray-900">
-                        Title *
-                      </Label>
-                      <Input
-                        id="feedbackTitle"
-                        placeholder="Briefly describe your feedback..."
-                        value={newFeedback.title}
-                        onChange={(e) =>
-                          setNewFeedback({
-                            ...newFeedback,
-                            title: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="feedbackDescription"
-                        className="text-gray-900">
-                        Description *
-                      </Label>
-                      <Textarea
-                        id="feedbackDescription"
-                        placeholder="Please provide detailed information about your feedback..."
-                        value={newFeedback.description}
-                        onChange={(e) =>
-                          setNewFeedback({
-                            ...newFeedback,
-                            description: e.target.value,
-                          })
-                        }
-                        rows={6}
-                      />
-                    </div>
-
-                    <Button
-                      className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
-                      onClick={handleCreateFeedback}
-                      disabled={
-                        isSubmitting ||
-                        !newFeedback.title.trim() ||
-                        !newFeedback.description.trim()
-                      }>
-                      {isSubmitting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Submitting...
-                        </>
-                      ) : (
-                        "Submit Feedback"
-                      )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="my-feedback" className="space-y-6">
-              <Card className="bg-gray-50 border border-gray-200">
-                <CardHeader>
-                  <CardTitle className="text-gray-900">Your Feedback</CardTitle>
-                  <CardDescription className="text-gray-600">
-                    Track the status of your feedback submissions
-                  </CardDescription>
+        <TabsContent value="overview" className="space-y-8 animate-in fade-in-50 duration-500">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              { title: "Total Feedback", icon: <MessageSquare className="w-5 h-5 text-purple-600" />, value: feedbackItems.length, sub: "All submissions", bg: "bg-purple-50", border: "border-purple-100" },
+              { title: "Open", icon: <Clock className="w-5 h-5 text-yellow-600" />, value: feedbackItems.filter(f => f.status === "open").length, sub: "Awaiting review", bg: "bg-yellow-50", border: "border-yellow-100" },
+              { title: "In Progress", icon: <AlertTriangle className="w-5 h-5 text-blue-600" />, value: feedbackItems.filter(f => f.status === "in_progress").length, sub: "Being worked on", bg: "bg-blue-50", border: "border-blue-100" },
+              { title: "Resolved", icon: <CheckCircle className="w-5 h-5 text-green-600" />, value: feedbackItems.filter(f => f.status === "resolved").length, sub: "Completed", bg: "bg-green-50", border: "border-green-100" }
+            ].map((stat, i) => (
+              <Card key={i} className={`border ${stat.border} shadow-sm hover:shadow-md transition-shadow`}>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-semibold text-gray-700 uppercase tracking-wider">{stat.title}</CardTitle>
+                  <div className={`p-2 rounded-lg ${stat.bg}`}>{stat.icon}</div>
                 </CardHeader>
                 <CardContent>
-                  {feedbackItems.length === 0 ? (
-                    <div className="text-center py-8">
-                      <MessageSquare className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">
-                        No feedback yet
-                      </h3>
-                      <p className="text-gray-500">
-                        You haven't submitted any feedback.
-                      </p>
-                      <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white mt-4"
-                        onClick={() => setActiveTab("submit")}>
-                        Submit Your First Feedback
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {feedbackItems.map((feedback) => (
-                        <div
-                          key={feedback.id}
-                          className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex items-center space-x-4">
-                            <div className="flex flex-col space-y-1">
-                              {getTypeBadge(feedback.type)}
-                              {getCategoryBadge(feedback.category)}
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {feedback.title}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                Submitted:{" "}
-                                {new Date(
-                                  feedback.created_at
-                                ).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            {getStatusBadge(feedback.status)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <div className="text-3xl font-bold text-gray-900">{stat.value}</div>
+                  <p className="text-sm text-gray-500 mt-1">{stat.sub}</p>
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+            ))}
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3">
+            <Card className="md:col-span-2 border-gray-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-gray-900">What's New?</CardTitle>
+                <CardDescription>Recent updates and common requests</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100">
+                    <h3 className="font-semibold text-blue-900 mb-2">We're listening! 🎧</h3>
+                    <p className="text-blue-800 text-sm mb-4">
+                      Thanks to your feedback, we've recently improved the dashboard performance and added dark mode support.
+                    </p>
+                    <Button variant="outline" className="bg-blue-500 hover:bg-blue-600 text-white border-blue-200" onClick={() => setActiveTab('submit')}>
+                      Have an idea? Tell us!
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-gray-200 shadow-sm bg-gray-50/50">
+              <CardHeader>
+                <CardTitle className="text-gray-900">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  className="w-full bg-gray-500 hover:bg-gray-600 text-white border border-gray-200 justify-start h-12 shadow-sm"
+                  onClick={() => { setNewFeedback({ ...newFeedback, type: "bug_report" }); setActiveTab("submit"); }}>
+                  <div className="bg-red-50 p-1.5 rounded mr-3"><Bug className="w-4 h-4 text-red-500" /></div>
+                  Report a Bug
+                </Button>
+                <Button
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white border border-gray-200 justify-start h-12 shadow-sm"
+                  onClick={() => { setNewFeedback({ ...newFeedback, type: "feature_request" }); setActiveTab("submit"); }}>
+                  <div className="bg-yellow-50 p-1.5 rounded mr-3"><Lightbulb className="w-4 h-4 text-yellow-500" /></div>
+                  Request Feature
+                </Button>
+                <Button
+                  className="w-full bg-indigo-500 hover:bg-indigo-600 text-white border border-gray-200 justify-start h-12 shadow-sm"
+                  onClick={() => { setNewFeedback({ ...newFeedback, type: "feedback" }); setActiveTab("submit"); }}>
+                  <div className="bg-blue-50 p-1.5 rounded mr-3"><MessageSquare className="w-4 h-4 text-blue-500" /></div>
+                  Share Feedback
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="submit" className="max-w-3xl mx-auto animate-in slide-in-from-bottom-4 duration-500">
+          <Card className="shadow-lg border-0 ring-1 ring-gray-100">
+            <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-6">
+              <CardTitle className="text-2xl text-gray-900">Submit Feedback</CardTitle>
+              <CardDescription className="text-gray-600 text-base">
+                We value your input. Please be as detailed as possible.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label className="text-gray-700 font-medium">Type</Label>
+                  <Select value={newFeedback.type} onValueChange={(v) => setNewFeedback({ ...newFeedback, type: v })}>
+                    <SelectTrigger className="h-11 bg-gray-50 border-gray-200 focus:ring-blue-500">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="feedback">General Feedback</SelectItem>
+                      <SelectItem value="bug_report">Bug Report</SelectItem>
+                      <SelectItem value="feature_request">Feature Request</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-gray-700 font-medium">Priority</Label>
+                  <Select value={newFeedback.priority} onValueChange={(v) => setNewFeedback({ ...newFeedback, priority: v })}>
+                    <SelectTrigger className="h-11 bg-gray-50 border-gray-200 focus:ring-blue-500">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="critical">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-gray-700 font-medium">Title</Label>
+                <Input
+                  placeholder="Brief summary of your feedback"
+                  className="h-11 bg-gray-50 border-gray-200 focus:ring-blue-500"
+                  value={newFeedback.title}
+                  onChange={(e) => setNewFeedback({ ...newFeedback, title: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-gray-700 font-medium">Description</Label>
+                <Textarea
+                  placeholder="Tell us more..."
+                  className="min-h-[150px] bg-gray-50 border-gray-200 focus:ring-blue-500 resize-none"
+                  value={newFeedback.description}
+                  onChange={(e) => setNewFeedback({ ...newFeedback, description: e.target.value })}
+                />
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setActiveTab("overview")}>Cancel</Button>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700 text-white min-w-[150px] h-11"
+                  onClick={handleCreateFeedback}
+                  disabled={isSubmitting || !newFeedback.title.trim() || !newFeedback.description.trim()}
+                >
+                  {isSubmitting ? "Sending..." : "Submit Feedback"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="my-feedback" className="animate-in fade-in-50 duration-500">
+          <Card className="border-gray-200 shadow-sm">
+            <CardHeader>
+              <CardTitle>History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {feedbackItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="bg-gray-50 p-4 rounded-full mb-4">
+                    <MessageSquare className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">No feedback yet</h3>
+                  <p className="text-gray-500 mt-1 mb-6 max-w-sm">Share your first idea or report a bug to help us improve.</p>
+                  <Button onClick={() => setActiveTab("submit")}>Submit Feedback</Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {feedbackItems.map((item) => (
+                    <div key={item.id} className="group flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl hover:border-blue-200 hover:shadow-md transition-all">
+                      <div className="flex items-start gap-4">
+                        <div className={`p-2 rounded-lg mt-1 ${item.type === 'bug_report' ? 'bg-red-50 text-red-600' : item.type === 'feature_request' ? 'bg-yellow-50 text-yellow-600' : 'bg-blue-50 text-blue-600'}`}>
+                          {item.type === 'bug_report' ? <Bug className="w-5 h-5" /> : item.type === 'feature_request' ? <Lightbulb className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{item.title}</h4>
+                          <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                            <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                            <span>•</span>
+                            <span className="capitalize">{item.priority} Priority</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {getStatusBadge(item.status)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

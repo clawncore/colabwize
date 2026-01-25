@@ -38,6 +38,7 @@ export interface AuthResponse {
   };
   userId?: string;
   requiresOTP?: boolean;
+  requires_2fa?: boolean;
   requiresSurvey?: boolean;
 }
 
@@ -164,8 +165,64 @@ class AuthService {
   }
 
   /**
-   * Get auth token
+   * Enable 2FA (Start - Get Secret)
    */
+  async enable2FA(): Promise<{ success: boolean; secret?: string; qrCodeUrl?: string; message?: string }> {
+    try {
+      const response = await apiClient.post("/api/auth/2fa/setup", {});
+
+      // Map backend response { qrCode, manualKey } to expected interface
+      if (response && (response as any).qrCode) {
+        return {
+          success: true,
+          secret: (response as any).manualKey,
+          qrCodeUrl: (response as any).qrCode,
+          message: "2FA setup initiated"
+        };
+      }
+      return response as any;
+    } catch (error: any) {
+      console.error("Enable 2FA Error:", error);
+      return { success: false, message: error.message || "Failed to start 2FA setup" };
+    }
+  }
+
+  /**
+   * Confirm 2FA (Verify Code & Activate)
+   */
+  async confirm2FA(token: string, secret?: string): Promise<{ success: boolean; backupCodes?: string[]; message?: string }> {
+    try {
+      const response = await apiClient.post("/api/auth/2fa/verify", { token, secret });
+      return response;
+    } catch (error: any) {
+      return { success: false, message: error.message || "Failed to confirm 2FA" };
+    }
+  }
+
+  /**
+   * Verify 2FA (Login Challenge)
+   */
+  async verify2FA(userId: string, token: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiClient.post("/api/auth/hybrid/verify-2fa", { userId, token });
+      return response;
+    } catch (error: any) {
+      return { success: false, message: error.message || "Invalid code" };
+    }
+  }
+
+  /**
+   * Disable 2FA
+   */
+  async disable2FA(password: string, token: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await apiClient.post("/api/auth/2fa/disable", { password, token });
+      return response;
+    } catch (error: any) {
+      return { success: false, message: error.message || "Failed to disable 2FA" };
+    }
+  }
+
   getToken(): string | null {
     return localStorage.getItem("auth_token");
   }

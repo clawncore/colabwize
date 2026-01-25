@@ -15,8 +15,9 @@ export interface Plan {
 
 export interface Subscription {
   id?: string;
-  plan: Plan;
+  plan: Plan | string;
   status: string;
+  current_period_start?: string;
   current_period_end?: string;
   cancel_at_period_end?: boolean;
 }

@@ -9,6 +9,10 @@ import {
   BookOpen,
   ArrowRight,
   Sparkles,
+  Map,
+  SearchCheck,
+  History,
+  Globe,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -249,11 +253,51 @@ function PreviewSection() {
   );
 }
 
+// Logo Ticker Component
+function LogoTicker() {
+  const logos = [
+    { name: "Vignan University", url: "https://vignan.ac.in/newvignan/assets/images/Logo%20with%20Deemed.svg" },
+    { name: "University of Cambridge", url: "https://upload.wikimedia.org/wikipedia/commons/4/4d/University_of_Cambridge_logo.png" },
+    { name: "University of Guelph", url: "https://logowik.com/content/uploads/images/university-of-guelph5416.logowik.com.webp" },
+    { name: "Harvard", url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Harvard_University_logo.svg/2560px-Harvard_University_logo.svg.png" },
+    { name: "Stanford", url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Stanford_Cardinal_logo.svg/1200px-Stanford_Cardinal_logo.svg.png" },
+    { name: "MIT", url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/MIT_logo.svg/1200px-MIT_logo.svg.png" },
+    { name: "Oxford", url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Oxford-University-Circlet.svg/1200px-Oxford-University-Circlet.svg.png" },
+    { name: "Waterloo", url: "https://upload.wikimedia.org/wikipedia/en/thumb/6/6e/University_of_Waterloo_seal.svg/1200px-University_of_Waterloo_seal.svg.png" },
+  ];
+
+  return (
+    <section className="py-12 bg-gray-50/50 border-y border-gray-100 overflow-hidden">
+      <div className="container-custom">
+        <p className="text-center text-sm font-semibold text-gray-400 uppercase tracking-widest mb-8">
+          Trusted by researchers from the world's leading institutions
+        </p>
+        <div className="relative flex overflow-hidden group">
+          <div className="animate-scroll whitespace-nowrap flex items-center gap-24 py-6">
+            {[...logos, ...logos].map((logo, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-center grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+              >
+                <img
+                  src={logo.url}
+                  alt={logo.name}
+                  className="h-16 w-auto object-contain max-w-[180px]"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // Features Grid Component
 function FeaturesGrid() {
   const features = [
     {
-      icon: Search,
+      icon: Map,
       title: "Explainable Originality Map",
       description:
         "Color-coded heatmap shows exactly which parts of your document need attention, with clear safety classifications (Green/Yellow/Red).",
@@ -262,7 +306,7 @@ function FeaturesGrid() {
       image: "https://i.ibb.co/sdHVBb82/editor.png?w=800&q=80",
     },
     {
-      icon: FileText,
+      icon: SearchCheck,
       title: "Citation Confidence Auditor",
       description:
         "Get confidence scores for each section and warnings about outdated or unsupported claims with suggestions for missing links.",
@@ -272,7 +316,7 @@ function FeaturesGrid() {
         "https://i.ibb.co/sY9F6B3/Screenshot-2026-01-13-203136.png?w=800&q=80",
     },
     {
-      icon: Bot,
+      icon: Sparkles,
       title: "Smart Citation Builder",
       description:
         "Instantly find credible sources and add accurate citations without leaving your workflow.",
@@ -282,7 +326,7 @@ function FeaturesGrid() {
         "https://i.ibb.co/7djtzT8g/Screenshot-2026-01-13-193634.png?w=800&q=80",
     },
     {
-      icon: Shield,
+      icon: History,
       title: "Defensibility Log",
       description:
         "Generate authorship certificates proving your work is original with time tracking and manual effort verification.",
@@ -568,6 +612,7 @@ export default function HomePage() {
       <ComparisonSection />
       <FeaturesGrid />
       <TestimonialsSection />
+      <LogoTicker />
       <CTASection />
     </Layout>
   );

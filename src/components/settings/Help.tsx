@@ -181,7 +181,8 @@ const HelpSettingsPage: React.FC = () => {
       let userPlan = "free"; // Default to free plan
       try {
         const subscription = await SubscriptionService.getCurrentSubscription();
-        userPlan = subscription?.subscription?.plan?.id || "free"; // Use plan ID (free, student, researcher)
+        const planData = subscription?.subscription?.plan;
+        userPlan = typeof planData === 'string' ? planData : (planData?.id || "free");
       } catch (planError) {
         console.warn(
           "Could not fetch user plan, defaulting to free:",

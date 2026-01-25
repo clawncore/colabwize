@@ -6,7 +6,10 @@ import {
     Filter,
     Plus,
     Unlock,
-    MoreHorizontal
+    MoreHorizontal,
+    Check,
+    Bookmark,
+    Trash2
 } from "lucide-react";
 import { CitationStyleFloatingPanel } from "./CitationStyleFloatingPanel";
 
@@ -48,6 +51,16 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
     const [activeTab, setActiveTab] = useState<"sources" | "collections">("sources");
     const [showStylePanel, setShowStylePanel] = useState(false);
     const [isSavingStyle, setIsSavingStyle] = useState(false);
+    const [collectionSet, setCollectionSet] = useState<Set<string>>(new Set());
+
+    // Helper to generate unique key
+    const getCitationKey = (c: StoredCitation) => {
+        if (c.doi) return c.doi;
+        const titlePart = c.title?.toLowerCase().trim() || "";
+        const yearPart = c.year || "";
+        const authorPart = (typeof c.author === 'string' ? c.author : c.authors?.[0] || "").toLowerCase().trim();
+        return `${titlePart}-${yearPart}-${authorPart}`;
+    };
 
     // Track which source triggered the style selection (to auto-cite after selection - optional)
     // For now we just set the style.
@@ -57,14 +70,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
         const uniqueMap = new Map<string, StoredCitation>();
 
         citations.forEach((c) => {
-            // Create a unique key: DOI or Title+Year+FirstAuthor
-            let key = c.doi;
-            if (!key) {
-                const titlePart = c.title?.toLowerCase().trim() || "";
-                const yearPart = c.year || "";
-                const authorPart = (typeof c.author === 'string' ? c.author : c.authors?.[0] || "").toLowerCase().trim();
-                key = `${titlePart}-${yearPart}-${authorPart}`;
-            }
+            const key = getCitationKey(c);
 
             if (!uniqueMap.has(key)) {
                 uniqueMap.set(key, c);
@@ -76,14 +82,35 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
 
     // Filter
     const filteredCitations = useMemo(() => {
-        if (!filterQuery) return processedCitations;
+        if (!filterQuery && activeTab === 'sources') return processedCitations;
+
+        let baseList = processedCitations;
+
+        // Filter by tab
+        if (activeTab === 'collections') {
+            baseList = processedCitations.filter(c => collectionSet.has(getCitationKey(c)));
+        }
+
+        if (!filterQuery) return baseList;
+
         const q = filterQuery.toLowerCase();
-        return processedCitations.filter((c) =>
+        return baseList.filter((c) =>
             c.title?.toLowerCase().includes(q) ||
             (typeof c.author === 'string' && c.author.toLowerCase().includes(q)) ||
             (Array.isArray(c.authors) && c.authors.some((a: string) => a.toLowerCase().includes(q)))
         );
-    }, [processedCitations, filterQuery]);
+    }, [processedCitations, filterQuery, activeTab, collectionSet]);
+
+    const handleToggleCollection = (source: StoredCitation) => {
+        const key = getCitationKey(source);
+        const newSet = new Set(collectionSet);
+        if (newSet.has(key)) {
+            newSet.delete(key);
+        } else {
+            newSet.add(key);
+        }
+        setCollectionSet(newSet);
+    };
 
     const handleVisitSource = (source: StoredCitation, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -259,114 +286,138 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {filteredCitations.map((source, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:border-blue-200 transition-all group"
-                                    >
-                                        {/* Card Header: Checkbox, Review, Badges */}
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-3">
-                                                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-100" />
-                                                <span className="text-xs font-medium text-gray-400">Review</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                {source.impactFactor && (
-                                                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded uppercase">
-                                                        IF {source.impactFactor}
-                                                    </span>
-                                                )}
-                                                {(source.openAccess !== false) && (
-                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded uppercase border border-orange-100">
-                                                        <Unlock className="w-3 h-3" />
-                                                        Open Access
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Title */}
-                                        <h3
-                                            onClick={() => setSelectedSource(source)}
-                                            className="text-base font-bold text-gray-900 mb-1 leading-snug cursor-pointer hover:text-blue-600 transition-colors"
+                                {filteredCitations.map((source, idx) => {
+                                    const isCollected = collectionSet.has(getCitationKey(source));
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:border-blue-200 transition-all group"
                                         >
-                                            {source.title}
-                                        </h3>
+                                            {/* Card Header: Checkbox, Review, Badges */}
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-3">
+                                                    <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-100" />
+                                                    <span className="text-xs font-medium text-gray-400">Review</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {source.impactFactor && (
+                                                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded uppercase">
+                                                            IF {source.impactFactor}
+                                                        </span>
+                                                    )}
+                                                    {(source.openAccess !== false) && (
+                                                        <span className="flex items-center gap-1 text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded uppercase border border-orange-100">
+                                                            <Unlock className="w-3 h-3" />
+                                                            Open Access
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
 
-                                        {/* Authors */}
-                                        <p className="text-sm text-gray-500 mb-1 truncate">
-                                            {Array.isArray(source.authors) ? source.authors.join(", ") : (source.author || "Unknown")}
-                                        </p>
+                                            {/* Title */}
+                                            <h3
+                                                onClick={() => setSelectedSource(source)}
+                                                className="text-base font-bold text-gray-900 mb-1 leading-snug cursor-pointer hover:text-blue-600 transition-colors"
+                                            >
+                                                {source.title}
+                                            </h3>
 
-                                        {/* Journal / Year */}
-                                        <p className="text-sm font-medium text-teal-700 mb-4">
-                                            {source.journal || "Source"} · {source.year}
-                                        </p>
+                                            {/* Authors */}
+                                            <p className="text-sm text-gray-500 mb-1 truncate">
+                                                {Array.isArray(source.authors) ? source.authors.join(", ") : (source.author || "Unknown")}
+                                            </p>
 
-                                        {/* Add to Collection Button */}
-                                        <button className="w-full sm:w-auto mb-4 px-3 py-1.5 border border-dashed border-gray-300 rounded text-xs font-medium text-gray-600 flex items-center justify-center gap-1.5 hover:border-gray-400 hover:bg-gray-50 transition-colors">
-                                            <Plus className="w-3.5 h-3.5" />
-                                            Add to collection
-                                        </button>
+                                            {/* Journal / Year */}
+                                            <p className="text-sm font-medium text-teal-700 mb-4">
+                                                {source.journal || "Source"} · {source.year}
+                                            </p>
 
-                                        {/* Action Footer */}
-                                        <div className="flex items-center gap-4 pt-2 border-t border-gray-50">
-                                            {/* Interactive Cite Button Logic */}
-                                            {!citationStyle ? (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setShowStylePanel(true);
-                                                    }}
-                                                    className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"
-                                                >
-                                                    <Quote className="w-3.5 h-3.5 fill-current" />
-                                                    Cite
-                                                </button>
-                                            ) : (
-                                                <CitationStylePopover
-                                                    source={source}
-                                                    fixedStyle={citationStyle as CitationStyle}
-                                                    onInsert={(inText, fullRef, style) => {
-                                                        if (onInsertCitation) {
-                                                            onInsertCitation(inText, {
-                                                                eventId: "citation_inserted",
-                                                                sourceId: source.doi || source.title,
-                                                                style: style,
-                                                                timestamp: new Date().toISOString(),
-                                                                fullReferenceEntry: fullRef
-                                                            });
-                                                        }
-                                                    }}
-                                                >
+                                            {/* Add to Collection Button */}
+                                            {/* Add to Collection Button */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleToggleCollection(source);
+                                                }}
+                                                className={`w-full sm:w-auto mb-4 px-3 py-1.5 border rounded text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${isCollected
+                                                    ? "bg-blue-50 border-blue-200 text-blue-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600 group/btn"
+                                                    : "border-dashed border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-50"
+                                                    }`}
+                                            >
+                                                {isCollected ? (
+                                                    <>
+                                                        <Check className="w-3.5 h-3.5 group-hover/btn:hidden" />
+                                                        <Trash2 className="w-3.5 h-3.5 hidden group-hover/btn:block" />
+                                                        <span className="group-hover/btn:hidden">Added to collection</span>
+                                                        <span className="hidden group-hover/btn:inline">Remove from collection</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Plus className="w-3.5 h-3.5" />
+                                                        Add to collection
+                                                    </>
+                                                )}
+                                            </button>
+
+                                            {/* Action Footer */}
+                                            <div className="flex items-center gap-4 pt-2 border-t border-gray-50">
+                                                {/* Interactive Cite Button Logic */}
+                                                {!citationStyle ? (
                                                     <button
-                                                        onClick={(e) => e.stopPropagation()} // Prevent card click
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setShowStylePanel(true);
+                                                        }}
                                                         className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"
                                                     >
                                                         <Quote className="w-3.5 h-3.5 fill-current" />
                                                         Cite
                                                     </button>
-                                                </CitationStylePopover>
-                                            )}
+                                                ) : (
+                                                    <CitationStylePopover
+                                                        source={source}
+                                                        fixedStyle={citationStyle as CitationStyle}
+                                                        onInsert={(inText, fullRef, style) => {
+                                                            if (onInsertCitation) {
+                                                                onInsertCitation(inText, {
+                                                                    eventId: "citation_inserted",
+                                                                    sourceId: source.doi || source.title,
+                                                                    style: style,
+                                                                    timestamp: new Date().toISOString(),
+                                                                    fullReferenceEntry: fullRef
+                                                                });
+                                                            }
+                                                        }}
+                                                    >
+                                                        <button
+                                                            onClick={(e) => e.stopPropagation()} // Prevent card click
+                                                            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"
+                                                        >
+                                                            <Quote className="w-3.5 h-3.5 fill-current" />
+                                                            Cite
+                                                        </button>
+                                                    </CitationStylePopover>
+                                                )}
 
-                                            <button
-                                                onClick={() => setSelectedSource(source)}
-                                                className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"
-                                            >
-                                                <MoreHorizontal className="w-3.5 h-3.5" />
-                                                Details
-                                            </button>
+                                                <button
+                                                    onClick={() => setSelectedSource(source)}
+                                                    className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"
+                                                >
+                                                    <MoreHorizontal className="w-3.5 h-3.5" />
+                                                    Details
+                                                </button>
 
-                                            <button
-                                                onClick={(e) => handleVisitSource(source, e)}
-                                                className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors ml-auto"
-                                            >
-                                                <FileText className="w-3.5 h-3.5" />
-                                                Visit Source
-                                            </button>
+                                                <button
+                                                    onClick={(e) => handleVisitSource(source, e)}
+                                                    className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors ml-auto"
+                                                >
+                                                    <FileText className="w-3.5 h-3.5" />
+                                                    Visit Source
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )
                     }

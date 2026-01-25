@@ -12,6 +12,7 @@ import { Button } from "../ui/button";
 import AccountService from "../../services/accountService";
 import { useToast } from "../../hooks/use-toast";
 import { supabase } from "../../lib/supabase/client";
+import { TwoFactorSetup } from "./TwoFactorSetup";
 
 interface UserAccount {
   id: string;
@@ -23,6 +24,7 @@ interface UserAccount {
   selected_plan: string | null;
   retention_period: number | null;
   affiliate_ref: string | null;
+  two_factor_enabled: boolean;
   created_at: string;
   updated_at: string;
   subscription?: {
@@ -734,28 +736,18 @@ const AccountSettingsPage: React.FC = () => {
         </div>
 
         {/* Two-Factor Authentication */}
-        <div className="bg-white  rounded-xl shadow-sm border border-gray-200 ">
-          <div className="p-6">
-            <h2 className="text-lg font-medium text-gray-900  mb-4">
-              Two-Factor Authentication
-            </h2>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-900 ">
-                  Two-Factor Authentication
-                </p>
-                <p className="text-sm text-gray-500  mt-1">
-                  Add an extra layer of security to your account
-                </p>
-              </div>
-              <Button
-                className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
-                onClick={handleEnable2FA}
-                variant="outline">
-                Enable 2FA
-              </Button>
-            </div>
-          </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <TwoFactorSetup
+            isEnabled={user?.two_factor_enabled || false}
+            onStatusChange={() => {
+              // Refresh user data
+              setLoading(true);
+              AccountService.getUserAccount()
+                .then(u => setUser(u))
+                .catch(console.error)
+                .finally(() => setLoading(false));
+            }}
+          />
         </div>
 
         {/* Danger Zone */}

@@ -15,6 +15,7 @@ export interface ActualUserAccount {
   selected_plan: string | null;
   retention_period: number | null;
   affiliate_ref: string | null;
+  two_factor_enabled: boolean;
   created_at: string;
   updated_at: string;
   subscription?: {

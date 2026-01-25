@@ -7,6 +7,15 @@ import {
   Plus,
   Loader2,
   AlertCircle,
+  FileText,
+  Download,
+  Shield,
+  Zap,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+  MessageSquare,
+  ArrowRight
 } from "lucide-react";
 import {
   PaymentMethod,
@@ -16,72 +25,80 @@ import {
 } from "../../services/subscriptionService";
 import { toast } from "../../hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { UsageChart } from "./UsageChart";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
 
 const BillingSettingsPage: React.FC = () => {
   const navigate = useNavigate();
+  const [plans, setPlans] = useState<any[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [limits, setLimits] = useState<any>({});
+  const [usage, setUsage] = useState<any>({});
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Cancellation Wizard State
+  const [cancelStep, setCancelStep] = useState<'start' | 'survey' | 'confirm'>('start');
+  const [surveyReason, setSurveyReason] = useState<string>("");
+
   useEffect(() => {
-    let isMounted = true; // Flag to prevent state updates after component unmounts
+    let isMounted = true;
 
     const fetchData = async () => {
       try {
-        // Only update state if component is still mounted
-        if (isMounted) {
-          setLoading(true);
-        }
+        if (isMounted) setLoading(true);
 
-        const [subscriptionResponse, invoicesData, paymentMethodsData] =
+        const [subscriptionData, invoicesData, paymentMethodsData, plansData] =
           await Promise.all([
             SubscriptionService.getCurrentSubscription().catch((err) => {
               console.error("Error fetching subscription data:", err);
-              // Return null as fallback
+              // Return mock data for testing if dev environment, otherwise null
               return null;
             }),
             SubscriptionService.getBillingHistory().catch((err) => {
               console.error("Error fetching billing history:", err);
-              // Return empty array as fallback
               return [];
             }),
             SubscriptionService.getPaymentMethods().catch((err) => {
               console.error("Error fetching payment methods:", err);
-              // Return empty array as fallback
+              return [];
+            }),
+            SubscriptionService.getPlans().catch((err) => {
+              console.error("Error fetching plans:", err);
               return [];
             }),
           ]);
 
-        // Only update state if component is still mounted
         if (isMounted) {
-          setSubscription(subscriptionResponse?.subscription || null);
+          if (subscriptionData) {
+            setSubscription(subscriptionData.subscription);
+            setLimits(subscriptionData.limits || {});
+            setUsage(subscriptionData.usage || {});
+          }
           setInvoices(invoicesData);
           setPaymentMethods(paymentMethodsData);
+          setPlans(plansData || []);
         }
       } catch (err: any) {
         console.error("Error fetching billing data:", err);
-        // Only update state if component is still mounted
         if (isMounted) {
           setError(err.message || "Failed to load billing data");
-          toast({
-            title: "Error",
-            description: "Failed to load billing data. Please try again.",
-            variant: "destructive",
-          });
         }
       } finally {
-        // Only update state if component is still mounted
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchData();
 
-    // Cleanup function to set isMounted to false when component unmounts
     return () => {
       isMounted = false;
     };
@@ -89,17 +106,11 @@ const BillingSettingsPage: React.FC = () => {
 
   const handleAddPaymentMethod = async () => {
     try {
-      // Redirect to LemonSqueezy update payment method page
-      const result = await SubscriptionService.updatePaymentMethod().catch(
-        (err) => {
-          throw new Error(err.message || "Failed to get payment update URL");
-        }
-      );
+      const result = await SubscriptionService.updatePaymentMethod();
       if (result.success && result.redirectUrl) {
         window.location.href = result.redirectUrl;
       }
     } catch (err: any) {
-      console.error("Error adding payment method:", err);
       toast({
         title: "Error",
         description: err.message || "Failed to initiate payment method update",
@@ -108,17 +119,19 @@ const BillingSettingsPage: React.FC = () => {
     }
   };
 
+  const currentPlanId = typeof subscription?.plan === 'string' ? subscription.plan : subscription?.plan?.id;
+  // If no subscription, default to free. If subscription exists but plan not found in list, still use subscription.plan (if object) or fallback.
+  // Actually, backend returns plan as string.
+  const currentPlan = plans.find(p => p.id === currentPlanId) ||
+    (plans.find(p => p.id === 'free') || { name: 'Free Plan', price: 0, id: 'free' });
+
   const handleViewAllInvoices = async () => {
     try {
-      const result = await SubscriptionService.getCustomerPortalUrl().catch((err) => {
-        throw new Error(err.message || "Failed to get portal URL");
-      });
-
+      const result = await SubscriptionService.getCustomerPortalUrl();
       if (result.success && result.portalUrl) {
         window.location.href = result.portalUrl;
       }
     } catch (err: any) {
-      console.error("Error opening invoices:", err);
       toast({
         title: "Error",
         description: "Could not open billing portal",
@@ -128,46 +141,24 @@ const BillingSettingsPage: React.FC = () => {
   };
 
   const handleSetDefault = async (id: string) => {
-    // LemonSqueezy manages default payment methods in their portal.
-    // This function is likely not needed if we fully delegate to LS, 
-    // but if we keep a local syncd list, we might want to guide them to LS.
-    // For now, removing the local logic or redirecting.
-
-    // Changing to redirect to portal for management
     handleUpdatePaymentMethod();
   };
 
   const handleRemovePaymentMethod = async (id: string) => {
-    // Similarly, remove via portal
     handleUpdatePaymentMethod();
   };
 
   const handleChangePlan = async () => {
-    try {
-      // Navigate to pricing page to change plan
-      navigate("/pricing");
-    } catch (err: any) {
-      console.error("Error changing plan:", err);
-      toast({
-        title: "Error",
-        description: err.message || "Failed to change plan",
-        variant: "destructive",
-      });
-    }
+    navigate("/pricing");
   };
 
   const handleUpdatePaymentMethod = async () => {
     try {
-      const result = await SubscriptionService.updatePaymentMethod().catch(
-        (err) => {
-          throw new Error(err.message || "Failed to update payment method");
-        }
-      );
+      const result = await SubscriptionService.updatePaymentMethod();
       if (result.success && result.redirectUrl) {
         window.location.href = result.redirectUrl;
       }
     } catch (err: any) {
-      console.error("Error updating payment method:", err);
       toast({
         title: "Error",
         description: err.message || "Failed to update payment method",
@@ -178,28 +169,22 @@ const BillingSettingsPage: React.FC = () => {
 
   const handleCancelSubscription = async () => {
     try {
-      if (
-        window.confirm("Are you sure you want to cancel your subscription?")
-      ) {
-        const result = await SubscriptionService.cancelSubscription(
-          "User requested cancellation"
-        );
-        if (result.success) {
-          // Refresh subscription data
-          const subscriptionResponse =
-            await SubscriptionService.getCurrentSubscription();
-          setSubscription(subscriptionResponse.subscription || null);
-
-          toast({
-            title: "Success",
-            description: "Subscription cancelled successfully!",
-          });
-        } else {
-          throw new Error(result.message || "Failed to cancel subscription");
-        }
+      const result = await SubscriptionService.cancelSubscription(
+        surveyReason || "User requested cancellation via wizard"
+      );
+      if (result.success) {
+        const subscriptionResponse = await SubscriptionService.getCurrentSubscription();
+        setSubscription(subscriptionResponse.subscription || null);
+        toast({
+          title: "Success",
+          description: "Subscription cancelled successfully!",
+        });
+        // Reset step or navigate away
+        setCancelStep('start');
+      } else {
+        throw new Error(result.message || "Failed to cancel subscription");
       }
     } catch (err: any) {
-      console.error("Error cancelling subscription:", err);
       toast({
         title: "Error",
         description: err.message || "Failed to cancel subscription",
@@ -209,71 +194,55 @@ const BillingSettingsPage: React.FC = () => {
   };
 
   const getCardIcon = (type: string) => {
+    // You can replace these with actual SVG components or images for better visuals
     switch (type) {
-      case "visa":
-        return "💳";
-      case "mastercard":
-        return "💳";
-      case "amex":
-        return "💳";
-      case "paypal":
-        return "🅿️";
-      default:
-        return "💳";
+      case "visa": return "💳";
+      case "mastercard": return "💳";
+      case "amex": return "💳";
+      case "paypal": return "🅿️";
+      default: return "💳";
     }
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "paid":
-        return (
-          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-            Paid
-          </span>
-        );
-      case "pending":
-        return (
-          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
-            Pending
-          </span>
-        );
-      case "failed":
-        return (
-          <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-            Failed
-          </span>
-        );
-      default:
-        return (
-          <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">
-            Unknown
-          </span>
-        );
-    }
+    const styles = {
+      paid: "bg-emerald-100 text-emerald-800 border-emerald-200",
+      pending: "bg-amber-100 text-amber-800 border-amber-200",
+      failed: "bg-red-100 text-red-800 border-red-200",
+      unknown: "bg-gray-100 text-gray-800 border-gray-200"
+    };
+    const style = styles[status as keyof typeof styles] || styles.unknown;
+
+    return (
+      <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full border ${style} capitalize`}>
+        {status}
+      </span>
+    );
   };
 
   if (loading) {
     return (
-      <div className="w-full py-6 flex justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className="w-full min-h-[60vh] flex flex-col justify-center items-center">
+        <Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" />
+        <p className="text-gray-500 font-medium">Loading your billing details...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="w-full py-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <AlertCircle className="h-5 w-5 text-red-400 mr-2" />
-            <h3 className="text-red-800 font-medium">Error Loading Data</h3>
+      <div className="w-full p-8">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start gap-4">
+          <AlertCircle className="h-6 w-6 text-red-500 shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-red-800 font-semibold text-lg">Unable to load billing info</h3>
+            <p className="text-red-600 mt-1">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm transition-colors">
+              Retry Connection
+            </button>
           </div>
-          <p className="text-red-600 mt-1">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-            Retry
-          </button>
         </div>
       </div>
     );
@@ -283,262 +252,255 @@ const BillingSettingsPage: React.FC = () => {
     ? new Date(subscription.current_period_end)
     : null;
 
+  const cycleStart = subscription?.current_period_start || '';
+  const cycleEnd = subscription?.current_period_end || '';
+
   return (
-    <div className="w-full p-8 bg-white">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Billing</h1>
-        <p className="text-gray-600 mt-1">
-          Manage your subscription, payment methods, and billing history
-        </p>
-      </div>
+    <div className="w-full px-8 py-8 bg-white min-h-screen">
+      <div className="w-full">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Billing & Subscription</h1>
+          <p className="text-gray-600 mt-2 text-lg">
+            Manage your plan, track usage, and billing settings.
+          </p>
+        </div>
 
-      <div className="space-y-6">
-        {/* Payment Methods */}
-        <div className="bg-white  rounded-xl shadow-sm border border-gray-200 ">
-          <div className="p-6 border-b border-gray-200 ">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-gray-900 ">
-                Payment Methods
-              </h2>
-              <button
-                onClick={handleAddPaymentMethod}
-                className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700">
-                <Plus className="h-4 w-4 mr-1" />
-                Manage Payment Methods
-              </button>
-            </div>
-          </div>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="bg-transparent dark:bg-transparent gap-3 w-full justify-start rounded-none p-0 h-auto space-x-6 border-b-0 border-none">
+            <TabsTrigger
+              value="overview"
+              className="px-1 py-3 bg-transparent border-none data-[state=active]:text-blue-600 rounded-none shadow-none font-medium text-sm text-gray-500 hover:text-gray-700 data-[state=active]:bg-transparent transition-all"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="billing"
+              className="px-1 py-3 bg-transparent border-none data-[state=active]:text-blue-600 rounded-none shadow-none font-medium text-sm text-gray-500 hover:text-gray-700 data-[state=active]:bg-transparent transition-all"
+            >
+              Billing Info
+            </TabsTrigger>
+            <TabsTrigger
+              value="cancel"
+              className="px-1 py-3 bg-transparent border-none data-[state=active]:text-red-600 rounded-none shadow-none font-medium text-sm text-gray-500 hover:text-red-600 data-[state=active]:bg-transparent transition-all"
+            >
+              Cancel Subscription
+            </TabsTrigger>
+          </TabsList>
 
-          <div className="p-6">
-            {paymentMethods.length === 0 ? (
-              <div className="text-center py-8">
-                <CreditCard className="mx-auto h-12 w-12 text-gray-400 " />
-                <h3 className="mt-2 text-sm font-medium text-gray-900 ">
-                  No payment methods
-                </h3>
-                <p className="mt-1 text-sm text-gray-500 ">
-                  Get started by adding a new payment method.
-                </p>
-                <div className="mt-6">
-                  <button
-                    onClick={handleAddPaymentMethod}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Manage Payment Methods
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <ul className="divide-y divide-gray-200">
-                {paymentMethods.map((method) => (
-                  <li key={method.id} className="py-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="text-2xl mr-3">
-                          {getCardIcon(method.type)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 ">
-                            {method.type.charAt(0).toUpperCase() +
-                              method.type.slice(1)}{" "}
-                            ending in {method.lastFour}
-                          </p>
-                          <p className="text-sm text-gray-500 ">
-                            Expires {method.expiryMonth}/{method.expiryYear}
-                          </p>
-                        </div>
-                        {method.isDefault && (
-                          <span className="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100  text-blue-800 ">
-                            Default
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex space-x-2">
-                        {!method.isDefault && (
-                          <button
-                            onClick={() => handleSetDefault(method.id)}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-700">
-                            Set as default
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleRemovePaymentMethod(method.id)}
-                          className="text-sm font-medium text-red-600 hover:text-red-700">
-                          Remove
-                        </button>
-                      </div>
+          {/* OVERVIEW TAB */}
+          <TabsContent value="overview">
+            <div className="grid gap-8">
+              {/* Plan Summary */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 flex items-center justify-between">
+                  {/* Left Side: Plan Info */}
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-xl ${subscription?.status === 'active' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-600'}`}>
+                      <Zap className="h-8 w-8" />
                     </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-
-        {/* Add Payment Method Modal Removed */}
-
-        {/* Billing History */}
-        <div className="bg-white  rounded-xl shadow-sm border border-gray-200 ">
-          <div className="p-6 border-b border-gray-200 ">
-            <h2 className="text-lg font-semibold text-gray-900 ">
-              Billing History
-            </h2>
-          </div>
-
-          <div className="p-6">
-            {invoices.length === 0 ? (
-              <div className="text-center py-8">
-                <Calendar className="mx-auto h-12 w-12 text-gray-400 " />
-                <h3 className="mt-2 text-sm font-medium text-gray-900 ">
-                  No billing history
-                </h3>
-                <p className="mt-1 text-sm text-gray-500 ">
-                  Your billing history will appear here once you have payments.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 ">
-                  <thead className="bg-gray-50 ">
-                    <tr>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                        Description
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                        Amount
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white  divide-y divide-gray-200 ">
-                    {invoices.map((invoice) => (
-                      <tr key={invoice.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 ">
-                          {new Date(invoice.date).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 ">
-                          {invoice.description}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 ">
-                          ${invoice.amount.toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 ">
-                          {getStatusBadge(invoice.status)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 ">
-                          {invoice.receiptUrl ? (
-                            <a
-                              href={invoice.receiptUrl}
-                              className="text-blue-600 hover:text-blue-900  "
-                              target="_blank"
-                              rel="noopener noreferrer">
-                              Download
-                            </a>
-                          ) : (
-                            <span className="text-gray-400">No receipt</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            <div className="mt-4 flex justify-center">
-              <button onClick={handleViewAllInvoices} className="text-sm font-medium text-blue-600 hover:text-blue-700  ">
-                View All Invoices
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Subscription Management */}
-        <div className="bg-white  rounded-xl shadow-sm border border-gray-200 ">
-          <div className="p-6 border-b border-gray-200 ">
-            <h2 className="text-lg font-semibold text-gray-900 ">
-              Subscription Management
-            </h2>
-          </div>
-
-          <div className="p-6">
-            {subscription ? (
-              <div>
-                <div className="flex items-center justify-between p-4 bg-gray-50  rounded-lg mb-6">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 ">
-                      {subscription?.plan?.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 ">
-                      Billed monthly at $
-                      {(subscription?.plan?.price || 0).toFixed(2)}
-                    </p>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 capitalize">
+                        {currentPlan?.name || "Free Plan"}
+                      </h3>
+                      <p className="text-gray-500">
+                        {currentPlan?.price
+                          ? `$${currentPlan.price}/${currentPlan.interval === 'year' ? 'yr' : 'mo'}`
+                          : "Free Forever"}
+                        {nextBillingDate && ` • Renews ${nextBillingDate.toLocaleDateString()}`}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    {nextBillingDate && (
-                      <>
-                        <p className="text-sm text-gray-600 ">
-                          Next billing date
-                        </p>
-                        <p className="font-medium text-gray-900 ">
-                          {nextBillingDate.toLocaleDateString()}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </div>
 
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <button
-                    onClick={handleChangePlan}
-                    className="flex items-center px-4 py-2 bg-white  border border-gray-300  rounded-lg text-sm font-medium text-gray-700  hover:bg-gray-50 ">
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    Change Plan
-                  </button>
-                  <button
-                    onClick={handleUpdatePaymentMethod}
-                    className="flex items-center px-4 py-2 bg-white  border border-gray-300  rounded-lg text-sm font-medium text-gray-700  hover:bg-gray-50 ">
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Update Payment Method
-                  </button>
-                  {subscription?.status === "active" && (
-                    <button
-                      onClick={handleCancelSubscription}
-                      className="flex items-center px-4 py-2 bg-white  border border-red-300  rounded-lg text-sm font-medium text-red-700  hover:bg-red-50 ">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Cancel Subscription
-                    </button>
+                  {/* Right Side: Change Plan Button (Hidden for Researcher) */}
+                  {currentPlan?.id !== 'researcher' && (
+                    <div className="flex gap-3">
+                      <button onClick={handleChangePlan} className="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+                        Change Plan
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <Loader2 className="mx-auto h-12 w-12 text-gray-400  animate-spin" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900 ">
-                  Loading subscription data
-                </h3>
+
+              {/* Usage Charts & Cycle Meter */}
+              <UsageChart usage={usage} limits={limits} cycleStart={cycleStart} cycleEnd={cycleEnd} />
+            </div>
+          </TabsContent>
+
+          {/* BILLING INFO TAB */}
+          <TabsContent value="billing">
+            <div className="space-y-8">
+              {/* Payment Methods */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-gray-500" />
+                    Payment Methods
+                  </h3>
+                  <button onClick={handleAddPaymentMethod} className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+                    + Add New
+                  </button>
+                </div>
+                <div className="p-6">
+                  {paymentMethods.length === 0 ? (
+                    <div className="text-center py-6 text-gray-500">No payment methods found.</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {paymentMethods.map((method) => (
+                        <div key={method.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                          <span className="flex items-center gap-3">
+                            <span className="text-2xl">{getCardIcon(method.type)}</span>
+                            <span className="font-medium text-gray-700 capitalize">{method.type} •••• {method.lastFour}</span>
+                          </span>
+                          <button onClick={() => handleUpdatePaymentMethod()} className="text-gray-400 hover:text-gray-600"><Edit3 className="h-4 w-4" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        </div>
+
+              {/* Invoices */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-gray-500" />
+                    Invoice History
+                  </h3>
+                  <button onClick={handleViewAllInvoices} className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">
+                    View All
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  {invoices.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">No invoices yet.</div>
+                  ) : (
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                          <th className="px-6 py-4 font-medium text-gray-500">Date</th>
+                          <th className="px-6 py-4 font-medium text-gray-500">Amount</th>
+                          <th className="px-6 py-4 font-medium text-gray-500">Status</th>
+                          <th className="px-6 py-4 font-medium text-gray-500 text-right">Receipt</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {invoices.map((inv) => (
+                          <tr key={inv.id} className="hover:bg-gray-50/50">
+                            <td className="px-6 py-4 text-gray-600">{new Date(inv.date).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 font-semibold text-gray-900">${inv.amount.toFixed(2)}</td>
+                            <td className="px-6 py-4">{getStatusBadge(inv.status)}</td>
+                            <td className="px-6 py-4 text-right">
+                              {inv.receiptUrl && <a href={inv.receiptUrl} target="_blank" className="text-blue-600 hover:underline">Download</a>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* CANCEL SUBSCRIPTION TAB */}
+          <TabsContent value="cancel">
+            <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-red-100 overflow-hidden">
+              {/* Step 1: Retention Warning */}
+              {cancelStep === 'start' && (
+                <div className="p-8 text-center space-y-6">
+                  <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                    <AlertCircle className="h-8 w-8" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Are you sure you want to cancel?</h2>
+                    <p className="text-gray-500 mt-2 max-w-md mx-auto">
+                      If you cancel, you will lose access to premium features like **Unlimited Scans**, **Plagiarism Checking**, and **Priority Support** at the end of your billing period.
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50 p-6 rounded-xl text-left space-y-3">
+                    <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">What you will lose:</h4>
+                    <ul className="space-y-2">
+                      <li className="flex items-center text-gray-700"><XCircle className="h-4 w-4 text-red-500 mr-3" /> Unlimited Originality Scans</li>
+                      <li className="flex items-center text-gray-700"><XCircle className="h-4 w-4 text-red-500 mr-3" /> Advanced Citation Analytics</li>
+                      <li className="flex items-center text-gray-700"><XCircle className="h-4 w-4 text-red-500 mr-3" /> Priority Support Access</li>
+                      <li className="flex items-center text-gray-700"><XCircle className="h-4 w-4 text-red-500 mr-3" /> Draft Comparison History</li>
+                    </ul>
+                  </div>
+
+                  <div className="flex gap-4 justify-center pt-4">
+                    <button onClick={() => navigate('/dashboard')} className="px-6 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors">
+                      Keep My Subscription
+                    </button>
+                    <button onClick={() => setCancelStep('survey')} className="px-6 py-2.5 bg-white border border-red-200 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-colors">
+                      Continue to Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Survey */}
+              {cancelStep === 'survey' && (
+                <div className="p-8 space-y-6">
+                  <h2 className="text-2xl font-bold text-gray-900">We're sorry to see you go</h2>
+                  <p className="text-gray-600">Please tell us why you are leaving so we can improve ColabWize.</p>
+
+                  <div className="space-y-3">
+                    {['Too expensive', 'Missing features', 'Found a better alternative', 'Technical issues', 'Other'].map((reason) => (
+                      <label key={reason} className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                        <input
+                          type="radio"
+                          name="cancelReason"
+                          value={reason}
+                          checked={surveyReason === reason}
+                          onChange={(e) => setSurveyReason(e.target.value)}
+                          className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                        />
+                        <span className="ml-3 text-gray-700 font-medium">{reason}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-between items-center pt-6">
+                    <button onClick={() => setCancelStep('start')} className="text-gray-500 hover:text-gray-700 font-medium">
+                      Back
+                    </button>
+                    <button
+                      disabled={!surveyReason}
+                      onClick={() => setCancelStep('confirm')}
+                      className="px-6 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Final Confirm */}
+              {cancelStep === 'confirm' && (
+                <div className="p-8 text-center space-y-6">
+                  <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                    <Trash2 className="h-8 w-8" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">Final Confirmation</h2>
+                  <p className="text-gray-600">
+                    By clicking "Confirm Cancellation" below, your subscription will be set to cancel at the end of the current billing period ({nextBillingDate?.toLocaleDateString()}).
+                  </p>
+
+                  <button
+                    onClick={handleCancelSubscription}
+                    className="w-full py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors shadow-lg shadow-red-200">
+                    Confirm Cancellation
+                  </button>
+
+                  <button onClick={() => setCancelStep('start')} className="text-gray-500 hover:text-gray-700 text-sm font-medium">
+                    Go Back
+                  </button>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

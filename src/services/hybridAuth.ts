@@ -113,7 +113,7 @@ export async function signInWithEmail(
   email: string,
   password: string,
   rememberMe: boolean = false
-): Promise<{ success: boolean; user: any; userData: any }> {
+): Promise<{ success: boolean; user: any; userData: any; requires_2fa?: boolean; userId?: string }> {
   try {
     const sanitizedEmail = email.trim().toLowerCase();
     // First, sign in with Supabase Authentication

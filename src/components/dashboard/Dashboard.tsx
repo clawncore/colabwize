@@ -33,17 +33,16 @@ import { DocumentUploadModal } from "./DocumentUploadModal";
 import AnalyticsService, { type DashboardData } from "../../services/analyticsService";
 import { useAuth } from "../../hooks/useAuth";
 import { useOnboarding } from "../../hooks/useOnboarding";
+import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
+import { extractTextFromContent } from "../../utils/documentUtils";
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { shouldShowTour, completeOnboarding, skipOnboarding, loading: onboardingLoading } = useOnboarding();
-  // Safe derivation of userPlan (adjust logic if your auth provider stores it differently)
-  const userPlan = user?.user_metadata?.plan || user?.app_metadata?.plan || 'free';
-
-  const handleUpgradeClick = () => {
-    navigate("/dashboard/billing/subscription");
-  };
+  // Use global subscription store for accurate plan status
+  // Use global subscription store for accurate plan status
+  const { plan, loading: subscriptionLoading, status: subscriptionStatus } = useSubscriptionStore();
 
   // const { toast } = useToast();
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -57,10 +56,11 @@ export const Dashboard: React.FC = () => {
   });
   // const [loading, setLoading] = useState(true);
   // const [uploadingProject, setUploadingProject] = useState(false);
-  const latestProject: Project | null = null;
+  const [latestProject, setLatestProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for the bar chart
-  const documentTrendData = [
+  // Memoize data to prevent re-renders
+  const documentTrendData = React.useMemo(() => [
     { name: 'Jan', documents: 4 },
     { name: 'Feb', documents: 3 },
     { name: 'Mar', documents: 2 },
@@ -68,16 +68,43 @@ export const Dashboard: React.FC = () => {
     { name: 'May', documents: 8 },
     { name: 'Jun', documents: 9 },
     { name: 'Jul', documents: 12 },
-  ];
+  ], []);
 
-  // ... (existing code)
+  // Helper to ensure consistency with sidebar logic
+  const userPlan = plan || 'free';
 
-  const fetchDashboardData = async () => {
+  const handleUpgradeClick = () => {
+    navigate("/dashboard/billing/subscription");
+  };
+
+  const fetchLatestProject = React.useCallback(async () => {
+    if (!user) return;
+    try {
+      const response = await documentService.getProjects();
+      if (response.success && response.data && response.data.length > 0) {
+        // Sort by updated_at desc just in case, though API usually does it
+        const sorted = [...response.data].sort((a, b) =>
+          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        );
+        setLatestProject(sorted[0]);
+      }
+    } catch (err) {
+      console.error("Error fetching latest project", err);
+    }
+  }, [user]);
+
+  const fetchDashboardData = React.useCallback(async () => {
+    if (!user) return; // Don't fetch if no user
+
     try {
       setConnectionError(false);
-      // setLoading(true);
+      setLoading(true);
       const data = await AnalyticsService.getDashboardData();
-      setDashboardData(data);
+
+      // Only update state if data actually changed or is different (deep compare would be better but this helps)
+      setDashboardData(prev => ({ ...prev, ...data }));
+
+      await fetchLatestProject();
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       setConnectionError(true); // Trigger Error UI
@@ -90,9 +117,9 @@ export const Dashboard: React.FC = () => {
       });
     } finally {
       setIsRetrying(false);
-      // setLoading(false);
+      setLoading(false);
     }
-  };
+  }, [user, fetchLatestProject]); // Depend on user
 
   const handleRetry = () => {
     setIsRetrying(true);
@@ -119,8 +146,32 @@ export const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [fetchDashboardData, user]);
+
+  if (subscriptionLoading || subscriptionStatus === 'unknown') {
+    return (
+      <div className="p-6 animate-pulse">
+        <div className="flex justify-between items-start mb-8">
+          <div className="space-y-3">
+            <div className="h-8 w-64 bg-gray-200 rounded"></div>
+            <div className="h-4 w-96 bg-gray-100 rounded"></div>
+          </div>
+          <div className="flex gap-3">
+            <div className="h-9 w-24 bg-gray-200 rounded-lg"></div>
+            <div className="h-9 w-24 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="h-40 bg-gray-100 rounded-2xl"></div>
+          <div className="h-40 bg-gray-100 rounded-2xl"></div>
+          <div className="h-40 bg-gray-100 rounded-2xl"></div>
+        </div>
+      </div>
+    );
+  }
 
   // ... (fetchLatestProject and others) ...
 
@@ -184,17 +235,20 @@ export const Dashboard: React.FC = () => {
         <div className="flex gap-3">
           <button
             data-tour="upload-button"
-            onClick={() => setShowUploadModal(true)}
+            onClick={() => navigate("/dashboard/documents")}
             className="flex items-center px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors shadow-sm">
             <Upload className="w-3.5 h-3.5 mr-1.5" />
             Upload
           </button>
-          <button
-            onClick={handleUpgradeClick}
-            className="flex items-center px-3 py-1.5 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-sm font-bold rounded-lg hover:from-amber-500 hover:to-amber-700 active:bg-amber-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-            <Crown className="w-3.5 h-3.5 mr-1.5 text-amber-100" />
-            Upgrade
-          </button>
+          {!['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) && (
+            <button
+              onClick={handleUpgradeClick}
+              className="flex items-center px-3 py-1.5 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-sm font-bold rounded-lg hover:from-amber-500 hover:to-amber-700 active:bg-amber-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            >
+              <Crown className="w-3.5 h-3.5 mr-1.5 text-amber-100" />
+              Upgrade
+            </button>
+          )}
         </div>
       </div>
 
@@ -235,14 +289,10 @@ export const Dashboard: React.FC = () => {
               {/* Reduced Height Visual Page Preview */}
               <div className="relative mt-auto">
                 <div className="bg-white p-6 rounded-t-xl shadow-sm border-x border-t border-gray-200 h-40 overflow-hidden relative mx-2">
-                  {/* Fake Content Lines */}
-                  <div className="space-y-3 opacity-60">
-                    <div className="w-3/4 h-2 bg-gray-200 rounded"></div>
-                    <div className="w-full h-2 bg-gray-100 rounded"></div>
-                    <div className="w-5/6 h-2 bg-gray-100 rounded"></div>
-                    <div className="w-full h-2 bg-gray-100 rounded"></div>
-                    <div className="w-2/3 h-2 bg-gray-100 rounded"></div>
-                    <div className="w-full h-2 bg-gray-100 rounded"></div>
+                  <div className="text-sm text-gray-700 leading-relaxed font-serif opacity-80 whitespace-pre-wrap">
+                    {extractTextFromContent(latestProject.content, 400) || (
+                      <span className="italic text-gray-400">No content available for preview.</span>
+                    )}
                   </div>
                   {/* Gradient Fade to connect with button area */}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/40 to-white"></div>
@@ -278,14 +328,14 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Originality */}
-                <div className={`bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between ${userPlan !== 'researcher' ? 'opacity-90' : ''}`}>
+                <div className={`bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between ${!['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) ? 'opacity-90' : ''}`}>
                   <div className="flex items-center gap-3">
                     <div className="p-1.5 bg-green-50 text-green-600 rounded-lg">
                       <ShieldCheck className="w-4 h-4" />
                     </div>
                     <span className="text-sm font-semibold text-gray-700">Originality</span>
                   </div>
-                  {userPlan === 'researcher' ? (
+                  {['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) ? (
                     <span className="font-bold text-green-600">{Math.round(latestProject.originality_scans?.[0]?.overallScore || 0)}%</span>
                   ) : (
                     <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded flex items-center pointer-events-none">
@@ -302,7 +352,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                     <span className="text-sm font-semibold text-gray-700">Citations</span>
                   </div>
-                  {userPlan === 'researcher' ? (
+                  {['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) ? (
                     <span className="font-bold text-gray-900 capitalize">{dashboardData.citationStatus || "-"}</span>
                   ) : (
                     <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded flex items-center pointer-events-none">
@@ -319,7 +369,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                     <span className="text-sm font-semibold text-gray-700">Authorship</span>
                   </div>
-                  {userPlan === 'researcher' ? (
+                  {['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) ? (
                     <span className="font-bold text-gray-900">{dashboardData.authorshipVerified ? "Verified" : "-"}</span>
                   ) : (
                     <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded flex items-center pointer-events-none">
@@ -330,7 +380,7 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Upgrade Promo (Small) using empty space efficiently */}
-              {userPlan !== 'researcher' && (
+              {!['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) && (
                 <div className="mt-4 pt-4 border-t border-gray-200/60">
                   <button
                     onClick={handleUpgradeClick}
@@ -360,7 +410,7 @@ export const Dashboard: React.FC = () => {
 
         <div className="relative">
           {/* Content wrapping for blur effect */}
-          <div className={`${userPlan !== "researcher" ? "filter blur-sm select-none pointer-events-none opacity-60 transition-all duration-500" : ""}`}>
+          <div className={`${!['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) ? "filter blur-sm select-none pointer-events-none opacity-60 transition-all duration-500" : ""}`}>
 
             {/* Key Metrics Row - Redesigned Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -454,8 +504,8 @@ export const Dashboard: React.FC = () => {
                     <BarChartIcon className="w-4 h-4 text-gray-400" />
                   </div>
                 </div>
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="h-72 w-full min-h-[300px]">
+                  <ResponsiveContainer width="99%" height="100%">
                     <BarChart
                       data={documentTrendData}
                       margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
@@ -578,7 +628,7 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Premium Overlay */}
-          {userPlan !== "researcher" && (
+          {!['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4">
               {/* Simplified Overlay - No Box */}
               <div className="text-center">

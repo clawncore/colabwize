@@ -16,6 +16,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { Button } from "./ui/button";
+import { useAuth } from "../hooks/useAuth";
 
 // Define types for dropdown items
 interface DropdownItem {
@@ -27,6 +28,7 @@ interface DropdownItem {
 }
 
 export default function Navigation() {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [productOpen, setProductOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
@@ -175,9 +177,8 @@ export default function Navigation() {
               <div className="text-sm font-medium transition-colors duration-200 text-gray-800 flex items-center gap-1 cursor-pointer focus:outline-none">
                 Solutions
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${
-                    solutionsOpen ? "rotate-180" : ""
-                  }`}
+                  className={`h-4 w-4 transition-transform duration-200 ${solutionsOpen ? "rotate-180" : ""
+                    }`}
                 />
               </div>
               {solutionsOpen && (
@@ -226,9 +227,8 @@ export default function Navigation() {
               <div className="text-sm font-medium transition-colors duration-200 text-gray-800 flex items-center gap-1 cursor-pointer focus:outline-none">
                 Product
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${
-                    productOpen ? "rotate-180" : ""
-                  }`}
+                  className={`h-4 w-4 transition-transform duration-200 ${productOpen ? "rotate-180" : ""
+                    }`}
                 />
               </div>
               {productOpen && (
@@ -281,9 +281,8 @@ export default function Navigation() {
               <div className="text-sm font-medium transition-colors duration-200 text-gray-800 flex items-center gap-1 cursor-pointer focus:outline-none">
                 Resources
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${
-                    resourcesOpen ? "rotate-180" : ""
-                  }`}
+                  className={`h-4 w-4 transition-transform duration-200 ${resourcesOpen ? "rotate-180" : ""
+                    }`}
                 />
               </div>
               {resourcesOpen && (
@@ -345,21 +344,42 @@ export default function Navigation() {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button
-              asChild
-              className="bg-gray-600 hover:bg-gray-700 text-white font-semibold shadow-md hover:shadow-lg transition-all">
-              <Link to="/login">Sign In</Link>
-            </Button>
-            <Button
-              asChild
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all">
-              <Link to="/schedule-demo">Schedule Demo</Link>
-            </Button>
-            <Button
-              asChild
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md hover:shadow-lg transition-all">
-              <Link to="/signup">Start ColabWize Free</Link>
-            </Button>
+            {user ? (
+              <>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="bg-white border-gray-300 text-blue-600 hover:bg-gray-50 hover:text-blue-700 font-medium transition-all shadow-sm">
+                  <Link to="/login">Login</Link>
+                </Button>
+
+                <Button
+                  asChild
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-lg shadow-indigo-500/20 rounded-full transition-all duration-300">
+                  <Link to="/dashboard">Start ColabWize Free</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50/50 font-medium transition-all">
+                  <Link to="/login">Sign In</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 border font-medium shadow-sm hover:shadow transition-all">
+                  <Link to="/schedule-demo">Schedule Demo</Link>
+                </Button>
+                <Button
+                  asChild
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg shadow-blue-500/20 rounded-full contrast-125 hover:scale-105 transition-all duration-300">
+                  <Link to="/signup">Start ColabWize Free</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -386,11 +406,10 @@ export default function Navigation() {
           onClick={() => setIsOpen(false)}></div>
       )}
       <div
-        className={`md:hidden fixed top-16 right-0 left-0 bg-[#F3F0EC] z-40 transition-all duration-300 ease-in-out ${
-          isOpen
-            ? "opacity-100 translate-y-0 pointer-events-auto max-h-screen overflow-y-auto"
-            : "opacity-0 -translate-y-full pointer-events-none max-h-0 overflow-hidden"
-        }`}>
+        className={`md:hidden fixed top-16 right-0 left-0 bg-[#F3F0EC] z-40 transition-all duration-300 ease-in-out ${isOpen
+          ? "opacity-100 translate-y-0 pointer-events-auto max-h-screen overflow-y-auto"
+          : "opacity-0 -translate-y-full pointer-events-none max-h-0 overflow-hidden"
+          }`}>
         <div className="container-custom pt-6 pb-8">
           <div className="flex flex-col space-y-6">
             {/* Mobile Navigation Items */}
@@ -406,9 +425,8 @@ export default function Navigation() {
                   className="flex justify-between items-center w-full text-left font-medium text-gray-800 py-2">
                   <span>Solutions</span>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${
-                      solutionsOpen ? "rotate-180" : ""
-                    }`}
+                    className={`h-4 w-4 transition-transform duration-200 ${solutionsOpen ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
                 {solutionsOpen && (
@@ -441,9 +459,8 @@ export default function Navigation() {
                   className="flex justify-between items-center w-full text-left font-medium text-gray-800 py-2">
                   <span>Product</span>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${
-                      productOpen ? "rotate-180" : ""
-                    }`}
+                    className={`h-4 w-4 transition-transform duration-200 ${productOpen ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
                 {productOpen && (
@@ -486,9 +503,8 @@ export default function Navigation() {
                   className="flex justify-between items-center w-full text-left font-medium text-gray-800 py-2">
                   <span>Resources</span>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${
-                      resourcesOpen ? "rotate-180" : ""
-                    }`}
+                    className={`h-4 w-4 transition-transform duration-200 ${resourcesOpen ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
                 {resourcesOpen && (
@@ -531,21 +547,21 @@ export default function Navigation() {
             <div className="flex flex-col space-y-3 pt-4">
               <Button
                 asChild
-                variant="outline"
-                className="w-full py-6 border-2 border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white font-semibold"
+                variant="ghost"
+                className="w-full py-6 text-blue-600 hover:bg-gray-100 font-semibold"
                 onClick={() => setIsOpen(false)}>
                 <Link to="/login">Sign In</Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
-                className="w-full py-6 border-2 border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white font-semibold"
+                className="w-full py-6 border-gray-200 text-gray-800 hover:bg-gray-50 font-semibold"
                 onClick={() => setIsOpen(false)}>
                 <Link to="/schedule-demo">Schedule Demo</Link>
               </Button>
               <Button
                 asChild
-                className="w-full py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-gray-800"
+                className="w-full py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-md shadow-blue-500/20 rounded-full"
                 onClick={() => setIsOpen(false)}>
                 <Link to="/signup">Start ColabWize Free</Link>
               </Button>

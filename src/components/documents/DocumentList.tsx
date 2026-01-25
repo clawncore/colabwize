@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { documentService, Project } from "../../services/documentService";
 import { ArrowLeftIcon } from "lucide-react";
 import { RenameProjectModal } from "../dashboard/RenameProjectModal";
+import { extractTextFromContent } from "../../utils/documentUtils";
 
 type DisplayMode = "grid" | "list";
 
@@ -348,58 +349,14 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                   <div className="bg-gray-100 border border-gray-200 rounded-md p-3 h-32 overflow-hidden">
                     <div className="text-xs text-gray-600 h-28 overflow-hidden">
                       {(() => {
-                        let contentObj = project.content;
-
                         const getFallback = () => {
                           if (project.description && project.description.trim().length > 0) return project.description;
                           const dateStr = new Date(project.updated_at).toLocaleDateString();
                           if (project.word_count > 0) return `${project.word_count} words • ${dateStr}`;
                           return `Document created on ${dateStr}`;
                         };
-
-                        // Parse string content if needed
-                        if (typeof contentObj === 'string') {
-                          try {
-                            contentObj = JSON.parse(contentObj);
-                          } catch (e) {
-                            return getFallback();
-                          }
-                        }
-
-                        if (contentObj && contentObj.type === "doc" && contentObj.content) {
-                          // Extract text from content for preview
-                          const paragraphs = contentObj.content;
-                          let textPreview = "";
-
-                          for (const node of paragraphs) {
-                            if (node.type === "paragraph" && node.content) {
-                              for (const content of node.content) {
-                                if (content.type === "text" && content.text) {
-                                  textPreview += content.text + " ";
-                                }
-                              }
-                            }
-                            // Also check for headings or other blocks if needed
-                            if (node.content && !node.type.includes("paragraph")) {
-                              for (const content of node.content) {
-                                if (content.type === "text" && content.text) {
-                                  textPreview += content.text + " ";
-                                }
-                              }
-                            }
-
-                            if (textPreview.length > 150) {
-                              break;
-                            }
-                          }
-
-                          return textPreview.length > 0
-                            ? textPreview.substring(0, 140) +
-                            (textPreview.length > 140 ? "..." : "")
-                            : getFallback();
-                        }
-
-                        return getFallback();
+                        const text = extractTextFromContent(project.content, 140);
+                        return text || getFallback();
                       })()}
                     </div>
                   </div>

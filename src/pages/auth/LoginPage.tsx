@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useSearchParams } from "react-router-dom";
-import { Mail, Lock, AlertCircle } from "lucide-react";
+import { Mail, Lock, AlertCircle, Smartphone, Shield } from "lucide-react";
+import { motion } from "framer-motion";
 import AuthLayout from "../../components/auth/AuthLayout";
 import FormInput from "../../components/auth/FormInput";
 import { Button } from "../../components/ui/button";
@@ -12,6 +13,7 @@ import {
   signInWithEmail,
   resendVerificationEmail,
 } from "../../services/hybridAuth";
+import authService from "../../services/authService";
 
 // List of allowed email domains
 const ALLOWED_DOMAINS = [
@@ -85,6 +87,8 @@ const LoginPage: React.FC = () => {
   const [isEmailNotConfirmed, setIsEmailNotConfirmed] = React.useState(false);
   const [selectedPlan, setSelectedPlan] = React.useState<string | null>(null);
   const [redirectPath, setRedirectPath] = React.useState<string | null>(null);
+  const [is2FARequired, setIs2FARequired] = React.useState(false);
+  const [userIdFor2FA, setUserIdFor2FA] = React.useState<string | null>(null);
 
   const {
     register,
@@ -128,25 +132,14 @@ const LoginPage: React.FC = () => {
       );
 
       if (result.user) {
-        // Handle successful login
-        console.log("Login successful", result);
-
-        // Wait a bit for the auth state to propagate
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        // Determine redirect path
-        let finalRedirectPath = redirectPath || "/dashboard";
-
-        // If there's a selected plan, preserve it in the redirect
-        if (selectedPlan && !finalRedirectPath.includes("?plan=")) {
-          finalRedirectPath += finalRedirectPath.includes("?")
-            ? `&plan=${selectedPlan}`
-            : `?plan=${selectedPlan}`;
-        }
-
-        console.log("Redirecting to:", finalRedirectPath);
-        // Use window.location for full page reload to ensure proper state reset
-        window.location.href = finalRedirectPath;
+        // Handle successful login directly
+        await handleLoginSuccess(redirectPath, selectedPlan);
+      } else if (result.requires_2fa && result.userId) {
+        // Handle 2FA Challenge
+        setIs2FARequired(true);
+        setUserIdFor2FA(result.userId);
+        setIsLoading(false);
+        // We stay on the page but switch to 2FA form
       } else {
         throw new Error("Login failed");
       }
@@ -204,6 +197,145 @@ const LoginPage: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  const handleLoginSuccess = async (redirect: string | null, plan: string | null) => {
+    // Wait a bit for the auth state to propagate
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Determine redirect path
+    let finalRedirectPath = redirect || "/dashboard";
+
+    // If there's a selected plan, preserve it in the redirect
+    if (plan && !finalRedirectPath.includes("?plan=")) {
+      finalRedirectPath += finalRedirectPath.includes("?")
+        ? `&plan=${plan}`
+        : `?plan=${plan}`;
+    }
+
+    console.log("Redirecting to:", finalRedirectPath);
+    // Use window.location for full page reload to ensure proper state reset
+    window.location.href = finalRedirectPath;
+  };
+
+  const handle2FASubmit = async (otp: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      if (!userIdFor2FA) throw new Error("Session invalid");
+
+      const result = await authService.verify2FA(userIdFor2FA, otp);
+      if (result.success) {
+        await handleLoginSuccess(redirectPath, selectedPlan);
+      } else {
+        setError(result.message || "Invalid authentication code");
+      }
+    } catch (err: any) {
+      setError(err.message || "Verification failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 2FA Form Render
+  if (is2FARequired) {
+    return (
+      <AuthLayout title="Two-Factor Authentication" subtitle="Enter the code from your app">
+        <div className="flex flex-col items-center justify-center mb-8">
+          <div className="relative w-32 h-32 flex items-center justify-center mb-4">
+            <div className="absolute inset-0 bg-blue-100/50 rounded-full blur-2xl"></div>
+
+            {/* Mobile bouncing/floating */}
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+              className="relative z-10 flex items-center justify-center"
+            >
+              <Smartphone className="w-24 h-24 text-blue-600" strokeWidth={1} />
+
+              {/* Screen glow effect */}
+              <div className="absolute inset-0 bg-blue-400/5 rounded-3xl blur-sm transform scale-x-75 scale-y-90"></div>
+
+              {/* Shield appearing inside screen */}
+              <motion.div
+                animate={{
+                  opacity: [0, 1, 1, 0],
+                  scale: [0.5, 1.2, 1, 0.5]
+                }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 3,
+                  times: [0, 0.2, 0.8, 1],
+                  ease: "easeInOut"
+                }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <div className="bg-white p-1.5 rounded-full shadow-lg">
+                  <Shield className="w-5 h-5 text-green-500 fill-green-100" />
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+          <p className="text-sm text-gray-500 text-center max-w-xs">
+            Your account is protected with 2FA. Please enter the verification code from your authenticator app.
+          </p>
+        </div>
+
+        {error && (
+          <div className="rounded-lg p-3 bg-red-50 border border-red-200 mb-6 slide-in-from-top-2 animate-in fade-in duration-300">
+            <div className="flex items-start">
+              <AlertCircle className="h-5 w-5 mr-2 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm font-medium text-red-800">{error}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 block text-center">Authentication Code</label>
+            <div className="relative">
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="000000"
+                autoFocus
+                className="w-full h-14 text-center text-3xl tracking-[0.5em] font-bold text-gray-800 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-gray-200"
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  e.target.value = val;
+                  if (val.length === 6) handle2FASubmit(val);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const val = (e.currentTarget as HTMLInputElement).value;
+                    if (val.length === 6) handle2FASubmit(val);
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <Button
+              onClick={() => setIs2FARequired(false)} // Cancel/Back
+              className="w-full h-11 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium shadow-sm transition-colors">
+              Cancel
+            </Button>
+            <Button
+              disabled={isLoading}
+              onClick={() => {
+                const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+                if (input && input.value.length === 6) handle2FASubmit(input.value);
+              }}
+              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium">
+              {isLoading ? (
+                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : "Verify"}
+            </Button>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout title="Welcome back" subtitle="Sign in to your account">

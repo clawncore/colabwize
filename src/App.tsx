@@ -188,11 +188,7 @@ function App() {
                   {/* Guest Only Routes - Accessible only when not signed in */}
                   <Route
                     path="/login"
-                    element={
-                      <GuestRoute>
-                        <LoginPage />
-                      </GuestRoute>
-                    }
+                    element={<LoginPage />}
                   />
                   <Route path="/signup" element={<SignupPage />} />
                   <Route

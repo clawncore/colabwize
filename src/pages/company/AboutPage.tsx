@@ -79,13 +79,13 @@ function FeaturesPresentationFlow() {
               </h3>
               <p className="text-gray-600 mb-4 leading-relaxed">
                 In an age of AI-generated content, students and researchers face
-                a career-ending paradox: use AI tools and risk getting flagged,
+                a high-stakes academic paradox: use AI tools and risk getting flagged,
                 or don't use them and fall behind peers who do.
               </p>
               <p className="text-gray-600 leading-relaxed">
                 ColabWize solves this by providing a defensibility-first
                 platform that doesn't just help you write better—it proves your
-                work is original, properly cited, and human-created.
+                work is original, properly cited, and authentically authored.
               </p>
             </div>
 
@@ -130,32 +130,32 @@ function FeaturesPresentationFlow() {
           {/* Stats Section */}
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12">
-              By the Numbers
+              Built for Academia
             </h2>
             <div className="grid md:grid-cols-4 gap-8 mb-16">
               <div className="bg-white border border-gray-300 rounded-2xl p-6">
-                <div className="text-4xl font-bold text-green-500 mb-2">
-                  1,000+
+                <div className="text-xl font-bold text-green-500 mb-2">
+                  Global Reach
                 </div>
-                <div className="text-gray-600">Active Users</div>
+                <div className="text-gray-600">Used by students across multiple institutions</div>
               </div>
               <div className="bg-white border border-gray-300 rounded-2xl p-6">
-                <div className="text-4xl font-bold text-green-500 mb-2">
-                  10,000+
+                <div className="text-xl font-bold text-green-500 mb-2">
+                  Proven Scale
                 </div>
-                <div className="text-gray-600">Documents Scanned</div>
+                <div className="text-gray-600">Thousands of documents processed</div>
               </div>
               <div className="bg-white border border-gray-300 rounded-2xl p-6">
-                <div className="text-4xl font-bold text-green-500 mb-2">
-                  95%
+                <div className="text-xl font-bold text-green-500 mb-2">
+                  Accuracy First
                 </div>
-                <div className="text-gray-600">Success Rate</div>
+                <div className="text-gray-600">Designed for precision and explainability</div>
               </div>
               <div className="bg-white border border-gray-300 rounded-2xl p-6">
-                <div className="text-4xl font-bold text-green-500 mb-2">
-                  4 min
+                <div className="text-xl font-bold text-green-500 mb-2">
+                  Real-Time
                 </div>
-                <div className="text-gray-600">Average Scan Time</div>
+                <div className="text-gray-600">Instant analysis and feedback</div>
               </div>
             </div>
           </div>
@@ -165,14 +165,15 @@ function FeaturesPresentationFlow() {
             <div className="text-center mb-8">
               <Users className="h-12 w-12 text-green-500 mx-auto mb-4" />
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Our Team
+                The People Behind ColabWize
               </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                We're a team of educators, developers, and researchers who
-                understand the challenges of academic writing. We've been in
-                your shoes, and we built ColabWize to solve the problems we
-                faced.
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+                ColabWize is built and maintained by a small, technically focused team committed to academic integrity and transparency.
               </p>
+              <div className="flex flex-col gap-2">
+                <p className="text-xl font-semibold text-gray-800">Simbisai Chinhema</p>
+                <p className="text-xl font-semibold text-gray-800">Craig Marowa</p>
+              </div>
             </div>
           </div>
         </div>

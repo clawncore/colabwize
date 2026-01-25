@@ -96,10 +96,10 @@ const SubscriptionStatus = ({
         </h2>
         <div
           className={`px-3 py-1 rounded-full text-sm font-medium ${subscription.status === "active"
-              ? "bg-green-100 text-green-800"
-              : subscription.status === "canceled"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-gray-100 text-gray-800"
+            ? "bg-green-100 text-green-800"
+            : subscription.status === "canceled"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-gray-100 text-gray-800"
             }`}>
           {subscription.status.toUpperCase()}
         </div>
@@ -133,6 +133,7 @@ const SubscriptionStatus = ({
                 <Button
                   onClick={handleManage}
                   variant="outline"
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
                   disabled={loading}>
                   Manage Payment Method
                 </Button>
@@ -142,12 +143,12 @@ const SubscriptionStatus = ({
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="bg-red-500 hover:bg-red-600 text-white"
                       disabled={loading}>
                       Cancel Subscription
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent className="bg-white">
                     <AlertDialogHeader>
                       <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
                       <AlertDialogDescription>
@@ -160,7 +161,7 @@ const SubscriptionStatus = ({
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleCancel}
-                        className="bg-red-600 hover:bg-red-700">
+                        className="bg-red-500 hover:bg-red-600 text-white">
                         Cancel Subscription
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -172,7 +173,7 @@ const SubscriptionStatus = ({
           {subscription.cancel_at_period_end && (
             <Button
               onClick={handleReactivate}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-green-500 hover:bg-green-600 text-white"
               disabled={loading}>
               Reactivate Subscription
             </Button>
@@ -181,7 +182,7 @@ const SubscriptionStatus = ({
           {subscription.status === "expired" && (
             <Button
               asChild
-              className="bg-blue-600 hover:bg-blue-700 text-white">
+              className="bg-blue-500 hover:bg-blue-600 text-white">
               <Link to="/pricing">Renew Subscription</Link>
             </Button>
           )}
@@ -329,10 +330,10 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${percentage > 90
-                          ? "bg-red-500"
-                          : percentage > 75
-                            ? "bg-yellow-500"
-                            : "bg-blue-500"
+                        ? "bg-red-500"
+                        : percentage > 75
+                          ? "bg-yellow-500"
+                          : "bg-blue-500"
                         }`}
                       style={{
                         width: `${percentage}%`,
@@ -444,10 +445,10 @@ const PaymentHistory = () => {
                 <div className="flex items-center gap-2 mt-1">
                   <span
                     className={`text-xs px-2 py-1 rounded-full ${invoice.status === "paid"
-                        ? "bg-green-100 text-green-800"
-                        : invoice.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
+                      ? "bg-green-100 text-green-800"
+                      : invoice.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
                       }`}>
                     {invoice.status.toUpperCase()}
                   </span>
@@ -562,8 +563,11 @@ export default function BillingPage() {
       ]);
 
       setData(subData);
-      const plan =
-        plans.find((p) => p.id === subData.subscription.plan.id) || null;
+      const planId = typeof subData.subscription.plan === 'string'
+        ? subData.subscription.plan
+        : subData.subscription.plan.id;
+
+      const plan = plans.find((p) => p.id === planId) || null;
       setActivePlan(plan);
     } catch (error) {
       console.error("Failed to load billing data:", error);

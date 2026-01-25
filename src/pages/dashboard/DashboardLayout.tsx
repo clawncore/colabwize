@@ -53,6 +53,7 @@ export default function DashboardLayout({
     creditBalance,
     fetchSubscription,
     loading: subscriptionLoading,
+    status: subscriptionStatus,
     error: subscriptionError,
   } = useSubscriptionStore();
 
@@ -405,7 +406,11 @@ export default function DashboardLayout({
                     alt="ColabWize Logo"
                     className="h-8 w-auto transition-transform duration-200 group-hover:scale-105"
                   />
-                  {userPlan &&
+                  {/* Loading State for Badge */}
+                  {(subscriptionLoading || subscriptionStatus === 'unknown') ? (
+                    <span className="ml-2 h-5 w-16 bg-gray-200 animate-pulse rounded-full"></span>
+                  ) : (
+                    userPlan &&
                     userPlan !== "Free Plan" &&
                     userPlan !== "Free" && (
                       <span
@@ -421,7 +426,8 @@ export default function DashboardLayout({
                           ? "PRO"
                           : "RESEARCHER"}
                       </span>
-                    )}
+                    )
+                  )}
                 </div>
                 <span className="text-xl font-bold text-gray-900 font-sans hidden sm:block">
                   ColabWize
@@ -500,11 +506,19 @@ export default function DashboardLayout({
                           : "bg-gradient-to-br from-purple-500 to-purple-700"
                       }
                   `}>
-                    <span className="text-white font-medium text-sm">
-                      {user?.user_metadata?.full_name
-                        ? user.user_metadata.full_name.charAt(0).toUpperCase()
-                        : user?.email?.charAt(0).toUpperCase() || "U"}
-                    </span>
+                    {user?.user_metadata?.avatar_url ? (
+                      <img
+                        src={user.user_metadata.avatar_url}
+                        alt="Profile"
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-white font-medium text-sm">
+                        {user?.user_metadata?.full_name
+                          ? user.user_metadata.full_name.charAt(0).toUpperCase()
+                          : user?.email?.charAt(0).toUpperCase() || "U"}
+                      </span>
+                    )}
                     {userPlan &&
                       userPlan !== "Free Plan" &&
                       userPlan !== "Free" && (
@@ -541,11 +555,19 @@ export default function DashboardLayout({
                                 : "bg-gradient-to-br from-purple-500 to-purple-700"
                             }
                         `}>
-                          <span className="text-white font-medium">
-                            {user?.user_metadata?.full_name
-                              ? user.user_metadata.full_name.charAt(0).toUpperCase()
-                              : user?.email?.charAt(0).toUpperCase() || "U"}
-                          </span>
+                          {user?.user_metadata?.avatar_url ? (
+                            <img
+                              src={user.user_metadata.avatar_url}
+                              alt="Profile"
+                              className="w-full h-full rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-white font-medium">
+                              {user?.user_metadata?.full_name
+                                ? user.user_metadata.full_name.charAt(0).toUpperCase()
+                                : user?.email?.charAt(0).toUpperCase() || "U"}
+                            </span>
+                          )}
                           {userPlan &&
                             userPlan !== "Free Plan" &&
                             userPlan !== "Free" && (
@@ -708,20 +730,29 @@ export default function DashboardLayout({
             {!sidebarCollapsed && (
               <div className="p-4 border-t border-gray-200 mt-auto">
                 <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                  <button
-                    onClick={() => setIsUsageCollapsed(!isUsageCollapsed)}
-                    className="w-full flex items-center justify-between mb-1 focus:outline-none"
-                  >
-                    <span className="text-sm font-medium text-gray-700 flex items-center">
-                      <Crown className="mr-2 h-4 w-4 text-purple-600" />
-                      {userPlan}
-                    </span>
-                    {isUsageCollapsed ? (
-                      <ChevronDown className="h-4 w-4 text-gray-400" />
+                  <div className="w-full flex items-center justify-between mb-1 focus:outline-none">
+                    {(subscriptionLoading || subscriptionStatus === 'unknown') ? (
+                      <div className="flex items-center space-x-2 w-full">
+                        <div className="h-4 w-4 bg-gray-200 rounded animate-pulse" />
+                        <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                      </div>
                     ) : (
-                      <ChevronUp className="h-4 w-4 text-gray-400" />
+                      <button
+                        onClick={() => setIsUsageCollapsed(!isUsageCollapsed)}
+                        className="w-full flex items-center justify-between focus:outline-none"
+                      >
+                        <span className="text-sm font-medium text-gray-700 flex items-center">
+                          <Crown className="mr-2 h-4 w-4 text-purple-600" />
+                          {userPlan}
+                        </span>
+                        {isUsageCollapsed ? (
+                          <ChevronDown className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <ChevronUp className="h-4 w-4 text-gray-400" />
+                        )}
+                      </button>
                     )}
-                  </button>
+                  </div>
 
                   <div className={`transition-all duration-300 ${isUsageCollapsed ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-[500px] opacity-100 mt-3 overflow-y-auto'}`}>
                     <div className="space-y-3 pr-1 custom-scrollbar">
@@ -737,13 +768,14 @@ export default function DashboardLayout({
                       )}
 
                       {/* Scans Meter - Derived from sub-limits */}
+                      {/* Scans Meter - Derived from sub-limits */}
                       <UsageMeter
                         current={
                           ((planUsage?.originality_scan || 0) >= (planLimits?.originality_scan ?? 3) ? 1 : 0) +
                           ((planUsage?.citation_check || 0) >= (typeof planLimits?.citation_check === 'number' ? planLimits.citation_check : 0) ? 1 : 0) +
                           ((planUsage?.rephrase || 0) >= (planLimits?.rephrase_per_month ?? 3) ? 1 : 0)
                         }
-                        limit={3}
+                        limit={(userPlan.toLowerCase().includes('researcher') || userPlan.toLowerCase().includes('student')) ? 'unlimited' : 3}
                         planName={userPlan}
                         featureName="scans"
                       />
@@ -780,8 +812,10 @@ export default function DashboardLayout({
                       ((planUsage?.citation_check || 0) >= (typeof planLimits?.citation_check === 'number' ? planLimits.citation_check : 0) ? 1 : 0) +
                       ((planUsage?.rephrase || 0) >= (planLimits?.rephrase_per_month ?? 3) ? 1 : 0);
 
-                    const derivedLimit = 3; // Hardcoded to 3 as requested for typical plans
-                    const percent = Math.min((derivedCurrent / derivedLimit) * 100, 100);
+                    // Use actual limit or fallback for Free, but treat Premium as unlimited visually if needed
+                    const isPremium = userPlan.toLowerCase().includes('researcher') || userPlan.toLowerCase().includes('student');
+                    const derivedLimit = isPremium ? 100 : 3;
+                    const percent = isPremium ? 0 : Math.min((derivedCurrent / derivedLimit) * 100, 100);
 
                     return (
                       <div className="mt-1">
