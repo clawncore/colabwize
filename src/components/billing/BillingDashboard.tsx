@@ -1,21 +1,13 @@
 import React, { useState, useEffect } from "react";
 import {
   CreditCard,
-  Calendar,
   Edit3,
   Trash2,
-  Plus,
   Loader2,
   AlertCircle,
   FileText,
-  Download,
-  Shield,
   Zap,
-  CheckCircle2,
-  XCircle,
-  HelpCircle,
-  MessageSquare,
-  ArrowRight
+  XCircle
 } from "lucide-react";
 import {
   PaymentMethod,
@@ -140,13 +132,7 @@ const BillingSettingsPage: React.FC = () => {
     }
   };
 
-  const handleSetDefault = async (id: string) => {
-    handleUpdatePaymentMethod();
-  };
 
-  const handleRemovePaymentMethod = async (id: string) => {
-    handleUpdatePaymentMethod();
-  };
 
   const handleChangePlan = async () => {
     navigate("/pricing");
@@ -391,7 +377,7 @@ const BillingSettingsPage: React.FC = () => {
                             <td className="px-6 py-4 font-semibold text-gray-900">${inv.amount.toFixed(2)}</td>
                             <td className="px-6 py-4">{getStatusBadge(inv.status)}</td>
                             <td className="px-6 py-4 text-right">
-                              {inv.receiptUrl && <a href={inv.receiptUrl} target="_blank" className="text-blue-600 hover:underline">Download</a>}
+                              {inv.receiptUrl && <a href={inv.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Download</a>}
                             </td>
                           </tr>
                         ))}

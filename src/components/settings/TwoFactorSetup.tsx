@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { toast } from "../../hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Shield, Smartphone, Loader2, CheckCircle, Copy, AlertTriangle, ArrowRight, Download, Mail, ChevronRight } from "lucide-react";
+import { Shield, Smartphone, Loader2, CheckCircle, Copy, AlertTriangle, ArrowRight, ChevronRight } from "lucide-react";
 import authService from "../../services/authService";
 import { QRCodeSVG } from 'qrcode.react';
 import {

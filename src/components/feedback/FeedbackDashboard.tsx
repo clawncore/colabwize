@@ -25,14 +25,10 @@ import {
   MessageSquare,
   Bug,
   Lightbulb,
-  FileText,
   AlertTriangle,
   CheckCircle,
   Clock,
-  XCircle,
-  Eye,
-  Database,
-  FileArchive,
+  XCircle
 } from "lucide-react";
 
 interface UserFeedback {
@@ -171,63 +167,7 @@ const FeedbackDashboard: React.FC = () => {
     }
   };
 
-  const getTypeBadge = (type: string) => {
-    switch (type) {
-      case "bug_report":
-        return (
-          <Badge variant="destructive">
-            <Bug className="w-3 h-3 mr-1" /> Bug
-          </Badge>
-        );
-      case "feature_request":
-        return (
-          <Badge variant="secondary">
-            <Lightbulb className="w-3 h-3 mr-1" /> Feature
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="secondary">
-            <MessageSquare className="w-3 h-3 mr-1" /> Feedback
-          </Badge>
-        );
-    }
-  };
 
-  const getCategoryBadge = (category: string | null) => {
-    if (!category) return null;
-
-    const categoryMap: Record<
-      string,
-      { icon: React.ReactNode; label: string }
-    > = {
-      ui: { icon: <Eye className="w-3 h-3 mr-1" />, label: "UI" },
-      functionality: {
-        icon: <Database className="w-3 h-3 mr-1" />,
-        label: "Functionality",
-      },
-      performance: {
-        icon: <Clock className="w-3 h-3 mr-1" />,
-        label: "Performance",
-      },
-      content: {
-        icon: <FileText className="w-3 h-3 mr-1" />,
-        label: "Content",
-      },
-      other: { icon: <FileArchive className="w-3 h-3 mr-1" />, label: "Other" },
-    };
-
-    const categoryInfo = categoryMap[category] || {
-      icon: <FileArchive className="w-3 h-3 mr-1" />,
-      label: category,
-    };
-
-    return (
-      <Badge variant="outline">
-        {categoryInfo.icon} {categoryInfo.label}
-      </Badge>
-    );
-  };
 
   if (loading) {
     return (

@@ -8,7 +8,6 @@ import {
     Unlock,
     MoreHorizontal,
     Check,
-    Bookmark,
     Trash2
 } from "lucide-react";
 import { CitationStyleFloatingPanel } from "./CitationStyleFloatingPanel";

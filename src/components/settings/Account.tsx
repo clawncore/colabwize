@@ -261,23 +261,7 @@ const AccountSettingsPage: React.FC = () => {
     }
   };
 
-  const handleEnable2FA = async () => {
-    try {
-      await AccountService.enable2FA();
 
-      toast({
-        title: "Success",
-        description:
-          "2FA enabled successfully. Follow the instructions sent to your email.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to enable 2FA. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleExportData = async () => {
     setExportLoading(true);

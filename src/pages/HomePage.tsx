@@ -2,8 +2,6 @@ import {
   Shield,
   Users,
   Bot,
-  Search,
-  FileText,
   Zap,
   CheckCircle,
   BookOpen,
@@ -12,7 +10,6 @@ import {
   Map,
   SearchCheck,
   History,
-  Globe,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";

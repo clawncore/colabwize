@@ -57,7 +57,7 @@ export const Dashboard: React.FC = () => {
   // const [loading, setLoading] = useState(true);
   // const [uploadingProject, setUploadingProject] = useState(false);
   const [latestProject, setLatestProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
+
 
   // Memoize data to prevent re-renders
   const documentTrendData = React.useMemo(() => [
@@ -98,7 +98,6 @@ export const Dashboard: React.FC = () => {
 
     try {
       setConnectionError(false);
-      setLoading(true);
       const data = await AnalyticsService.getDashboardData();
 
       // Only update state if data actually changed or is different (deep compare would be better but this helps)
@@ -117,7 +116,6 @@ export const Dashboard: React.FC = () => {
       });
     } finally {
       setIsRetrying(false);
-      setLoading(false);
     }
   }, [user, fetchLatestProject]); // Depend on user
 
