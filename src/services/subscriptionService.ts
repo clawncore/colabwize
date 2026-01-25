@@ -36,12 +36,13 @@ export interface PaymentMethod {
 }
 
 export interface Invoice {
-  id: string;
-  date: string;
-  description: string;
+  invoice_id: string;
+  issued_at: string;
   amount: number;
-  status: "paid" | "pending" | "failed";
-  receiptUrl?: string;
+  currency: string;
+  status: "paid" | "pending" | "failed" | "refunded";
+  hosted_invoice_url?: string;
+  pdf_url?: string;
 }
 
 /**
@@ -232,6 +233,40 @@ export class SubscriptionService {
       remaining,
       creditBalance: creditBalance || 0,
     };
+  }
+
+  /**
+   * Get comprehensive billing overview with real metrics
+   * Single source of truth for billing page
+   */
+  static async getBillingOverview(): Promise<{
+    plan: {
+      name: string;
+      price: number;
+      interval?: string;
+      status: string;
+      renewsAt: string | null;
+    };
+    usage: {
+      monthlyScans: { used: number; limit: number | null };
+      originalityScans: { used: number; limit: number | null };
+      citationChecks: { used: number; limit: number | null };
+      certificates: { used: number; limit: number | null };
+    };
+    metrics: {
+      documentsThisMonth: number;
+      documentsLastMonth: number;
+    };
+    trends: {
+      documentsDaily: number[];
+    };
+    paymentMethod: {
+      brand: string;
+      last4: string;
+    } | null;
+  }> {
+    const response = await apiClient.get("/api/subscription/billing/overview");
+    return response;
   }
 
   /**

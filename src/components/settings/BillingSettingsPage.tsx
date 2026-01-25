@@ -88,54 +88,43 @@ const SubscriptionStatus = ({
   if (!plan) return null;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-          <CreditCard className="mr-2 h-5 w-5 text-gray-500" />
-          Current Subscription
-        </h2>
-        <div
-          className={`px-3 py-1 rounded-full text-sm font-medium ${subscription.status === "active"
-            ? "bg-green-100 text-green-800"
-            : subscription.status === "canceled"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-gray-100 text-gray-800"
-            }`}>
-          {subscription.status.toUpperCase()}
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-8">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-sm p-8 mb-8 transition-all hover:shadow-md">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-6 border-b border-gray-100">
         <div>
-          <p className="text-sm text-gray-500 mb-1">Current Plan</p>
-          <p className="text-2xl font-bold text-gray-900 mb-4">{plan.name}</p>
-
-          <div className="space-y-2">
-            <div className="flex items-center text-sm text-gray-600">
-              <Calendar className="mr-2 h-4 w-4" />
-              {subscription.cancel_at_period_end
-                ? `Expires on ${new Date(subscription.current_period_end!).toLocaleDateString()}`
-                : `Renews on ${new Date(subscription.current_period_end || Date.now()).toLocaleDateString()}`}
-            </div>
-            <div className="flex items-center text-sm text-gray-600">
-              <CheckCircle className="mr-2 h-4 w-4" />
-              {subscription.cancel_at_period_end
-                ? "Access until end of period"
-                : "Active subscription"}
+          <div className="flex items-center gap-3 mb-2">
+            <h2 className="text-xl font-bold text-gray-900">
+              Current Subscription
+            </h2>
+            <div
+              className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase flex items-center gap-1.5 ${subscription.status === "active"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                : subscription.status === "canceled"
+                  ? "bg-amber-50 text-amber-700 border border-amber-100"
+                  : "bg-gray-50 text-gray-700 border border-gray-100"
+                }`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${subscription.status === "active"
+                ? "bg-emerald-500"
+                : subscription.status === "canceled"
+                  ? "bg-amber-500"
+                  : "bg-gray-500"
+                }`} />
+              {subscription.status}
             </div>
           </div>
+          <p className="text-gray-500 text-sm">
+            Manage your plan, billing details, and payment methods.
+          </p>
         </div>
-
-        <div className="flex flex-col gap-3 justify-center">
+        <div className="mt-4 md:mt-0 flex items-center gap-2">
           {subscription.status === "active" &&
             !subscription.cancel_at_period_end && (
               <>
                 <Button
                   onClick={handleManage}
                   variant="outline"
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                   disabled={loading}>
-                  Manage Payment Method
+                  Payment Methods
                 </Button>
                 <AlertDialog
                   open={showCancelDialog}
@@ -143,26 +132,73 @@ const SubscriptionStatus = ({
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="bg-red-500 hover:bg-red-600 text-white"
+                      className="rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700"
                       disabled={loading}>
-                      Cancel Subscription
+                      Cancel Plan
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="bg-white">
+                  <AlertDialogContent className="bg-white max-w-lg">
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Cancel Subscription</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to cancel your subscription? You
-                        will lose access to premium features at the end of your
-                        billing period.
+                      <AlertDialogTitle className="text-xl font-semibold text-gray-900">
+                        Cancel Subscription
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="space-y-4 pt-2">
+                        <p className="text-gray-600">
+                          Your subscription will remain active until the end of
+                          your current billing period. You will not be charged
+                          again after this period.
+                        </p>
+
+                        <div className="bg-blue-50 p-4 rounded-lg break-words">
+                          <p className="text-blue-800 font-medium">
+                            Access ends on:{" "}
+                            {subscription.current_period_end
+                              ? new Date(
+                                subscription.current_period_end
+                              ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })
+                              : "End of current period"}
+                          </p>
+                        </div>
+
+                        <div className="space-y-3">
+                          <p className="font-medium text-gray-900">What you'll lose:</p>
+                          <ul className="space-y-2 text-sm text-gray-600">
+                            {[
+                              "Unlimited Originality Scans",
+                              "Advanced Citation Analytics",
+                              "Priority Support",
+                              "Draft Comparison History",
+                            ].map((item, i) => (
+                              <li key={i} className="flex items-center gap-2">
+                                <span className="text-red-500 flex-shrink-0">✕</span>
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+                          <p className="font-medium text-gray-900">What happens next?</p>
+                          <ul className="space-y-1 text-gray-600 list-disc pl-4">
+                            <li>No further payments will be charged</li>
+                            <li>You keep full access until the date above</li>
+                            <li>You can re-subscribe anytime</li>
+                          </ul>
+                        </div>
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogFooter className="gap-2 sm:gap-0">
+                      <AlertDialogCancel className="bg-gray-100 text-gray-900 hover:bg-gray-200 border-0 mt-2 sm:mt-0 rounded-lg">
+                        Keep Subscription
+                      </AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleCancel}
-                        className="bg-red-500 hover:bg-red-600 text-white">
-                        Cancel Subscription
+                        className="bg-white text-red-600 border border-red-200 hover:bg-red-50 hover:text-red-700 shadow-none rounded-lg">
+                        Confirm Cancellation
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -173,7 +209,7 @@ const SubscriptionStatus = ({
           {subscription.cancel_at_period_end && (
             <Button
               onClick={handleReactivate}
-              className="bg-green-500 hover:bg-green-600 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-200"
               disabled={loading}>
               Reactivate Subscription
             </Button>
@@ -182,10 +218,47 @@ const SubscriptionStatus = ({
           {subscription.status === "expired" && (
             <Button
               asChild
-              className="bg-blue-500 hover:bg-blue-600 text-white">
+              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200">
               <Link to="/pricing">Renew Subscription</Link>
             </Button>
           )}
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-1">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Current Plan</p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-3xl font-extrabold text-gray-900">{plan.name}</p>
+            <span className="text-gray-500 font-medium">${plan.price}/month</span>
+          </div>
+
+          <div className="pt-4 space-y-3">
+            <div className="flex items-center text-sm text-gray-600 bg-gray-50 w-fit px-3 py-1.5 rounded-lg border border-gray-100">
+              <Calendar className="mr-2 h-4 w-4 text-gray-400" />
+              {subscription.cancel_at_period_end
+                ? <span className="text-amber-700 font-medium">Expires on {new Date(subscription.current_period_end!).toLocaleDateString()}</span>
+                : <span>Renews on {new Date(subscription.current_period_end || Date.now()).toLocaleDateString()}</span>}
+            </div>
+            <div className="flex items-center text-sm text-gray-600">
+              <CheckCircle className="mr-2 h-4 w-4 text-emerald-500" />
+              {subscription.cancel_at_period_end
+                ? "Full access until end of period"
+                : "Active subscription with auto-renewal"}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-2xl border border-indigo-50/50">
+          <h4 className="font-semibold text-indigo-900 mb-3 text-sm uppercase tracking-wide">Included in {plan.name}</h4>
+          <ul className="grid grid-cols-2 gap-3">
+            {plan.features.slice(0, 6).map((feature, i) => (
+              <li key={i} className="flex items-start text-sm text-gray-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 mr-2 flex-shrink-0" />
+                {feature}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>
@@ -271,13 +344,13 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
   return (
     <div className="grid md:grid-cols-3 gap-8 mb-8">
       {/* Usage Progress Bars */}
-      <div className="md:col-span-2 bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center mb-6">
-          <BarChart className="mr-2 h-5 w-5 text-gray-500" />
+      <div className="md:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+        <h2 className="text-lg font-bold text-gray-900 flex items-center mb-6">
+          <BarChart className="mr-2 h-5 w-5 text-indigo-500" />
           Feature Usage
         </h2>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           {consumableFeatures.map((feature) => {
             const config = FEATURE_CONFIG[feature];
             const limit = limits[feature];
@@ -289,19 +362,14 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
             const usageKey = config?.usageKey || feature;
             let current = usage[usageKey] || 0;
 
-            console.log("Usage Check:", feature, usage, limits);
-
             // Special handling for Scans Used - limits reached derived logic
             if (feature === "scans_per_month") {
               const origUsage = usage['originality_scan'] || 0;
               const origLimit = limits['originality_scan'] ?? 3;
 
               const citeUsage = usage['citation_check'] || 0;
-              // Default citation limit to 0 if undefined (for free plan) so 0/0 counts as used
               const citeLimit = typeof limits['citation_check'] === 'number' ? limits['citation_check'] : 0;
 
-              // Note: Rephrase might not be in the usage object passed here if not in feature config, 
-              // but assuming it comes from the API response 'usage' object.
               const rephraseUsage = usage['rephrase'] || 0;
               const rephraseLimit = limits['rephrase_per_month'] ?? 3;
 
@@ -318,22 +386,22 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
 
             return (
               <div key={feature}>
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="font-medium text-gray-700">
+                <div className="flex justify-between items-end mb-2">
+                  <span className="font-medium text-gray-700 text-sm">
                     {config?.label || feature}
                   </span>
-                  <span className="text-gray-500">
+                  <span className="text-sm font-semibold text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
                     {current} / {isUnlimited ? "Unlimited" : limit}
                   </span>
                 </div>
                 {!isUnlimited && (
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${percentage > 90
-                        ? "bg-red-500"
+                      className={`h-full rounded-full transition-all duration-500 ease-out ${percentage > 90
+                        ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
                         : percentage > 75
-                          ? "bg-yellow-500"
-                          : "bg-blue-500"
+                          ? "bg-amber-500"
+                          : "bg-indigo-500"
                         }`}
                       style={{
                         width: `${percentage}%`,
@@ -342,8 +410,8 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
                   </div>
                 )}
                 {isUnlimited && (
-                  <div className="h-2 bg-green-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500 w-full opacity-20" />
+                  <div className="h-2.5 bg-emerald-50 rounded-full overflow-hidden border border-emerald-100">
+                    <div className="h-full bg-emerald-500 w-full opacity-10" />
                   </div>
                 )}
               </div>
@@ -353,13 +421,13 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
       </div>
 
       {/* Plan Limits/Info */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center mb-6">
-          <CheckCircle className="mr-2 h-5 w-5 text-gray-500" />
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 h-fit">
+        <h2 className="text-lg font-bold text-gray-900 flex items-center mb-6">
+          <CheckCircle className="mr-2 h-5 w-5 text-indigo-500" />
           Plan Limits
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-0 divide-y divide-gray-50">
           {staticFeatures.map((feature) => {
             const config = FEATURE_CONFIG[feature];
             const limit = limits[feature];
@@ -367,11 +435,11 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
             return (
               <div
                 key={feature}
-                className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                <span className="text-gray-600 text-sm">
+                className="flex justify-between items-center py-3 first:pt-0 last:pb-0">
+                <span className="text-gray-500 text-sm">
                   {config?.label || feature}
                 </span>
-                <span className="font-semibold text-gray-900">
+                <span className="font-semibold text-gray-900 text-sm">
                   {config?.label.includes("Retention")
                     ? `${limit} Days`
                     : limit.toLocaleString()}
@@ -413,58 +481,72 @@ const PaymentHistory = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-8">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-8">
+      <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
         Payment History
+        <span className="px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 text-xs font-normal border border-gray-100">{invoices.length} records</span>
       </h2>
 
       {invoices.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">No payment history yet</p>
+        <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+          <p className="text-gray-500 text-sm">No payment history yet.</p>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {invoices.map((invoice) => (
-            <div
-              key={invoice.id}
-              className="flex justify-between items-center py-4 border-b border-gray-100 last:border-0">
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">
-                  {invoice.description}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {new Date(invoice.date).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </p>
-              </div>
-              <div className="text-right ml-4">
-                <p className="font-semibold text-gray-900">
-                  ${invoice.amount.toFixed(2)}
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${invoice.status === "paid"
-                      ? "bg-green-100 text-green-800"
-                      : invoice.status === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                      }`}>
-                    {invoice.status.toUpperCase()}
-                  </span>
-                  {invoice.receiptUrl && (
-                    <a
-                      href={invoice.receiptUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
-                      Receipt
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="overflow-hidden rounded-xl border border-gray-100">
+          <table className="min-w-full divide-y divide-gray-100">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {invoices.map((invoice) => (
+                <tr key={invoice.invoice_id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    Invoice {invoice.invoice_id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(invoice.issued_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    ${invoice.amount.toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${invoice.status === "paid"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                        : invoice.status === "pending"
+                          ? "bg-amber-50 text-amber-700 border border-amber-100"
+                          : "bg-red-50 text-red-700 border border-red-100"
+                        }`}>
+                      {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    {invoice.hosted_invoice_url ? (
+                      <a
+                        href={invoice.hosted_invoice_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-900 hover:underline">
+                        Download
+                      </a>
+                    ) : (
+                      <span className="text-gray-400">Unavailable</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
@@ -499,38 +581,45 @@ const PaymentMethodsDisplay = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-8">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-8">
+      <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
         Payment Methods
+        <span className="px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 text-xs font-normal border border-gray-100">
+          Secure
+        </span>
       </h2>
 
       {paymentMethods.length === 0 ? (
-        <p className="text-gray-500 text-center py-8">
-          No payment methods on file. Payment methods are managed through
-          LemonSqueezy.
-        </p>
+        <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+          <p className="text-gray-500 text-sm">
+            No payment methods on file. Payment methods are managed through
+            LemonSqueezy.
+          </p>
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {paymentMethods.map((method) => (
             <div
               key={method.id}
-              className="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+              className="flex justify-between items-center p-5 border border-gray-100 rounded-xl hover:border-indigo-100 hover:shadow-sm transition-all bg-white group">
               <div className="flex items-center">
-                <CreditCard className="h-5 w-5 text-gray-400 mr-3" />
+                <div className="h-10 w-10 bg-gray-50 rounded-full flex items-center justify-center mr-4 group-hover:bg-indigo-50 transition-colors">
+                  <CreditCard className="h-5 w-5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                </div>
                 <div>
-                  <p className="font-medium text-gray-900 capitalize">
+                  <p className="font-semibold text-gray-900 capitalize text-sm">
                     {method.type}{" "}
-                    {method.lastFour ? `•••• ${method.lastFour}` : ""}
+                    <span className="text-gray-400 font-normal">••••</span> {method.lastFour}
                   </p>
                   {method.expiryMonth && method.expiryYear && (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs text-gray-500 mt-0.5">
                       Expires {method.expiryMonth}/{method.expiryYear}
                     </p>
                   )}
                 </div>
               </div>
               {method.isDefault && (
-                <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full font-medium">
+                <span className="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-1 rounded-full font-medium border border-indigo-100">
                   Default
                 </span>
               )}
@@ -588,9 +677,12 @@ export default function BillingPage() {
 
   return (
     <div className="min-h-screen p-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">
-        Billing & Subscription
-      </h1>
+      <div className="mb-10">
+        <h1 className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
+          Billing & Subscription
+        </h1>
+        <p className="text-gray-500">Manage your subscription plan and billing history.</p>
+      </div>
 
       <SubscriptionStatus subscription={data.subscription} plan={activePlan} />
 

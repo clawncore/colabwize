@@ -18,18 +18,26 @@ import {
 import { toast } from "../../hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { UsageChart } from "./UsageChart";
+import { BillingStatusStrip } from "./BillingStatusStrip";
+import { ValueMetricCard } from "./ValueMetricCard";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "../../components/ui/tabs";
+import { Badge } from "../../components/ui/badge";
 
 const BillingSettingsPage: React.FC = () => {
   const navigate = useNavigate();
+  // Get query params manually since we aren't using useSearchParams to keep it light
+  const searchParams = new URLSearchParams(window.location.search);
+  const statusParam = searchParams.get('status');
   const [plans, setPlans] = useState<any[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(true);
+  const [invoicesError, setInvoicesError] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [limits, setLimits] = useState<any>({});
   const [usage, setUsage] = useState<any>({});
@@ -48,16 +56,11 @@ const BillingSettingsPage: React.FC = () => {
       try {
         if (isMounted) setLoading(true);
 
-        const [subscriptionData, invoicesData, paymentMethodsData, plansData] =
+        const [subscriptionData, paymentMethodsData, plansData] =
           await Promise.all([
             SubscriptionService.getCurrentSubscription().catch((err) => {
               console.error("Error fetching subscription data:", err);
-              // Return mock data for testing if dev environment, otherwise null
               return null;
-            }),
-            SubscriptionService.getBillingHistory().catch((err) => {
-              console.error("Error fetching billing history:", err);
-              return [];
             }),
             SubscriptionService.getPaymentMethods().catch((err) => {
               console.error("Error fetching payment methods:", err);
@@ -75,7 +78,6 @@ const BillingSettingsPage: React.FC = () => {
             setLimits(subscriptionData.limits || {});
             setUsage(subscriptionData.usage || {});
           }
-          setInvoices(invoicesData);
           setPaymentMethods(paymentMethodsData);
           setPlans(plansData || []);
         }
@@ -89,12 +91,53 @@ const BillingSettingsPage: React.FC = () => {
       }
     };
 
+    const fetchInvoices = async () => {
+      try {
+        setInvoicesLoading(true);
+        setInvoicesError(null);
+        const data = await SubscriptionService.getBillingHistory();
+        if (isMounted) setInvoices(data);
+      } catch (err) {
+        console.error("Error fetching invoices:", err);
+        if (isMounted) setInvoicesError("We couldn’t load your invoices right now. Please try again.");
+      } finally {
+        if (isMounted) setInvoicesLoading(false);
+      }
+    };
+
     fetchData();
+    fetchInvoices();
 
     return () => {
       isMounted = false;
     };
   }, []);
+
+  // FRONTEND RECONCILIATION: Handle return from Lemon Squeezy Portal
+  useEffect(() => {
+    if (statusParam) {
+      if (statusParam === 'updated') {
+        toast({
+          title: "Processing Update",
+          description: "Verifying your payment method changes...",
+          variant: "default",
+        });
+        // Re-fetch data immediately
+        setTimeout(() => {
+          // In a real app, you might want to force a harder refresh or wait a bit for webhook
+          window.location.href = window.location.pathname; // Clean URL and refresh
+        }, 1000);
+      } else if (statusParam === 'cancelled') {
+        toast({
+          title: "No Changes",
+          description: "No changes were made to your payment method.",
+          variant: "default", // Neutral
+        });
+        // Clean URL
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, [statusParam]);
 
   const handleAddPaymentMethod = async () => {
     try {
@@ -195,6 +238,7 @@ const BillingSettingsPage: React.FC = () => {
       paid: "bg-emerald-100 text-emerald-800 border-emerald-200",
       pending: "bg-amber-100 text-amber-800 border-amber-200",
       failed: "bg-red-100 text-red-800 border-red-200",
+      refunded: "bg-gray-100 text-gray-800 border-gray-200",
       unknown: "bg-gray-100 text-gray-800 border-gray-200"
     };
     const style = styles[status as keyof typeof styles] || styles.unknown;
@@ -275,41 +319,60 @@ const BillingSettingsPage: React.FC = () => {
 
           {/* OVERVIEW TAB */}
           <TabsContent value="overview">
-            <div className="grid gap-8">
-              {/* Plan Summary */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 flex items-center justify-between">
-                  {/* Left Side: Plan Info */}
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-xl ${subscription?.status === 'active' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-600'}`}>
-                      <Zap className="h-8 w-8" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 capitalize">
-                        {currentPlan?.name || "Free Plan"}
-                      </h3>
-                      <p className="text-gray-500">
-                        {currentPlan?.price
-                          ? `$${currentPlan.price}/${currentPlan.interval === 'year' ? 'yr' : 'mo'}`
-                          : "Free Forever"}
-                        {nextBillingDate && ` • Renews ${nextBillingDate.toLocaleDateString()}`}
-                      </p>
-                    </div>
-                  </div>
+            <div className="space-y-8">
+              {/* 1️⃣ STATE - Subtle Status Strip */}
+              <BillingStatusStrip
+                status={(subscription?.status as any) || "active"}
+                renewalDate={nextBillingDate}
+                cancelDate={subscription?.cancel_at_period_end ? nextBillingDate : null}
+                paymentMethod={
+                  paymentMethods.length > 0
+                    ? {
+                      brand: paymentMethods[0].type,
+                      last4: paymentMethods[0].lastFour,
+                    }
+                    : null
+                }
+                planName={
+                  currentPlan?.id === 'student' ? 'Student Pro' :
+                    currentPlan?.id === 'researcher' ? 'Researcher' :
+                      currentPlan?.name || "Free Plan"
+                }
+              />
 
-                  {/* Right Side: Change Plan Button (Hidden for Researcher) */}
-                  {currentPlan?.id !== 'researcher' && (
-                    <div className="flex gap-3">
-                      <button onClick={handleChangePlan} className="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
-                        Change Plan
-                      </button>
-                    </div>
-                  )}
-                </div>
+              {/* 2️⃣ VALUE - The "Hero" Metric Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <ValueMetricCard
+                  value={usage?.documents_processed || 0}
+                  label="Documents processed"
+                  percentageChange={undefined}
+                />
+
+                <ValueMetricCard
+                  value={subscription?.plan === 'free' ? 0 : (currentPlan?.price || 0)}
+                  label="Estimated Cost (This Month)"
+                  isCurrency={true}
+                  comparisonLabel="vs last month"
+                />
+
+                <ValueMetricCard
+                  value={subscription?.current_period_end ? new Date(subscription.current_period_end).getDate() : 0}
+                  label={subscription?.current_period_end ? `Next payment: ${new Date(subscription.current_period_end).toLocaleDateString()}` : "No payment due"}
+                  isDate={true}
+                />
               </div>
 
-              {/* Usage Charts & Cycle Meter */}
-              <UsageChart usage={usage} limits={limits} cycleStart={cycleStart} cycleEnd={cycleEnd} />
+              {/* 3️⃣ & 4️⃣ USAGE & LIMITS - Usage Overview section */}
+              <UsageChart
+                usage={usage}
+                limits={limits}
+                cycleStart={cycleStart}
+                cycleEnd={cycleEnd}
+                planName={currentPlanId || 'free'}
+              />
+
+              {/* 5️⃣ ACTION / INFO - Current Plan (Secondary) - REMOVED as per request */}
+              {/* <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm"> ... </div> */}
             </div>
           </TabsContent>
 
@@ -318,73 +381,269 @@ const BillingSettingsPage: React.FC = () => {
             <div className="space-y-8">
               {/* Payment Methods */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-gray-500" />
-                    Payment Methods
-                  </h3>
-                  <button onClick={handleAddPaymentMethod} className="text-sm font-semibold text-blue-600 hover:text-blue-700">
-                    + Add New
-                  </button>
+                <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+                  <div className="flex justify-between items-center mb-1">
+                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <CreditCard className="h-5 w-5 text-gray-500" />
+                      Payment Methods
+                    </h3>
+                  </div>
+                  <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    Your payment details are securely stored and processed by Lemon Squeezy. We never store card information.
+                  </p>
                 </div>
+
                 <div className="p-6">
                   {paymentMethods.length === 0 ? (
-                    <div className="text-center py-6 text-gray-500">No payment methods found.</div>
+                    <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                      <p className="mb-4">No payment method on file.</p>
+                      <button onClick={handleAddPaymentMethod} className="text-sm font-semibold text-blue-600 hover:text-blue-700">
+                        + Add Payment Method
+                      </button>
+                    </div>
                   ) : (
-                    <div className="space-y-3">
-                      {paymentMethods.map((method) => (
-                        <div key={method.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                          <span className="flex items-center gap-3">
-                            <span className="text-2xl">{getCardIcon(method.type)}</span>
-                            <span className="font-medium text-gray-700 capitalize">{method.type} •••• {method.lastFour}</span>
-                          </span>
-                          <button onClick={() => handleUpdatePaymentMethod()} className="text-gray-400 hover:text-gray-600"><Edit3 className="h-4 w-4" /></button>
+                    <div className="space-y-4">
+                      {paymentMethods.map((method, index) => (
+                        <div key={method.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="p-2 bg-gray-50 rounded-md border border-gray-100 text-2xl">
+                              {getCardIcon(method.type)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-gray-900 capitalize">
+                                  {method.type} •••• {method.lastFour}
+                                </span>
+                                {(index === 0 || method.isDefault) && (
+                                  <Badge variant="secondary" className="text-[10px] bg-gray-100 text-gray-600 font-medium px-1.5 py-0">
+                                    Default
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-sm text-gray-500 mt-0.5">
+                                Expires {method.expiryMonth}/{method.expiryYear}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleAddPaymentMethod()} // Using same handler since it goes to portal
+                              className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline px-2 py-1"
+                            >
+                              Update
+                            </button>
+                            {/* Remove button would go here if API supported direct removal, currently handled via portal */}
+                          </div>
                         </div>
                       ))}
+
+                      <div className="pt-2">
+                        <button onClick={handleAddPaymentMethod} className="text-sm font-semibold text-gray-600 hover:text-gray-900 flex items-center gap-1">
+                          + Add another card
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Invoices */}
+              {/* Billing Email */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 flex justify-between items-center">
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900 mb-1">Billing Email</h3>
+                    <p className="text-sm text-gray-500">Invoices and receipts will be sent to this address.</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium text-gray-900 mb-1">
+                      {/* Fallback to user email if no specific billing email */}
+                      {(subscription as any)?.user_email || "user@example.com"}
+                    </div>
+                    <button
+                      onClick={() => toast({ title: "Coming Soon", description: "This feature will be available shortly." })}
+                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                    >
+                      Change email
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Invoice History */}
+              {/* Invoice History */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                   <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                     <FileText className="h-5 w-5 text-gray-500" />
                     Invoice History
                   </h3>
-                  <button onClick={handleViewAllInvoices} className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">
-                    View All
-                  </button>
-                </div>
-                <div className="overflow-x-auto">
-                  {invoices.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">No invoices yet.</div>
-                  ) : (
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                          <th className="px-6 py-4 font-medium text-gray-500">Date</th>
-                          <th className="px-6 py-4 font-medium text-gray-500">Amount</th>
-                          <th className="px-6 py-4 font-medium text-gray-500">Status</th>
-                          <th className="px-6 py-4 font-medium text-gray-500 text-right">Receipt</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50">
-                        {invoices.map((inv) => (
-                          <tr key={inv.id} className="hover:bg-gray-50/50">
-                            <td className="px-6 py-4 text-gray-600">{new Date(inv.date).toLocaleDateString()}</td>
-                            <td className="px-6 py-4 font-semibold text-gray-900">${inv.amount.toFixed(2)}</td>
-                            <td className="px-6 py-4">{getStatusBadge(inv.status)}</td>
-                            <td className="px-6 py-4 text-right">
-                              {inv.receiptUrl && <a href={inv.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Download</a>}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  {invoices.length > 0 && !invoicesLoading && (
+                    <button onClick={handleViewAllInvoices} className="text-sm font-semibold text-gray-500 hover:text-gray-700">
+                      View All
+                    </button>
                   )}
                 </div>
+
+                <div className="w-full">
+                  {invoicesLoading ? (
+                    <div className="p-6 space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex justify-between items-center animate-pulse">
+                          <div className="h-4 bg-gray-200 rounded w-24"></div>
+                          <div className="h-4 bg-gray-200 rounded w-32 hidden md:block"></div>
+                          <div className="h-4 bg-gray-200 rounded w-16"></div>
+                          <div className="h-4 bg-gray-200 rounded w-20"></div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : invoicesError ? (
+                    <div className="p-8 text-center">
+                      <div className="text-red-500 mb-2">
+                        <AlertCircle className="h-8 w-8 mx-auto" />
+                      </div>
+                      <p className="text-gray-900 font-medium mb-1">{invoicesError}</p>
+                      <button
+                        onClick={() => {
+                          const fetchInvoices = async () => {
+                            try {
+                              setInvoicesLoading(true);
+                              setInvoicesError(null);
+                              const data = await SubscriptionService.getBillingHistory();
+                              setInvoices(data);
+                            } catch (err) {
+                              setInvoicesError("We couldn’t load your invoices right now.");
+                            } finally {
+                              setInvoicesLoading(false);
+                            }
+                          };
+                          fetchInvoices();
+                        }}
+                        className="text-indigo-600 hover:text-indigo-700 font-medium text-sm mt-2"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  ) : invoices.length === 0 ? (
+                    <div className="text-center py-12 px-6">
+                      <div className="bg-gray-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <FileText className="h-6 w-6 text-gray-400" />
+                      </div>
+                      <h4 className="text-gray-900 font-medium mb-1">No invoices yet</h4>
+                      <p className="text-gray-500 text-sm">
+                        Invoices will appear here once your first payment is processed.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Desktop Table */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                          <thead className="bg-gray-50/50 border-b border-gray-100">
+                            <tr>
+                              <th className="px-6 py-3 font-medium text-gray-500">Date</th>
+                              <th className="px-6 py-3 font-medium text-gray-500">Invoice</th>
+                              <th className="px-6 py-3 font-medium text-gray-500">Amount</th>
+                              <th className="px-6 py-3 font-medium text-gray-500">Status</th>
+                              <th className="px-6 py-3 font-medium text-gray-500 text-right">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-50">
+                            {invoices.map((inv) => (
+                              <tr key={inv.invoice_id} className="hover:bg-gray-50/50 transition-colors">
+                                <td className="px-6 py-4 text-gray-700 font-medium whitespace-nowrap">
+                                  {new Date(inv.issued_at).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
+                                </td>
+                                <td className="px-6 py-4 text-gray-500 font-mono text-xs uppercase">
+                                  {inv.invoice_id.substring(0, 8)}...
+                                </td>
+                                <td className="px-6 py-4 font-semibold text-gray-900">
+                                  {new Intl.NumberFormat('en-US', { style: 'currency', currency: inv.currency || 'USD' }).format(inv.amount)}
+                                </td>
+                                <td className="px-6 py-4">
+                                  {getStatusBadge(inv.status)}
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                  <div className="flex justify-end gap-3 text-xs font-medium">
+                                    {inv.hosted_invoice_url && (
+                                      <a
+                                        href={inv.hosted_invoice_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                                      >
+                                        View
+                                      </a>
+                                    )}
+                                    {inv.pdf_url && (
+                                      <a
+                                        href={inv.pdf_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-gray-500 hover:text-gray-700 hover:underline"
+                                      >
+                                        PDF
+                                      </a>
+                                    )}
+                                    {!inv.hosted_invoice_url && !inv.pdf_url && (
+                                      <span className="text-gray-400">Unavailable</span>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Mobile Cards */}
+                      <div className="md:hidden divide-y divide-gray-100">
+                        {invoices.map((inv) => (
+                          <div key={inv.invoice_id} className="p-4 flex flex-col gap-3">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="text-sm font-semibold text-gray-900">
+                                  {new Intl.NumberFormat('en-US', { style: 'currency', currency: inv.currency || 'USD' }).format(inv.amount)}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-0.5">
+                                  {new Date(inv.issued_at).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
+                                </div>
+                              </div>
+                              {getStatusBadge(inv.status)}
+                            </div>
+                            <div className="flex items-center justify-between pt-2">
+                              <span className="text-xs font-mono text-gray-400 uppercase">
+                                #{inv.invoice_id.substring(0, 8)}
+                              </span>
+                              <div className="flex gap-4">
+                                {inv.hosted_invoice_url && (
+                                  <a href={inv.hosted_invoice_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-indigo-600">
+                                    View
+                                  </a>
+                                )}
+                                {inv.pdf_url && (
+                                  <a href={inv.pdf_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-600">
+                                    PDF
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Legal / Tax Note */}
+              <div className="text-center pt-2 pb-6">
+                <p className="text-xs text-gray-400">
+                  Taxes are applied based on your billing location and local regulations.
+                  <br />
+                  Payment processing powered by Lemon Squeezy.
+                </p>
               </div>
             </div>
           </TabsContent>
