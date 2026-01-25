@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {
   CreditCard,
-  Edit3,
   Trash2,
   Loader2,
   AlertCircle,
   FileText,
-  Zap,
   XCircle
 } from "lucide-react";
 import {
@@ -177,24 +175,9 @@ const BillingSettingsPage: React.FC = () => {
 
 
 
-  const handleChangePlan = async () => {
-    navigate("/pricing");
-  };
 
-  const handleUpdatePaymentMethod = async () => {
-    try {
-      const result = await SubscriptionService.updatePaymentMethod();
-      if (result.success && result.redirectUrl) {
-        window.location.href = result.redirectUrl;
-      }
-    } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.message || "Failed to update payment method",
-        variant: "destructive",
-      });
-    }
-  };
+
+
 
   const handleCancelSubscription = async () => {
     try {

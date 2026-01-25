@@ -1,6 +1,6 @@
 import React from "react";
 import { BarChart, CheckCircle, Clock } from "lucide-react";
-import { Badge } from "../ui/badge";
+
 import { UsageSparkline } from "./UsageSparkline";
 
 export interface Usage {
@@ -216,34 +216,7 @@ export const UsageChart = ({ usage, limits, cycleStart, cycleEnd, planName = 'fr
                             else if (percentage > 50) colorClass = "bg-gradient-to-r from-amber-500 to-amber-600";
                             else colorClass = "bg-gradient-to-r from-emerald-500 to-emerald-600";
 
-                            // Determine usage context for unlimited plans
-                            // Use percentage of typical baseline (e.g., 50 uses/month as baseline)
-                            const TYPICAL_BASELINE = 50; // Typical monthly usage baseline
-                            const usagePercentage = (current / TYPICAL_BASELINE) * 100;
 
-                            const getUsageContext = () => {
-                                if (usagePercentage > 70) {
-                                    return {
-                                        label: "High usage this month",
-                                        color: "bg-green-100 text-green-700 border-green-200"
-                                    };
-                                }
-                                if (usagePercentage >= 20) {
-                                    return {
-                                        label: "Normal usage",
-                                        color: "bg-blue-100 text-blue-700 border-blue-200"
-                                    };
-                                }
-                                return {
-                                    label: "Low usage this month",
-                                    color: "bg-gray-100 text-gray-700 border-gray-200"
-                                };
-                            };
-
-                            const usageContext = getUsageContext();
-
-                            // Empty state intelligence - encourage usage when current = 0
-                            const showEmptyState = current === 0;
 
                             return (
                                 <div key={feature}>
