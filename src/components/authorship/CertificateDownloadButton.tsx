@@ -77,7 +77,7 @@ export const CertificateDownloadButton: React.FC<
           action: isUpgradeError ? (
             <button
               onClick={() =>
-                (window.location.href = "/dashboard/billing/subscription")
+                (window.location.href = "/pricing")
               }
               className="px-3 py-2 bg-white text-red-600 text-sm font-semibold rounded hover:bg-gray-100 transition-colors">
               Upgrade Plan

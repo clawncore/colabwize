@@ -74,7 +74,7 @@ export const Dashboard: React.FC = () => {
   const userPlan = plan || 'free';
 
   const handleUpgradeClick = () => {
-    navigate("/dashboard/billing/subscription");
+    navigate("/pricing");
   };
 
   const fetchLatestProject = React.useCallback(async () => {
