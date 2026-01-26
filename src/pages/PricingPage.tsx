@@ -268,7 +268,7 @@ function FeaturesPresentationFlow() {
 
       if (savedSubscription) {
         try {
-          const { planId, billingPeriod: savedPeriod } =
+          const { billingPeriod: savedPeriod } =
             JSON.parse(savedSubscription);
 
           // Clear saved subscription immediately to prevent loops
