@@ -95,14 +95,14 @@ export const CitationAuditDemo: React.FC<CitationAuditDemoProps> = ({
     if (editor) {
       const content = editor.getJSON();
       const extracted = DocumentExtractor.extractTextWithPositions(content);
-      
+
       console.log("=== EXTRACTION RESULTS ===");
       console.log("Full Text:", extracted.fullText);
       console.log("Word Count:", extracted.fullText.split(/\s+/).filter(w => w.length > 0).length);
       console.log("Character Count:", extracted.fullText.length);
       console.log("Citations Found:", extracted.citations);
       console.log("Sections Identified:", extracted.sections);
-      
+
       alert(`Extraction Complete!
 
 Words: ${extracted.fullText.split(/\s+/).filter(w => w.length > 0).length}
@@ -116,22 +116,22 @@ Sections: ${extracted.sections.length}`);
     if (editor) {
       try {
         const content = editor.getJSON();
-        
+
         console.log("🧪 Testing Enhanced Chunked Processing...");
-        
+
         const { auditReport, processingStats } = await EnhancedCitationProcessor.processDocumentInChunks(
           content,
           "APA"
         );
-        
+
         setTestResults({
           auditReport,
           processingStats
         });
-        
+
         console.log("✅ Chunked Processing Results:", processingStats);
         console.log("🚩 Audit Flags Found:", auditReport.flags.length);
-        
+
         alert(`Enhanced Audit Complete!
 
 Chunks Processed: ${processingStats.totalChunks}
@@ -140,7 +140,7 @@ Citations Found: ${processingStats.citationsFound}
 Violations Detected: ${processingStats.flagsDetected}
 
 Check console for detailed results.`);
-        
+
       } catch (error) {
         console.error("❌ Chunked processing test failed:", error);
         alert(`Processing failed: ${error.message}`);
@@ -151,7 +151,7 @@ Check console for detailed results.`);
   return (
     <div className="p-4 bg-gray-50 rounded-lg">
       <h3 className="text-lg font-semibold mb-4">Citation Audit Demo</h3>
-      
+
       <div className="space-y-3">
         <button
           onClick={handleLoadDemo}
@@ -159,21 +159,21 @@ Check console for detailed results.`);
         >
           Load Sample Document
         </button>
-        
+
         <button
           onClick={handleTestExtraction}
           className="w-full py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
         >
           Test Content Extraction
         </button>
-        
+
         <button
           onClick={handleTestChunkedProcessing}
           className="w-full py-2 px-4 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
         >
           Test Chunked Audit Processing
         </button>
-        
+
         <div className="text-sm text-gray-600">
           <p className="mb-2"><strong>Demo Features:</strong></p>
           <ul className="list-disc list-inside space-y-1">
@@ -186,7 +186,7 @@ Check console for detailed results.`);
             <li>Better error handling and validation</li>
           </ul>
         </div>
-        
+
         {/* Test Results Display */}
         {testResults && (
           <div className="mt-4 p-3 bg-gray-100 rounded-lg text-xs">

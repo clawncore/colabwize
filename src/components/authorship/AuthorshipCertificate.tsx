@@ -1,7 +1,9 @@
 import React from "react";
 import { AuthorshipStatsDisplay } from "./AuthorshipStatsDisplay";
 import { CertificateDownloadButton } from "./CertificateDownloadButton";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Clock, FileEdit, Bot } from "lucide-react";
+import { BehavioralTrackingService, WritingDNAReport } from "../../services/behavioralTrackingService";
+import { SourceIntegrationService, SourceIntegrationReport } from "../../services/sourceIntegrationService";
 
 
 interface AuthorshipCertificateProps {
@@ -14,18 +16,38 @@ export const AuthorshipCertificate: React.FC<AuthorshipCertificateProps> = ({
   projectTitle,
 }) => {
   const [downloadStep, setDownloadStep] = React.useState<'idle' | 'preparing' | 'signing' | 'ready'>('preparing');
+  const [behavioralReport, setBehavioralReport] = React.useState<WritingDNAReport | null>(null);
+  const [sourceIntegrationReport, setSourceIntegrationReport] = React.useState<SourceIntegrationReport | null>(null);
 
   // Auto-run "preparation" on mount
   React.useEffect(() => {
     // Sequence to simulate "Fetching / Signing" on load
     const timer1 = setTimeout(() => setDownloadStep('signing'), 800);
+
+    // Fetch behavioral and source integration reports
+    const fetchReports = async () => {
+      try {
+        const [behavioralRes, sourceRes] = await Promise.all([
+          BehavioralTrackingService.analyzePatterns(projectId),
+          SourceIntegrationService.verifySourceIntegration(projectId)
+        ]);
+
+        setBehavioralReport(behavioralRes);
+        setSourceIntegrationReport(sourceRes);
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+      }
+    };
+
+    fetchReports();
+
     const timer2 = setTimeout(() => setDownloadStep('ready'), 2200);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, []);
+  }, [projectId]);
 
   return (
     <div className="w-full h-full flex flex-col bg-gray-50">
@@ -169,7 +191,7 @@ export const AuthorshipCertificate: React.FC<AuthorshipCertificateProps> = ({
             <div className="prose prose-sm text-gray-500 mb-6">
               <p>
                 This certificate serves as an immutable record of the creation process.
-                It aggregates edit logs, session metadata, and keystroke dynamics to prove original authorship.
+                It aggregates edit logs, session metadata, keystroke dynamics, behavioral patterns, and source integration data to prove original authorship.
               </p>
             </div>
 
@@ -177,6 +199,60 @@ export const AuthorshipCertificate: React.FC<AuthorshipCertificateProps> = ({
             <div className="mb-6">
               <AuthorshipStatsDisplay projectId={projectId} />
             </div>
+
+            {/* Behavioral Tracking Data */}
+            {behavioralReport && (
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                <h3 className="text-lg font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                  <Bot className="w-5 h-5" />
+                  Writing Pattern Analysis
+                </h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Human Authenticity:</span>
+                    <span className="font-bold">{behavioralReport.humanAuthenticityScore}%</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Average Speed:</span>
+                    <span className="font-bold">{Math.round(behavioralReport.averageTypingSpeed)} WPM</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Think/Pause Ratio:</span>
+                    <span className="font-bold">{Math.round(behavioralReport.thinkPauseRatio)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Error Corrections:</span>
+                    <span className="font-bold">{Math.round(behavioralReport.errorCorrectionFrequency)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Source Integration Data */}
+            {sourceIntegrationReport && (
+              <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-100">
+                <h3 className="text-lg font-semibold text-green-800 mb-2 flex items-center gap-2">
+                  <FileEdit className="w-5 h-5" />
+                  Source Integration Verification
+                </h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Authenticity Score:</span>
+                    <span className="font-bold">{sourceIntegrationReport.authenticityScore}%</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Status:</span>
+                    <span className={`font-bold ${sourceIntegrationReport.isConsistentWithReading ? 'text-green-600' : 'text-red-600'}`}>
+                      {sourceIntegrationReport.isConsistentWithReading ? 'Consistent' : 'Issues Found'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Red Flags:</span>
+                    <span className="font-bold">{sourceIntegrationReport.redFlags.length}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-auto pt-6 border-t border-gray-100">

@@ -6,6 +6,7 @@ export interface Project {
   title: string;
   description?: string;
   content?: any;
+  outline?: any;
   word_count: number;
   citation_style?: string | null;
   file_path?: string;
@@ -70,7 +71,8 @@ export const documentService = {
     description: string,
     content: any,
     wordCount: number,
-    citationStyle?: string | null
+    citationStyle?: string | null,
+    outline?: any
   ): Promise<{ success: boolean; data?: Project; error?: string }> {
     try {
       const response = await apiClient.put(`/api/documents/${projectId}`, {
@@ -79,6 +81,7 @@ export const documentService = {
         content,
         word_count: wordCount,
         citation_style: citationStyle,
+        outline,
       });
       return response;
     } catch (error: any) {

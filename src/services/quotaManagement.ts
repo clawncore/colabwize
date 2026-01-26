@@ -70,7 +70,7 @@ export class QuotaManager {
   static getQuotaStatus(plan: 'free' | 'researcher' | 'enterprise', usage: CurrentUsage): QuotaStatus {
     const limits = this.PLANS[plan];
     const remaining = this.calculateRemaining(limits, usage);
-    
+
     return {
       plan,
       limits,
@@ -82,7 +82,7 @@ export class QuotaManager {
 
   static getDaysUntilReset(resetDate?: string): number {
     if (!resetDate) return 30; // Default monthly cycle
-    
+
     const reset = new Date(resetDate);
     const today = new Date();
     const diffTime = reset.getTime() - today.getTime();
@@ -104,15 +104,15 @@ export class QuotaManager {
     const used = status.usage[`${resource}Used` as keyof CurrentUsage] as number;
     const limit = status.limits[resource];
     const remaining = status.remaining[resource];
-    
+
     if (limit === Infinity) {
       return `${used} ${resource} used (unlimited)`;
     }
-    
+
     if (remaining <= 0) {
       return `Quota exceeded: ${used}/${limit} ${resource}`;
     }
-    
+
     const percentage = this.getUsagePercentage(used, limit);
     return `${used}/${limit} ${resource} (${percentage}% used)`;
   }
@@ -126,22 +126,22 @@ export class TemporaryQuotaBypass {
   static enableTemporaryBypass(): void {
     const expiration = new Date();
     expiration.setHours(expiration.getHours() + this.expirationHours);
-    
+
     localStorage.setItem(this.bypassKey, expiration.toISOString());
   }
 
   static isBypassActive(): boolean {
     const expirationStr = localStorage.getItem(this.bypassKey);
     if (!expirationStr) return false;
-    
+
     const expiration = new Date(expirationStr);
     const now = new Date();
-    
+
     if (now > expiration) {
       this.disableBypass();
       return false;
     }
-    
+
     return true;
   }
 
@@ -152,20 +152,20 @@ export class TemporaryQuotaBypass {
   static getTimeRemaining(): number {
     const expirationStr = localStorage.getItem(this.bypassKey);
     if (!expirationStr) return 0;
-    
+
     const expiration = new Date(expirationStr);
     const now = new Date();
-    
+
     return Math.max(0, expiration.getTime() - now.getTime());
   }
 
   static getFormattedTimeRemaining(): string {
     const msRemaining = this.getTimeRemaining();
     if (msRemaining <= 0) return 'Expired';
-    
+
     const hours = Math.floor(msRemaining / (1000 * 60 * 60));
     const minutes = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m remaining`;
     }

@@ -1,5 +1,6 @@
+
 import React from "react";
-import { ArrowLeft, ExternalLink, BookOpen, Calendar, MapPin, Hash, ShieldCheck, Globe } from "lucide-react";
+import { ArrowLeft, ExternalLink, BookOpen, Calendar, MapPin, Hash, ShieldCheck, Globe, Sparkles } from "lucide-react";
 
 export interface StoredCitation {
     id?: string;
@@ -20,16 +21,22 @@ export interface StoredCitation {
     openAccess?: boolean;
     type?: string;
     formatted_citations?: any;
+    themes?: string[]; // Added
+    matrix_notes?: string; // Added
 }
 
 interface SourceDetailPanelProps {
     source: StoredCitation;
+    projectId: string; // Added
     onBack: () => void;
+    onUpdate: (updatedSource: StoredCitation) => void; // Added
 }
 
 export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
     source,
+    projectId,
     onBack,
+    onUpdate
 }) => {
     // Normalize authors
     const getAuthors = () => {
@@ -42,6 +49,74 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
         if (source.url || source.doi) {
             const targetUrl = source.url || `https://doi.org/${source.doi}`;
             window.open(targetUrl, "_blank", "noopener,noreferrer");
+        }
+    };
+
+    const themes = ["Gap", "Methodology", "Result"];
+    const [isSaving, setIsSaving] = React.useState(false);
+    const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+
+    const handleAnalyze = async () => {
+        if (!source.id || !projectId || isAnalyzing) return;
+
+        // Alert if no abstract
+        if (!source.abstract) {
+            alert("No abstract available for this source. Please use a source with an abstract.");
+            return;
+        }
+
+        setIsAnalyzing(true);
+        try {
+            const { CitationService } = await import("../../services/citationService");
+            const updated = await CitationService.analyzeCitation(projectId, source.id);
+            if (updated) {
+                onUpdate(updated);
+                // DEBUG: Show exactly what was received
+                alert(`Analysis Result:\nThemes: ${JSON.stringify(updated.themes)}\nNotes: ${updated.matrix_notes}`);
+            }
+        } catch (err: any) {
+            console.error("Analysis failed", err);
+            alert(`Analysis failed: ${err.message || "Unknown error"}`);
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    const handleToggleTheme = async (theme: string) => {
+        if (!source.id || !projectId) return;
+
+        setIsSaving(true);
+        try {
+            const currentThemes = source.themes || [];
+            const newThemes = currentThemes.includes(theme)
+                ? currentThemes.filter(t => t !== theme)
+                : [...currentThemes, theme];
+
+            const { CitationService } = await import("../../services/citationService");
+            await CitationService.updateCitationThemes(projectId, source.id, { themes: newThemes });
+
+            onUpdate({ ...source, themes: newThemes });
+        } catch (err) {
+            console.error("Failed to update theme", err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleUpdateNotes = async (e: React.FocusEvent<HTMLTextAreaElement>) => {
+        const newNotes = e.target.value;
+        if (!source.id || !projectId || newNotes === source.matrix_notes) return;
+
+        setIsSaving(true);
+        try {
+            const { CitationService } = await import("../../services/citationService");
+            await CitationService.updateCitationThemes(projectId, source.id, { matrix_notes: newNotes });
+
+            onUpdate({ ...source, matrix_notes: newNotes });
+        } catch (err) {
+            console.error("Failed to update notes", err);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -133,6 +208,54 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
                             </div>
                         </div>
                     )}
+                </div>
+
+                {/* Literature Matrix Themes */}
+                <div className="mb-8 p-4 bg-teal-50/50 border border-teal-100 rounded-xl relative">
+                    {isSaving && (
+                        <div className="absolute top-4 right-4 text-[10px] font-bold text-teal-600 animate-pulse flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+                            SAVING...
+                        </div>
+                    )}
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-bold text-teal-900">Literature Matrix Tags</h3>
+                        <button
+                            onClick={handleAnalyze}
+                            disabled={isAnalyzing || !source.abstract}
+                            className="text-[10px] text-teal-600 font-bold uppercase tracking-wider flex items-center gap-1 hover:text-teal-800 disabled:opacity-50 transition-colors"
+                            title={!source.abstract ? "Abstract required for analysis" : "Analyze with AI"}
+                        >
+                            <Sparkles className={`w-3 h-3 ${isAnalyzing ? 'animate-spin' : ''}`} />
+                            {isAnalyzing ? "Analyzing..." : "Auto-Analyze"}
+                        </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {themes.map(theme => {
+                            const isSelected = source.themes?.includes(theme);
+                            return (
+                                <button
+                                    key={theme}
+                                    onClick={() => handleToggleTheme(theme)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${isSelected
+                                        ? "bg-teal-600 text-white border-teal-600 shadow-md transform scale-105"
+                                        : "bg-white text-teal-700 border-teal-200 hover:border-teal-400 hover:bg-teal-50"
+                                        }`}
+                                >
+                                    {theme}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <div className="mt-4">
+                        <label className="block text-[10px] font-bold text-teal-600 uppercase tracking-wider mb-1.5">Matrix Notes</label>
+                        <textarea
+                            className="w-full p-3 text-sm bg-white border border-teal-100 rounded-lg focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none transition-all placeholder:text-gray-300 min-h-[80px]"
+                            placeholder="Identify specific gaps or findings in this source for the Literature Matrix..."
+                            defaultValue={source.matrix_notes}
+                            onBlur={handleUpdateNotes}
+                        />
+                    </div>
                 </div>
 
                 {/* Abstract Preview */}

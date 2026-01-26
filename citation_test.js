@@ -18,7 +18,7 @@ const enhancedSuperscriptDetection = () => {
     '⁰': 0, '¹': 1, '²': 2, '³': 3, '⁴': 4,
     '⁵': 5, '⁶': 6, '⁷': 7, '⁸': 8, '⁹': 9
   };
-  
+
   let foundSuperscripts = [];
   for (let i = 0; i < testContent.length; i++) {
     const char = testContent[i];
@@ -30,7 +30,7 @@ const enhancedSuperscriptDetection = () => {
       });
     }
   }
-  
+
   return foundSuperscripts;
 };
 
@@ -39,7 +39,7 @@ console.log("Enhanced superscript detection:", enhancedSuperscriptDetection());
 // Test APA violation detection
 const detectAPAViolations = (text) => {
   const violations = [];
-  
+
   // Check for numeric brackets
   const bracketMatches = text.match(numericBracketRegex);
   if (bracketMatches) {
@@ -49,7 +49,7 @@ const detectAPAViolations = (text) => {
       matches: bracketMatches
     });
   }
-  
+
   // Check for superscript numbers
   const superscriptMatches = enhancedSuperscriptDetection();
   if (superscriptMatches.length > 0) {
@@ -59,7 +59,7 @@ const detectAPAViolations = (text) => {
       matches: superscriptMatches
     });
   }
-  
+
   return violations;
 };
 

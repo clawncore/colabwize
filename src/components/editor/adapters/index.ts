@@ -3,3 +3,4 @@ export { OriginalityMapAdapter } from "./OriginalityMapAdapter";
 export { CitationConfidenceAdapter } from "./CitationConfidenceAdapter";
 export { AuthorshipCertificateAdapter } from "./AuthorshipCertificateAdapter";
 export { RephraseAdapter } from "./RephraseAdapter";
+export { AIDetectionAdapter } from "./AIDetectionAdapter";

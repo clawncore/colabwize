@@ -88,6 +88,20 @@
   border-bottom: 2px solid #ff9800;
 }
 
+.highlight[data-color="purple"] {
+  background-color: #f3e8ff !important;
+  /* purple-100 */
+  padding: 2px 4px;
+  border-radius: 3px;
+  border-bottom: 2px solid #a855f7;
+  /* purple-500 */
+}
+
+.highlight[data-color="purple"]:hover {
+  background-color: #faf5ff !important;
+  /* purple-50 */
+}
+
 .highlight:hover {
   opacity: 0.8;
   cursor: pointer;

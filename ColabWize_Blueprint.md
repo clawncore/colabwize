@@ -30,208 +30,173 @@ A **defensibility-first platform** that acts as an "Ironclad Shield" against AI 
 
 ---
 
-## 2. PHASE 1: CORE MVP FEATURES
+## Phase 1: Core MVP Features
+**Timeline:** Months 1-3 | **Goal:** Validate Product-Market Fit
 
-### Timeline: Months 1-3 | Goal: Validate Product-Market Fit
-
-> **Phase 1 Philosophy**: Build the minimum features that solve the CORE anxiety. Nothing more.
-
-### What to Build (Prioritized List)
-
-#### ✅ Feature #1: Originality Map (The Turnitin Mirror)
-
-**Goal**: Eliminate the fear of hidden plagiarism by showing *exactly* what the professor sees.
-
-**Function**: Scans documents using **Enterprise-Grade Detection** (mirroring Turnitin's strictness). It color-codes text (Green/Yellow/Red) to distinguish between safe common phrases and "danger zones".
-
-**MVP Scope (✅ IMPLEMENTED + 🛠️ UPGRADED)**:
-- Upload your paper (PDF/DOCX)
-- See what % similarity Turnitin-style detection will show
-- See EXACTLY which sentences will be flagged
-- Get explanation: "This is fine because it's a common phrase" vs "This needs rewording"
-- Color-coded heatmap (Green/Yellow/Red)
-- **NEW - MVP Enhancements (Jan 2026)**:
-  - ✅ **Enterprise PDF Parsing**: Switched from `pdf-parse` to **Mathpix/Adobe OCR** to handle complex academic layouts without crashing.
-  - ✅ **Copyleaks API Integration**: Replaced basic `string-similarity` with industry-standard detection to ensure the "Map" matches reality.
-  - ✅ Bibliography auto-exclusion
-  - ✅ Proper quote detection
-  - ✅ 8-word minimum matching (Turnitin standard)
-
-**Tech Stack (Upgraded)**:
-- Parsing: **Mathpix OCR / Adobe PDF Services** (Fixes "Weak PDF Parsing")
-- Detection API: **Copyleaks API** (Fixes "Weak Detection")
-- Frontend: React component (Heatmap)
-- Storage: PostgreSQL (cache results)
-
-**Success Metric**: 60% of users who upload a document click on at least one flagged sentence.
+> [!IMPORTANT]
+> **Phase 1 Philosophy:** Build the minimum features that solve the CORE anxiety. Nothing more.
 
 ---
 
-#### ✅ Feature #2: The Auto-Humanizer (Fix-It Suggestions 2.0)
+## 🛡️ CORE FEATURES (Keep Simple)
 
-**Goal**: Fast-track the editing process and bypass robotic detection mechanisms.
+### 1. Originality Map (The Wedge)
+Turnitin-style similarity detection with color-coded heatmap.
+- **Safety Classification System:**
+  - 🟢 **Green:** 0-24% similarity (Safe)
+  - 🟡 **Yellow:** 25-49% similarity (Review)
+  - 🔴 **Red:** 50%+ similarity (Action required)
+- Click on flagged sentences to see exact source matches.
+- Real-time originality checking while writing.
+- Pre-check similarity report against academic databases.
+- Self-plagiarism detector (compare against user's previous documents).
+- **Tech Stack:** `sentence-transformers` (MiniLM/MPNet), Cosine similarity, Google Custom Search API, Copyscape/Copyleak integration.
 
-**Function**: A one-click "Sanitize" button. Uses **Adversarial AI** to rewrite flagged content, specifically increasing "burstiness" and "perplexity" to break detection patterns.
+### 2. AI-Probability Heatmap
+- Highlight specific sentences that appear "too perfect" or "robotic".
+- AI detection meter showing overall AI probability score.
+- Sentence-level analysis for targeted revision.
+- Explanation of why each sentence was flagged.
+- **Tech Stack:** AI detection API integration.
 
-**MVP Scope (✅ IMPLEMENTED + 🛠️ UPGRADED)**:
-- For flagged sentences: "Here's 3 ways to rephrase this"
-- **Adversarial Rewrite Mode**: "Make this Undetectable"
-- Direct insertion of suggestions into the document
-- **NEW - MVP Enhancements (Jan 2026)**:
-  - ✅ **Claude 3.5 Sonnet Integration**: Replaced simple GPT-3.5 synonyms with advanced, nuanced rewriting.
-  - ✅ **Anti-Robotic Logic**: Prompts specifically engineered to avoid "AI patterns" (repetitive sentence structure).
-  - ✅ Field-specific paper search (medicine → PubMed, CS → arXiv)
-  - ✅ Recent papers only (last 3 years)
+### 3. Citation Confidence Auditor
+Scan bibliographies to flag problematic citations:
+- Too old (>5 years for science, >10 for humanities).
+- Improperly formatted.
+- Potentially fake/hallucinated (cross-reference with CrossRef).
+- From predatory journals.
+- Confidence score per section.
+- Citation coverage map showing which parts lack proper citations.
+- Broken link checker for URL credibility and availability.
+- Citation verification (ensure all in-text citations have corresponding references).
+- **Tech Stack:** CrossRef API, PubMed API, ArXiv API, Semantic Scholar API.
 
-**Tech Stack (Upgraded)**:
-- LLM: **Claude 3.5 Sonnet** (via Anthropic API)
-- Logic: Adversarial Prompting (Fixes "Robotic Rephrasing")
-- Context: Local sentence context + bibliographic data
+### 4. Authorship Certificate (The Moat)
+**The "Proof of Authenticity" System.** Tracks and generates verifiable proof including:
+- Keystroke log summary (40+ hours of active typing time).
+- Writing timeline with session timestamps.
+- Edit pattern analysis (proof of organic writing, not copy-paste).
+- Number of manual edits/keystrokes.
+- "0% automated rewriting" verification.
+- ColabWize seal of authenticity.
+- Professional PDF certificate (watermark-free for paid users).
+- **Success Metric:** 30% of users download their certificate.
 
-**Success Metric**: 50% of users accept at least one suggestion.
+### 5. Anxiety Reality Check Panel
+- Clear breakdown: "X% similarity from References".
+- "Trust Score" based on citation quality.
+- **Reassuring Contextual Messages:**
+  - "Common phrases are expected."
+  - "Turnitin flags ≠ plagiarism accusation."
+  - "Intent + citation matters more than %."
+- De-escalate panic with data-driven reassurance.
 
----
-
-#### ✅ Feature #3: Citation Confidence Auditor
-
-**Goal**: Prevent embarrassment from fake or bad citations.
-
-**Function**: Scans bibliographies to flag citations that are outdated (>5 years), improperly formatted, or potentially hallucinated/fake.
-
-**MVP Scope (✅ IMPLEMENTED)**:
-- Scan your bibliography
-- Flag citations that are:
-  - Too old (>5 years for science, >10 for humanities)
-  - Improperly formatted
-  - Potentially fake (cross-reference with CrossRef)
-  - From predatory journals
-- Show confidence score per section
-- **NEW - MVP Enhancements (Jan 2026)**:
-  - ✅ CrossRef verification (detects AI-hallucinated citations)
-  - ✅ Field-specific recency scoring
-  - ✅ 4-component confidence score
-  - ✅ APA/MLA format validation
-
-**Tech Stack**:
-- API: CrossRef, PubMed, Semantic Scholar
-- Logic: Recency check + formatting heuristics
-
-**Success Metric**: 40% of users view citation details.
-
----
-
-#### ✅ Feature #4: Anxiety Reality Check Panel (Psychological Win)
-
-**Goal**: De-escalate panic with data-driven reassurance.
-
-**Function**: A subtle panel that contextualizes similarity scores, ensuring users know that "12% similarity" from quotes is NOT plagiarism.
-
-**MVP Scope (✅ IMPLEMENTED)**:
-- Display clear breakdown: "X% similarity from References"
-- Show "Trust Score" based on citation quality
-- Display reassuring messages:
-  - "Common phrases are expected"
-  - "Turnitin flags ≠ plagiarism accusation"
-  - "Intent + citation matters more than %"
-- **NEW - MVP Features (Operational)**:
-  - ✅ Calculates safeMatches, quotedMatches, citedMatches
-  - ✅ Provides percentageSafe score
-  - ✅ Context-aware reassurance messages
+### 6. Draft Comparison Guard
+- Upload two versions of a document (Draft 1 vs Draft 2).
+- Detect and highlight:
+  - Self-plagiarism risk.
+  - Reused sections.
+  - Overlapping structure.
+- Explain why it might be flagged.
+- Revision comparison showing paper evolution from messy first draft to polished final version.
 
 ---
 
-#### ✅ Feature #5: Draft Comparison Guard
+## 📚 RESEARCH VAULT (Literature Management)
 
-**Goal**: Catch accidental self-plagiarism before submission.
+### 7. PDF Annotator & Organization
+- Built-in PDF reader with highlighting and margin notes.
+- Categorization tags (Methodology, Results, Theories, Gaps, etc.).
+- Automatic metadata extraction (DOI, Journal Name, Authors).
+- Search & filter for quick cross-referencing.
+- Annotation history with timestamps.
+- Source map showing every PDF opened, highlighted, and referenced.
 
-**Function**: Allows users to upload a previous draft and compare it against their current version to identify reused sections.
-
-**MVP Scope (✅ IMPLEMENTED)**:
-- Upload two versions of a document
-- Detect and highlight reused sections / structural overlap
-- **NEW - MVP Features (Operational)**:
-  - ✅ Dedicated comparison service (`draftComparisonService.ts`)
-  - ✅ Risk classification (low/medium/high)
-  - ✅ Sentence-level matching
-
----
-
-#### ✅ Feature #6: Safe AI Integrity Assistant
-
-**Goal**: Provide instant answers to anxiety-inducing questions without risking academic integrity.
-
-**Function**: A read-only, advisory AI chatbot that explains flags but **refuses to write** for the student.
-
-**MVP Scope (✅ IMPLEMENTED)**:
-- Context-aware chat (knows your document content)
-- Explains specific flags: "Why is this sentence marked red?"
-- Strictly refuses to write, rewrite, or paraphrase text.
-- **NEW - MVP Features (Operational)**:
-  - ✅ GPT-4o-mini integration (`aiChatService.ts`)
-  - ✅ Strict guardrails
-  - ✅ Document context awareness
-
-**Success Metric**: 25% of users ask at least one question per session.
+### 8. Literature Review Manager
+- Organize sources by themes and research questions.
+- Note-taking system with automatic source tracking.
+- Citation journey tracking (when each source was added and how it was used).
+- Citation network visualization showing how sources connect.
 
 ---
 
-#### ✅ Feature #7: Authorship Certificate (The Backup)
+## ✍️ HUMAN-FIRST WRITING ENVIRONMENT
 
-**Goal**: Provide proof of manual effort (if all else fails).
+### 9. Focus Mode Writing Interface
+- Minimalist, distraction-free text editor (TipTap).
+- No AI autofill or autocomplete suggestions.
+- Writing progress tracker with visual timeline.
+- Word count & progress goals.
+- Writing productivity metrics (track sessions, word count growth).
 
-**Status**: **Backup** (Not the primary Moat).
+### 10. Outline & Structure Builder
+- Drag-and-drop tool to organize chapters.
+- Pre-structured sections: Abstract, Introduction, Methods, Results, Discussion, Conclusion.
+- Document templates for different paper types.
+- Structure analyzer checking for logical flow and coherence.
 
-**Function**: Tracks editing time, keystrokes, and session data to generate a verifiable "Authorship Certificate." This serves as a "receipt" students can show if accused.
-
-**MVP Scope (✅ IMPLEMENTED)**:
-- Track time spent writing
-- Track number of edits/keystrokes
-- Generate PDF certificate showing stats
-- **NEW - Enhanced Features (Operational)**:
-  - ✅ Real-time activity tracking
-  - ✅ Professional PDF (blue/gold elegant design)
-  - ✅ QR code verification system
-  - ✅ Public verification page
-
-**Tech Stack**:
-- Activity tracking: Simple timestamp + edit count
-- PDF generation: Puppeteer (landscape format)
-- Storage: PostgreSQL
-
-**Success Metric**: 30% of users download their certificate.
+### 11. Version History & Provenance
+- Time-lapse recording of writing process.
+- Word-by-word growth over time.
+- Complete edit history with timestamps.
+- Version recovery and backup.
+- Automatic cloud saves.
 
 ---
 
-## 3. What NOT to Build in Phase 1 (CRITICAL)
+## 🔧 SMART CITATION ENGINE
 
-- ❌ **Generic Grammar Checker** (Let Grammarly win this)
-- ❌ **Bibliography Manager** (Let Zotero win this)
-- ❌ **Collaboration Tools** (Use Google Docs)
-- ❌ **Advanced Writing Tools** (Style, Tone)
+### 12. One-Click Bibliography Generator
+- Support for 10,000+ citation styles (APA 7th, MLA, Chicago, Harvard, IEEE, Vancouver, etc.).
+- In-text citation generator (copy-paste directly in correct format).
+- Auto-citation from DOI/URL.
+- Reference formatter with automatic formatting.
+- Citation quality scoring.
+- Duplicate citation detection.
 
-## 4. MVP Success Criteria
+---
 
-**User Metrics**:
-- ✅ 1,000 active users
-- ✅ 20% weekly retention
-- ✅ 50% feature adoption
+## 🛡️ ADVANCED AUTHENTICITY & TRUST FEATURES
+**Critical Features for 100% Turnitin Safety**
 
-**Decision Point**:
-- If metrics hit → Proceed to Phase 2 (Advanced Plagiarism Features)
-- If metrics miss → Pivot
+### 31. Writing Pattern Fingerprint
+Behavioral biometrics that prove human authorship. Track unique typing patterns:
+- **Typing Speed Variations:** Humans slow down when thinking.
+- **Pause Patterns:** Thinking breaks between paragraphs.
+- **Deletion/Correction Patterns:** Humans make mistakes and fix them.
+- **Sentence Construction Patterns:** How ideas develop organically.
+- **"Writing DNA" Report Includes:**
+  - Average typing speed with natural fluctuations.
+  - Think-pause ratios (time spent thinking vs typing).
+  - Error correction frequency.
+  - Revision patterns over time.
+- **Why it Matters:** AI generates text instantly; humans have natural rhythms that prove authenticity.
 
-## 5. Technical Architecture (Active Defense)
+### 32. Multi-Draft Evolution Tracker
+Mandatory multi-draft system that forces an organic writing process. Track evolution across minimum 3 drafts:
+- **Rough Draft:** Initial ideas, fragments, messy notes.
+- **Working Draft:** Structured but incomplete.
+- **Final Draft:** Polished version.
+- **Comparison Metrics:**
+  - How ideas developed organically.
+  - Where content was added/removed/reorganized.
+  - Natural progression of arguments.
+  - Vocabulary evolution (humans refine word choices).
+- **Visual Timeline:** "Started with 500 words → 1,200 words → 2,000 words".
+- **Why it Matters:** AI creates polished text immediately; humans build progressively.
 
-**Frontend**:
-- React 18+ with TypeScript
-- TipTap editor
-- Tailwind CSS
-
-**Backend**:
-- Node.js + Express
-- PostgreSQL (Prisma)
-- **Enterprise Services**:
-    - **Mathpix/Adobe OCR** (PDF Parsing)
-    - **Copyleaks API** (Detection)
-    - **Claude 3.5 Sonnet** (Humanization)
-    - **Semantic Scholar** (Citations)
+### 33. Source Integration Verification
+Prove that the user actually **READ** the sources they cited. Track for each cited source:
+- Time spent reading the PDF.
+- Sections highlighted/annotated.
+- Notes taken while reading.
+- When the citation was added (after reading, not before).
+- **Suspicious Pattern Flags:**
+  - 🚩 **Red Flag:** Citation added without opening source.
+  - ⚠️ **Warning:** Source opened for < 30 seconds.
+  - 🤨 **Suspicious:** Zero highlights/notes but cited.
+- **Reading Audit Trail:**
+  - "Spent 47 minutes reading Smith (2020)"
+  - "Highlighted 8 passages"
+  - "Added citation 3 days after reading"
+- **Why it Matters:** Proves sources weren't just copied from AI-generated bibliography.

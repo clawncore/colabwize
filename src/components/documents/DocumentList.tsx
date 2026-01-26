@@ -13,6 +13,7 @@ interface DocumentListProps {
   selectedProjectId?: string;
   displayMode?: DisplayMode;
   showActions?: boolean;
+  hideHeader?: boolean;
 }
 
 export const DocumentList: React.FC<DocumentListProps> = ({
@@ -21,6 +22,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   selectedProjectId,
   displayMode = "grid",
   showActions = true,
+  hideHeader = false,
 }) => {
   const navigate = useNavigate();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "failed">("idle");
@@ -157,18 +159,20 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   return (
     <div className="w-full h-full flex flex-col bg-gray-50">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-white">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={handleBackButton}
-              className="p-1 hover:bg-gray-100 rounded-md transition-colors">
-              <ArrowLeftIcon className="w-5 h-5 text-gray-600" />
-            </button>
-            <h2 className="text-lg font-semibold text-gray-900">Documents</h2>
+      {!hideHeader && (
+        <div className="p-4 border-b border-gray-200 bg-white">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handleBackButton}
+                className="p-1 hover:bg-gray-100 rounded-md transition-colors">
+                <ArrowLeftIcon className="w-5 h-5 text-gray-600" />
+              </button>
+              <h2 className="text-lg font-semibold text-gray-900">Documents</h2>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Document List/Grid */}
       <div className="flex-1 overflow-y-auto p-4">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
+import { EditorProvider } from "./EditorContext";
 import StarterKit from "@tiptap/starter-kit";
 import { CharacterCount } from "@tiptap/extension-character-count";
 import { HighlightExtension } from "../../extensions/HighlightExtension";
@@ -36,12 +37,15 @@ import {
   // CitationConfidenceAdapter, // Removed/Replaced
   AuthorshipCertificateAdapter,
   RephraseAdapter,
+  AIDetectionAdapter,
 } from "./adapters";
 import { CitationAuditAdapter } from "./adapters/CitationAuditAdapter";
 import { UpgradeModal } from "../subscription/UpgradeModal";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { DraftComparisonSelector } from "../originality/DraftComparisonSelector";
 import { RightPanelType } from "./EditorWorkspacePage";
+import { AIScanResult } from "../../services/aiDetectionService";
+import BehavioralTracker from "./BehavioralTracker";
 // import Image from "@tiptap/extension-image"; // Replaced
 import { Table } from "@tiptap/extension-table";
 import { TableCell } from "@tiptap/extension-table-cell";
@@ -64,6 +68,8 @@ import {
   ShieldAlert,
   Bot,
   ShieldCheck,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 
 
@@ -74,6 +80,8 @@ interface DocumentEditorProps {
   onOpenPanel?: (panelType: RightPanelType, data?: any) => void;
   onOpenLeftPanel?: (panelType: "documents" | "audit", data?: any) => void;
   onEditorReady?: (editor: any) => void;
+  isFocusMode?: boolean;
+  onToggleFocusMode?: () => void;
 }
 
 export const DocumentEditor: React.FC<DocumentEditorProps> = ({
@@ -82,6 +90,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   onOpenPanel,
   onOpenLeftPanel,
   onEditorReady,
+  isFocusMode = false,
+  onToggleFocusMode,
 }) => {
   const { toast } = useToast();
   // const [editorState, setEditorState] = useState(project.content);
@@ -99,6 +109,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [lastScanResult, setLastScanResult] = useState<OriginalityScan | null>(
     null
   );
+  const [, setLastAIScanResult] = useState<AIScanResult | null>(
+    null
+  );
+  const [aiSentenceCache, setAiSentenceCache] = useState<Map<string, number>>(new Map());
   const [citationSuggestions] = useState<any>(null);
   const [editCount, setEditCount] = useState(0);
   const [timeSpent, setTimeSpent] = useState(0); // in seconds
@@ -402,6 +416,55 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     });
   };
 
+  // Function to highlight AI detection results with persistent mapping
+  const highlightAIResults = (results: AIScanResult) => {
+    if (!editor || !results || !results.sentences) return;
+
+    // Update the persistent cache
+    const newCache = new Map(aiSentenceCache);
+    results.sentences.forEach(s => {
+      if (s.text && s.score !== undefined) {
+        newCache.set(s.text.trim(), s.score);
+      }
+    });
+    setAiSentenceCache(newCache);
+    setLastAIScanResult(results);
+
+    syncAIHighlights(newCache);
+  };
+
+  const syncAIHighlights = (cache: Map<string, number> = aiSentenceCache) => {
+    if (!editor || cache.size === 0) return;
+
+    const doc = editor.state.doc;
+
+    // Efficiently apply highlights to all matching sentences in the document
+    editor.chain().setMeta("addToHistory", false); // Don't clutter history
+
+    cache.forEach((score, sentenceText) => {
+      let lastPos = 0;
+      // Find ALL occurrences of this sentence in the document
+      while (true) {
+        const range = findTextRange(doc, sentenceText, lastPos);
+        if (!range) break;
+
+        if (score >= 30) {
+          editor.chain().highlightRange(range.from, range.to, {
+            color: "purple",
+            type: "ai",
+            aiProbability: score,
+            message: `AI Probability: ${Math.round(score)}%`,
+          });
+        }
+
+        lastPos = range.to;
+        if (lastPos >= doc.content.size) break;
+      }
+    });
+
+    editor.chain().run();
+  };
+
 
   // Track time spent writing
   useEffect(() => {
@@ -425,6 +488,18 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       }
     };
   }, []);
+
+  // Add Escape key listener for Focus Mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFocusMode && onToggleFocusMode) {
+        onToggleFocusMode();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFocusMode, onToggleFocusMode]);
 
 
 
@@ -533,237 +608,278 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        feature="Draft Comparison"
-        title="Premium Feature"
-        message="Draft Comparison is available on paid plans. Upgrade to unlock accurate version comparison."
-      />
-      {/* Editor Header */}
-      <div className="border-b border-gray-200 p-4 bg-white z-10 flex-shrink-0">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex-1">
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="text-2xl font-bold w-full border-none focus:outline-none focus:ring-0 pl-8 text-gray-900"
-              placeholder="Untitled Document"
-            />
-          </div>
-          <div className="flex items-center space-x-2 flex-wrap">
-            <button
-              onClick={() => setIsExportWorkflowOpen(true)}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
-              title="Export Document">
-              <Download className="w-4 h-4" />
-              Export
-            </button>
-
-            <button
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
-              title="Clear Highlights"
-              onClick={() => {
-                clearHighlights();
-                toast({
-                  title: "Highlights Cleared",
-                  description: "All highlights have been cleared",
-                  variant: "default",
-
-                });
-              }}>
-              <Eraser className="w-4 h-4" />
-              Clear Highlights
-            </button>
-
-            {/* Feature Adapter Components */}
-            <OriginalityMapAdapter
-              projectId={project.id}
-              editor={editor}
-              onScanComplete={handleOriginalityScanComplete}
-            />
-
-            <button
-              onClick={handleCompareClick}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
-              title="Compare with Previous">
-              <GitCompare className="w-4 h-4" />
-              Compare
-            </button>
-
-            {lastScanResult?.realityCheck && (
-              <button
-                onClick={() =>
-                  onOpenPanel?.("reality-check", lastScanResult.realityCheck)
-                }
-                className="px-4 py-2 border border-indigo-200 bg-indigo-50 text-indigo-700 rounded-md text-sm font-medium hover:bg-indigo-100 transition-colors flex items-center gap-2"
-                title="View Reality Check">
-                <ShieldAlert className="w-4 h-4" />
-                Reality Check
-              </button>
-            )}
-
-            {/* Anxiety Reality Check Panel - Prominently featured */}
-            {lastScanResult?.realityCheck && (
-              <div className="px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 rounded-md text-sm font-medium flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Score: {Math.round(lastScanResult.overallScore)}%</span>
-                <span className="text-xs bg-white px-2 py-1 rounded">
-                  {lastScanResult.realityCheck.trustScore > 70
-                    ? "Good"
-                    : lastScanResult.realityCheck.trustScore > 40
-                      ? "Review"
-                      : "Attention"}
-                </span>
+    <EditorProvider editor={editor}>
+      <div className={`flex flex-col h-full bg-white transition-all duration-500 ${isFocusMode ? "fixed inset-0 z-[100] p-0" : ""}`}>
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          feature="Draft Comparison"
+          title="Premium Feature"
+          message="Draft Comparison is available on paid plans. Upgrade to unlock accurate version comparison."
+        />
+        {/* Editor Header - Hidden in Focus Mode */}
+        {!isFocusMode && (
+          <div className="border-b border-gray-200 p-4 bg-white z-10 flex-shrink-0">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="text-2xl font-bold w-full border-none focus:outline-none focus:ring-0 pl-8 text-gray-900"
+                  placeholder="Untitled Document"
+                />
               </div>
-            )}
+              <div className="flex items-center space-x-2 flex-wrap">
+                <button
+                  onClick={() => setIsExportWorkflowOpen(true)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                  title="Export Document">
+                  <Download className="w-4 h-4" />
+                  Export
+                </button>
 
-            <RephraseAdapter
+                <button
+                  onClick={onToggleFocusMode}
+                  className={`px-4 py-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
+                    ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
+                >
+                  {isFocusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  {isFocusMode ? "Exit Focus" : "Focus Mode"}
+                </button>
+
+                <button
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                  title="Clear Highlights"
+                  onClick={() => {
+                    clearHighlights();
+                    toast({
+                      title: "Highlights Cleared",
+                      description: "All highlights have been cleared",
+                      variant: "default",
+                    });
+                  }}>
+                  <Eraser className="w-4 h-4" />
+                  Clear Highlights
+                </button>
+
+                {/* Feature Adapter Components */}
+                <OriginalityMapAdapter
+                  projectId={project.id}
+                  editor={editor}
+                  onScanComplete={handleOriginalityScanComplete}
+                />
+
+                <button
+                  onClick={handleCompareClick}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                  title="Compare with Previous">
+                  <GitCompare className="w-4 h-4" />
+                  Compare
+                </button>
+
+                {lastScanResult?.realityCheck && (
+                  <button
+                    onClick={() =>
+                      onOpenPanel?.("reality-check", lastScanResult.realityCheck)
+                    }
+                    className="px-4 py-2 border border-indigo-200 bg-indigo-50 text-indigo-700 rounded-md text-sm font-medium hover:bg-indigo-100 transition-colors flex items-center gap-2"
+                    title="View Reality Check">
+                    <ShieldAlert className="w-4 h-4" />
+                    Reality Check
+                  </button>
+                )}
+
+                {/* Anxiety Reality Check Panel - Prominently featured */}
+                {lastScanResult?.realityCheck && (
+                  <div className="px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 rounded-md text-sm font-medium flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Score: {Math.round(lastScanResult.overallScore)}%</span>
+                    <span className="text-xs bg-white px-2 py-1 rounded">
+                      {lastScanResult.realityCheck.trustScore > 70
+                        ? "Good"
+                        : lastScanResult.realityCheck.trustScore > 40
+                          ? "Review"
+                          : "Attention"}
+                    </span>
+                  </div>
+                )}
+
+                <RephraseAdapter
+                  projectId={project.id}
+                  editor={editor}
+                  onOpenRephrasePanel={(suggestions, originalText) => {
+                    if (onOpenPanel) {
+                      onOpenPanel("rephrase", { suggestions, originalText });
+                    }
+                  }}
+                />
+
+                <button
+                  className="p-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  title="More Options">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Editor Toolbar - Hidden in Focus Mode */}
+        {!isFocusMode && <EditorToolbar editor={editor} />}
+
+        {/* Editor Content & Sidebar Container */}
+        <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
+            {/* Main Editor Area */}
+            <div className={`flex-1 overflow-auto transition-all duration-500 ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}>
+              {editor && <TableBubbleMenu editor={editor} />}
+              <EditorContent
+                editor={editor}
+                className={`${isFocusMode ? "max-w-[900px]" : "max-w-[816px]"} mx-auto prose prose-lg min-h-full focus:outline-none p-8 bg-white rounded-lg shadow-sm`}
+              />
+              {/* Behavioral Tracker */}
+              <BehavioralTracker projectId={project.id} userId={project.user_id} />
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Exit Button - Visible ONLY in Focus Mode */}
+        {isFocusMode && onToggleFocusMode && (
+          <button
+            onClick={onToggleFocusMode}
+            className="fixed top-6 right-6 z-[110] px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-300 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-100 transition-all shadow-lg flex items-center gap-2 opacity-50 hover:opacity-100"
+            title="Exit Focus Mode (Esc)"
+          >
+            <Minimize2 className="w-4 h-4" />
+            Exit Focus (Esc)
+          </button>
+        )}
+
+        {/* Editor Footer with Stats - Hidden in Focus Mode */}
+        {!isFocusMode && (
+          <div className="border-t border-gray-200 px-8 py-3 bg-white text-sm text-gray-500 flex flex-wrap items-center justify-between gap-4 z-10 flex-shrink-0">
+            <div className="flex items-center gap-6">
+              {editor && (
+                <span className="font-medium">
+                  {editor.storage.characterCount.words()} words
+                </span>
+              )}
+              <span className="text-gray-600">
+                Time: {formatTimeSpent(timeSpent)}
+              </span>
+              <span className="text-gray-600">Edits: {editCount}</span>
+            </div>
+            <div className="w-px h-6 bg-gray-300"></div>
+
+            <CitationAuditAdapter
               projectId={project.id}
               editor={editor}
-              onOpenRephrasePanel={(suggestions, originalText) => {
-                // Open the rephrase suggestions panel in the right sidebar
-                if (onOpenPanel) {
-                  onOpenPanel("rephrase", { suggestions, originalText });
+              onScanComplete={(results) => {
+                if (onOpenLeftPanel) {
+                  onOpenLeftPanel("audit", results);
                 }
               }}
             />
 
             <button
-              className="p-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-              title="More Options">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                />
-              </svg>
+              onClick={() =>
+                onOpenPanel?.("ai-chat", {
+                  selectedText: editor?.getAttributes("highlight")?.message,
+                  originalityResults: lastScanResult,
+                  citationSuggestions: citationSuggestions,
+                })
+              }
+              className="px-4 py-2 border border-purple-200 bg-purple-50 text-purple-700 rounded-md text-sm font-medium hover:bg-purple-100 transition-colors flex items-center gap-2"
+              title="AI Integrity Assistant">
+              <Bot className="w-4 h-4" />
+              Ask Integrity AI
             </button>
-          </div>
-        </div>
-      </div>
 
-      {/* Editor Toolbar */}
-      <EditorToolbar editor={editor} />
+            <button
+              onClick={() => onOpenPanel?.("citations")}
+              className="px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors flex items-center gap-2"
+              title="Find Missing Citations">
+              <BookOpen className="w-4 h-4" />
+              Find Papers
+            </button>
 
-      {/* Editor Content & Sidebar Container */}
-      <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
-          {/* Main Editor Area */}
-          <div className="flex-1 overflow-auto p-8">
-            {editor && <TableBubbleMenu editor={editor} />}
-            <EditorContent
+            <AIDetectionAdapter
+              projectId={project.id}
               editor={editor}
-              className="max-w-[816px] mx-auto prose prose-lg min-h-full focus:outline-none p-8 bg-white rounded-lg "
+              onScanComplete={(results) => {
+                setLastAIScanResult(results);
+                highlightAIResults(results);
+                if (onOpenPanel) {
+                  onOpenPanel("ai-results", results);
+                }
+              }}
+            />
+
+            <AuthorshipCertificateAdapter
+              projectId={project.id}
+              projectTitle={title}
+              editor={editor}
             />
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Editor Footer with Stats */}
-      <div className="border-t border-gray-200 px-8 py-3 bg-white text-sm text-gray-500 flex flex-wrap items-center justify-between gap-4 z-10 flex-shrink-0">
-        <div className="flex items-center gap-6">
-          {editor && (
-            <span className="font-medium">
-              {editor.storage.characterCount.words()} words
-            </span>
-          )}
-          <span className="text-gray-600">
-            Time: {formatTimeSpent(timeSpent)}
-          </span>
-          <span className="text-gray-600">Edits: {editCount}</span>
-        </div>
-        <div className="w-px h-6 bg-gray-300"></div>
+        {/* Reality Check Manual Trigger */}
+        {lastScanResult && (
+          <div className="fixed top-20 right-4 z-50">
+            <button
+              onClick={() => {
+                if (onOpenPanel) {
+                  const stats = lastScanResult.realityCheck || {
+                    referencePercent: 45,
+                    commonPhrasePercent: 12,
+                    trustScore: 85,
+                    message: "Good citation practice detected.",
+                  };
+                  onOpenPanel("reality-check", stats);
+                }
+              }}
+              className="bg-white/90 backdrop-blur border border-indigo-100 shadow-sm px-3 py-1.5 rounded-full text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center gap-1.5">
+              <span>🛡️ Reality Check</span>
+            </button>
+          </div>
+        )}
 
-        {/* Citation Audit Sidebar Trigger - Replaces CitationConfidenceAdapter modal */}
-        {/* Citation Audit Sidebar Trigger - Replaces CitationConfidenceAdapter modal */}
-        <CitationAuditAdapter
-          projectId={project.id}
-          editor={editor}
-          onScanComplete={(results) => {
-            if (onOpenLeftPanel) {
-              onOpenLeftPanel("audit", results);
+        {/* Comparison Selector Dialog */}
+        <DraftComparisonSelector
+          isOpen={isComparisonSelectorOpen}
+          onClose={() => setIsComparisonSelectorOpen(false)}
+          currentDraftContent={editor?.getText() || ""}
+          onComparisonComplete={(result) => {
+            if (onOpenPanel) {
+              onOpenPanel("draft-comparison", result);
             }
           }}
+          excludeProjectId={project.id}
         />
 
-        <button
-          onClick={() =>
-            onOpenPanel?.("ai-chat", {
-              selectedText: editor?.getAttributes("highlight")?.message,
-              originalityResults: lastScanResult,
-              citationSuggestions: citationSuggestions,
-            })
-          }
-          className="px-4 py-2 border border-purple-200 bg-purple-50 text-purple-700 rounded-md text-sm font-medium hover:bg-purple-100 transition-colors flex items-center gap-2"
-          title="AI Integrity Assistant">
-          <Bot className="w-4 h-4" />
-          Ask Integrity AI
-        </button>
-
-        <button
-          onClick={() => onOpenPanel?.("citations")}
-          className="px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors flex items-center gap-2"
-          title="Find Missing Citations">
-          <BookOpen className="w-4 h-4" />
-          Find Papers
-        </button>
-
-        <AuthorshipCertificateAdapter
-          projectId={project.id}
-          projectTitle={title}
-          editor={editor}
+        <ExportWorkflowModal
+          isOpen={isExportWorkflowOpen}
+          onClose={() => setIsExportWorkflowOpen(false)}
+          project={{ ...project, title }}
+          currentContent={editor?.getJSON()}
+          currentHtmlContent={editor?.getHTML()}
         />
       </div>
-      {/* Reality Check Manual Trigger */}
-      {lastScanResult && (
-        <div className="fixed top-20 right-4 z-50">
-          <button
-            onClick={() => {
-              if (onOpenPanel) {
-                const stats = lastScanResult.realityCheck || {
-                  referencePercent: 45,
-                  commonPhrasePercent: 12,
-                  trustScore: 85,
-                  message: "Good citation practice detected.",
-                };
-                onOpenPanel("reality-check", stats);
-              }
-            }}
-            className="bg-white/90 backdrop-blur border border-indigo-100 shadow-sm px-3 py-1.5 rounded-full text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center gap-1.5">
-            <span>🛡️ Reality Check</span>
-          </button>
-        </div>
-      )}
-
-      {/* Comparison Selector Dialog */}
-      <DraftComparisonSelector
-        isOpen={isComparisonSelectorOpen}
-        onClose={() => setIsComparisonSelectorOpen(false)}
-        currentDraftContent={editor?.getText() || ""}
-        onComparisonComplete={(result) => {
-          if (onOpenPanel) {
-            onOpenPanel("draft-comparison", result);
-          }
-        }}
-        excludeProjectId={project.id}
-      />
-
-      <ExportWorkflowModal
-        isOpen={isExportWorkflowOpen}
-        onClose={() => setIsExportWorkflowOpen(false)}
-        project={{ ...project, title }}
-        currentContent={editor?.getJSON()}
-        currentHtmlContent={editor?.getHTML()}
-      />
-    </div>
+    </EditorProvider>
   );
 };

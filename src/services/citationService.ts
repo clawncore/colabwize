@@ -65,6 +65,8 @@ export interface StoredCitation {
   openAccess?: boolean; // Added based on usage
   formatted_citations?: Record<string, string>;
   added_at?: string;
+  themes?: string[];
+  matrix_notes?: string;
 }
 
 export class CitationService {
@@ -182,6 +184,7 @@ export class CitationService {
       volume?: string;
       issue?: string;
       pages?: string;
+      abstract?: string;
       citationCount?: number;
     }
   ): Promise<any> {
@@ -214,6 +217,7 @@ export class CitationService {
         issue: citation.issue,
         pages: citation.pages,
         citation_count: citation.citationCount,
+        abstract: citation.abstract,
         formatted_citations: formattedCitations,
         added_at: new Date().toISOString(),
       });
@@ -253,7 +257,7 @@ export class CitationService {
       };
     } catch (error: any) {
       console.error("Error scanning content:", error);
-      
+
       // Handle specific error types
       if (error.response?.status === 403) {
         if (error.message?.includes("usage limit")) {
@@ -272,17 +276,17 @@ export class CitationService {
       } else if (error.code === "ERR_NETWORK" || error.message?.includes("network")) {
         // Fallback simulation when backend is offline
         console.log("🔧 Backend offline - simulating citation scan for testing");
-        
+
         // Simulate finding some citations in the content
         const simulatedSuggestions = this.simulateCitationDetection(content);
-        
+
         return {
           suggestions: simulatedSuggestions,
           matchCount: simulatedSuggestions.length,
           scanStatus: "success"
         };
       }
-      
+
       const unknownError = new Error(error.message || "Failed to scan content");
       (unknownError as any).type = "unknown_error";
       throw unknownError;
@@ -301,16 +305,16 @@ export class CitationService {
       /\b(statistics|data|survey|poll)\b.*?\d+/gi,
       /\b(is|are|was|were)\b.*?\b(important|significant|crucial|essential)\b/gi
     ];
-    
+
     const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
     const suggestions: any[] = [];
-    
+
     sentences.forEach(sentence => {
       let matchCount = 0;
       patterns.forEach(pattern => {
         if (pattern.test(sentence)) matchCount++;
       });
-      
+
       if (matchCount > 0) {
         suggestions.push({
           sentence: sentence.trim(),
@@ -319,8 +323,47 @@ export class CitationService {
         });
       }
     });
-    
+
     // Limit to first 5 suggestions to avoid overwhelming
     return suggestions.slice(0, 5);
+  }
+
+  /**
+   * Update citation themes and matrix notes
+   */
+  static async updateCitationThemes(
+    projectId: string,
+    citationId: string,
+    data: { themes?: string[]; matrix_notes?: string }
+  ): Promise<any> {
+    try {
+      const response = await apiClient.put(
+        `/api/citations/${projectId}/${citationId}`,
+        data
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error("Error updating citation themes:", error);
+      throw new Error(error.message || "Failed to update citation themes");
+    }
+  }
+
+  /**
+   * AI Analysis of citation for Literature Matrix
+   */
+  static async analyzeCitation(
+    projectId: string,
+    citationId: string
+  ): Promise<any> {
+    try {
+      const response = await apiClient.post(
+        `/api/citations/${projectId}/${citationId}/analyze`,
+        {}
+      );
+      return response.data.data;
+    } catch (error: any) {
+      console.error("Error analyzing citation:", error);
+      throw new Error(error.message || "Failed to analyze citation");
+    }
   }
 }

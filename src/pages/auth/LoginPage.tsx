@@ -90,6 +90,9 @@ const LoginPage: React.FC = () => {
   const [is2FARequired, setIs2FARequired] = React.useState(false);
   const [userIdFor2FA, setUserIdFor2FA] = React.useState<string | null>(null);
 
+  // Prevent duplicate submissions using ref
+  const isSubmittingRef = React.useRef(false);
+
   const {
     register,
     handleSubmit,
@@ -117,9 +120,17 @@ const LoginPage: React.FC = () => {
   }, [searchParams]);
 
   const onSubmit = async (data: LoginFormData) => {
+    // Prevent duplicate submissions
+    if (isSubmittingRef.current) {
+      console.log("Login already in progress, ignoring duplicate submission");
+      return;
+    }
+
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setError(null);
     setIsEmailNotConfirmed(false);
+
     try {
       console.log("Attempting login with email:", data.email);
       console.log("Remember me option:", data.rememberMe);
@@ -138,6 +149,7 @@ const LoginPage: React.FC = () => {
         // Handle 2FA Challenge
         setIs2FARequired(true);
         setUserIdFor2FA(result.userId);
+        isSubmittingRef.current = false; // Reset for 2FA form
         setIsLoading(false);
         // We stay on the page but switch to 2FA form
       } else {
@@ -145,6 +157,15 @@ const LoginPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Login failed:", error);
+
+      // Check if it's an AbortError from duplicate submission
+      if (error.name === "AbortError") {
+        console.log("Login request was aborted (likely duplicate submission)");
+        // Don't show error to user, just reset state
+        isSubmittingRef.current = false;
+        setIsLoading(false);
+        return;
+      }
 
       // Check if it's an email not confirmed error
       if (
@@ -170,6 +191,7 @@ const LoginPage: React.FC = () => {
         }
       }
     } finally {
+      isSubmittingRef.current = false;
       setIsLoading(false);
     }
   };
