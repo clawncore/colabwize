@@ -3,6 +3,7 @@ import {
   CreditCard,
   LifeBuoy,
   Mail,
+  Zap,
   BookOpen,
   Users
 } from "lucide-react";
