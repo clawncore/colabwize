@@ -45,6 +45,7 @@ import TermsOfServicePage from "./pages/legal/TermsOfServicePage";
 import CookiePolicyPage from "./pages/legal/CookiePolicyPage";
 import GDPRPage from "./pages/legal/GDPRPage";
 import SecurityPage from "./pages/legal/SecurityPage";
+import RefundPolicyPage from "./pages/legal/RefundPolicyPage";
 
 // Other Pages
 import ContactPage from "./pages/ContactPage";
@@ -180,6 +181,8 @@ function App() {
                     element={<PrivacyPolicyPage />}
                   />
                   <Route path="/legal/terms" element={<TermsOfServicePage />} />
+                  <Route path="/docs/refund-policy" element={<RefundPolicyPage />} />
+                  <Route path="/legal/refund-policy" element={<RefundPolicyPage />} /> {/* Alias for SEO */}
 
                   {/* Other Routes - Public */}
                   <Route path="/contact" element={<ContactPage />} />

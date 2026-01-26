@@ -5,7 +5,8 @@ import {
   Loader2,
   AlertCircle,
   FileText,
-  XCircle
+  XCircle,
+  ArrowRight
 } from "lucide-react";
 import {
   PaymentMethod,
@@ -39,6 +40,7 @@ const BillingSettingsPage: React.FC = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [limits, setLimits] = useState<any>({});
   const [usage, setUsage] = useState<any>({});
+  const [totalDocuments, setTotalDocuments] = useState<number>(0);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +77,7 @@ const BillingSettingsPage: React.FC = () => {
             setSubscription(subscriptionData.subscription);
             setLimits(subscriptionData.limits || {});
             setUsage(subscriptionData.usage || {});
+            setTotalDocuments((subscriptionData as any).totalDocuments || 0);
           }
           setPaymentMethods(paymentMethodsData);
           setPlans(plansData || []);
@@ -326,7 +329,7 @@ const BillingSettingsPage: React.FC = () => {
               {/* 2️⃣ VALUE - The "Hero" Metric Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <ValueMetricCard
-                  value={usage?.documents_processed || 0}
+                  value={totalDocuments}
                   label="Documents processed"
                   percentageChange={undefined}
                 />
@@ -437,7 +440,7 @@ const BillingSettingsPage: React.FC = () => {
                 <div className="p-6 flex justify-between items-center">
                   <div>
                     <h3 className="text-base font-bold text-gray-900 mb-1">Billing Email</h3>
-                    <p className="text-sm text-gray-500">Invoices and receipts will be sent to this address.</p>
+                    <p className="text-sm text-gray-500">Receipts and billing notifications are sent to this address.</p>
                   </div>
                   <div className="text-right">
                     <div className="font-medium text-gray-900 mb-1">
@@ -618,6 +621,13 @@ const BillingSettingsPage: React.FC = () => {
                     </>
                   )}
                 </div>
+
+                {/* 3️⃣ "Find Your Invoices" Guidance (Safe Version) */}
+                <div className="bg-gray-50 border-t border-gray-100 p-4 text-center">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-semibold text-gray-700">Looking for a receipt?</span> Billing confirmations and invoices are sent to your billing email after each successful payment.
+                  </p>
+                </div>
               </div>
 
               {/* Legal / Tax Note */}
@@ -627,6 +637,36 @@ const BillingSettingsPage: React.FC = () => {
                   <br />
                   Payment processing powered by Lemon Squeezy.
                 </p>
+              </div>
+
+              {/* 4️⃣ Billing Policy & Help */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Refund Policy Summary */}
+                <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Refund Policy</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    ColabWize operates on a non-refundable basis due to immediate access to digital services. We encourage users to review our policy before subscribing. Be assured, cancellation stops all future billing immediately.
+                  </p>
+                  <a href="/legal/refund-policy" target="_blank" className="text-blue-600 font-medium hover:underline text-sm flex items-center">
+                    Read Full Refund Policy <FileText className="h-3 w-3 ml-1" />
+                  </a>
+                </div>
+
+                {/* Need Help? */}
+                <div className="bg-blue-50/50 rounded-xl p-6 border border-blue-100">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Need Help?</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Have a question about your invoice or subscription status? Visit our Help Center for instant answers.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <a href="/help" className="text-blue-600 font-medium hover:underline text-sm flex items-center">
+                      Visit Help Center <ArrowRight className="h-3 w-3 ml-1" />
+                    </a>
+                    <span className="text-xs text-gray-400 mt-1">
+                      For exceptional billing errors, please contact support from your billing email address.
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </TabsContent>
@@ -643,7 +683,7 @@ const BillingSettingsPage: React.FC = () => {
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">Are you sure you want to cancel?</h2>
                     <p className="text-gray-500 mt-2 max-w-md mx-auto">
-                      If you cancel, you will lose access to premium features like **Unlimited Scans**, **Plagiarism Checking**, and **Priority Support** at the end of your billing period.
+                      All sales are final. You may cancel at any time to prevent future billing, but no refunds are issued for the current billing period. Access remains active until the end of the billing cycle.
                     </p>
                   </div>
 
@@ -712,7 +752,7 @@ const BillingSettingsPage: React.FC = () => {
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900">Final Confirmation</h2>
                   <p className="text-gray-600">
-                    By clicking "Confirm Cancellation" below, your subscription will be set to cancel at the end of the current billing period ({nextBillingDate?.toLocaleDateString()}).
+                    By clicking "Confirm Cancellation" below, your subscription will be set to cancel at the end of the current billing period ({nextBillingDate?.toLocaleDateString()}). You will retain full access until then.
                   </p>
 
                   <button
@@ -730,7 +770,7 @@ const BillingSettingsPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </div >
   );
 };
 

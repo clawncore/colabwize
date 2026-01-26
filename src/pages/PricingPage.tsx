@@ -7,6 +7,8 @@ import { useToast } from "../hooks/use-toast";
 import Layout from "../components/Layout";
 
 import { useAuth } from "../hooks/useAuth";
+import { CheckoutNoticeModal } from "../components/subscription/CheckoutNoticeModal";
+
 function IntroHero() {
   return (
     <section className="section-padding bg-white relative overflow-hidden">
@@ -46,6 +48,11 @@ function FeaturesPresentationFlow() {
     "yearly"
   );
   const [currentPlanId, setCurrentPlanId] = useState<string>("free");
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pendingPlanId, setPendingPlanId] = useState<string | null>(null);
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
 
   const navigate = useNavigate();
   const { user } = useAuth(); // Use the hook for reactive auth state
@@ -138,12 +145,35 @@ function FeaturesPresentationFlow() {
       return;
     }
 
-    // User is authenticated, proceed to checkout
+    // CHECK FOR DUPLICATE SUBSCRIPTION
+    // If user already has a paid plan (not free, not payg), block new sub
+    if (currentPlanId !== "free" && currentPlanId !== "payg") {
+      toast({
+        title: "Active Subscription Found",
+        description: "You already have an active subscription. Please manage your plan from the billing dashboard.",
+        variant: "destructive", // Use destructive or warning style
+      });
+      navigate("/dashboard/billing");
+      return;
+    }
+
+    // User is authenticated, proceed to checkout logic
+    // But FIRST, show the Disclaimer Modal
+    setPendingPlanId(planId);
+    setIsModalOpen(true);
+  }, [billingPeriod, navigate, toast, currentPlanId, user]);
+
+  const handleConfirmCheckout = async () => {
+    if (!pendingPlanId) return;
+
+    setIsProcessingCheckout(true);
     try {
-      setCheckoutLoading(planId);
+      setCheckoutLoading(pendingPlanId);
+      // Pass policyAccepted: true to the API
       const checkoutUrl = await SubscriptionService.createCheckout(
-        planId,
-        billingPeriod
+        pendingPlanId,
+        billingPeriod,
+        true // Policy accepted
       );
       window.location.href = checkoutUrl;
     } catch (error) {
@@ -153,10 +183,11 @@ function FeaturesPresentationFlow() {
         description: "Failed to create checkout session. Please try again.",
         variant: "destructive",
       });
-    } finally {
+      setIsProcessingCheckout(false);
       setCheckoutLoading(null);
+      setIsModalOpen(false); // Close modal on error so they can try again
     }
-  }, [billingPeriod, navigate, toast, currentPlanId, user]);
+  };
 
   useEffect(() => {
     // Define base monthly plans
@@ -268,23 +299,11 @@ function FeaturesPresentationFlow() {
 
             // Make sure we use the saved period for checkout, avoiding stale closures
             setTimeout(async () => {
-              try {
-                setCheckoutLoading(planId);
-                const checkoutUrl = await SubscriptionService.createCheckout(
-                  planId,
-                  savedPeriod
-                );
-                window.location.href = checkoutUrl;
-              } catch (error) {
-                console.error("Resume checkout error:", error);
-                setCheckoutLoading(null);
-                toast({
-                  title: "Checkout Error",
-                  description:
-                    "Failed to create checkout session. Please try again.",
-                  variant: "destructive",
-                });
-              }
+              // For resumed sessions, we might technically need to show the modal again if we want to be strict.
+              // However, since they clicked "Subscribe" before, showing it now is good practice.
+              setPendingPlanId(planId);
+              setBillingPeriod(savedPeriod); // Ensure state matches
+              setIsModalOpen(true);
             }, 500);
           }
         } catch (error) {
@@ -755,9 +774,14 @@ function ClosingCTA() {
               size="lg"
               variant="outline"
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
-              <RouterLink to="/docs/quickstart" className="flex items-center">
+              <a
+                href="https://docs.colabwize.com/quickstart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center"
+              >
                 See How It Works
-              </RouterLink>
+              </a>
             </Button>
           </div>
 

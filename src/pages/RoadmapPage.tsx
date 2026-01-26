@@ -161,8 +161,8 @@ function FeaturesPresentationFlow() {
                 </h2>
                 <span
                   className={`px-4 py-2 rounded-full text-sm font-semibold ${quarter.status === "In Progress"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
                     }`}>
                   {quarter.status}
                 </span>
@@ -300,9 +300,14 @@ function ClosingCTA() {
               size="lg"
               variant="outline"
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
-              <RouterLink to="/docs/quickstart" className="flex items-center">
+              <a
+                href="https://docs.colabwize.com/quickstart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center"
+              >
                 See How It Works
-              </RouterLink>
+              </a>
             </Button>
           </div>
 

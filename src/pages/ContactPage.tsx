@@ -263,11 +263,10 @@ function ContactForm() {
 
         {submitStatus.message && (
           <div
-            className={`p-4 rounded-lg ${
-              submitStatus.type === "success"
+            className={`p-4 rounded-lg ${submitStatus.type === "success"
                 ? "bg-green-50 text-green-700 border border-green-200"
                 : "bg-red-50 text-red-700 border border-red-200"
-            }`}>
+              }`}>
             {submitStatus.message}
           </div>
         )}
@@ -354,9 +353,14 @@ function ClosingCTA() {
               size="lg"
               variant="outline"
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
-              <RouterLink to="/docs/quickstart" className="flex items-center">
+              <a
+                href="https://docs.colabwize.com/quickstart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center"
+              >
                 See How It Works
-              </RouterLink>
+              </a>
             </Button>
           </div>
 

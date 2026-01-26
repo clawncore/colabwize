@@ -40,6 +40,7 @@ const footerLinks = {
     { name: "Cookie Policy", href: "/legal/cookies" },
     { name: "GDPR", href: "/legal/gdpr" },
     { name: "Security", href: "/legal/security" },
+    { name: "Refund Policy", href: "/legal/refund-policy" },
   ],
 };
 

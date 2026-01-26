@@ -13,7 +13,7 @@ const footerLinks = {
     { name: "Blogs", href: "/blogs" },
     { name: "Case Studies", href: "/resources/case-studies" },
     { name: "Help Center", href: "/help" },
-    { name: "Documentation", href: "/docs" },
+    { name: "Documentation", href: "https://docs.colabwize.com" },
     { name: "Schedule Demo", href: "/schedule-demo" },
   ],
   solutions: [
@@ -61,7 +61,7 @@ export default function Footer() {
                 <span className="text-xl font-bold text-white">ColabWize</span>
               </Link>
               <p className="text-gray-400 text-sm mb-6 max-w-xs">
-                Your Academic Success, Defended. A platform designed to transform 
+                Your Academic Success, Defended. A platform designed to transform
                 anxiety into confidence through academic integrity and defensibility.
               </p>
               <div className="flex space-x-4">
@@ -107,12 +107,23 @@ export default function Footer() {
               <ul className="space-y-3">
                 {footerLinks.resources.map((link) => (
                   <li key={link.name}>
-                    <Link
-                      to={link.href}
-                      className="text-gray-400 hover:text-blue-400 transition-colors duration-200 text-sm"
-                    >
-                      {link.name}
-                    </Link>
+                    {link.href.startsWith("http") ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-400 hover:text-blue-400 transition-colors duration-200 text-sm"
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.href}
+                        className="text-gray-400 hover:text-blue-400 transition-colors duration-200 text-sm"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

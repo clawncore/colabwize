@@ -65,6 +65,7 @@ export class SubscriptionService {
     limits: any;
     usage: Usage;
     creditBalance: number;
+    totalDocuments: number;
   }> {
     const response = await apiClient.get("/api/subscription/current");
     return response;
@@ -75,11 +76,13 @@ export class SubscriptionService {
    */
   static async createCheckout(
     plan: string,
-    billingPeriod: string = "monthly"
+    billingPeriod: string = "monthly",
+    policyAccepted?: boolean
   ): Promise<string> {
     const response = await apiClient.post("/api/subscription/checkout", {
       plan,
       billingPeriod,
+      policyAccepted,
     });
     return response.checkoutUrl;
   }

@@ -170,10 +170,6 @@ function FeaturesPresentationFlow() {
               <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
                 ColabWize is built and maintained by a small, technically focused team committed to academic integrity and transparency.
               </p>
-              <div className="flex flex-col gap-2">
-                <p className="text-xl font-semibold text-gray-800">Simbisai Chinhema</p>
-                <p className="text-xl font-semibold text-gray-800">Craig Marowa</p>
-              </div>
             </div>
           </div>
         </div>
@@ -222,9 +218,14 @@ function ClosingCTA() {
               size="lg"
               variant="outline"
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
-              <RouterLink to="/docs/quickstart" className="flex items-center">
+              <a
+                href="https://docs.colabwize.com/quickstart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center"
+              >
                 See How It Works
-              </RouterLink>
+              </a>
             </Button>
           </div>
 
