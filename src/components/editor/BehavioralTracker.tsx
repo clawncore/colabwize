@@ -9,14 +9,12 @@ interface BehavioralTrackerProps {
 
 const BehavioralTracker: React.FC<BehavioralTrackerProps> = ({ projectId, userId }) => {
     const { editor } = useEditorContext(); // Access the editor instance
-    const keystrokeTimesRef = useRef<number[]>([]);
     const pauseDurationsRef = useRef<number[]>([]);
     const deletionCountsRef = useRef<number>(0);
     const correctionCountsRef = useRef<number>(0);
     const revisionCountsRef = useRef<number>(0);
     const typingSpeedsRef = useRef<number[]>([]);
     const lastActionTimeRef = useRef<number>(Date.now());
-    const lastTypedWordTimeRef = useRef<number>(Date.now());
     const wordCountRef = useRef<number>(0);
 
     // Initialize behavioral tracking when component mounts

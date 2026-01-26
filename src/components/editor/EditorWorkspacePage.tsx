@@ -280,7 +280,7 @@ const EditorWorkspacePage: React.FC = () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizingLeft, isResizingRight]);
+  }, [isResizingLeft, isResizingRight, isNavRailOpen]);
 
   // Get panel title based on active type
   const getPanelTitle = () => {

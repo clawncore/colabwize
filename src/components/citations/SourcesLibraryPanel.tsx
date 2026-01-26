@@ -12,7 +12,6 @@ import {
 import { CitationStyleFloatingPanel } from "./CitationStyleFloatingPanel";
 import { CitationStyle } from "../../utils/citationFormatter";
 import { CitationStylePopover } from "./CitationStylePopover";
-import { SourceDetailPanel } from "./SourceDetailPanel";
 import { StoredCitation } from "../../services/citationService";
 import { PDFAnnotator } from "../research/PDFAnnotator";
 import { PDFService } from "../../services/pdfService";
@@ -65,15 +64,6 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
     React.useEffect(() => {
         setLocalCitations(citations);
     }, [citations]);
-
-    const handleUpdateSource = (updated: StoredCitation) => {
-        setLocalCitations(prev => prev.map(c =>
-            (c.id && updated.id && c.id === updated.id) || (c.title === updated.title) ? updated : c
-        ));
-        if (selectedLibrarySource && ((selectedLibrarySource.id && updated.id && selectedLibrarySource.id === updated.id) || (selectedLibrarySource.title === updated.title))) {
-            onSourceSelect(updated);
-        }
-    };
 
     // Helper to generate unique key
     const getCitationKey = (c: StoredCitation) => {

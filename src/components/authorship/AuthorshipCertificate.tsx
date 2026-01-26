@@ -1,7 +1,7 @@
 import React from "react";
 import { AuthorshipStatsDisplay } from "./AuthorshipStatsDisplay";
 import { CertificateDownloadButton } from "./CertificateDownloadButton";
-import { ShieldCheck, Clock, FileEdit, Bot } from "lucide-react";
+import { ShieldCheck, FileEdit, Bot } from "lucide-react";
 import { BehavioralTrackingService, WritingDNAReport } from "../../services/behavioralTrackingService";
 import { SourceIntegrationService, SourceIntegrationReport } from "../../services/sourceIntegrationService";
 
