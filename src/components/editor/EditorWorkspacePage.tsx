@@ -20,6 +20,9 @@ import { OutlineBuilder } from "./OutlineBuilder";
 import { LiteratureMatrix } from "../citations/LiteratureMatrix";
 import { CitationAuditSidebar } from "../citations/CitationAuditSidebar";
 import { useNavigate } from "react-router-dom";
+import { EditorOnboardingTour } from "../onboarding/EditorOnboardingTour";
+import { OnboardingService } from "../../services/onboardingService";
+import { HelpCircle } from "lucide-react";
 
 // Define panel types
 export type RightPanelType =
@@ -72,6 +75,9 @@ const EditorWorkspacePage: React.FC = () => {
 
   // Source Library selection state for full-page view
   const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
+
+  // Editor onboarding tour state
+  const [showEditorTour, setShowEditorTour] = useState(false);
 
   // Resize state
   const [isResizingLeft, setIsResizingLeft] = useState(false);
@@ -245,6 +251,36 @@ const EditorWorkspacePage: React.FC = () => {
     }
   }, [user]);
 
+  // Check if we should show the editor tour (first time the user opens the editor)
+  useEffect(() => {
+    if (selectedProject && !OnboardingService.getEditorTourStatusLocal()) {
+      // Show tour after a short delay to let the UI render
+      const timer = setTimeout(() => {
+        setShowEditorTour(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedProject]);
+
+  const handleEditorTourComplete = () => {
+    setShowEditorTour(false);
+    OnboardingService.completeEditorTourLocal();
+    // Optionally call backend
+    OnboardingService.completeEditorTour().catch(err =>
+      console.error("Failed to mark editor tour complete:", err)
+    );
+  };
+
+  const handleEditorTourSkip = () => {
+    setShowEditorTour(false);
+    OnboardingService.completeEditorTourLocal();
+    // Optionally call backend
+    OnboardingService.skipEditorTour().catch(err =>
+      console.error("Failed to mark editor tour skipped:", err)
+    );
+  };
+
+
   // Handle mouse move for resizing
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -398,9 +434,18 @@ const EditorWorkspacePage: React.FC = () => {
                       </button>
                       <span className="text-sm font-bold text-gray-900">Display</span>
                     </div>
-                    <button onClick={() => setIsNavRailOpen(false)} title="Collapse Sidebar" className="cursor-pointer hover:bg-gray-200 p-1 rounded-md transition-colors">
-                      <ChevronLeft className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setShowEditorTour(true)}
+                        className="p-1.5 hover:bg-indigo-100 rounded-md transition-colors group"
+                        title="Show Editor Tour"
+                      >
+                        <HelpCircle className="w-4 h-4 text-gray-400 group-hover:text-indigo-600" />
+                      </button>
+                      <button onClick={() => setIsNavRailOpen(false)} title="Collapse Sidebar" className="cursor-pointer hover:bg-gray-200 p-1 rounded-md transition-colors">
+                        <ChevronLeft className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <button
@@ -416,6 +461,7 @@ const EditorWorkspacePage: React.FC = () => {
               {/* Nav Items */}
               <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5 custom-scrollbar">
                 <button
+                  data-tour="documents-panel"
                   onClick={() => {
                     setActiveLeftPanel("documents");
                     setIsLeftSidebarOpen(true);
@@ -431,6 +477,7 @@ const EditorWorkspacePage: React.FC = () => {
                 </button>
 
                 <button
+                  data-tour="source-library"
                   onClick={() => {
                     setActiveLeftPanel("sources");
                     setActiveSourceTab("sources");
@@ -483,6 +530,7 @@ const EditorWorkspacePage: React.FC = () => {
                 )}
 
                 <button
+                  data-tour="outline-builder"
                   onClick={() => {
                     setActiveLeftPanel("outline");
                     setIsLeftSidebarOpen(true);
@@ -806,6 +854,13 @@ const EditorWorkspacePage: React.FC = () => {
           </div>
         </>
       )}
+
+      {/* Editor Onboarding Tour */}
+      <EditorOnboardingTour
+        run={showEditorTour}
+        onFinish={handleEditorTourComplete}
+        onSkip={handleEditorTourSkip}
+      />
     </div>
   );
 };
