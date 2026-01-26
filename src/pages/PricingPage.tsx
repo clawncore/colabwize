@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Check, Zap } from "lucide-react";
 import { SubscriptionService, Plan } from "../services/subscriptionService";
@@ -7,7 +7,7 @@ import { useToast } from "../hooks/use-toast";
 import Layout from "../components/Layout";
 
 import { useAuth } from "../hooks/useAuth";
-import { CheckoutNoticeModal } from "../components/subscription/CheckoutNoticeModal";
+
 
 function IntroHero() {
   return (
@@ -50,9 +50,7 @@ function FeaturesPresentationFlow() {
   const [currentPlanId, setCurrentPlanId] = useState<string>("free");
 
   // Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [pendingPlanId, setPendingPlanId] = useState<string | null>(null);
-  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
+
 
   const navigate = useNavigate();
   const { user } = useAuth(); // Use the hook for reactive auth state
@@ -158,22 +156,13 @@ function FeaturesPresentationFlow() {
     }
 
     // User is authenticated, proceed to checkout logic
-    // But FIRST, show the Disclaimer Modal
-    setPendingPlanId(planId);
-    setIsModalOpen(true);
-  }, [billingPeriod, navigate, toast, currentPlanId, user]);
-
-  const handleConfirmCheckout = async () => {
-    if (!pendingPlanId) return;
-
-    setIsProcessingCheckout(true);
     try {
-      setCheckoutLoading(pendingPlanId);
-      // Pass policyAccepted: true to the API
+      setCheckoutLoading(planId);
+      // Create checkout session directly
       const checkoutUrl = await SubscriptionService.createCheckout(
-        pendingPlanId,
+        planId,
         billingPeriod,
-        true // Policy accepted
+        true // Policy accepted (implied by clicking)
       );
       window.location.href = checkoutUrl;
     } catch (error) {
@@ -183,11 +172,11 @@ function FeaturesPresentationFlow() {
         description: "Failed to create checkout session. Please try again.",
         variant: "destructive",
       });
-      setIsProcessingCheckout(false);
       setCheckoutLoading(null);
-      setIsModalOpen(false); // Close modal on error so they can try again
     }
-  };
+  }, [billingPeriod, navigate, toast, currentPlanId, user]);
+
+
 
   useEffect(() => {
     // Define base monthly plans
@@ -299,11 +288,8 @@ function FeaturesPresentationFlow() {
 
             // Make sure we use the saved period for checkout, avoiding stale closures
             setTimeout(async () => {
-              // For resumed sessions, we might technically need to show the modal again if we want to be strict.
-              // However, since they clicked "Subscribe" before, showing it now is good practice.
-              setPendingPlanId(planId);
-              setBillingPeriod(savedPeriod); // Ensure state matches
-              setIsModalOpen(true);
+              // Redirect to checkout or just let user click again
+              // For now, we rely on the user clicking the button again as auto-checkout might be blocked
             }, 500);
           }
         } catch (error) {

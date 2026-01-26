@@ -4,7 +4,7 @@ import { Mail, Building, Newspaper, Send, Check } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import Layout from "../components/Layout";
-import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 // Contact Hero Section
 function ContactHero() {
@@ -264,8 +264,8 @@ function ContactForm() {
         {submitStatus.message && (
           <div
             className={`p-4 rounded-lg ${submitStatus.type === "success"
-                ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
               }`}>
             {submitStatus.message}
           </div>
