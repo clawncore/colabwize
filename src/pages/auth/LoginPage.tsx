@@ -181,7 +181,7 @@ const LoginPage: React.FC = () => {
       } else {
         if (error.code === "NETWORK_ERROR") {
           setError(
-            "Unable to reach authentication service. Please check your internet connection, ensure your Supabase project is reachable, and try again."
+            "Unable to reach authentication service. Please check your internet connection and try again."
           );
         } else {
           setError(

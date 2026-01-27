@@ -7,7 +7,6 @@ import {
   Award,
   Clock,
   Edit,
-  BarChart,
   Shield,
   Download,
   Users,
@@ -132,17 +131,6 @@ export default function AuthorshipCertificatePage() {
           "Track every keystroke",
           "Record all revisions",
           "Prove authentic authorship",
-        ],
-      },
-      {
-        icon: BarChart,
-        title: "AI Assistance Transparency",
-        description:
-          "Show exactly what percentage of your work was AI-assisted vs. manual.",
-        benefits: [
-          "Show AI-assisted percentage",
-          "Compare with manual work",
-          "Complete transparency",
         ],
       },
       {

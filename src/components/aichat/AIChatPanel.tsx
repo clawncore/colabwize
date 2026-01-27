@@ -37,6 +37,7 @@ import { apiClient } from "../../services/apiClient";
 // supabase import removed
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { InlineLimitMessage } from "../common/InlineLimitMessage";
 
 interface AIChatPanelProps {
   documentContent: string;
@@ -53,6 +54,7 @@ interface Message {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
+  metadata?: any;
 }
 
 export const AIChatPanel: React.FC<AIChatPanelProps> = ({
@@ -330,12 +332,38 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       }
     } catch (error: any) {
       console.error("Chat error:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to connect to AI assistant.",
-        variant: "destructive",
-      });
-      setMessages((prev) => prev.filter((m) => m.content !== ""));
+
+      // Check for structured limit error
+      const backendCode = error.code || error.response?.data?.code || error.response?.code;
+      const backendMsg = error.response?.data?.error || error.message;
+
+      if (backendCode === "PLAN_LIMIT_REACHED" || backendCode === "INSUFFICIENT_CREDITS" || backendCode === "FEATURE_NOT_ALLOWED") {
+        // Remove the loading/empty assistant message
+        setMessages((prev) => prev.filter((m) => m.id !== assistantMessageId));
+
+        // Add system message with limit info
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: "system",
+            content: "Usage Limit Reached",
+            metadata: {
+              type: "limit",
+              code: backendCode,
+              message: backendMsg,
+              data: error.response?.data?.data
+            }
+          }
+        ]);
+      } else {
+        toast({
+          title: "Error",
+          description: backendMsg || "Failed to connect to AI assistant.",
+          variant: "destructive",
+        });
+        setMessages((prev) => prev.filter((m) => m.content !== ""));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -507,117 +535,134 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                     "flex items-start gap-2 max-w-[85%]",
                     message.role === "user"
                       ? "ml-auto flex-row-reverse"
-                      : "mr-auto"
+                      : message.role === "system"
+                        ? "mx-auto max-w-full w-full"  // System messages take full width
+                        : "mr-auto"
                   )}>
-                  <div
-                    className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                      message.role === "user"
-                        ? "bg-indigo-100 text-indigo-600"
-                        : "bg-gray-100 text-gray-600"
-                    )}>
-                    {message.role === "user" ? (
-                      <User className="w-4 h-4" />
-                    ) : (
-                      <Bot className="w-4 h-4" />
-                    )}
-                  </div>
 
-                  <div
-                    className={cn(
-                      "rounded-lg px-3 py-2 text-sm",
-                      message.role === "user"
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-100 text-gray-800"
-                    )}>
-                    <div className="prose prose-sm max-w-none break-words dark:prose-invert">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          p: ({ node, ...props }) => (
-                            <p
-                              className="mb-2 last:mb-0 leading-relaxed"
-                              {...props}
-                            />
-                          ),
-                          ul: ({ node, ...props }) => (
-                            <ul
-                              className="list-disc pl-5 mb-2 space-y-1 block"
-                              {...props}
-                            />
-                          ),
-                          ol: ({ node, ...props }) => (
-                            <ol
-                              className="list-decimal pl-5 mb-2 space-y-1 block"
-                              {...props}
-                            />
-                          ),
-                          li: ({ node, ...props }) => (
-                            <li className="pl-1 mb-0.5" {...props} />
-                          ),
-                          h1: ({ node, ...props }) => (
-                            <h1
-                              className="text-lg font-bold mb-2 mt-4"
-                              {...props}
-                            >
-                              {props.children}
-                            </h1>
-                          ),
-                          h2: ({ node, ...props }) => (
-                            <h2
-                              className="text-base font-bold mb-2 mt-3"
-                              {...props}
-                            >
-                              {props.children}
-                            </h2>
-                          ),
-                          h3: ({ node, ...props }) => (
-                            <h3
-                              className="text-sm font-bold mb-1 mt-2"
-                              {...props}
-                            >
-                              {props.children}
-                            </h3>
-                          ),
-                          a: ({ node, ...props }) => (
-                            <a
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="underline font-medium hover:text-indigo-300 transition-colors"
-                              {...props}
-                            >
-                              {props.children}
-                            </a>
-                          ),
-                          blockquote: ({ node, ...props }) => (
-                            <blockquote
-                              className="border-l-4 border-indigo-300 pl-3 italic my-2 text-gray-500"
-                              {...props}
-                            />
-                          ),
-                          code: ({
-                            node,
-                            className,
-                            children,
-                            ...props
-                          }: any) => {
-                            return !className?.includes("language-") ? (
-                              <code
-                                className="bg-muted/50 px-1.5 py-0.5 rounded font-mono text-xs border border-muted"
-                                {...props}>
-                                {children}
-                              </code>
-                            ) : (
-                              <code className={className} {...props}>
-                                {children}
-                              </code>
-                            );
-                          },
-                        }}>
-                        {message.content}
-                      </ReactMarkdown>
+                  {message.role === "system" && message.metadata?.type === "limit" ? (
+                    <div className="w-full my-4">
+                      <InlineLimitMessage
+                        type={message.metadata.code}
+                        title={message.metadata.code === "INSUFFICIENT_CREDITS" ? "Credits Required" : "Limit Reached"}
+                        message={message.metadata.message}
+                        actionLabel={message.metadata.code === "INSUFFICIENT_CREDITS" ? "Purchase Credits" : "Upgrade Plan"}
+                        onAction={() => window.open(message.metadata.data?.upgrade_url || "/pricing", "_blank")}
+                      />
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div
+                        className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+                          message.role === "user"
+                            ? "bg-indigo-100 text-indigo-600"
+                            : "bg-gray-100 text-gray-600"
+                        )}>
+                        {message.role === "user" ? (
+                          <User className="w-4 h-4" />
+                        ) : (
+                          <Bot className="w-4 h-4" />
+                        )}
+                      </div>
+
+                      <div
+                        className={cn(
+                          "rounded-lg px-3 py-2 text-sm",
+                          message.role === "user"
+                            ? "bg-indigo-600 text-white"
+                            : "bg-gray-100 text-gray-800"
+                        )}>
+                        <div className="prose prose-sm max-w-none break-words dark:prose-invert">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              p: ({ node, ...props }) => (
+                                <p
+                                  className="mb-2 last:mb-0 leading-relaxed"
+                                  {...props}
+                                />
+                              ),
+                              ul: ({ node, ...props }) => (
+                                <ul
+                                  className="list-disc pl-5 mb-2 space-y-1 block"
+                                  {...props}
+                                />
+                              ),
+                              ol: ({ node, ...props }) => (
+                                <ol
+                                  className="list-decimal pl-5 mb-2 space-y-1 block"
+                                  {...props}
+                                />
+                              ),
+                              li: ({ node, ...props }) => (
+                                <li className="pl-1 mb-0.5" {...props} />
+                              ),
+                              h1: ({ node, ...props }) => (
+                                <h1
+                                  className="text-lg font-bold mb-2 mt-4"
+                                  {...props}
+                                >
+                                  {props.children}
+                                </h1>
+                              ),
+                              h2: ({ node, ...props }) => (
+                                <h2
+                                  className="text-base font-bold mb-2 mt-3"
+                                  {...props}
+                                >
+                                  {props.children}
+                                </h2>
+                              ),
+                              h3: ({ node, ...props }) => (
+                                <h3
+                                  className="text-sm font-bold mb-1 mt-2"
+                                  {...props}
+                                >
+                                  {props.children}
+                                </h3>
+                              ),
+                              a: ({ node, ...props }) => (
+                                <a
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="underline font-medium hover:text-indigo-300 transition-colors"
+                                  {...props}
+                                >
+                                  {props.children}
+                                </a>
+                              ),
+                              blockquote: ({ node, ...props }) => (
+                                <blockquote
+                                  className="border-l-4 border-indigo-300 pl-3 italic my-2 text-gray-500"
+                                  {...props}
+                                />
+                              ),
+                              code: ({
+                                node,
+                                className,
+                                children,
+                                ...props
+                              }: any) => {
+                                return !className?.includes("language-") ? (
+                                  <code
+                                    className="bg-muted/50 px-1.5 py-0.5 rounded font-mono text-xs border border-muted"
+                                    {...props}>
+                                    {children}
+                                  </code>
+                                ) : (
+                                  <code className={className} {...props}>
+                                    {children}
+                                  </code>
+                                );
+                              },
+                            }}>
+                            {message.content}
+                          </ReactMarkdown>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
               {isLoading && (
@@ -662,6 +707,6 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
           </Button>
         </form>
       </CardFooter>
-    </Card>
+    </Card >
   );
 };

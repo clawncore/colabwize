@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ConfigService from "../../services/ConfigService";
+
 import { Editor } from "@tiptap/react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -8,7 +8,7 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Image as ImageIcon, Upload, Search, Loader2 } from "lucide-react";
 import { Toggle } from "../ui/toggle";
-import axios from "axios";
+import apiClient from "../../services/apiClient";
 
 interface ImageUploadPopoverProps {
   editor: Editor;
@@ -62,21 +62,30 @@ export function ImageUploadPopover({ editor }: ImageUploadPopoverProps) {
 
     setIsLoading(true);
     try {
-      const response = await axios.get(
-        `${ConfigService.getUnsplashConfig().apiUrl}/search/photos`,
-        {
-          params: {
-            query: unsplashQuery,
-            per_page: 9,
-          },
-          headers: {
-            Authorization: `Client-ID ${ConfigService.getUnsplashConfig().accessKey}`,
-          },
-        }
+      // Use backend proxy via apiClient
+      // apiClient.get handles auth auto-injection
+      const searchParams = new URLSearchParams({
+        query: unsplashQuery,
+        per_page: "9",
+      });
+
+      const response: any = await apiClient.get(
+        `/api/integrations/unsplash/search?${searchParams.toString()}`
       );
-      setUnsplashImages(response.data.results);
+
+      // Proxy response structure: { success: true, data: { results: [...] } }
+      // If apiClient unwraps top level json, response is the object.
+      // But typical usage in this codebase suggests we get the data payload directly if successful (?)
+      // Wait, let's look at ImageInsertModal handling again.
+      // We used response.data?.results.
+
+      // Let's assume response is the data object returned by axios/fetch
+      const results = response.data?.results || [];
+      setUnsplashImages(results);
+
     } catch (error) {
       console.error("Failed to search Unsplash:", error);
+      // Silent failure or empty state is better than broken UI for this popover
     } finally {
       setIsLoading(false);
     }

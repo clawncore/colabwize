@@ -3,6 +3,7 @@ import { Editor } from "@tiptap/react";
 import { OriginalityService } from "../../../services/originalityService";
 import { useToast } from "../../../hooks/use-toast";
 import { UpgradePromptDialog } from "../../subscription/UpgradePromptDialog";
+import { Sparkles, Loader2, ArrowRight } from "lucide-react"; // Import Icons
 
 interface RephraseAdapterProps {
   editor: Editor | null;
@@ -19,35 +20,27 @@ export const RephraseAdapter: React.FC<RephraseAdapterProps> = ({
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const { toast } = useToast();
 
-  const handleGetRephrase = async () => {
-    if (!editor) {
+  const handleRephrase = async () => {
+    if (!editor) return;
+
+    const selectionStart = editor.state.selection.from;
+    const selectionEnd = editor.state.selection.to;
+    const selectedText = editor.state.doc.textBetween(selectionStart, selectionEnd);
+    const selectionLength = selectionEnd - selectionStart;
+
+    if (selectionLength < 500) {
       toast({
-        title: "Editor not available",
-        description: "Cannot rephrase text without an active editor.",
+        title: "Selection too short",
+        description: `Please select at least 500 characters to rephrase (current: ${selectionLength}).`,
         variant: "destructive",
       });
       return;
     }
 
-    const selectedText = editor.state.doc.textBetween(
-      editor.state.selection.from,
-      editor.state.selection.to
-    );
-
-    if (!selectedText.trim()) {
+    if (selectionLength > 2000) {
       toast({
-        title: "No text selected",
-        description: "Please select some text to rephrase.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (selectedText.length > 500) {
-      toast({
-        title: "Text too long",
-        description:
-          "Please select a shorter piece of text (under 500 characters).",
+        title: "Selection too long",
+        description: "Please select under 2000 characters at a time.",
         variant: "destructive",
       });
       return;
@@ -56,113 +49,82 @@ export const RephraseAdapter: React.FC<RephraseAdapterProps> = ({
     try {
       setIsRephrasing(true);
 
-      // Since we don't have a scan ID for selected text, we'll use the rephrase API directly
-      // We'll simulate a temporary scan for the selected text
-      const tempScanId = "temp-" + Date.now().toString();
-      const tempMatchId = "temp-match-" + Date.now().toString();
-
-      // Get rephrase suggestions for the selected text
-      const suggestions = await OriginalityService.getRephrases(
-        tempScanId,
-        tempMatchId,
+      const result = await OriginalityService.rewriteSelection(
         selectedText
       );
 
-      if (suggestions.length > 0) {
-        // Call the parent to open the rephrase suggestions panel
-        onOpenRephrasePanel(suggestions, selectedText);
-      } else {
-        toast({
-          title: "No suggestions found",
-          description:
-            "Could not generate rephrase suggestions for the selected text.",
-          variant: "destructive",
-        });
+      // Validate result
+      if (!result || !result.variations || result.variations.length === 0) {
+        throw new Error("Failed to generate rephrased text. Please try again.");
       }
-    } catch (err: any) {
-      // Changed 'error' to 'err' as per the provided snippet
-      console.error("Rephrase failed:", err);
 
-      // Check for usage limit error
-      if (
-        err.response?.status === 403 ||
-        err.message?.includes("limit") ||
-        err.response?.data?.error?.includes("limit")
-      ) {
+      // Map variations to suggestion objects
+      const rephraseSuggestions = result.variations.map((text, idx) => ({
+        id: `rephrased-${idx}`,
+        originalText: selectedText,
+        suggestedText: text,
+        explanation: `Variation ${idx + 1}: AI-generated alternative for better flow and originality.`
+      }));
+
+      onOpenRephrasePanel(rephraseSuggestions, selectedText);
+
+    } catch (err: any) {
+      console.error("Rephrase failed:", err);
+      // Enhanced Limit Handling
+      const backendCode = err.code || err.response?.data?.code;
+      const backendData = err.response?.data?.data;
+
+      if (backendCode === "PLAN_LIMIT_REACHED" || backendCode === "INSUFFICIENT_CREDITS") {
         setShowUpgradePrompt(true);
+        // We might want to pass more specific data to the dialog in future,
+        // but for now, the dialog handles "upgrade" flow.
         return;
       }
 
+      // Legacy check just in case
+      if (err.response?.status === 403) {
+        setShowUpgradePrompt(true);
+        return;
+      }
       toast({
-        title: "Rephrase Failed",
-        description: err.message || "Could not generate rephrase suggestions.",
-        variant: "destructive",
+        title: "Rephraser Failed",
+        description: err.response?.data?.error || err.message || "Could not rephrase text at this time.",
+        variant: "destructive"
       });
     } finally {
       setIsRephrasing(false);
     }
   };
 
+  const selectionLength = editor ? editor.state.selection.to - editor.state.selection.from : 0;
+  const isSelectionTooShort = selectionLength < 500;
+
   return (
     <>
       <button
-        onClick={handleGetRephrase}
-        disabled={isRephrasing || !editor || editor.state.selection.empty}
-        className={`px-4 py-2 border rounded-md text-sm font-medium transition-colors flex items-center gap-2
-        ${
-          isRephrasing
-            ? "bg-blue-50 border-blue-200 text-blue-700 cursor-not-allowed"
-            : !editor || editor.state.selection.empty
-              ? "bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed"
-              : "border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"
-        }`}
-        title="Rephrase Selected Text">
+        onClick={handleRephrase}
+        disabled={isRephrasing || !editor || isSelectionTooShort}
+        className={`px-4 py-2 border rounded-md text-sm font-bold transition-all flex items-center gap-2 shadow-sm
+        ${isRephrasing
+            ? "bg-purple-50 border-purple-200 text-purple-700 cursor-not-allowed"
+            : !editor || isSelectionTooShort
+              ? "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
+              : "border-purple-200 text-purple-700 hover:bg-purple-50 bg-white hover:shadow-md"
+          }`}
+        title={isSelectionTooShort ? "Select at least 500 characters to rephrase" : "Rephrase Selected Text (AI)"}>
         {isRephrasing ? (
           <>
-            <svg
-              className="w-4 h-4 animate-spin"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+            <Loader2 className="w-4 h-4 animate-spin" />
             <span>Rephrasing...</span>
           </>
         ) : (
           <>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-4 h-4 text-blue-600">
-              <path d="M11 7h10" />
-              <path d="M3 7h2" />
-              <path d="M3 17h2" />
-              <path d="M13 17h-2" />
-              <path d="M11 12h8" />
-              <path d="M7 12h2" />
-              <path d="M21 17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z" />
-            </svg>
+            <Sparkles className="w-4 h-4" />
             <span>Rephrase</span>
           </>
         )}
       </button>
+
       {showUpgradePrompt && (
         <UpgradePromptDialog
           open={showUpgradePrompt}

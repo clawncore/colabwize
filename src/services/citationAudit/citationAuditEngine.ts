@@ -133,7 +133,34 @@ export async function runCitationAudit(
     } catch (error: any) {
         console.error("❌ Enhanced citation audit failed:", error);
 
-        // Handle specific error types with state machine
+        // Handle structured backend errors
+        const backendCode = error.response?.data?.code;
+        const msg = error.response?.data?.error || error.message;
+
+        if (backendCode === "PLAN_LIMIT_REACHED" || backendCode === "INSUFFICIENT_CREDITS") {
+            // Map both to QUOTA_EXCEEDED but we can distinguish in UI via errorMessage or a new field
+            return {
+                state: "FAILED_QUOTA_EXCEEDED",
+                violations: [],
+                errorMessage: msg,
+                quotaInfo: {
+                    ...error.response?.data?.data,
+                    code: backendCode // Pass code through for UI styling
+                }
+            };
+        } else if (backendCode === "FEATURE_NOT_ALLOWED") {
+            return {
+                state: "FAILED_SUBSCRIPTION_ERROR",
+                violations: [],
+                errorMessage: msg,
+                quotaInfo: {
+                    ...error.response?.data?.data,
+                    code: backendCode
+                }
+            };
+        }
+
+        // Handle specific error types with state machine (Legacy wrapper)
         if ((error as any).type === "quota_exceeded") {
             return CitationAuditStateMachine.handleQuotaExceeded(error);
         } else if ((error as any).type === "subscription_error") {

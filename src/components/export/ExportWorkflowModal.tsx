@@ -8,12 +8,10 @@ import {
     ChevronRight,
     ChevronLeft,
     Loader2,
-    AlertTriangle,
 } from "lucide-react";
 import { apiClient } from "../../services/apiClient";
 import { Project } from "../../services/documentService";
 import { useToast } from "../../hooks/use-toast";
-import { OriginalityService } from "../../services/originalityService";
 
 interface ExportWorkflowModalProps {
     isOpen: boolean;
@@ -184,42 +182,12 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
         }
     };
 
-    const runSelfPlagiarismCheck = async () => {
-        setIsSelfPlagiarismCheckRunning(true);
-        try {
-            const contentText = typeof currentContent === "string" ? currentContent : JSON.stringify(currentContent);
-            const results = await OriginalityService.checkSelfPlagiarism(contentText, project.id);
-
-            const riskyMatches = results.filter(r => r.isSelfPlagiarismInternal && r.similarityScore > 20);
-
-            if (riskyMatches.length > 0) {
-                setSelfPlagiarismWarning(`${riskyMatches.length} sections match your previous work.`);
-            } else {
-                setSelfPlagiarismWarning(null);
-                toast({ title: "No Self-Plagiarism Detected", description: "You are good to go!", variant: "default" });
-            }
-        } catch (err) {
-            console.error("Check failed", err);
-        } finally {
-            setIsSelfPlagiarismCheckRunning(false);
-        }
-    };
-
     // --- Navigation ---
     const goToNextStep = () => {
         if (currentStep === "checklist" && isChecklistComplete) setCurrentStep("format");
         else if (currentStep === "format" && selectedFormat) setCurrentStep("preview");
         else if (currentStep === "preview") setCurrentStep("final");
     };
-
-    // Navigation helper (currently unused but kept for future use)
-    // const goToPrevStep = () => {
-    //     if (currentStep === "format") setCurrentStep("checklist");
-    //     else if (currentStep === "preview") setCurrentStep("format");
-    //     else if (currentStep === "final") setCurrentStep("preview");
-    // };
-
-    // --- Render Steps (Content Only) ---
 
     // Step 1: Checklist Content
     const renderChecklistContent = () => (
@@ -266,26 +234,6 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Format</h2>
                 <p className="text-gray-500">Choose the file format you wish to export.</p>
-            </div>
-
-            {/* Self-Plagiarism Guard */}
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-4">
-                <div className="bg-amber-100 p-2 rounded-lg">
-                    <AlertTriangle className="w-6 h-6 text-amber-700" />
-                </div>
-                <div className="flex-1">
-                    <h4 className="font-semibold text-amber-900">Draft Comparison Guard</h4>
-                    <p className="text-amber-800 text-sm mt-1 mb-3">
-                        {selfPlagiarismWarning || "Check for content overlaps with your previous submissions to avoid self-plagiarism."}
-                    </p>
-                    <button
-                        onClick={runSelfPlagiarismCheck}
-                        disabled={isSelfPlagiarismCheckRunning}
-                        className="text-sm font-medium bg-white text-amber-700 border border-amber-200 px-3 py-1.5 rounded-md hover:bg-amber-50 transition-colors shadow-sm flex items-center gap-2">
-                        {isSelfPlagiarismCheckRunning && <Loader2 className="w-3 h-3 animate-spin" />}
-                        {isSelfPlagiarismCheckRunning ? "Running Check..." : "Run Safety Check"}
-                    </button>
-                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -41,7 +41,6 @@ import {
   Split,
   Superscript,
   Subscript,
-  RemoveFormatting,
 } from "lucide-react";
 import { useState } from "react";
 import { ImageInsertModal } from "./ImageInsertModal";
@@ -280,13 +279,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         onClick={() => setIsMathModalOpen(true)}
       >
         Tx
-      </Toggle>
-
-      <Toggle
-        size="sm"
-        title="Clear Formatting"
-        onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}>
-        <RemoveFormatting className="h-4 w-4" />
       </Toggle>
 
       <Separator orientation="vertical" className="mx-1 h-6" />

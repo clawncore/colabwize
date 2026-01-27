@@ -40,11 +40,34 @@ export function extractPatterns(text: string, offset: number, context: "inline" 
 
         let match;
         while ((match = regex.exec(text)) !== null) {
+            // Extract surrounding context (sentence)
+            const matchIndex = match.index;
+            const matchText = match[0];
+
+            // Find start of sentence (backward search for . ! ? or start of string)
+            let sentenceStart = 0;
+            const beforeMatch = text.substring(0, matchIndex);
+            const sentenceStartMatch = beforeMatch.match(/[.!?]\s+[^.!?]*$/);
+            if (sentenceStartMatch) {
+                sentenceStart = sentenceStartMatch.index! + sentenceStartMatch[0].indexOf(sentenceStartMatch[0].trim().substring(0, 1)) + 1;
+            }
+
+            // Find end of sentence (forward search for . ! ? or end of string)
+            let sentenceEnd = text.length;
+            const afterMatch = text.substring(matchIndex + matchText.length);
+            const sentenceEndMatch = afterMatch.match(/[.!?]/);
+            if (sentenceEndMatch) {
+                sentenceEnd = matchIndex + matchText.length + sentenceEndMatch.index! + 1;
+            }
+
+            const context = text.substring(sentenceStart, sentenceEnd).trim();
+
             findings.push({
                 patternType: type as PatternType,
-                text: match[0],
-                start: offset + match.index,
-                end: offset + match.index + match[0].length
+                text: matchText,
+                start: offset + matchIndex,
+                end: offset + matchIndex + matchText.length,
+                context: context
             });
         }
     });

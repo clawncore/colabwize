@@ -22,7 +22,6 @@ interface RephraseSuggestionsPanelProps {
   };
 
   onClose: () => void;
-  onApply?: (text: string) => void;
 }
 
 export const RephraseSuggestionsPanel: React.FC<
@@ -36,7 +35,6 @@ export const RephraseSuggestionsPanel: React.FC<
   isLoading: externalIsLoading,
   panelData,
   onClose,
-  onApply,
 }) => {
     const [copiedIndex, setCopiedIndex] = React.useState<number | null>(null);
     const [isLoading, setIsLoading] = React.useState(false);
@@ -320,13 +318,6 @@ export const RephraseSuggestionsPanel: React.FC<
                           </p>
                         </div>
                         <div className="flex gap-2 shrinking-0">
-                          {onApply && (
-                            <button
-                              onClick={() => onApply(suggestion.suggestedText)}
-                              className="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors whitespace-nowrap">
-                              Insert
-                            </button>
-                          )}
                           <button
                             onClick={() =>
                               handleCopy(suggestion.suggestedText, index)

@@ -818,7 +818,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               Find Papers
             </button>
 
-            <AIDetectionAdapter
+            {/*<AIDetectionAdapter
               projectId={project.id}
               editor={editor}
               onScanComplete={(results) => {
@@ -828,7 +828,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   onOpenPanel("ai-results", results);
                 }
               }}
-            />
+            /> */}
 
             <AuthorshipCertificateAdapter
               projectId={project.id}

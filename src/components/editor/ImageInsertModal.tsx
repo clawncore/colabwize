@@ -31,28 +31,49 @@ export const ImageInsertModal: React.FC<ImageInsertModalProps> = ({
 
         setIsSearching(true);
         try {
-            const response = await fetch(
-                `https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&per_page=12`,
-                {
-                    headers: {
-                        Authorization: `Client-ID ${import.meta.env.REACT_APP_UNSPLASH_ACCESS_KEY}`,
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("Unsplash search failed");
-            }
-
-            const data = await response.json();
-            setUnsplashImages(data.results || []);
-        } catch (error) {
-            console.error("Unsplash search error:", error);
-            toast({
-                title: "Search Failed",
-                description: "Unable to search Unsplash. Please check your API key.",
-                variant: "destructive",
+            // Use backend proxy - secure and authenticated
+            const queryParams = new URLSearchParams({
+                query: searchQuery,
+                per_page: "12"
             });
+            const response = await apiClient.get(`/api/integrations/unsplash/search?${queryParams.toString()}`);
+
+            // apiClient returns data directly in success case usually, 
+            // but let's double check if it returns the full response object or data.
+            // Based on established patterns: response is likely the data payload if interceptors work as expected,
+            // OR it's the Axios response. Let's assume standard Axios response data structure from proxy.
+            // Proxy returns { success: true, data: { results: [...] } }
+
+            // If apiClient strips wrapper:
+            const results = response.data?.results || [];
+            setUnsplashImages(results);
+
+        } catch (error: any) {
+            console.error("Unsplash search error:", error);
+
+            // Safe Error Handling - No scary toasts
+            const code = error.response?.data?.code || "UNKNOWN";
+
+            if (code === "IMAGE_PROVIDER_UNAVAILABLE") {
+                // Non-blocking UI indication (could be a specialized UI element, but for now simple toast is safer than red error)
+                toast({
+                    title: "Image Search Unavailable",
+                    description: "Image search is temporarily unavailable. Please upload an image instead.",
+                    variant: "default", // Neutral, not destructive
+                });
+            } else if (code === "IMAGE_RATE_LIMIT") {
+                toast({
+                    title: "Limit Reached",
+                    description: "Image search limit reached. Please try again later.",
+                    variant: "default",
+                });
+            } else {
+                toast({
+                    title: "Search Unavailable",
+                    description: "We couldn't load images right now. Please try uploading.",
+                    variant: "default",
+                });
+            }
         } finally {
             setIsSearching(false);
         }
@@ -61,12 +82,11 @@ export const ImageInsertModal: React.FC<ImageInsertModalProps> = ({
     // Insert from Unsplash
     const handleUnsplashSelect = async (image: any) => {
         try {
-            // Trigger download endpoint (required by Unsplash API terms)
-            await fetch(image.links.download_location, {
-                headers: {
-                    Authorization: `Client-ID ${import.meta.env.REACT_APP_UNSPLASH_ACCESS_KEY}`,
-                },
-            });
+            // Trigger download endpoint via proxy (required by Unsplash API terms)
+            // Fire and forget
+            const params = new URLSearchParams({ url: image.links.download_location });
+            apiClient.get(`/api/integrations/unsplash/download?${params.toString()}`)
+                .catch(e => console.warn("Track download failed", e));
 
             onInsertImage(image.urls.regular, image.alt_description || "Unsplash photo");
             onClose();

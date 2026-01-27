@@ -10,6 +10,7 @@ interface CertificateDownloadButtonProps {
   variant?: "primary" | "secondary";
   className?: string; // Allow custom styling
   disabled?: boolean;
+  onError?: (error: any) => void;
 }
 
 export const CertificateDownloadButton: React.FC<
@@ -20,7 +21,10 @@ export const CertificateDownloadButton: React.FC<
   certificateType = "authorship",
   variant = "primary",
   className = "",
+  variant = "primary",
+  className = "",
   disabled = false,
+  onError,
 }) => {
     const [downloadStep, setDownloadStep] = useState<"idle" | "generating" | "signing" | "downloading">("idle");
     const [error, setError] = useState<string | null>(null);
@@ -70,20 +74,25 @@ export const CertificateDownloadButton: React.FC<
         setError(errorMessage);
         setDownloadStep("idle");
 
-        toast({
-          title: isUpgradeError ? "Limit Reached" : "Generation Failed",
-          description: errorMessage,
-          variant: "destructive",
-          action: isUpgradeError ? (
-            <button
-              onClick={() =>
-                (window.location.href = "/pricing")
-              }
-              className="px-3 py-2 bg-white text-red-600 text-sm font-semibold rounded hover:bg-gray-100 transition-colors">
-              Upgrade Plan
-            </button>
-          ) : undefined,
-        });
+        if (onError) {
+          onError(err);
+        } else {
+          // Fallback toast if no handler provided (legacy behavior)
+          toast({
+            title: isUpgradeError ? "Limit Reached" : "Generation Failed",
+            description: errorMessage,
+            variant: "destructive",
+            action: isUpgradeError ? (
+              <button
+                onClick={() =>
+                  (window.location.href = "/pricing")
+                }
+                className="px-3 py-2 bg-white text-red-600 text-sm font-semibold rounded hover:bg-gray-100 transition-colors">
+                Upgrade Plan
+              </button>
+            ) : undefined,
+          });
+        }
       } finally {
         // setIsGenerating(false); // Handled by step reset
       }

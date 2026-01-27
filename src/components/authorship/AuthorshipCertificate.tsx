@@ -2,6 +2,7 @@ import React from "react";
 import { AuthorshipStatsDisplay } from "./AuthorshipStatsDisplay";
 import { CertificateDownloadButton } from "./CertificateDownloadButton";
 import { ShieldCheck, FileEdit, Bot } from "lucide-react";
+import { InlineLimitMessage } from "../common/InlineLimitMessage";
 import { BehavioralTrackingService, WritingDNAReport } from "../../services/behavioralTrackingService";
 import { SourceIntegrationService, SourceIntegrationReport } from "../../services/sourceIntegrationService";
 
@@ -18,6 +19,7 @@ export const AuthorshipCertificate: React.FC<AuthorshipCertificateProps> = ({
   const [downloadStep, setDownloadStep] = React.useState<'idle' | 'preparing' | 'signing' | 'ready'>('preparing');
   const [behavioralReport, setBehavioralReport] = React.useState<WritingDNAReport | null>(null);
   const [sourceIntegrationReport, setSourceIntegrationReport] = React.useState<SourceIntegrationReport | null>(null);
+  const [generationError, setGenerationError] = React.useState<any | null>(null);
 
   // Auto-run "preparation" on mount
   React.useEffect(() => {
@@ -164,113 +166,129 @@ export const AuthorshipCertificate: React.FC<AuthorshipCertificateProps> = ({
           </div>
         </div>
 
-        {/* Right Side - Stats & Actions */}
-        <div className="lg:w-3/5 p-8 flex flex-col bg-white">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">{projectTitle}</h1>
-              <p className="text-sm text-gray-500 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-green-500" />
-                Verified & Ready for Issue
-              </p>
-            </div>
-            <div className="text-right">
-              {downloadStep === 'ready' ? (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  Ready to Issue
-                </span>
-              ) : (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 animate-pulse">
-                  Preparing...
-                </span>
-              )}
-            </div>
+      </div>
+
+      {/* Right Side - Stats & Actions */}
+      <div className="lg:w-3/5 p-8 flex flex-col bg-white">
+
+        {/* Top Error Area - Full width within right panel */}
+        {generationError && (
+          <div className="mb-6 animate-in slide-in-from-top-2 fade-in duration-300">
+            <InlineLimitMessage
+              type={generationError.data?.code || "GENERATION_FAILED"}
+              title={generationError.data?.code === "INSUFFICIENT_CREDITS" ? "Credits Required" : generationError.data?.code === "PLAN_LIMIT_REACHED" ? "Limit Reached" : "Generation Failed"}
+              message={generationError.message || "We could not generate your certificate at this time."}
+              actionLabel={generationError.data?.code === "INSUFFICIENT_CREDITS" ? "Purchase Credits" : "Upgrade Plan"}
+              onAction={() => window.open(generationError.data?.data?.upgrade_url || "/pricing", "_blank")}
+            />
           </div>
+        )}
 
-          <div className="flex-1 overflow-y-auto pr-2 -mr-2">
-            <div className="prose prose-sm text-gray-500 mb-6">
-              <p>
-                This certificate serves as an immutable record of the creation process.
-                It aggregates edit logs, session metadata, keystroke dynamics, behavioral patterns, and source integration data to prove original authorship.
-              </p>
-            </div>
-
-            {/* Stats Component Integration */}
-            <div className="mb-6">
-              <AuthorshipStatsDisplay projectId={projectId} />
-            </div>
-
-            {/* Behavioral Tracking Data */}
-            {behavioralReport && (
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <h3 className="text-lg font-semibold text-blue-800 mb-2 flex items-center gap-2">
-                  <Bot className="w-5 h-5" />
-                  Writing Pattern Analysis
-                </h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Human Authenticity:</span>
-                    <span className="font-bold">{behavioralReport.humanAuthenticityScore}%</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Average Speed:</span>
-                    <span className="font-bold">{Math.round(behavioralReport.averageTypingSpeed)} WPM</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Think/Pause Ratio:</span>
-                    <span className="font-bold">{Math.round(behavioralReport.thinkPauseRatio)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Error Corrections:</span>
-                    <span className="font-bold">{Math.round(behavioralReport.errorCorrectionFrequency)}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Source Integration Data */}
-            {sourceIntegrationReport && (
-              <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-100">
-                <h3 className="text-lg font-semibold text-green-800 mb-2 flex items-center gap-2">
-                  <FileEdit className="w-5 h-5" />
-                  Source Integration Verification
-                </h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Authenticity Score:</span>
-                    <span className="font-bold">{sourceIntegrationReport.authenticityScore}%</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Status:</span>
-                    <span className={`font-bold ${sourceIntegrationReport.isConsistentWithReading ? 'text-green-600' : 'text-red-600'}`}>
-                      {sourceIntegrationReport.isConsistentWithReading ? 'Consistent' : 'Issues Found'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">Red Flags:</span>
-                    <span className="font-bold">{sourceIntegrationReport.redFlags.length}</span>
-                  </div>
-                </div>
-              </div>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">{projectTitle}</h1>
+            <p className="text-sm text-gray-500 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-green-500" />
+              Verified & Ready for Issue
+            </p>
+          </div>
+          <div className="text-right">
+            {downloadStep === 'ready' ? (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Ready to Issue
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 animate-pulse">
+                Preparing...
+              </span>
             )}
           </div>
+        </div>
 
-          <div className="mt-auto pt-6 border-t border-gray-100">
-            <div className="flex items-center justify-between gap-4">
-              <div className="text-xs text-gray-400">
-                Includes: Timestamp, Edit Count, Auth Signature
+        <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+          <div className="prose prose-sm text-gray-500 mb-6">
+            <p>
+              This certificate serves as an immutable record of the creation process.
+              It aggregates edit logs, session metadata, keystroke dynamics, behavioral patterns, and source integration data to prove original authorship.
+            </p>
+          </div>
+
+          {/* Stats Component Integration */}
+          <div className="mb-6">
+            <AuthorshipStatsDisplay projectId={projectId} />
+          </div>
+
+          {/* Behavioral Tracking Data */}
+          {behavioralReport && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <h3 className="text-lg font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                <Bot className="w-5 h-5" />
+                Writing Pattern Analysis
+              </h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Human Authenticity:</span>
+                  <span className="font-bold">{behavioralReport.humanAuthenticityScore}%</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Average Speed:</span>
+                  <span className="font-bold">{Math.round(behavioralReport.averageTypingSpeed)} WPM</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Think/Pause Ratio:</span>
+                  <span className="font-bold">{Math.round(behavioralReport.thinkPauseRatio)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Error Corrections:</span>
+                  <span className="font-bold">{Math.round(behavioralReport.errorCorrectionFrequency)}</span>
+                </div>
               </div>
-              <div className="flex-shrink-0">
-                <CertificateDownloadButton
-                  projectId={projectId}
-                  projectTitle={projectTitle}
-                  certificateType="authorship"
-                  variant="primary"
-                  // Pass loading state down based on initial prep
-                  disabled={downloadStep !== 'ready'}
-                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 transition-all hover:scale-105"
-                />
+            </div>
+          )}
+
+          {/* Source Integration Data */}
+          {sourceIntegrationReport && (
+            <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-100">
+              <h3 className="text-lg font-semibold text-green-800 mb-2 flex items-center gap-2">
+                <FileEdit className="w-5 h-5" />
+                Source Integration Verification
+              </h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Authenticity Score:</span>
+                  <span className="font-bold">{sourceIntegrationReport.authenticityScore}%</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Status:</span>
+                  <span className={`font-bold ${sourceIntegrationReport.isConsistentWithReading ? 'text-green-600' : 'text-red-600'}`}>
+                    {sourceIntegrationReport.isConsistentWithReading ? 'Consistent' : 'Issues Found'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Red Flags:</span>
+                  <span className="font-bold">{sourceIntegrationReport.redFlags.length}</span>
+                </div>
               </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-auto pt-6 border-t border-gray-100">
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-xs text-gray-400">
+              Includes: Timestamp, Edit Count, Auth Signature
+            </div>
+            <div className="flex-shrink-0">
+              <CertificateDownloadButton
+                projectId={projectId}
+                projectTitle={projectTitle}
+                certificateType="authorship"
+                variant="primary"
+                // Pass loading state down based on initial prep
+                disabled={downloadStep !== 'ready'}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 transition-all hover:scale-105"
+                onError={(err) => setGenerationError(err)}
+              />
             </div>
           </div>
         </div>

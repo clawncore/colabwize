@@ -1,13 +1,43 @@
-import React from "react";
+import React, { useState } from "react";
 import { ChevronDown, Save, FileText, CheckCircle2 } from "lucide-react";
-
+import { CitationService } from "../../services/citationService";
 import { StoredCitation as Source } from "./SourceDetailPanel";
 
 interface LiteratureMatrixProps {
-    sources: Source[];
+    sources: any[];
+    projectId?: string;
+    onUpdateCitations?: (updatedCitations: any[]) => void;
+    isAnalyzing?: boolean;
 }
 
-export const LiteratureMatrix: React.FC<LiteratureMatrixProps> = ({ sources }) => {
+export const LiteratureMatrix: React.FC<LiteratureMatrixProps> = ({
+    sources,
+    projectId,
+    onUpdateCitations,
+    isAnalyzing: externalIsAnalyzing = false,
+}) => {
+    const [localIsAnalyzing, setLocalIsAnalyzing] = useState(false);
+    const isAnalyzing = externalIsAnalyzing || localIsAnalyzing;
+
+    const handleBatchAnalyze = async () => {
+        if (!projectId || isAnalyzing) return;
+
+        setLocalIsAnalyzing(true);
+        try {
+            const updated = await CitationService.batchAnalyzeCitations(projectId);
+            if (onUpdateCitations && updated && updated.length > 0) {
+                onUpdateCitations(updated);
+            } else if (updated && updated.length === 0) {
+                alert("No citations found requiring analysis (missing abstracts or already analyzed).");
+            }
+        } catch (err: any) {
+            console.error("Batch analysis failed", err);
+            alert(`Synthesis failed: ${err.message || "Unknown error"}`);
+        } finally {
+            setLocalIsAnalyzing(false);
+        }
+    };
+
     const themes = ["Gap", "Methodology", "Result"];
 
     // Group sources by theme for a "Theme Card" layout if not using a grid
@@ -17,21 +47,34 @@ export const LiteratureMatrix: React.FC<LiteratureMatrixProps> = ({ sources }) =
         <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
             {/* Header */}
             <div className="p-6 bg-white border-b border-slate-200">
-                <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-teal-600" />
-                        Literature Matrix
-                    </h2>
-                    <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-1">
+                            <FileText className="w-5 h-5 text-teal-600" />
+                            Literature Matrix
+                        </h2>
+                        <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
+                            Synthesize your research by identifying recurring patterns across your bibliography.
+                        </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
                         <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
-                            {sources.length} Sources Analyzed
+                            {sources.length} Sources
                         </span>
+
+                        {projectId && (
+                            <button
+                                onClick={handleBatchAnalyze}
+                                disabled={isAnalyzing}
+                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg text-sm font-bold shadow-md hover:from-teal-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                            >
+                                <CheckCircle2 className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
+                                {isAnalyzing ? "Synthesizing..." : "Synthesize Matrix"}
+                            </button>
+                        )}
                     </div>
                 </div>
-                <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
-                    Synthesize your research by identifying recurring patterns across your bibliography.
-                    Use this grid to identify what is missing (Gaps) and what is established (Methodology/Results).
-                </p>
             </div>
 
             {/* Matrix Table */}

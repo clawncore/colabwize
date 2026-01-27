@@ -3,7 +3,7 @@ import {
   AuthorshipService,
   AuthorshipStats,
 } from "../../services/authorshipService";
-import { Clock, FileEdit, ShieldCheck } from "lucide-react";
+import { Clock, FileEdit } from "lucide-react";
 
 interface AuthorshipStatsDisplayProps {
   projectId: string;
@@ -128,25 +128,6 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
             </div>
             <div className="text-xs text-green-600 font-medium mt-1">
               Human Keystrokes Tracked
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-4 border border-orange-100 shadow-sm flex flex-col justify-between h-full bg-gradient-to-br from-white to-orange-50/30">
-          <div className="flex items-start justify-between mb-2">
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              AI Assistance
-            </div>
-            <div className="p-1.5 bg-orange-100 text-orange-600 rounded-md">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-900">
-              {Math.round(stats.aiAssistedPercentage || 0)}%
-            </div>
-            <div className="text-xs text-orange-600 font-medium mt-1">
-              Generated Content Detected
             </div>
           </div>
         </div>

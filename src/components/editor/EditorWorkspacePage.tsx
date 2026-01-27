@@ -14,11 +14,13 @@ import { Project, documentService } from "../../services/documentService";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { UsageMeter } from "../../components/subscription/UsageMeter";
 import { useAuth } from "../../hooks/useAuth";
-import { FileText, BookOpen, PenTool, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { FileText, BookOpen, PenTool, ChevronLeft, ChevronRight, ArrowLeft, Network, Lightbulb } from "lucide-react";
 import { AIProbabilityHeatmap } from "../originality/AIProbabilityHeatmap";
 import { OutlineBuilder } from "./OutlineBuilder";
 import { LiteratureMatrix } from "../citations/LiteratureMatrix";
 import { CitationAuditSidebar } from "../citations/CitationAuditSidebar";
+import { CitationGraph } from "../citations/CitationGraph";
+import { ResearchGapsPanel } from "../citations/ResearchGapsPanel";
 import { useNavigate } from "react-router-dom";
 import { EditorOnboardingTour } from "../onboarding/EditorOnboardingTour";
 import { OnboardingService } from "../../services/onboardingService";
@@ -42,17 +44,17 @@ const EditorWorkspacePage: React.FC = () => {
   const [isEditorLoading, setIsEditorLoading] = useState(false);
   // const [projects, setProjects] = useState<Project[]>([]);
 
-  // Collapsible state - Responsive defaults
-  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(() => window.innerWidth >= 1280);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(() => window.innerWidth >= 1024);
+  // Collapsible state - Start with both sidebars closed
+  const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
 
   // Left Panel State
-  const [activeLeftPanel, setActiveLeftPanel] = useState<"documents" | "audit" | "sources" | "outline">("documents");
+  const [activeLeftPanel, setActiveLeftPanel] = useState<"documents" | "audit" | "sources" | "outline" | "visual-map" | "research-gaps" | null>(null);
   const [leftPanelData, setLeftPanelData] = useState<any>(null);
 
   // Right panel type state
   const [activePanelType, setActivePanelType] =
-    useState<RightPanelType>("ai-chat");
+    useState<RightPanelType>(null);
   const [panelData, setPanelData] = useState<any>(null);
 
   // Resizable widths
@@ -186,6 +188,31 @@ const EditorWorkspacePage: React.FC = () => {
     setSelectedProject(updatedProject);
     setSelectedLibrarySource(updatedSource);
 
+    await documentService.updateProject(
+      selectedProject.id,
+      selectedProject.title,
+      selectedProject.description || "",
+      selectedProject.content,
+      selectedProject.word_count,
+      selectedProject.citation_style,
+      selectedProject.outline
+    );
+  };
+
+  const handleBatchSourceUpdate = async (updatedCitations: any[]) => {
+    if (!selectedProject) return;
+
+    // Merge updated citations into existing project citations
+    const currentCitations = [...selectedProject.citations];
+    const newCitations = currentCitations.map(c => {
+      const match = updatedCitations.find(uc => uc.id === c.id);
+      return match ? { ...c, ...match } : c;
+    });
+
+    const updatedProject = { ...selectedProject, citations: newCitations };
+    setSelectedProject(updatedProject);
+
+    // Persist to backend
     await documentService.updateProject(
       selectedProject.id,
       selectedProject.title,
@@ -544,6 +571,38 @@ const EditorWorkspacePage: React.FC = () => {
                   <PenTool className={`w-4 h-4 ${activeLeftPanel === "outline" ? "text-[#D97706]" : "text-gray-400"}`} />
                   {isNavRailOpen && "Outline"}
                 </button>
+
+                <button
+                  data-tour="visual-map"
+                  onClick={() => {
+                    setActiveLeftPanel("visual-map");
+                    setIsLeftSidebarOpen(true);
+                  }}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "visual-map"
+                    ? "bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                    }`}
+                  title={!isNavRailOpen ? "Insight Map" : ""}
+                >
+                  <Network className={`w-4 h-4 ${activeLeftPanel === "visual-map" ? "text-[#10b981]" : "text-gray-400"}`} />
+                  {isNavRailOpen && "Insight Map"}
+                </button>
+
+                <button
+                  data-tour="research-gaps"
+                  onClick={() => {
+                    setActiveLeftPanel("research-gaps");
+                    setIsLeftSidebarOpen(true);
+                  }}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "research-gaps"
+                    ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                    }`}
+                  title={!isNavRailOpen ? "Research Gaps" : ""}
+                >
+                  <Lightbulb className={`w-4 h-4 ${activeLeftPanel === "research-gaps" ? "text-[#f59e0b]" : "text-gray-400"}`} />
+                  {isNavRailOpen && "Research Gaps"}
+                </button>
               </div>
 
               {/* Credit Meter Fixed at Bottom of Rail */}
@@ -560,7 +619,7 @@ const EditorWorkspacePage: React.FC = () => {
 
 
             {/* Sidebar Content Area */}
-            {!(activeLeftPanel === "sources" && activeSourceTab === "matrix") && (
+            {!(activeLeftPanel === "sources" && activeSourceTab === "matrix") && activeLeftPanel !== "research-gaps" && activeLeftPanel !== "visual-map" && (
               <div className={`flex-1 flex flex-col min-w-0 bg-white relative`}>
                 {activeLeftPanel === "documents" && isLeftSidebarOpen && (
                   <div className="flex-1 overflow-hidden flex flex-col">
@@ -634,7 +693,7 @@ const EditorWorkspacePage: React.FC = () => {
             )}
           </div>
           {/* Left Resize Handle */}
-          {!(activeLeftPanel === "sources" && activeSourceTab === "matrix") && (
+          {!(activeLeftPanel === "sources" && activeSourceTab === "matrix") && activeLeftPanel !== "research-gaps" && activeLeftPanel !== "visual-map" && (
             <div
               onMouseDown={() => setIsResizingLeft(true)}
               className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors"
@@ -678,7 +737,7 @@ const EditorWorkspacePage: React.FC = () => {
         </button>
       )}
 
-      {/* Center Panel - Document Editor OR Full-Page Matrix OR Full-Page Source Details */}
+      {/* Center Panel - Document Editor OR Full-Page Matrix OR Full-Page Source Details OR Research Gaps OR Visual Map */}
       <div className="flex-1 h-full overflow-hidden min-w-0">
         {selectedLibrarySource ? (
           <SourceDetailPanel
@@ -688,7 +747,24 @@ const EditorWorkspacePage: React.FC = () => {
             onUpdate={handleSourceUpdate}
           />
         ) : activeLeftPanel === "sources" && activeSourceTab === "matrix" ? (
-          <LiteratureMatrix sources={selectedProject?.citations || []} />
+          <LiteratureMatrix
+            sources={selectedProject?.citations || []}
+            projectId={selectedProject?.id}
+            onUpdateCitations={handleBatchSourceUpdate}
+          />
+        ) : activeLeftPanel === "research-gaps" && selectedProject ? (
+          <ResearchGapsPanel
+            projectId={selectedProject.id}
+            onSearchGap={(keywords) => {
+              openPanel("citations", { contextKeywords: keywords });
+            }}
+          />
+        ) : activeLeftPanel === "visual-map" && selectedProject ? (
+          <CitationGraph
+            projectId={selectedProject.id}
+            width={typeof window !== 'undefined' ? window.innerWidth : 1920}
+            height={typeof window !== 'undefined' ? window.innerHeight : 1080}
+          />
         ) : isEditorLoading ? (
           <div className="h-full flex flex-col items-center justify-center bg-gray-50">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
@@ -738,7 +814,7 @@ const EditorWorkspacePage: React.FC = () => {
       </div>
 
       {/* Toggle Right Sidebar Button - Hidden in Focus Mode */}
-      {!isFocusMode && !(activeLeftPanel === "sources" && activeSourceTab === "matrix") && (
+      {!isFocusMode && !(activeLeftPanel === "sources" && activeSourceTab === "matrix") && activeLeftPanel !== "research-gaps" && activeLeftPanel !== "visual-map" && (
         <button
           onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
           className={`absolute top-4 z-10 p-2 bg-white border border-gray-300 rounded-md shadow-md hover:bg-gray-50 transition-all`}
@@ -775,7 +851,7 @@ const EditorWorkspacePage: React.FC = () => {
       )}
 
       {/* Right Sidebar - Feature-Specific Panels - Hidden in Focus Mode */}
-      {!isFocusMode && !(activeLeftPanel === "sources" && activeSourceTab === "matrix") && isRightSidebarOpen && activePanelType && (
+      {!isFocusMode && !(activeLeftPanel === "sources" && activeSourceTab === "matrix") && activeLeftPanel !== "research-gaps" && activeLeftPanel !== "visual-map" && isRightSidebarOpen && activePanelType && (
         <>
           {/* Right Resize Handle */}
           <div
@@ -805,14 +881,6 @@ const EditorWorkspacePage: React.FC = () => {
                 projectId={selectedProject?.id}
                 panelData={panelData}
                 onClose={() => setIsRightSidebarOpen(false)}
-                onApply={(text: string) => {
-                  if (editorInstance) {
-                    editorInstance.chain().focus().insertContent(text).run();
-                    if (editorInstance.commands.trackAIAction) {
-                      editorInstance.commands.trackAIAction();
-                    }
-                  }
-                }}
               />
             )}
             {activePanelType === "reality-check" && panelData && (

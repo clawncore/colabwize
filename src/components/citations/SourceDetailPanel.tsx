@@ -1,6 +1,19 @@
-
-import React from "react";
-import { ArrowLeft, ExternalLink, BookOpen, Calendar, MapPin, Hash, ShieldCheck, Globe, Sparkles } from "lucide-react";
+import React, { useState } from "react";
+import {
+    ArrowLeft,
+    ExternalLink,
+    BookOpen,
+    Calendar,
+    MapPin,
+    Hash,
+    ShieldCheck,
+    Globe,
+    Sparkles,
+    Activity,
+    Loader2
+} from "lucide-react";
+import { ConsensusBadge } from "./ConsensusBadge";
+import { apiClient } from "../../services/apiClient";
 
 export interface StoredCitation {
     id?: string;
@@ -55,6 +68,11 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
     const themes = ["Gap", "Methodology", "Result"];
     const [isSaving, setIsSaving] = React.useState(false);
     const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+
+    // Consensus Meter State
+    const [consensusClaim, setConsensusClaim] = React.useState("");
+    const [consensusResult, setConsensusResult] = React.useState<any>(null);
+    const [isAnalyzingConsensus, setIsAnalyzingConsensus] = React.useState(false);
 
     const handleAnalyze = async () => {
         if (!source.id || !projectId || isAnalyzing) return;
@@ -120,6 +138,34 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
         }
     };
 
+    const handleAnalyzeConsensus = async () => {
+        if (!consensusClaim.trim() || !projectId || isAnalyzingConsensus) return;
+
+        // Check if abstract is available
+        if (!source.abstract) {
+            alert("Cannot analyze: This paper doesn't have an abstract. Please try adding it from a search result that includes abstracts.");
+            return;
+        }
+
+        setIsAnalyzingConsensus(true);
+        setConsensusResult(null);
+
+        try {
+            const response = await apiClient.post(`/api/citations/${projectId}/consensus`, {
+                claim: consensusClaim,
+                citationIds: source.id ? [source.id] : undefined
+            });
+
+            if (response.data.success) {
+                setConsensusResult(response.data.consensus);
+            }
+        } catch (error: any) {
+            console.error("Consensus analysis failed", error);
+            alert(`Analysis failed: ${error.message || "Unknown error"}`);
+        } finally {
+            setIsAnalyzingConsensus(false);
+        }
+    };
 
     const isOpenAccess = false; // We don't have this metadata explicitly yet, but could check type.
 
@@ -210,6 +256,35 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
                     )}
                 </div>
 
+                {/* Abstract Preview */}
+                <div className="mb-8">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-bold text-gray-900">Abstract preview</h3>
+                        <span className="text-[10px] text-gray-400 uppercase tracking-wider">(For verification only)</span>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 relatiive group select-none">
+                        {/* No select, no copy */}
+                        <div className="select-none pointer-events-none">
+                            <p className="text-sm text-gray-600 leading-relaxed font-serif relative">
+                                {source.abstract ? (
+                                    <>
+                                        {source.abstract.slice(0, 400)}
+                                        {source.abstract.length > 400 && "..."}
+                                        {/* Fade effect overlay */}
+                                        <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none"></div>
+                                    </>
+                                ) : (
+                                    <span className="italic text-gray-400">No abstract available for this source.</span>
+                                )}
+                            </p>
+                        </div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2 text-center">
+                        Reading and interpretation should be done at the source.
+                    </p>
+                </div>
+
                 {/* Literature Matrix Themes */}
                 <div className="mb-8 p-4 bg-teal-50/50 border border-teal-100 rounded-xl relative">
                     {isSaving && (
@@ -222,7 +297,7 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
                         <h3 className="text-sm font-bold text-teal-900">Literature Matrix Tags</h3>
                         <button
                             onClick={handleAnalyze}
-                            disabled={isAnalyzing || !source.abstract}
+                            disabled={isAnalyzing}
                             className="text-[10px] text-teal-600 font-bold uppercase tracking-wider flex items-center gap-1 hover:text-teal-800 disabled:opacity-50 transition-colors"
                             title={!source.abstract ? "Abstract required for analysis" : "Analyze with AI"}
                         >
@@ -258,33 +333,77 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
                     </div>
                 </div>
 
-                {/* Abstract Preview */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-bold text-gray-900">Abstract preview</h3>
-                        <span className="text-[10px] text-gray-400 uppercase tracking-wider">(For verification only)</span>
+                {/* Consensus Meter */}
+                <div className="mb-6 p-4 bg-purple-50/50 border border-purple-100 rounded-xl">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Activity className="w-4 h-4 text-purple-600" />
+                        <h3 className="text-sm font-bold text-purple-900">Consensus Analysis</h3>
+                    </div>
+                    <p className="text-xs text-purple-600 mb-3">
+                        Analyze how this paper aligns with a research claim.
+                    </p>
+
+                    {/* Claim Input */}
+                    <div className="mb-3">
+                        <input
+                            type="text"
+                            value={consensusClaim}
+                            onChange={(e) => setConsensusClaim(e.target.value)}
+                            placeholder="Enter a claim to analyze (e.g., 'AI will replace human jobs')"
+                            className="w-full px-3 py-2 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-400 outline-none transition-all placeholder:text-gray-400"
+                            disabled={isAnalyzingConsensus}
+                        />
                     </div>
 
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 relatiive group select-none">
-                        {/* No select, no copy */}
-                        <div className="select-none pointer-events-none">
-                            <p className="text-sm text-gray-600 leading-relaxed font-serif relative">
-                                {source.abstract ? (
-                                    <>
-                                        {source.abstract.slice(0, 400)}
-                                        {source.abstract.length > 400 && "..."}
-                                        {/* Fade effect overlay */}
-                                        <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none"></div>
-                                    </>
-                                ) : (
-                                    <span className="italic text-gray-400">No abstract available for this source.</span>
-                                )}
-                            </p>
+                    <button
+                        onClick={handleAnalyzeConsensus}
+                        disabled={!consensusClaim.trim() || isAnalyzingConsensus}
+                        className="w-full py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isAnalyzingConsensus ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Analyzing...
+                            </>
+                        ) : (
+                            <>
+                                <Activity className="w-4 h-4" />
+                                Analyze Stance
+                            </>
+                        )}
+                    </button>
+
+                    {/* Results */}
+                    {consensusResult && (
+                        <div className="mt-4 p-3 bg-white border border-purple-200 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-bold text-purple-900">Analysis Result:</span>
+                                <ConsensusBadge
+                                    consensusLevel={consensusResult.consensusLevel}
+                                    agreementPercentage={consensusResult.agreementPercentage}
+                                    showLabel={false}
+                                    size="sm"
+                                />
+                            </div>
+                            <p className="text-xs text-gray-700 mb-2">{consensusResult.summary}</p>
+
+                            {consensusResult.supporting.length > 0 && (
+                                <div className="text-xs text-emerald-700 mb-1">
+                                    ✓ <strong>{consensusResult.supporting.length}</strong> supporting
+                                </div>
+                            )}
+                            {consensusResult.opposing.length > 0 && (
+                                <div className="text-xs text-red-700 mb-1">
+                                    ✗ <strong>{consensusResult.opposing.length}</strong> opposing
+                                </div>
+                            )}
+                            {consensusResult.neutral.length > 0 && (
+                                <div className="text-xs text-gray-600">
+                                    ○ <strong>{consensusResult.neutral.length}</strong> neutral
+                                </div>
+                            )}
                         </div>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-2 text-center">
-                        Reading and interpretation should be done at the source.
-                    </p>
+                    )}
                 </div>
 
                 {/* External Action */}

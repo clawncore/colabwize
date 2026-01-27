@@ -58,6 +58,22 @@ export class SubscriptionService {
   }
 
   /**
+   * Update Auto-Use Credits Preference
+   */
+  static async updateAutoUseCredits(enabled: boolean): Promise<boolean> {
+    const response = await apiClient.post("/api/subscription/credits/auto-use", { enabled });
+    return response.success;
+  }
+
+  /**
+   * Get credit transaction history
+   */
+  static async getCreditHistory(): Promise<any[]> {
+    const response = await apiClient.get("/api/subscription/credits/history");
+    return response.history;
+  }
+
+  /**
    * Get current user subscription
    */
   static async getCurrentSubscription(): Promise<{

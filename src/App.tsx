@@ -249,8 +249,20 @@ function App() {
                       <Route path="billing" element={<BillingSettingsPage />} />
                       <Route path="help" element={<HelpSettingsPage />} />
                       <Route path="feedback" element={<FeedbackPage />} />
+
                     </Route>
                   </Route>
+                  {/* Alias for Credit Purchase as per detailed requirement */}
+                  <Route
+                    path="/purchase-credits"
+                    element={
+                      <ProtectedRoute>
+                        <DashboardLayout>
+                          <CreditsPage />
+                        </DashboardLayout>
+                      </ProtectedRoute>
+                    }
+                  />
                   {/* Editor Workspace - Protected */}
                   <Route
                     path="/dashboard/editor"

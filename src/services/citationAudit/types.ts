@@ -30,6 +30,7 @@ export interface ExtractedPattern {
     start: number;
     end: number;
     section: SectionType;
+    context?: string; // Surrounding sentence
 }
 
 export interface RawExtractedPattern {
@@ -37,6 +38,7 @@ export interface RawExtractedPattern {
     text: string;
     start: number;
     end: number;
+    context?: string; // Surrounding sentence
 }
 
 export interface ReferenceEntry {

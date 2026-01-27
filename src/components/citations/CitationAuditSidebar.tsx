@@ -4,6 +4,9 @@ import { ArrowLeft, ShieldAlert, ChevronDown } from "lucide-react";
 import { runCitationAudit } from "../../services/citationAudit/citationAuditEngine";
 import { useToast } from "../../hooks/use-toast";
 import { VerificationResultsPanel } from "./VerificationResultsPanel";
+import { CitationGraph } from "./CitationGraph";
+import { Network } from "lucide-react";
+import { InlineLimitMessage } from "../common/InlineLimitMessage";
 
 
 interface CitationAuditSidebarProps {
@@ -16,16 +19,15 @@ interface CitationAuditSidebarProps {
 }
 
 export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
-    projectId,
     editor,
     onClose,
-    onFindPapers,
     citationStyle
 }) => {
     const [loading, setLoading] = useState(false);
     const [auditResult, setAuditResult] = useState<any>(null);
     const [activeDetail, setActiveDetail] = useState<string | null>(null);
     const [isLegendOpen, setIsLegendOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<"list" | "graph">("list");
     const selectedStyle = citationStyle || "APA";
     const { toast } = useToast();
 
@@ -91,6 +93,9 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                         variant: "default"
                     });
                 }
+            } else if (result.state === "FAILED_QUOTA_EXCEEDED" || result.state === "FAILED_SUBSCRIPTION_ERROR") {
+                // Do NOT show toast. Let the UI handle the blocking state.
+                console.log("Audit blocked:", result.state);
             } else {
                 toast({
                     title: "⚠️ Citation audit could not be completed",
@@ -168,159 +173,248 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-6">
+            {/* NEW: Integrity Score Gauge */}
+            {auditResult && (
+                <div className="px-6 pt-6 pb-2">
+                    <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 text-white shadow-lg border border-slate-700">
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Integrity Score</h3>
+                                <div className="text-3xl font-black mt-1">
+                                    {Math.max(0, 100 - (auditResult.violations.length * 5) - (auditResult.verificationResults?.filter((r: any) => r.status !== 'VERIFIED').length * 10 || 0))}%
+                                </div>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                                <ShieldAlert className="w-5 h-5 text-green-400" />
+                            </div>
+                        </div>
 
-                {/* Section 1: Audit Status */}
-                <section>
-                    <div className="mb-4">
-                        {loading ? (
-                            <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-center text-sm text-gray-600">
-                                Running audit...
+                        {/* Progress Bar */}
+                        <div className="w-full h-1.5 bg-slate-700/50 rounded-full overflow-hidden mb-2">
+                            <div
+                                className={`h-full rounded-full transition-all duration-1000 ${(100 - (auditResult.violations.length * 5)) > 80 ? 'bg-green-500' :
+                                    (100 - (auditResult.violations.length * 5)) > 50 ? 'bg-amber-500' : 'bg-red-500'
+                                    }`}
+                                style={{ width: `${Math.max(5, 100 - (auditResult.violations.length * 5) - (auditResult.verificationResults?.filter((r: any) => r.status !== 'VERIFIED').length * 10 || 0))}%` }}
+                            />
+                        </div>
+                        <p className="text-[10px] text-slate-400 text-right">
+                            {auditResult.violations.length > 0 ? "Issues detected requiring attention" : "Document analysis passed"}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* NEW: View Toggle */}
+            <div className="px-6 pt-4 flex gap-2">
+                <button
+                    onClick={() => setViewMode("list")}
+                    className={`flex-1 text-xs font-semibold py-1.5 rounded-md border transition-colors ${viewMode === "list"
+                        ? "bg-slate-800 text-white border-slate-800"
+                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                        }`}
+                >
+                    List View
+                </button>
+                <button
+                    onClick={() => setViewMode("graph")}
+                    className={`flex-1 text-xs font-semibold py-1.5 rounded-md border flex items-center justify-center gap-2 transition-colors ${viewMode === "graph"
+                        ? "bg-slate-800 text-white border-slate-800"
+                        : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                        }`}
+                >
+                    <Network className="w-3 h-3" />
+                    Graph View
+                </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 pt-4 custom-scrollbar space-y-6">
+
+                {viewMode === "graph" ? (
+                    <div className="space-y-4">
+                        <p className="text-xs text-gray-500 mb-2">
+                            Visualizing connections between your document, citations, and authors.
+                        </p>
+                        <CitationGraph />
+                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-2">
+                            <h4 className="font-semibold text-slate-700">Graph Legend</h4>
+                            <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-white border border-slate-400"></span> Document</div>
+                            <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Citation</div>
+                            <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500"></span> Author</div>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* Section 1: Audit Status */}
+                        <section>
+                            <div className="mb-4">
+                                {loading ? (
+                                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-center text-sm text-gray-600">
+                                        Running audit...
+                                    </div>
+                                ) : !auditResult ? (
+                                    null
+                                ) : auditResult.violations.length > 0 ? (
+                                    <div className="text-amber-800 bg-amber-50 p-4 rounded-md border border-amber-200">
+                                        <div className="flex items-center gap-2 font-bold mb-1">
+                                            <ShieldAlert className="w-4 h-4" />
+                                            <span>Citation issues detected</span>
+                                        </div>
+                                        <p className="text-sm">Review highlighted markers below.</p>
+                                        <button onClick={handleRunStyleAudit} className="mt-3 text-xs font-semibold uppercase tracking-wider hover:underline">
+                                            Rerun Audit
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="text-green-800 bg-green-50 p-4 rounded-md border border-green-200">
+                                        <div className="flex items-center gap-2 font-bold mb-1">
+                                            <span>✅</span>
+                                            <span>Citation audit completed</span>
+                                        </div>
+                                        <p className="text-sm">No issues found.</p>
+                                        <button onClick={handleRunStyleAudit} className="mt-3 text-xs font-semibold uppercase tracking-wider hover:underline">
+                                            Rerun Audit
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                        ) : !auditResult ? (
-                            null
-                        ) : auditResult.violations.length > 0 ? (
-                            <div className="text-amber-800 bg-amber-50 p-4 rounded-md border border-amber-200">
-                                <div className="flex items-center gap-2 font-bold mb-1">
-                                    <ShieldAlert className="w-4 h-4" />
-                                    <span>Citation issues detected</span>
-                                </div>
-                                <p className="text-sm">Review highlighted markers below.</p>
-                                <button onClick={handleRunStyleAudit} className="mt-3 text-xs font-semibold uppercase tracking-wider hover:underline">
-                                    Rerun Audit
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="text-green-800 bg-green-50 p-4 rounded-md border border-green-200">
-                                <div className="flex items-center gap-2 font-bold mb-1">
-                                    <span>✅</span>
-                                    <span>Citation audit completed</span>
-                                </div>
-                                <p className="text-sm">No issues found.</p>
-                                <button onClick={handleRunStyleAudit} className="mt-3 text-xs font-semibold uppercase tracking-wider hover:underline">
-                                    Rerun Audit
-                                </button>
+                        </section>
+
+                        {/* Section 1.5: Blocking Messages */}
+                        {auditResult && (auditResult.state === "FAILED_QUOTA_EXCEEDED" || auditResult.state === "FAILED_SUBSCRIPTION_ERROR") && (
+                            <div className="mb-6">
+                                <InlineLimitMessage
+                                    type={auditResult.quotaInfo?.code || "PLAN_LIMIT_REACHED"}
+                                    title={auditResult.state === "FAILED_QUOTA_EXCEEDED" ? "Limit Reached" : "Feature Locked"}
+                                    message={auditResult.errorMessage || "You cannot perform this action."}
+                                    actionLabel={auditResult.quotaInfo?.code === "INSUFFICIENT_CREDITS" ? "Buy Credits" : "Upgrade Plan"}
+                                    onAction={() => window.open("/pricing", "_blank")}
+                                />
                             </div>
                         )}
-                    </div>
-                </section>
 
-                {/* Section 2: Accordion Reports */}
-                {auditResult && (
-                    <section className="border-t border-gray-100 pt-6">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
-                            Audit Reports
-                        </h3>
-                        <div className="space-y-3">
-                            {/* Style Report Accordion */}
-                            <AuditReportCard
-                                title="Citation Style"
-                                code="STY"
-                                count={violationStats['STY'] || 0}
-                                passed={(violationStats['STY'] || 0) === 0}
-                                expanded={activeDetail === 'STY'}
-                                onClick={() => toggleDetail('STY')}
-                            >
-                                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
-                                    <p className="text-xs text-gray-500 mb-2">
-                                        Reviewing formatting against {selectedStyle}.
-                                    </p>
-                                    {filterViolationsByCode(auditResult?.violations, 'STY').map((v: any, i: number) => (
-                                        <div key={i} className="p-2 border rounded bg-white/50 border-amber-100 hover:border-amber-300 transition-colors">
-                                            <div className="flex justify-between font-medium text-amber-900 text-xs">
-                                                <span>Violation</span>
-                                                <button className="text-xs text-amber-700 underline" onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    editor?.commands.setTextSelection(v.anchor.start);
-                                                    editor?.commands.scrollIntoView();
-                                                }}>Jump</button>
-                                            </div>
-                                            <p className="text-xs mt-1 text-gray-700">{v.message}</p>
+                        {/* Section 2: Accordion Reports */}
+                        {auditResult && (
+                            <section className="border-t border-gray-100 pt-6">
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
+                                    Audit Reports
+                                </h3>
+                                <div className="space-y-3">
+                                    {/* Style Report Accordion */}
+                                    <AuditReportCard
+                                        title="Citation Style"
+                                        code="STY"
+                                        count={violationStats['STY'] || 0}
+                                        passed={(violationStats['STY'] || 0) === 0}
+                                        expanded={activeDetail === 'STY'}
+                                        onClick={() => toggleDetail('STY')}
+                                    >
+                                        <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                                            <p className="text-xs text-gray-500 mb-2">
+                                                Reviewing formatting against {selectedStyle}.
+                                            </p>
+                                            {filterViolationsByCode(auditResult?.violations, 'STY').map((v: any, i: number) => (
+                                                <div key={i} className="p-2 border rounded bg-white/50 border-amber-100 hover:border-amber-300 transition-colors">
+                                                    <div className="flex justify-between font-medium text-amber-900 text-xs">
+                                                        <span>Violation</span>
+                                                        <button className="text-xs text-amber-700 underline" onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            editor?.commands.setTextSelection(v.anchor.start);
+                                                            editor?.commands.scrollIntoView();
+                                                        }}>Jump</button>
+                                                    </div>
+                                                    <p className="text-xs mt-1 text-gray-700">{v.message}</p>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
-                            </AuditReportCard>
+                                    </AuditReportCard>
 
-                            {/* Reference Report Accordion */}
-                            <AuditReportCard
-                                title="Reference List"
-                                code="REF"
-                                count={violationStats['REF'] || 0}
-                                passed={(violationStats['REF'] || 0) === 0}
-                                expanded={activeDetail === 'REF'}
-                                onClick={() => toggleDetail('REF')}
-                            >
-                                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
-                                    {filterViolationsByCode(auditResult?.violations, 'REF').map((v: any, i: number) => (
-                                        <div key={i} className="p-2 border rounded bg-white/50 border-blue-100 hover:border-blue-300 transition-colors">
-                                            <div className="flex justify-between font-medium text-blue-900 text-xs">
-                                                <span>Missing Reference</span>
-                                                <button className="text-xs text-blue-700 underline" onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    editor?.commands.setTextSelection(v.anchor.start);
-                                                    editor?.commands.scrollIntoView();
-                                                }}>Jump</button>
-                                            </div>
-                                            <p className="text-xs mt-1 text-gray-700">{v.message}</p>
+                                    {/* Reference Report Accordion */}
+                                    <AuditReportCard
+                                        title="Reference List"
+                                        code="REF"
+                                        count={violationStats['REF'] || 0}
+                                        passed={(violationStats['REF'] || 0) === 0}
+                                        expanded={activeDetail === 'REF'}
+                                        onClick={() => toggleDetail('REF')}
+                                    >
+                                        <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                                            {filterViolationsByCode(auditResult?.violations, 'REF').map((v: any, i: number) => (
+                                                <div key={i} className="p-2 border rounded bg-white/50 border-blue-100 hover:border-blue-300 transition-colors">
+                                                    <div className="flex justify-between font-medium text-blue-900 text-xs">
+                                                        <span>Missing Reference</span>
+                                                        <button className="text-xs text-blue-700 underline" onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            editor?.commands.setTextSelection(v.anchor.start);
+                                                            editor?.commands.scrollIntoView();
+                                                        }}>Jump</button>
+                                                    </div>
+                                                    <p className="text-xs mt-1 text-gray-700">{v.message}</p>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
-                            </AuditReportCard>
+                                    </AuditReportCard>
 
-                            {/* Verification Report Accordion */}
-                            <AuditReportCard
-                                title="Source Verification"
-                                code="VER"
-                                count={violationStats['VER'] || 0}
-                                passed={(violationStats['VER'] || 0) === 0}
-                                expanded={activeDetail === 'VER'}
-                                onClick={() => toggleDetail('VER')}
-                            >
-                                <div className="mt-3 pt-3 border-t border-gray-100">
-                                    {auditResult?.verificationResults && (
-                                        <VerificationResultsPanel results={auditResult.verificationResults} />
-                                    )}
+                                    {/* Verification Report Accordion */}
+                                    <AuditReportCard
+                                        title="Source Verification"
+                                        code="VER"
+                                        count={violationStats['VER'] || 0}
+                                        passed={(violationStats['VER'] || 0) === 0}
+                                        expanded={activeDetail === 'VER'}
+                                        onClick={() => toggleDetail('VER')}
+                                    >
+                                        <div className="mt-3 pt-3 border-t border-gray-100">
+                                            {auditResult?.verificationResults && (
+                                                <VerificationResultsPanel
+                                                    results={auditResult.verificationResults}
+                                                    editor={editor}
+                                                />
+                                            )}
+                                        </div>
+                                    </AuditReportCard>
                                 </div>
-                            </AuditReportCard>
-                        </div>
-                    </section>
+                            </section>
+                        )}
+
+                        {/* Section 3: Marker Guide (Collapsible) */}
+                        <section className="border-t border-gray-100 pt-6">
+                            <button
+                                onClick={() => setIsLegendOpen(!isLegendOpen)}
+                                className="w-full flex items-center justify-between group mb-4"
+                            >
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-600 transition-colors">
+                                    Citation Marker Guide
+                                </h3>
+                                <div className={`transform transition-transform duration-200 ${isLegendOpen ? 'rotate-180' : ''}`}>
+                                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                                </div>
+                            </button>
+
+                            {isLegendOpen && (
+                                <div className="space-y-3 text-sm text-gray-600 animate-in slide-in-from-top-2 duration-200">
+                                    <div className="flex items-center gap-3">
+                                        <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white min-w-[28px]">STY</span>
+                                        <span>Citation style violation</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white min-w-[28px]">VER</span>
+                                        <span>Source could not be verified</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500 text-white min-w-[28px]">REF</span>
+                                        <span>Reference list mismatch</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold text-blue-600 min-w-[28px] border border-blue-200 bg-blue-50">Link</span>
+                                        <span>Verified Citation</span>
+                                    </div>
+                                </div>
+                            )}
+                        </section>
+                    </>
                 )}
 
-                {/* Section 3: Marker Guide (Collapsible) */}
-                <section className="border-t border-gray-100 pt-6">
-                    <button
-                        onClick={() => setIsLegendOpen(!isLegendOpen)}
-                        className="w-full flex items-center justify-between group mb-4"
-                    >
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider group-hover:text-gray-600 transition-colors">
-                            Citation Marker Guide
-                        </h3>
-                        <div className={`transform transition-transform duration-200 ${isLegendOpen ? 'rotate-180' : ''}`}>
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                        </div>
-                    </button>
-
-                    {isLegendOpen && (
-                        <div className="space-y-3 text-sm text-gray-600 animate-in slide-in-from-top-2 duration-200">
-                            <div className="flex items-center gap-3">
-                                <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-white min-w-[28px]">STY</span>
-                                <span>Citation style violation</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white min-w-[28px]">VER</span>
-                                <span>Source could not be verified</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500 text-white min-w-[28px]">REF</span>
-                                <span>Reference list mismatch</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded text-[10px] font-bold text-blue-600 min-w-[28px] border border-blue-200 bg-blue-50">Link</span>
-                                <span>Verified Citation</span>
-                            </div>
-                        </div>
-                    )}
-                </section>
             </div>
         </div>
     );

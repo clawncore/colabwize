@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useToast } from "../../hooks/use-toast";
 import { Search, Loader2 } from "lucide-react";
 import {
   SuggestedPaper,
   CitationService,
 } from "../../services/citationService";
+import { CredibilityBadge } from "./CredibilityBadge";
+import { apiClient } from "../../services/apiClient";
 
 
 interface PaperSuggestionsPanelProps {
@@ -31,18 +33,59 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     useState<SuggestedPaper[]>(initialSuggestions);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-
   const [addedPaperIds, setAddedPaperIds] = useState<Set<string>>(new Set());
+
+  // Pagination
+  const [displayCount, setDisplayCount] = useState(10);
+  const PAPERS_PER_PAGE = 10;
+
+  // Credibility scores
+  const [credibilityScores, setCredibilityScores] = useState<Map<string, any>>(new Map());
+
+
+  const calculateCredibilityScores = useCallback(async () => {
+    try {
+      const papers = suggestedPapers.map(p => ({
+        title: p.title,
+        year: p.year,
+        citationCount: p.citationCount,
+        journal: p.journal,
+        url: p.url,
+        isPeerReviewed: p.source !== 'arxiv'
+      }));
+
+      const response = await apiClient.post("/api/citations/batch-credibility", { papers });
+
+      if (response.data.success) {
+        const scores = new Map<string, any>();
+        Object.entries(response.data.credibilityScores).forEach(([title, score]) => {
+          scores.set(title, score);
+        });
+        setCredibilityScores(scores);
+      }
+    } catch (error) {
+      console.error("Failed to calculate credibility scores", error);
+    }
+  }, [suggestedPapers]);
+
+  // Calculate credibility when papers change
+  useEffect(() => {
+    if (suggestedPapers.length > 0) {
+      calculateCredibilityScores();
+    }
+  }, [suggestedPapers, calculateCredibilityScores]);
 
   // Removed auto-search useEffect and isLoadingInitial as per requirements to make this a passive "Sources" panel.
 
-  const handleManualSearch = async (e?: React.FormEvent) => {
+  const handleManualSearch = async (e?: React.FormEvent, searchStr?: string) => {
     if (e) e.preventDefault();
-    if (!searchQuery.trim()) return;
+    const query = searchStr || searchQuery;
+    if (!query.trim()) return;
 
     setIsSearching(true);
+    setDisplayCount(10); // Reset to first page on new search
     try {
-      const results = await CitationService.searchPapers(searchQuery);
+      const results = await CitationService.searchPapers(query);
       setSuggestedPapers(results || []);
     } catch (error: any) {
       console.error("Search failed:", error);
@@ -61,6 +104,15 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
       setIsSearching(false);
     }
   };
+
+  // Auto-search logic when contextKeywords are provided
+  useEffect(() => {
+    if (contextKeywords && contextKeywords.length > 0) {
+      const query = contextKeywords.join(" ");
+      setSearchQuery(query);
+      handleManualSearch(undefined, query);
+    }
+  }, [contextKeywords]);
 
   const handleAddSource = async (paper: SuggestedPaper) => {
     try {
@@ -91,6 +143,13 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
 
   const hasSuggestions =
     Array.isArray(suggestedPapers) && suggestedPapers.length > 0;
+
+  const displayedPapers = suggestedPapers.slice(0, displayCount);
+  const hasMore = suggestedPapers.length > displayCount;
+
+  const handleLoadMore = () => {
+    setDisplayCount(prev => prev + PAPERS_PER_PAGE);
+  };
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -146,10 +205,10 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
         {hasSuggestions ? (
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Found {suggestedPapers!.length} Sources
+              Found {suggestedPapers!.length} Sources {displayCount < suggestedPapers.length && `(Showing ${displayCount})`}
             </h3>
             <div className="space-y-4">
-              {suggestedPapers!.map((paper, index) => (
+              {displayedPapers.map((paper, index) => (
                 <div
                   key={index}
                   className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -168,14 +227,21 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
                         {paper.journal && ` • ${paper.journal}`}
                       </p>
 
-                      <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-2">
-                        {/* Allowed badges: Peer-reviewed / Preprint, Open Access */}
-                        <span className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-medium uppercase">
+                      <div className="flex items-center gap-2 mb-2">
+                        {/* Credibility Badge */}
+                        {credibilityScores.has(paper.title) && (
+                          <CredibilityBadge
+                            level={credibilityScores.get(paper.title)?.level || "medium"}
+                            score={credibilityScores.get(paper.title)?.score}
+                            flags={credibilityScores.get(paper.title)?.flags}
+                            size="sm"
+                          />
+                        )}
+
+                        {/* Peer Review Badge */}
+                        <span className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-medium uppercase text-[10px]">
                           {paper.source === 'arxiv' ? 'Preprint' : 'Peer-Reviewed'}
                         </span>
-                        {/* We don't have open access info in generic SuggestedPaper interface blindly, so omitting unless source implies it or we just stick to metadata available. 
-                            If open access data isn't in SuggestedPaper, we can't display it purely. 
-                            However, the previous code showed paper.source. I've updated it to be more descriptive based on the source 'type' usually associated (arxiv=preprint). */}
                       </div>
                     </div>
 
@@ -193,6 +259,18 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
                 </div>
               ))}
             </div>
+
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="mt-6 text-center">
+                <button
+                  onClick={handleLoadMore}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
+                >
+                  Load More Papers ({suggestedPapers.length - displayCount} remaining)
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-12">

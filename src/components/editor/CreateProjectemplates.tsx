@@ -153,7 +153,7 @@ export default function CreateProjectTemplates({
       if (result.success && result.data) {
         // Navigate to editor - content is already saved in backend
         // No router state needed (was fragile, ephemeral, broke on refresh)
-        navigate(`/editor/${result.data.id}`);
+        navigate(`/dashboard/editor/${result.data.id}`);
 
         if (onProjectCreate) {
           onProjectCreate(result.data); // Pass proper Project object

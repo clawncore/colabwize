@@ -6,7 +6,15 @@ import {
   AlertCircle,
   FileText,
   XCircle,
-  ArrowRight
+  ArrowRight,
+  Coins,
+  Check,
+  X,
+  Wallet,
+  CalendarCheck,
+  ShieldCheck,
+  Zap,
+  Activity
 } from "lucide-react";
 import {
   PaymentMethod,
@@ -19,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 import { UsageChart } from "./UsageChart";
 import { BillingStatusStrip } from "./BillingStatusStrip";
 import { ValueMetricCard } from "./ValueMetricCard";
+import { CreditUsageHistory } from "./CreditUsageHistory"; // Import the new component
 import {
   Tabs,
   TabsContent,
@@ -26,10 +35,10 @@ import {
   TabsTrigger,
 } from "../../components/ui/tabs";
 import { Badge } from "../../components/ui/badge";
+import { Switch } from "../../components/ui/switch"; // Assuming we have shadcn switch
 
 const BillingSettingsPage: React.FC = () => {
   const navigate = useNavigate();
-  // Get query params manually since we aren't using useSearchParams to keep it light
   const searchParams = new URLSearchParams(window.location.search);
   const statusParam = searchParams.get('status');
   const [plans, setPlans] = useState<any[]>([]);
@@ -41,6 +50,12 @@ const BillingSettingsPage: React.FC = () => {
   const [limits, setLimits] = useState<any>({});
   const [usage, setUsage] = useState<any>({});
   const [totalDocuments, setTotalDocuments] = useState<number>(0);
+
+  // NEW STATE
+  const [creditBalance, setCreditBalance] = useState<number>(0);
+  const [autoUseCredits, setAutoUseCredits] = useState<boolean>(true);
+  const [creditHistory, setCreditHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState<boolean>(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +93,10 @@ const BillingSettingsPage: React.FC = () => {
             setLimits(subscriptionData.limits || {});
             setUsage(subscriptionData.usage || {});
             setTotalDocuments((subscriptionData as any).totalDocuments || 0);
+
+            // NEW STATE UPDATE
+            setCreditBalance((subscriptionData as any).creditBalance || 0);
+            setAutoUseCredits((subscriptionData as any).autoUseCredits ?? true);
           }
           setPaymentMethods(paymentMethodsData);
           setPlans(plansData || []);
@@ -106,8 +125,22 @@ const BillingSettingsPage: React.FC = () => {
       }
     };
 
+    // NEW FETCH: Credit History
+    const fetchCreditHistory = async () => {
+      try {
+        setHistoryLoading(true);
+        const history = await SubscriptionService.getCreditHistory();
+        if (isMounted) setCreditHistory(history);
+      } catch (err) {
+        console.error("Error fetching credit history", err);
+      } finally {
+        if (isMounted) setHistoryLoading(false);
+      }
+    };
+
     fetchData();
     fetchInvoices();
+    fetchCreditHistory();
 
     return () => {
       isMounted = false;
@@ -181,6 +214,29 @@ const BillingSettingsPage: React.FC = () => {
 
 
 
+
+  const handleToggleAutoUse = async (checked: boolean) => {
+    try {
+      // Optimistic Update
+      setAutoUseCredits(checked);
+
+      const success = await SubscriptionService.updateAutoUseCredits(checked);
+      if (!success) {
+        setAutoUseCredits(!checked); // Revert
+        toast({ title: "Error", description: "Failed to update preference", variant: "destructive" });
+      } else {
+        toast({
+          title: checked ? "Auto-Use Enabled" : "Auto-Use Disabled",
+          description: checked
+            ? "Credits will be used automatically when plan limits are reached."
+            : "You will be asked for confirmation before using credits."
+        });
+      }
+    } catch (err) {
+      setAutoUseCredits(!checked);
+      toast({ title: "Error", description: "Failed to update preference", variant: "destructive" });
+    }
+  };
 
   const handleCancelSubscription = async () => {
     try {
@@ -275,10 +331,49 @@ const BillingSettingsPage: React.FC = () => {
     <div className="w-full px-8 py-8 bg-white min-h-screen">
       <div className="w-full">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Billing & Subscription</h1>
-          <p className="text-gray-600 mt-2 text-lg">
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Billing & Subscription</h1>
+          <p className="text-gray-500 mt-1 text-base">
             Manage your plan, track usage, and billing settings.
           </p>
+        </div>
+
+        {/* 2️⃣ SUMMARY CARDS (Documents / Cost / Payment Due) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Card 1: Documents */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Documents Processed</p>
+              <div className="text-2xl font-bold text-gray-900 font-mono">{totalDocuments}</div>
+            </div>
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-full">
+              <FileText className="h-5 w-5" />
+            </div>
+          </div>
+
+          {/* Card 2: Estimated Cost */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Estimated Cost</p>
+              <div className="text-2xl font-bold text-gray-900 font-mono">$0.00</div>
+              <p className="text-[10px] text-gray-400 mt-1">Updates daily</p>
+            </div>
+            <div className="p-3 bg-green-50 text-green-600 rounded-full">
+              <Wallet className="h-5 w-5" />
+            </div>
+          </div>
+
+          {/* Card 3: Payment Due */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Next Payment</p>
+              <div className="text-lg font-bold text-gray-900">
+                {subscription?.current_period_end ? new Date(subscription.current_period_end).toLocaleDateString() : 'No payment due'}
+              </div>
+            </div>
+            <div className="p-3 bg-purple-50 text-purple-600 rounded-full">
+              <CalendarCheck className="h-5 w-5" />
+            </div>
+          </div>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
@@ -303,63 +398,241 @@ const BillingSettingsPage: React.FC = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* OVERVIEW TAB */}
-          <TabsContent value="overview">
-            <div className="space-y-8">
-              {/* 1️⃣ STATE - Subtle Status Strip */}
-              <BillingStatusStrip
-                status={(subscription?.status as any) || "active"}
-                renewalDate={nextBillingDate}
-                cancelDate={subscription?.cancel_at_period_end ? nextBillingDate : null}
-                paymentMethod={
-                  paymentMethods.length > 0
-                    ? {
-                      brand: paymentMethods[0].type,
-                      last4: paymentMethods[0].lastFour,
-                    }
-                    : null
-                }
-                planName={
-                  currentPlan?.id === 'student' ? 'Student Pro' :
-                    currentPlan?.id === 'researcher' ? 'Researcher' :
-                      currentPlan?.name || "Free Plan"
-                }
-              />
+          <TabsContent value="overview" className="space-y-6">
+            {/* PANEL 1 & 2: PLAN & METERS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* PANEL 1: CURRENT PLAN & FEATURES */}
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between h-full relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+                  <div>
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Current Plan</h3>
+                        <div className="flex items-center gap-3">
+                          <span className="text-3xl font-bold text-gray-900 capitalize tracking-tight">
+                            {currentPlan?.name || "Free Plan"}
+                          </span>
+                          <span className={`px-2.5 py-1 text-xs font-semibold rounded-full capitalize ${subscription?.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                            {subscription?.status || 'Active'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-gray-900">
+                          {currentPlan?.price ? `$${currentPlan.price}` : 'Free'}
+                          <span className="text-sm text-gray-400 font-normal">/{currentPlan?.interval || 'mo'}</span>
+                        </div>
+                      </div>
+                    </div>
 
-              {/* 2️⃣ VALUE - The "Hero" Metric Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <ValueMetricCard
-                  value={totalDocuments}
-                  label="Documents processed"
-                  percentageChange={undefined}
-                />
+                    {/* 4️⃣ FREE FEATURES SIDEBAR (Re-integrated) */}
+                    <div className="pt-6 border-t border-gray-100">
+                      <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-4 flex items-center gap-2">
+                        <Zap className="h-3 w-3 text-indigo-500" />
+                        Plan Features
+                      </h4>
 
-                <ValueMetricCard
-                  value={subscription?.plan === 'free' ? 0 : (currentPlan?.price || 0)}
-                  label="Estimated Cost (This Month)"
-                  isCurrency={true}
-                  comparisonLabel="vs last month"
-                />
+                      <div className="space-y-4">
+                        {/* Group: Limits */}
+                        <div>
+                          <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Daily Limits</p>
+                          <ul className="space-y-2">
+                            <li className="flex items-center text-sm text-gray-600">
+                              <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
+                              <span>{limits.scans_per_month || 3} document scans / mo</span>
+                            </li>
+                            <li className="flex items-center text-sm text-gray-600">
+                              <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
+                              <span>{limits.rephrases_per_month || 3} rephrases / mo</span>
+                            </li>
+                          </ul>
+                        </div>
 
-                <ValueMetricCard
-                  value={subscription?.current_period_end ? new Date(subscription.current_period_end).getDate() : 0}
-                  label={subscription?.current_period_end ? `Next payment: ${new Date(subscription.current_period_end).toLocaleDateString()}` : "No payment due"}
-                  isDate={true}
-                />
+                        {/* Group: Capabilities */}
+                        <div>
+                          <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2"> capabilities</p>
+                          <ul className="space-y-2">
+                            <li className="flex items-center text-sm text-gray-600">
+                              <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
+                              <span>Basic Originality Check</span>
+                            </li>
+                            <li className="flex items-center text-sm text-gray-600">
+                              <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
+                              <span>Max 100,000 characters</span>
+                            </li>
+                          </ul>
+                        </div>
+
+                        {/* Group: Certificates */}
+                        <div>
+                          <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Certificates</p>
+                          <ul className="space-y-2">
+                            <li className="flex items-center text-sm text-gray-600">
+                              <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
+                              <span>Watermarked Verification</span>
+                            </li>
+                            <li className="flex items-center text-sm text-gray-600">
+                              <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
+                              <span>7-day retention</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => navigate('/pricing?upgrade=true')}
+                    className="w-full mt-6 py-2.5 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors text-sm shadow-sm"
+                  >
+                    Upgrade Plan
+                  </button>
+                </div>
               </div>
 
-              {/* 3️⃣ & 4️⃣ USAGE & LIMITS - Usage Overview section */}
-              <UsageChart
-                usage={usage}
-                limits={limits}
-                cycleStart={cycleStart}
-                cycleEnd={cycleEnd}
-                planName={currentPlanId || 'free'}
-              />
+              {/* PANEL 2: MONTHLY USAGE METERS (Strictly excluding credits) */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 h-fit">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-base font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-indigo-500" />
+                    Monthly Plan Usage
+                  </h3>
+                  <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                    Resets {usage.periodEnd ? new Date(usage.periodEnd).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : 'Monthly'}
+                  </span>
+                </div>
 
-              {/* 5️⃣ ACTION / INFO - Current Plan (Secondary) - REMOVED as per request */}
-              {/* <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm"> ... </div> */}
+                <div className="space-y-8">
+                  {/* Scans Meter */}
+                  <div>
+                    <div className="flex justify-between items-end mb-3">
+                      <span className="text-sm font-medium text-gray-700">Citation Audits</span>
+                      <div className="text-right">
+                        <span className={`text-lg font-bold font-mono ${(usage.scans || 0) >= (limits.scans_per_month || 1) ? 'text-red-600' : 'text-gray-900'}`}>
+                          {usage.scans || 0}
+                        </span>
+                        <span className="text-gray-400 text-sm font-mono mx-1">/</span>
+                        <span className="text-gray-400 text-sm font-mono">
+                          {(!limits.scans_per_month || limits.scans_per_month === -1) ? '∞' : limits.scans_per_month}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Progress Bar */}
+                    <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${(usage.scans || 0) >= (limits.scans_per_month || 1)
+                          ? 'bg-red-500' // Exceeded
+                          : ((usage.scans || 0) / (limits.scans_per_month || 1)) > 0.8
+                            ? 'bg-amber-400' // Near limit
+                            : 'bg-green-500' // Normal
+                          }`}
+                        style={{ width: `${Math.min(100, ((usage.scans || 0) / (limits.scans_per_month || 1)) * 100)}%` }}
+                      />
+                    </div>
+                    {(usage.scans || 0) >= (limits.scans_per_month || 1) && (
+                      <div className="mt-2 flex items-center text-xs text-red-600 font-medium animate-pulse">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Limit reached. Use credits to continue.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Rephrases Meter */}
+                  <div>
+                    <div className="flex justify-between items-end mb-3">
+                      <span className="text-sm font-medium text-gray-700">Rephrases</span>
+                      <div className="text-right">
+                        <span className={`text-lg font-bold font-mono ${(usage.rephrases || 0) >= (limits.rephrases_per_month || 1) ? 'text-red-600' : 'text-gray-900'}`}>
+                          {usage.rephrases || 0}
+                        </span>
+                        <span className="text-gray-400 text-sm font-mono mx-1">/</span>
+                        <span className="text-gray-400 text-sm font-mono">
+                          {(!limits.rephrases_per_month || limits.rephrases_per_month === -1) ? '∞' : limits.rephrases_per_month}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${(usage.rephrases || 0) >= (limits.rephrases_per_month || 1)
+                          ? 'bg-red-500'
+                          : ((usage.rephrases || 0) / (limits.rephrases_per_month || 1)) > 0.8
+                            ? 'bg-amber-400'
+                            : 'bg-purple-500'
+                          }`}
+                        style={{ width: `${Math.min(100, ((usage.rephrases || 0) / (limits.rephrases_per_month || 1)) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* PANEL 3: CREDITS BALANCE */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 bg-gradient-to-r from-gray-50 to-white">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-indigo-100 text-indigo-600 rounded-full">
+                    <Coins className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Credits Balance</h3>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-3xl font-bold text-gray-900">{creditBalance}</span>
+                      <span className="text-sm text-gray-500">credits available</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">~{creditBalance * 1000} words capacity</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  {/* Auto-Use Toggle */}
+                  <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm">
+                    <Switch
+                      checked={autoUseCredits}
+                      onCheckedChange={handleToggleAutoUse}
+                      className="data-[state=checked]:bg-green-600"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">Auto-Use Credits</div>
+                      <div className="text-xs text-gray-500">When plan limits reached</div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => navigate('/purchase-credits')}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                    >
+                      Buy Credits
+                    </button>
+                    <button
+                      onClick={() => {
+                        const el = document.getElementById('credit-history');
+                        el?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      View Usage
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* PANEL 4: CREDIT USAGE HISTORY */}
+            <div id="credit-history">
+              {historyLoading ? (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 flex justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                </div>
+              ) : (
+                <CreditUsageHistory transactions={creditHistory} />
+              )}
+            </div>
+
           </TabsContent>
 
           {/* BILLING INFO TAB */}

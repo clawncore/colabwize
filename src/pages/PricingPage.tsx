@@ -41,19 +41,14 @@ function IntroHero() {
 // Features Presentation Flow
 function FeaturesPresentationFlow() {
   const { toast } = useToast();
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Simplified loading logic as plans are now static-ish
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">(
-    "yearly"
-  );
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("yearly");
   const [currentPlanId, setCurrentPlanId] = useState<string>("free");
-
-  // Modal state
-
+  const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const { user } = useAuth(); // Use the hook for reactive auth state
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -61,12 +56,12 @@ function FeaturesPresentationFlow() {
         try {
           const data = await SubscriptionService.getCurrentSubscription();
           const plan = data?.subscription?.plan;
+          setSubscriptionId(data?.subscription?.id || null);
+
           let planId = "free";
-          if (typeof plan === "string") {
-            planId = plan;
-          } else if (plan && typeof plan === "object" && "id" in plan) {
-            planId = (plan as any).id;
-          }
+          if (typeof plan === "string") planId = plan;
+          else if (plan && typeof plan === "object" && "id" in plan) planId = (plan as any).id;
+
           setCurrentPlanId(planId || "free");
         } catch (error) {
           console.error("Failed to fetch subscription", error);
@@ -77,383 +72,364 @@ function FeaturesPresentationFlow() {
   }, [user]);
 
   const handleSelectPlan = useCallback(async (planId: string) => {
-    // Handle free tier - redirect to signup
+    // 1. Handle Free Plan
     if (planId === "free") {
       if (currentPlanId !== "free") {
-        // Downgrade logic? For now redirect to dashboard
-        navigate("/dashboard");
+        // Already on paid plan, redirect to dashboard to manage
+        navigate("/dashboard/billing");
         return;
       }
       navigate("/signup");
       return;
     }
 
-    // Handle pay-as-you-go - check authentication first
-    if (planId === "payg") {
-      // const isAuthenticated = authService.isAuthenticated();
-
+    // 2. Handle Credits (PAYG)
+    if (planId === "credits") {
       if (!user) {
-        // Save intended action for after login
-        localStorage.setItem(
-          "intended_action",
-          JSON.stringify({
-            type: "credits",
-            action: "/dashboard/billing/credits",
-          })
-        );
-
-        toast({
-          title: "Login Required",
-          description: "Please login to purchase credits",
-        });
-
+        localStorage.setItem("intended_action", JSON.stringify({ type: "credits", action: "/purchase-credits" }));
+        toast({ title: "Login Required", description: "Please login to purchase credits" });
         navigate("/login");
         return;
       }
-
-      // User is authenticated, navigate to credits page
-      toast({
-        title: "Pay-As-You-Go",
-        description: "Select credit package on the next page",
-      });
-      navigate("/dashboard/billing/credits");
+      navigate("/purchase-credits");
       return;
     }
 
-    // Check if user is authenticated using the hook which is reactive
-    // const isAuthenticated = authService.isAuthenticated(); // DEPRECATED
-
-    if (!user) { // useAuth provides user object if authenticated
-      // Save intended subscription for after login
-      localStorage.setItem(
-        "intended_subscription",
-        JSON.stringify({
-          planId,
-          billingPeriod,
-        })
-      );
-
-      toast({
-        title: "Login Required",
-        description: "Please login to subscribe to this plan",
-      });
-
-      // Redirect to login
+    // 3. Handle Paid Subscriptions
+    if (!user) {
+      localStorage.setItem("intended_subscription", JSON.stringify({ planId, billingPeriod }));
+      toast({ title: "Login Required", description: "Please login to subscribe" });
       navigate("/login");
       return;
     }
 
-    // CHECK FOR DUPLICATE SUBSCRIPTION
-    // If user already has a paid plan (not free, not payg), block new sub
-    if (currentPlanId !== "free" && currentPlanId !== "payg") {
+    // Strict Upgrade Guard
+    const canUpgrade =
+      subscriptionId === null ||
+      currentPlanId === "free" ||
+      (currentPlanId !== planId && planId === "researcher");
+
+    if (!canUpgrade) {
       toast({
         title: "Active Subscription Found",
-        description: "You already have an active subscription. Please manage your plan from the billing dashboard.",
-        variant: "destructive", // Use destructive or warning style
+        description: "You already have an active subscription. Manage it from your dashboard.",
+        variant: "destructive",
       });
       navigate("/dashboard/billing");
       return;
     }
 
-    // User is authenticated, proceed to checkout logic
     try {
       setCheckoutLoading(planId);
-      // Create checkout session directly
-      const checkoutUrl = await SubscriptionService.createCheckout(
-        planId,
-        billingPeriod,
-        true // Policy accepted (implied by clicking)
-      );
+      const checkoutUrl = await SubscriptionService.createCheckout(planId, billingPeriod, true);
       window.location.href = checkoutUrl;
     } catch (error) {
       console.error("Checkout error:", error);
-      toast({
-        title: "Checkout Error",
-        description: "Failed to create checkout session. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Checkout Error", description: "Failed to create checkout session.", variant: "destructive" });
       setCheckoutLoading(null);
     }
-  }, [billingPeriod, navigate, toast, currentPlanId, user]);
+  }, [billingPeriod, navigate, toast, currentPlanId, user, subscriptionId]);
 
+  // Pricing Constants
+  const STUDENT_PRICE = billingPeriod === "yearly" ? 47.9 : 4.99;
+  const RESEARCHER_PRICE = billingPeriod === "yearly" ? 124.7 : 12.99;
 
+  const PriceDisplay = ({ price }: { price: number }) => (
+    <div className="flex items-baseline justify-center gap-1 mb-1">
+      <span className="text-4xl font-bold text-gray-900">${price}</span>
+      <span className="text-gray-500">{billingPeriod === "yearly" ? "/year" : "/mo"}</span>
+    </div>
+  );
 
-  useEffect(() => {
-    // Define base monthly plans
-    const basePlans = [
-      {
-        id: "free",
-        name: "Free Tier",
-        monthlyPrice: 0,
-        yearlyPrice: 0,
-        features: [
-          "3 document scans per month",
-          "3 Rephrase Suggestions",
-          "Max 100,000 characters (~15k words)",
-          "Basic originality check",
-          "Certificate",
-        ],
-      },
-      {
-        id: "payg",
-        name: "Pay-As-You-Go",
-        monthlyPrice: 0,
-        yearlyPrice: 0,
-        oneTime: true,
-        features: [
-          "No subscription required",
-          "Buy scan credits anytime",
-          "Credits never expire",
-          "Max 300,000 characters (~50k words)",
-          "Full originality map",
-          "Professional certificates",
-          "10 scans: $4.99 | 25: $9.99 | 50: $17.99",
-        ],
-      },
-      {
-        id: "student",
-        name: "Student",
-        monthlyPrice: 4.99,
-        yearlyPrice: 47.9, // 20% discount
-        features: [
-          "50 document scans per month",
-          "50 Rephrase Suggestions",
-          "Max 300,000 characters (~50k words)",
-          "Full originality map",
-          "Citation confidence auditor",
-          "Professional certificate",
-        ],
-        popular: true,
-      },
-      {
-        id: "researcher",
-        name: "Researcher",
-        monthlyPrice: 12.99,
-        yearlyPrice: 124.7, // 20% discount
-        features: [
-          "Everything in Student Unlimited",
-          "Max 500,000 characters (~80k words)",
-          "Priority scanning",
-          "Advanced Analytics",
-          "Draft comparison",
-          "Safe AI Integrity Assistant",
-        ],
-        researcher: true,
-      },
-    ];
-
-    // Convert to Plan format with correct pricing based on billing period
-    const convertedPlans: Plan[] = basePlans.map((plan) => ({
-      id: plan.id,
-      name: plan.name,
-      price: billingPeriod === "yearly" ? plan.yearlyPrice : plan.monthlyPrice,
-      interval: plan.oneTime
-        ? "one-time"
-        : billingPeriod === "yearly"
-          ? "year"
-          : "month",
-      features: plan.features,
-      popular: plan.popular,
-      researcher: plan.researcher,
-    }));
-
-    setPlans(convertedPlans);
-    setLoading(false);
-  }, [billingPeriod]);
-
-  // Check if user just logged in with intention to subscribe
-  useEffect(() => {
-    const resumeSubscription = async () => {
-      const savedSubscription = localStorage.getItem("intended_subscription");
-
-      if (savedSubscription) {
-        try {
-          const { billingPeriod: savedPeriod } =
-            JSON.parse(savedSubscription);
-
-          // Clear saved subscription immediately to prevent loops
-          localStorage.removeItem("intended_subscription");
-
-          // Check if user is now authenticated
-          // const isAuthenticated = authService.isAuthenticated();
-
-          if (user) {
-            // Update billing period unconditionally
-            setBillingPeriod(savedPeriod);
-
-            toast({
-              title: "Resuming Subscription",
-              description: "Redirecting to checkout...",
-            });
-
-            // Make sure we use the saved period for checkout, avoiding stale closures
-            setTimeout(async () => {
-              // Redirect to checkout or just let user click again
-              // For now, we rely on the user clicking the button again as auto-checkout might be blocked
-            }, 500);
-          }
-        } catch (error) {
-          console.error("Error resuming subscription:", error);
-          localStorage.removeItem("intended_subscription");
-        }
-      }
-    };
-
-    resumeSubscription();
-
-    // Check for PAYG credits intent
-    const resumeCredits = () => {
-      const savedAction = localStorage.getItem("intended_action");
-
-      if (savedAction) {
-        try {
-          const { type, action } = JSON.parse(savedAction);
-
-          // Clear saved action immediately
-          localStorage.removeItem("intended_action");
-
-          if (type === "credits" && user) {
-            toast({
-              title: "Redirecting to Credits",
-              description: "Taking you to purchase credits...",
-            });
-
-            setTimeout(() => {
-              navigate(action);
-            }, 500);
-          }
-        } catch (error) {
-          console.error("Error resuming action:", error);
-          localStorage.removeItem("intended_action");
-        }
-      }
-    };
-
-    resumeCredits();
-  }, [navigate, toast, user]); // Only run once on mount (navigate and toast are stable)
-
-
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-gray-600">Loading pricing...</div>
-      </div>
-    );
-  }
+  const EffectiveMonthly = ({ price }: { price: number }) => {
+    if (billingPeriod !== "yearly") return null;
+    return <div className="text-sm text-gray-500 mb-4">${(price / 12).toFixed(2)}/mo effective</div>;
+  };
 
   return (
-    <section className="section-padding bg-white">
+    <section className="section-padding bg-gray-50">
       <div className="container-custom">
-        <div className="space-y-12">
-          {/* Billing Period Toggle */}
-          <div className="flex justify-center mb-12">
-            <div className="inline-flex items-center bg-gray-100 rounded-full p-1 gap-1">
-              <button
-                onClick={() => setBillingPeriod("monthly")}
-                className={`px-8 py-2.5 rounded-full font-medium transition-all ${billingPeriod === "monthly"
-                  ? "bg-white text-gray-900 shadow-md"
-                  : "text-gray-600 hover:text-gray-900"
-                  }`}>
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingPeriod("yearly")}
-                className={`px-8 py-2.5 rounded-full font-medium transition-all relative ${billingPeriod === "yearly"
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "text-gray-600 hover:text-gray-900"
-                  }`}>
-                Annual
-                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold">
-                  20% OFF
-                </span>
-              </button>
+
+        {/* Billing Toggle */}
+        <div className="flex justify-center mb-16">
+          <div className="inline-flex items-center bg-white rounded-full p-1 border border-gray-200 shadow-sm">
+            <button
+              onClick={() => setBillingPeriod("monthly")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${billingPeriod === "monthly" ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"
+                }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingPeriod("yearly")}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all relative ${billingPeriod === "yearly" ? "bg-green-600 text-white" : "text-gray-600 hover:text-gray-900"
+                }`}
+            >
+              Yearly
+              <span className="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
+                SAVE 20%
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* SECTION 1: SUBSCRIPTION PLANS */}
+        <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto mb-24">
+
+          {/* FREE PLAN */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-8 flex flex-col relative">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Free</h3>
+              <p className="text-gray-500 text-sm h-5">Citation Preview</p>
             </div>
+
+            <div className="mb-8 text-center pt-4 border-t border-gray-100">
+              <span className="text-4xl font-bold text-gray-900">$0</span>
+              <p className="text-xs text-gray-400 mt-2">Forever free</p>
+            </div>
+
+            <div className="space-y-4 flex-1 mb-8">
+              <p className="font-semibold text-sm text-gray-900 uppercase tracking-wide">Included:</p>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-gray-400 shrink-0" />
+                  <span className="text-gray-600">3 basic citation audits / mo</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-gray-400 shrink-0" />
+                  <span className="text-gray-600">Max 20,000 characters (~3k words)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-gray-400 shrink-0" />
+                  <span className="text-gray-600">3 rephrases / mo (1 variant)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-gray-400 shrink-0" />
+                  <span className="text-gray-600">Preview certificate (watermarked)</span>
+                </li>
+              </ul>
+
+              <div className="pt-4 border-t border-gray-50">
+                <p className="font-semibold text-sm text-gray-400 uppercase tracking-wide mb-3">Locked:</p>
+                <ul className="space-y-3 text-sm opacity-60">
+                  <li className="flex items-start gap-3">
+                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
+                      <span className="text-xs">🔒</span>
+                    </span>
+                    <span className="text-gray-500">Full citation analysis</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
+                      <span className="text-xs">🔒</span>
+                    </span>
+                    <span className="text-gray-500">Large academic papers</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
+                      <span className="text-xs">🔒</span>
+                    </span>
+                    <span className="text-gray-500">Submission-ready reports</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => handleSelectPlan("free")}
+              variant="outline"
+              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              Start Free
+            </Button>
+            <p className="text-center text-xs text-gray-400 mt-3">Preview only. Upgrade for full access.</p>
           </div>
 
-          {/* Pricing Cards */}
-          <div className="min-w-screen mx-auto">
-            <div className="grid md:grid-cols-4 gap-6">
-              {plans.map((plan) => (
-                <div
-                  key={plan.id}
-                  className={`relative rounded-2xl border-2 p-8 ${plan.researcher
-                    ? "border-red-500 shadow-xl scale-105"
-                    : plan.popular
-                      ? "border-green-500 shadow-xl scale-105"
-                      : "border-gray-300"
-                    }
-                  hover:shadow-lg transition-all bg-white`}>
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                      Most Popular
-                    </div>
-                  )}
-                  {plan.researcher && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-1 rounded-full text-sm font-semibold whitespace-nowrap">
-                      For Researchers
-                    </div>
-                  )}
+          {/* STUDENT PLAN */}
+          <div className="bg-white rounded-2xl border-2 border-green-500 p-8 flex flex-col relative shadow-xl transform lg:-translate-y-4">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-md">
+              Most Popular
+            </div>
 
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                      {plan.name}
-                    </h3>
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="flex items-baseline justify-center gap-2">
-                        <span className="text-5xl font-bold text-gray-900">
-                          ${plan.price}
-                        </span>
-                        <span className="text-gray-600">
-                          {plan.interval === "one-time"
-                            ? ""
-                            : `/${plan.interval}`}
-                        </span>
-                      </div>
-                      {billingPeriod === "yearly" &&
-                        plan.id !== "free" &&
-                        plan.id !== "payg" && (
-                          <div className="text-sm text-gray-500">
-                            ${(plan.price / 12).toFixed(2)}/month effective
-                          </div>
-                        )}
-                    </div>
-                  </div>
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Student</h3>
+              <p className="text-green-600 font-medium text-sm h-5">Coursework, assignments, projects</p>
+            </div>
 
-                  <ul className="space-y-4 mb-8">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-600">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+            <div className="mb-8 text-center pt-4 border-t border-gray-100">
+              <PriceDisplay price={STUDENT_PRICE} />
+              <EffectiveMonthly price={STUDENT_PRICE} />
+            </div>
 
-                  <Button
-                    onClick={() => handleSelectPlan(plan.id)}
-                    disabled={checkoutLoading === plan.id || plan.id === currentPlanId}
-                    className={`w-full ${plan.researcher
-                      ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
-                      : plan.popular
-                        ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
-                        : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
-                      }`}
-                    size="lg">
-                    {checkoutLoading === plan.id ? (
-                      "Loading..."
-                    ) : plan.id === currentPlanId ? (
-                      "Current Plan"
-                    ) : plan.id === "free" ? (
-                      "Start Free"
-                    ) : (
-                      <>
-                        <Zap className="mr-2 h-5 w-5" />
-                        {currentPlanId !== "free" && plan.id !== "payg" ? "Switch Plan" : "Get Started"}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              ))}
+            <div className="space-y-4 flex-1 mb-8">
+              <p className="font-semibold text-sm text-gray-900 uppercase tracking-wide">Everything in Free, plus:</p>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-green-500 shrink-0" />
+                  <span className="text-gray-700 font-medium">25 verified citation audits / mo</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-green-500 shrink-0" />
+                  <span className="text-gray-700">Max 80,000 characters (~12k words)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-green-500 shrink-0" />
+                  <span className="text-gray-700">25 rephrases (up to 3 variants)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-green-500 shrink-0" />
+                  <span className="text-gray-700 font-medium">Citation confidence analysis</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-green-500 shrink-0" />
+                  <span className="text-gray-700">Verified academic certificate</span>
+                </li>
+              </ul>
+
+              <div className="pt-4 border-t border-gray-50">
+                <p className="font-semibold text-sm text-gray-400 uppercase tracking-wide mb-3">Locked:</p>
+                <ul className="space-y-3 text-sm opacity-75">
+                  <li className="flex items-start gap-3">
+                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
+                      <span className="text-xs">🔒</span>
+                    </span>
+                    <span className="text-gray-500">Priority scanning</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
+                      <span className="text-xs">🔒</span>
+                    </span>
+                    <span className="text-gray-500">Draft comparison</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
+                      <span className="text-xs">🔒</span>
+                    </span>
+                    <span className="text-gray-500">Advanced analytics</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => handleSelectPlan("student")}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-6 shadow-lg hover:shadow-green-200 transition-all"
+            >
+              {checkoutLoading === "student" ? "Processing..." : "Upgrade to Student"}
+            </Button>
+          </div>
+
+          {/* RESEARCHER PLAN */}
+          <div className="bg-white rounded-2xl border border-blue-200 p-8 flex flex-col relative ring-1 ring-blue-100/50">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Researcher</h3>
+              <p className="text-blue-600 font-medium text-sm h-5">Theses, publications, serious research</p>
+            </div>
+
+            <div className="mb-8 text-center pt-4 border-t border-gray-100">
+              <PriceDisplay price={RESEARCHER_PRICE} />
+              <EffectiveMonthly price={RESEARCHER_PRICE} />
+            </div>
+
+            <div className="space-y-4 flex-1 mb-8">
+              <p className="font-semibold text-sm text-gray-900 uppercase tracking-wide">Everything in Student, plus:</p>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
+                  <span className="text-gray-900 font-semibold">100 citation audits / month</span>
+                  <span className="text-xs text-gray-400 mt-1">(Max 200,000 chars/doc)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
+                  <span className="text-gray-700">Research Gaps & Insight Map</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
+                  <span className="text-gray-700">100 rephrases / month (Advanced)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
+                  <span className="text-gray-700">Priority scanning (Queue Jump)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
+                  <span className="text-gray-700">Draft comparison</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
+                  <span className="text-gray-700">Certified institutional-grade reports</span>
+                </li>
+              </ul>
+              <div className="pt-4 mt-6 bg-blue-50/50 rounded-lg p-4 border border-blue-100">
+                <p className="text-xs text-blue-800 font-medium text-center">
+                  Designed for rigorous academic standards and frequent analysis.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => handleSelectPlan("researcher")}
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-6"
+            >
+              {checkoutLoading === "researcher" ? "Processing..." : "Upgrade to Researcher"}
+            </Button>
+          </div>
+        </div>
+
+        {/* SECTION 2: USAGE ADD-ONS */}
+        <div className="max-w-4xl mx-auto mt-20 border-t border-gray-200 pt-16">
+          <div className="text-center mb-10">
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">Need more usage?</h3>
+            <p className="text-gray-600">Buy credits to extend usage on your Free or paid plan. No subscription required.</p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-8 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
+            <div className="flex-1">
+              <h4 className="text-lg font-bold text-gray-900 mb-2">Extend your usage</h4>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-amber-500" />
+                  1 credit = 1,000 words processed
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
+                  Credits never expire
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-500" />
+                  Applies to features on your current plan
+                </li>
+              </ul>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 w-full md:w-auto">
+              <div className="border border-gray-200 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
+                <div className="text-sm font-semibold text-gray-500 mb-1">Trial</div>
+                <div className="text-xl font-bold text-gray-900">$1.99</div>
+                <div className="text-xs text-gray-400">5 Credits</div>
+              </div>
+              <div className="border border-purple-200 bg-purple-50 rounded-lg p-4 text-center hover:border-purple-400 transition-colors">
+                <div className="text-sm font-semibold text-purple-700 mb-1">Standard</div>
+                <div className="text-xl font-bold text-gray-900">$6.99</div>
+                <div className="text-xs text-purple-600 font-medium">25 Credits</div>
+              </div>
+              <div className="border border-gray-200 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
+                <div className="text-xs font-semibold text-gray-500 mb-1">Power</div>
+                <div className="text-xl font-bold text-gray-900">$12.99</div>
+                <div className="text-xs text-gray-400">50 Credits</div>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center gap-3">
+              <Button
+                onClick={() => handleSelectPlan("credits")}
+                variant="secondary"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-8"
+              >
+                Buy Credits
+              </Button>
+              <span className="text-[10px] text-gray-400 max-w-[150px] text-center leading-tight">
+                Credits extend usage limits, not plan features.
+              </span>
             </div>
           </div>
         </div>
@@ -474,9 +450,6 @@ function FeaturesPresentationFlow() {
                     Free
                   </th>
                   <th className="text-center py-4 px-4 font-semibold text-gray-900">
-                    Pay-As-You-Go
-                  </th>
-                  <th className="text-center py-4 px-4 font-semibold text-gray-900">
                     Student
                   </th>
                   <th className="text-center py-4 px-4 font-semibold text-gray-900">
@@ -492,14 +465,11 @@ function FeaturesPresentationFlow() {
                   <td className="py-4 px-4 text-center text-gray-600">
                     3/month
                   </td>
-                  <td className="py-4 px-4 text-center text-gray-600">
-                    Credit-based
+                  <td className="py-4 px-4 text-center text-gray-900">
+                    25/month
                   </td>
                   <td className="py-4 px-4 text-center text-gray-900">
-                    50/month
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-900">
-                    Unlimited
+                    100/month
                   </td>
                 </tr>
                 <tr>
@@ -515,18 +485,12 @@ function FeaturesPresentationFlow() {
                   <td className="py-4 px-4 text-center">
                     <Check className="h-5 w-5 text-green-500 mx-auto" />
                   </td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
                 </tr>
                 <tr>
                   <td className="py-4 px-4 font-medium text-gray-900">
                     Citation Confidence
                   </td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
                   <td className="py-4 px-4 text-center">
                     <Check className="h-5 w-5 text-green-500 mx-auto" />
                   </td>
@@ -550,13 +514,8 @@ function FeaturesPresentationFlow() {
                     </span>
                   </td>
                   <td className="py-4 px-4 text-center">
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                      Professional
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                      Professional
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      Institution-grade
                     </span>
                   </td>
                 </tr>
@@ -571,15 +530,11 @@ function FeaturesPresentationFlow() {
                   <td className="py-4 px-4 text-center">
                     <Check className="h-5 w-5 text-green-500 mx-auto" />
                   </td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
                 </tr>
                 <tr>
                   <td className="py-4 px-4 font-medium text-gray-900">
                     Priority Scanning
                   </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center">
@@ -591,9 +546,6 @@ function FeaturesPresentationFlow() {
                     Draft Comparison
                   </td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center">
                     <Check className="h-5 w-5 text-green-500 mx-auto" />
@@ -603,7 +555,6 @@ function FeaturesPresentationFlow() {
                   <td className="py-4 px-4 font-medium text-gray-900">
                     Advanced Analytics
                   </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center">
@@ -616,7 +567,6 @@ function FeaturesPresentationFlow() {
                   </td>
                   <td className="py-4 px-4 text-center text-gray-600">Basic</td>
                   <td className="py-4 px-4 text-center text-gray-900">Email</td>
-                  <td className="py-4 px-4 text-center text-gray-900">Email</td>
                   <td className="py-4 px-4 text-center text-gray-900">
                     Priority
                   </td>
@@ -626,16 +576,13 @@ function FeaturesPresentationFlow() {
                     Max Scan Size
                   </td>
                   <td className="py-4 px-4 text-center text-gray-600">
-                    100k chars
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">
-                    300k chars
+                    20k chars
                   </td>
                   <td className="py-4 px-4 text-center text-gray-900">
-                    300k chars
+                    80k chars
                   </td>
                   <td className="py-4 px-4 text-center text-gray-900">
-                    500k chars
+                    200k chars
                   </td>
                 </tr>
                 <tr>
@@ -645,19 +592,27 @@ function FeaturesPresentationFlow() {
                   <td className="py-4 px-4 text-center text-gray-600">
                     3/month
                   </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center text-gray-900">
-                    50/month
+                    25/month
                   </td>
                   <td className="py-4 px-4 text-center text-gray-900">
-                    Unlimited
+                    100/month
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-4 font-medium text-gray-900">
+                    Research Gaps & Insights
+                  </td>
+                  <td className="py-4 px-4 text-center text-gray-600">-</td>
+                  <td className="py-4 px-4 text-center text-gray-600">-</td>
+                  <td className="py-4 px-4 text-center">
+                    <Check className="h-5 w-5 text-green-500 mx-auto" />
                   </td>
                 </tr>
                 <tr>
                   <td className="py-4 px-4 font-medium text-gray-900">
                     Safe AI Integrity Assistant
                   </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center">
@@ -668,7 +623,6 @@ function FeaturesPresentationFlow() {
                   <td className="py-4 px-4 font-medium text-gray-900">
                     Advanced Citation Suggestions
                   </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
                   <td className="py-4 px-4 text-center">

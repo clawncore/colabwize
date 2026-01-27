@@ -414,13 +414,10 @@ export const Dashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {/* Originality Overview */}
               <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <ShieldCheck className="w-24 h-24 text-indigo-600 transform rotate-12" />
-                </div>
-                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-blue-500"></div>
+                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600"></div>
 
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                  <div className="p-2 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100">
                     <ShieldCheck className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Safety Score</span>
@@ -437,13 +434,10 @@ export const Dashboard: React.FC = () => {
 
               {/* Citation Health */}
               <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <BookOpen className="w-24 h-24 text-blue-600 transform -rotate-12" />
-                </div>
-                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-cyan-500"></div>
+                <div className="absolute top-0 left-0 w-1 h-full bg-blue-600"></div>
 
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                  <div className="p-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-100">
                     <BookOpen className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Citation Health</span>
@@ -462,13 +456,10 @@ export const Dashboard: React.FC = () => {
 
               {/* Authorship Verification */}
               <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <Award className="w-24 h-24 text-purple-600" />
-                </div>
-                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-purple-500 to-pink-500"></div>
+                <div className="absolute top-0 left-0 w-1 h-full bg-purple-600"></div>
 
                 <div className="mb-4 flex items-center justify-between">
-                  <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                  <div className="p-2 bg-purple-50 text-purple-700 rounded-lg border border-purple-100">
                     <Award className="w-6 h-6" />
                   </div>
                   <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Authorship</span>
@@ -643,10 +634,10 @@ export const Dashboard: React.FC = () => {
                 </p>
                 <button
                   onClick={handleUpgradeClick}
-                  className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-full shadow-xl shadow-indigo-500/40 transition-all duration-200 flex items-center justify-center mx-auto group ring-4 ring-white/30"
+                  className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-base rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center mx-auto"
                 >
                   <span>{userPlan?.includes("student") ? "Upgrade to Researcher" : "Unlock Premium Features"}</span>
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-2 w-4 h-4" />
                 </button>
                 <p className="text-sm text-gray-600 font-semibold mt-4 bg-white/60 inline-block px-3 py-1 rounded-full backdrop-blur-sm">
                   {userPlan?.includes("student") ? "Starting at $12/mo" : "Starting at $4.99/mo"}

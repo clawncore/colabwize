@@ -94,6 +94,7 @@
     "react-day-picker": "^9.11.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.3.8",
+    "react-force-graph-2d": "^1.29.0",
     "react-hook-form": "^7.63.0",
     "react-is": "^19.2.3",
     "react-joyride": "^2.9.3",

@@ -17,7 +17,7 @@ export class PDFService {
     static async getAnnotations(fileId: string): Promise<Annotation[]> {
         try {
             const response = await apiClient.get(`/api/annotations/${fileId}`);
-            return response.data.data;
+            return response.data;
         } catch (error: any) {
             console.error("Failed to fetch annotations:", error);
             throw new Error(error.message || "Failed to fetch annotations");
@@ -30,7 +30,7 @@ export class PDFService {
     static async saveAnnotation(annotation: Omit<Annotation, 'id' | 'user_id'>): Promise<Annotation> {
         try {
             const response = await apiClient.post("/api/annotations", annotation);
-            return response.data.data;
+            return response.data;
         } catch (error: any) {
             console.error("Failed to save annotation:", error);
             throw new Error(error.message || "Failed to save annotation");
@@ -43,7 +43,7 @@ export class PDFService {
     static async updateAnnotation(id: string, content: string): Promise<Annotation> {
         try {
             const response = await apiClient.put(`/api/annotations/${id}`, { content });
-            return response.data.data;
+            return response.data;
         } catch (error: any) {
             console.error("Failed to update annotation:", error);
             throw new Error(error.message || "Failed to update annotation");

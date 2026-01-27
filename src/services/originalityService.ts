@@ -215,15 +215,54 @@ export class OriginalityService {
   /**
    * Humanize text using Adversarial AI (Auto-Humanizer)
    */
-  static async humanizeText(content: string): Promise<{ text: string; provider: "anthropic" | "openai" }> {
+  static async humanizeText(content: string): Promise<{ variations: string[]; provider: "anthropic" | "openai" }> {
     try {
       const response = await apiClient.post("/api/originality/humanize", {
         content,
       });
-      return response.data.data;
+      return response.data;
     } catch (error: any) {
       console.error("Error humanizing text:", error);
       throw new Error(error.message || "Failed to humanize text");
+    }
+  }
+
+  /**
+   * Real-time section check for "Active Defense"
+   */
+  static async checkSectionRisk(
+    projectId: string,
+    content: string
+  ): Promise<{ riskScore: number; flags: string[]; isAiSuspected: boolean }> {
+    try {
+      const response = await apiClient.post("/api/originality/section-check", {
+        projectId,
+        content
+      });
+      return response.data;
+    } catch (e: any) {
+      console.error("Error checking section risk", e);
+      // Return safe default if check fails to not block UI
+      return { riskScore: 0, flags: [], isAiSuspected: false };
+    }
+  }
+
+  /**
+   * In-line rewrite for editor selection
+   */
+  static async rewriteSelection(
+    selection: string,
+    context?: string
+  ): Promise<{ variations: string[]; provider: string }> {
+    try {
+      const response = await apiClient.post("/api/originality/rewrite-selection", {
+        selection,
+        context
+      });
+      return response.data;
+    } catch (e: any) {
+      console.error("Error rewriting selection", e);
+      throw e;
     }
   }
 }

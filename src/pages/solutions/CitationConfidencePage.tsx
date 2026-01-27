@@ -27,14 +27,12 @@ export default function CitationConfidencePage() {
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 z-0"
           style={{
             backgroundImage:
-              "url('https://i.ibb.co/sY9F6B3/Screenshot-2026-01-13-203136.png?w=1200&h=800&fit=crop')",
+              "url('/images/academic_citation_network.png')",
           }}></div>
         <div className="container-custom relative z-10">
           <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-              <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-                Citation Confidence Auditor
-              </span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-slate-900 mb-6 tracking-tight">
+              Citation Confidence Auditor
             </h1>
 
             <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
@@ -47,15 +45,16 @@ export default function CitationConfidencePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
+                className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-8 py-6 shadow-sm transition-all duration-200 rounded-lg"
                 asChild>
-                <RouterLink to="/signup">Audit My Citations</RouterLink>
+                <RouterLink to="/signup">Start Audit</RouterLink>
               </Button>
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
+                variant="outline"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 font-medium px-8 py-6 text-lg shadow-sm transition-all duration-200 rounded-lg"
                 asChild>
-                <RouterLink to="/schedule-demo">Learn More</RouterLink>
+                <RouterLink to="/schedule-demo">View Methodology</RouterLink>
               </Button>
             </div>
           </div>
@@ -77,10 +76,10 @@ export default function CitationConfidencePage() {
     benefits: string[];
   }) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-8 hover:border-green-500/50 transition-all duration-300">
+      <div className="bg-white border border-slate-200 rounded-lg p-8 hover:border-indigo-500/30 hover:shadow-md transition-all duration-300 group">
         <div className="flex items-start gap-4">
-          <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-3 rounded-lg">
-            <Icon className="h-6 w-6 text-white" />
+          <div className="bg-slate-50 p-3 rounded-md border border-slate-100 group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-colors">
+            <Icon className="h-6 w-6 text-slate-700 group-hover:text-indigo-700" />
           </div>
           <div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
@@ -216,17 +215,18 @@ export default function CitationConfidencePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
+                className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-8 py-6 shadow-sm hover:shadow-md transition-all duration-200 rounded-lg"
                 asChild>
                 <RouterLink to="/signup">
-                  Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
+                  Launch Platform <ArrowRight className="ml-2 h-5 w-5" />
                 </RouterLink>
               </Button>
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
+                variant="outline"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 font-medium px-8 py-6 text-lg shadow-sm transition-all duration-200 rounded-lg"
                 asChild>
-                <RouterLink to="/schedule-demo">Schedule Demo</RouterLink>
+                <RouterLink to="/schedule-demo">Request Access</RouterLink>
               </Button>
             </div>
 

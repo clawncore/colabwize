@@ -84,7 +84,7 @@ export class CitationService {
         { projectId, keywords, field }
       );
 
-      return response.data.suggestions;
+      return response.suggestions;
     } catch (error: any) {
       console.error("Error finding missing link:", error);
       throw new Error(error.message || "Failed to find missing link");
@@ -360,10 +360,48 @@ export class CitationService {
         `/api/citations/${projectId}/${citationId}/analyze`,
         {}
       );
-      return response.data.data;
+      return response.data;
     } catch (error: any) {
       console.error("Error analyzing citation:", error);
       throw new Error(error.message || "Failed to analyze citation");
+    }
+  }
+
+  /**
+   * Real-time verification for a single citation
+   */
+  static async verifySingleCitation(citation: { title: string; doi?: string }): Promise<{ isReliable: boolean; source: string | null }> {
+    try {
+      const response = await apiClient.post("/api/citations/verify-single", citation);
+      return response.data;
+    } catch (e: any) {
+      console.error("Single citation verification failed", e);
+      return { isReliable: false, source: null };
+    }
+  }
+
+  /**
+   * Auto-Fixer: Find metadata for fuzzy query
+   */
+  static async findCitationMetadata(query: string): Promise<any> {
+    try {
+      const response = await apiClient.post("/api/citations/auto-fix", { query });
+      return response.data;
+    } catch (e: any) {
+      console.error("Auto-fix search failed", e);
+    }
+  }
+
+  /**
+   * Batch AI Analysis of citations for Literature Matrix
+   */
+  static async batchAnalyzeCitations(projectId: string, force: boolean = false): Promise<any[]> {
+    try {
+      const response = await apiClient.post(`/api/citations/${projectId}/batch-analyze`, { force });
+      return response.data;
+    } catch (error: any) {
+      console.error("Batch analysis failed:", error);
+      throw new Error(error.message || "Failed to batch analyze citations");
     }
   }
 }

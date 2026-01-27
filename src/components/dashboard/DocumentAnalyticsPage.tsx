@@ -255,17 +255,17 @@ export const DocumentAnalyticsPage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-r from-indigo-900 to-purple-900 rounded-xl p-8 text-white flex flex-col md:flex-row items-center justify-between">
+                    <div className="bg-slate-900 rounded-xl p-8 text-white flex flex-col md:flex-row items-center justify-between shadow-sm">
                         <div>
-                            <h3 className="text-2xl font-bold mb-2">Productivity Insight</h3>
-                            <p className="text-indigo-200 max-w-xl">
-                                You are most productive on <span className="text-white font-bold">Wednesdays</span>, creating 40% more content than other days.
-                                Try scheduling your heavy writing sessions then!
+                            <h3 className="text-2xl font-bold mb-2 font-serif tracking-tight">Productivity Insight</h3>
+                            <p className="text-slate-300 max-w-xl text-lg leading-relaxed">
+                                You are most productive on <span className="text-white font-semibold">Wednesdays</span>, creating 40% more content than other days.
+                                Try scheduling your writing sessions then.
                             </p>
                         </div>
-                        <div className="mt-6 md:mt-0 p-4 bg-white/10 rounded-lg backdrop-blur-sm border border-white/20">
-                            <div className="text-3xl font-bold mb-1">Top 1%</div>
-                            <div className="text-xs text-indigo-300 uppercase tracking-wide">Writer Rank</div>
+                        <div className="mt-6 md:mt-0 p-4 bg-white/5 rounded-lg border border-white/10">
+                            <div className="text-3xl font-bold mb-1 font-mono">Top 1%</div>
+                            <div className="text-xs text-slate-400 uppercase tracking-widest">Writer Rank</div>
                         </div>
                     </div>
                 </div>
