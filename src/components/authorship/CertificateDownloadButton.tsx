@@ -21,8 +21,7 @@ export const CertificateDownloadButton: React.FC<
   certificateType = "authorship",
   variant = "primary",
   className = "",
-  variant = "primary",
-  className = "",
+
   disabled = false,
   onError,
 }) => {
