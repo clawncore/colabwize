@@ -44,7 +44,7 @@ import { UpgradeModal } from "../subscription/UpgradeModal";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { DraftComparisonSelector } from "../originality/DraftComparisonSelector";
 import { RightPanelType } from "./EditorWorkspacePage";
-import { AIScanResult } from "../../services/aiDetectionService";
+
 import BehavioralTracker from "./BehavioralTracker";
 // import Image from "@tiptap/extension-image"; // Replaced
 import { Table } from "@tiptap/extension-table";
