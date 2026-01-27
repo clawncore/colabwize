@@ -109,10 +109,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [lastScanResult, setLastScanResult] = useState<OriginalityScan | null>(
     null
   );
-  const [, setLastAIScanResult] = useState<AIScanResult | null>(
-    null
-  );
-  const [aiSentenceCache, setAiSentenceCache] = useState<Map<string, number>>(new Map());
+
   const [citationSuggestions] = useState<any>(null);
   const [editCount, setEditCount] = useState(0);
   const [timeSpent, setTimeSpent] = useState(0); // in seconds
@@ -416,40 +413,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     });
   };
 
-  // Function to highlight AI detection results with persistent mapping
 
-
-  const syncAIHighlights = (cache: Map<string, number> = aiSentenceCache) => {
-    if (!editor || cache.size === 0) return;
-
-    const doc = editor.state.doc;
-
-    // Efficiently apply highlights to all matching sentences in the document
-    editor.chain().setMeta("addToHistory", false); // Don't clutter history
-
-    cache.forEach((score, sentenceText) => {
-      let lastPos = 0;
-      // Find ALL occurrences of this sentence in the document
-      while (true) {
-        const range = findTextRange(doc, sentenceText, lastPos);
-        if (!range) break;
-
-        if (score >= 30) {
-          editor.chain().highlightRange(range.from, range.to, {
-            color: "purple",
-            type: "ai",
-            aiProbability: score,
-            message: `AI Probability: ${Math.round(score)}%`,
-          });
-        }
-
-        lastPos = range.to;
-        if (lastPos >= doc.content.size) break;
-      }
-    });
-
-    editor.chain().run();
-  };
 
 
   // Track time spent writing

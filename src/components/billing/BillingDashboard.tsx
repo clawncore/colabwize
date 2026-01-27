@@ -9,7 +9,7 @@ import {
   ArrowRight,
   Coins,
   Check,
-  X,
+
   Wallet,
   CalendarCheck,
 
