@@ -12,7 +12,7 @@ import {
   X,
   Wallet,
   CalendarCheck,
-  ShieldCheck,
+
   Zap,
   Activity
 } from "lucide-react";
@@ -24,9 +24,7 @@ import {
 } from "../../services/subscriptionService";
 import { toast } from "../../hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { UsageChart } from "./UsageChart";
-import { BillingStatusStrip } from "./BillingStatusStrip";
-import { ValueMetricCard } from "./ValueMetricCard";
+
 import { CreditUsageHistory } from "./CreditUsageHistory"; // Import the new component
 import {
   Tabs,
@@ -324,8 +322,7 @@ const BillingSettingsPage: React.FC = () => {
     ? new Date(subscription.current_period_end)
     : null;
 
-  const cycleStart = subscription?.current_period_start || '';
-  const cycleEnd = subscription?.current_period_end || '';
+
 
   return (
     <div className="w-full px-8 py-8 bg-white min-h-screen">

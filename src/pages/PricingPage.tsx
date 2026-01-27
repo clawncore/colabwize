@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Check, Zap } from "lucide-react";
-import { SubscriptionService, Plan } from "../services/subscriptionService";
+import { SubscriptionService } from "../services/subscriptionService";
 import { useToast } from "../hooks/use-toast";
 import Layout from "../components/Layout";
 
@@ -41,7 +41,7 @@ function IntroHero() {
 // Features Presentation Flow
 function FeaturesPresentationFlow() {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false); // Simplified loading logic as plans are now static-ish
+  // Simplified loading logic as plans are now static-ish
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("yearly");
   const [currentPlanId, setCurrentPlanId] = useState<string>("free");

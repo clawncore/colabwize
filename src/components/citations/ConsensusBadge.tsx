@@ -1,5 +1,5 @@
 import React from "react";
-import { TrendingUp, TrendingDown, Minus, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export type ConsensusLevel = "strong" | "emerging" | "divided" | "controversial";
 

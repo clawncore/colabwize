@@ -3,7 +3,7 @@ import { Editor } from "@tiptap/react";
 import { OriginalityService } from "../../../services/originalityService";
 import { useToast } from "../../../hooks/use-toast";
 import { UpgradePromptDialog } from "../../subscription/UpgradePromptDialog";
-import { Sparkles, Loader2, ArrowRight } from "lucide-react"; // Import Icons
+import { Sparkles, Loader2 } from "lucide-react"; // Import Icons
 
 interface RephraseAdapterProps {
   editor: Editor | null;
@@ -72,7 +72,7 @@ export const RephraseAdapter: React.FC<RephraseAdapterProps> = ({
       console.error("Rephrase failed:", err);
       // Enhanced Limit Handling
       const backendCode = err.code || err.response?.data?.code;
-      const backendData = err.response?.data?.data;
+
 
       if (backendCode === "PLAN_LIMIT_REACHED" || backendCode === "INSUFFICIENT_CREDITS") {
         setShowUpgradePrompt(true);

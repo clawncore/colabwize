@@ -1,5 +1,5 @@
 import React from "react";
-import { CreditCard, Clock, Activity, AlertCircle } from "lucide-react";
+import { CreditCard, Clock, Activity } from "lucide-react";
 import { format } from "date-fns";
 
 interface CreditTransaction {

@@ -35,11 +35,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     const [checkedItems, setCheckedItems] = useState<number[]>([]);
     const [selectedFormat, setSelectedFormat] = useState<ExportFormat | null>(null);
     const [downloading, setDownloading] = useState(false);
-    const [isSelfPlagiarismCheckRunning, setIsSelfPlagiarismCheckRunning] =
-        useState(false);
-    const [selfPlagiarismWarning, setSelfPlagiarismWarning] = useState<
-        string | null
-    >(null);
+
     const [includeAuthorshipCertificate, setIncludeAuthorshipCertificate] = useState(true);
     // Removed hasCredit state usage for UI, but keeping logic internal if needed later
 
@@ -51,7 +47,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             setCurrentStep("checklist");
             setCheckedItems([]);
             setSelectedFormat(null);
-            setSelfPlagiarismWarning(null);
+
         }
     }, [isOpen]);
 

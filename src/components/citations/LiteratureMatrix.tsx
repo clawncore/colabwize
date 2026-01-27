@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown, Save, FileText, CheckCircle2 } from "lucide-react";
 import { CitationService } from "../../services/citationService";
-import { StoredCitation as Source } from "./SourceDetailPanel";
+
 
 interface LiteratureMatrixProps {
     sources: any[];

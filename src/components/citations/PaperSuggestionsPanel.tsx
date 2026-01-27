@@ -77,11 +77,8 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
 
   // Removed auto-search useEffect and isLoadingInitial as per requirements to make this a passive "Sources" panel.
 
-  const handleManualSearch = async (e?: React.FormEvent, searchStr?: string) => {
-    if (e) e.preventDefault();
-    const query = searchStr || searchQuery;
+  const executeSearch = useCallback(async (query: string) => {
     if (!query.trim()) return;
-
     setIsSearching(true);
     setDisplayCount(10); // Reset to first page on new search
     try {
@@ -103,6 +100,12 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     } finally {
       setIsSearching(false);
     }
+  }, [toast]);
+
+  const handleManualSearch = async (e?: React.FormEvent, searchStr?: string) => {
+    if (e) e.preventDefault();
+    const query = searchStr || searchQuery;
+    executeSearch(query);
   };
 
   // Auto-search logic when contextKeywords are provided
@@ -110,9 +113,9 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     if (contextKeywords && contextKeywords.length > 0) {
       const query = contextKeywords.join(" ");
       setSearchQuery(query);
-      handleManualSearch(undefined, query);
+      executeSearch(query);
     }
-  }, [contextKeywords]);
+  }, [contextKeywords, executeSearch]);
 
   const handleAddSource = async (paper: SuggestedPaper) => {
     try {

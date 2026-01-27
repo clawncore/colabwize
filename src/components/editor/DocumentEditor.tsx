@@ -37,7 +37,7 @@ import {
   // CitationConfidenceAdapter, // Removed/Replaced
   AuthorshipCertificateAdapter,
   RephraseAdapter,
-  AIDetectionAdapter,
+
 } from "./adapters";
 import { CitationAuditAdapter } from "./adapters/CitationAuditAdapter";
 import { UpgradeModal } from "../subscription/UpgradeModal";
@@ -417,21 +417,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   };
 
   // Function to highlight AI detection results with persistent mapping
-  const highlightAIResults = (results: AIScanResult) => {
-    if (!editor || !results || !results.sentences) return;
 
-    // Update the persistent cache
-    const newCache = new Map(aiSentenceCache);
-    results.sentences.forEach(s => {
-      if (s.text && s.score !== undefined) {
-        newCache.set(s.text.trim(), s.score);
-      }
-    });
-    setAiSentenceCache(newCache);
-    setLastAIScanResult(results);
-
-    syncAIHighlights(newCache);
-  };
 
   const syncAIHighlights = (cache: Map<string, number> = aiSentenceCache) => {
     if (!editor || cache.size === 0) return;

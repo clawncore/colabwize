@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { apiClient } from "../../services/apiClient";
 import { AlertCircle, TrendingUp, BookOpen, Beaker, Loader2, ExternalLink } from "lucide-react";
 
@@ -21,11 +21,7 @@ export const ResearchGapsPanel: React.FC<ResearchGapsPanelProps> = ({ projectId,
     const [loading, setLoading] = useState(true);
     const [filterType, setFilterType] = useState<string | null>(null);
 
-    useEffect(() => {
-        fetchGaps();
-    }, [projectId]);
-
-    const fetchGaps = async () => {
+    const fetchGaps = useCallback(async () => {
         setLoading(true);
         try {
             const response = await apiClient.get(`/api/citations/${projectId}/gaps`);
@@ -35,7 +31,11 @@ export const ResearchGapsPanel: React.FC<ResearchGapsPanelProps> = ({ projectId,
         } finally {
             setLoading(false);
         }
-    };
+    }, [projectId]);
+
+    useEffect(() => {
+        fetchGaps();
+    }, [fetchGaps]);
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -50,18 +50,7 @@ export const ResearchGapsPanel: React.FC<ResearchGapsPanelProps> = ({ projectId,
         }
     };
 
-    const getSeverityColor = (severity: string) => {
-        switch (severity) {
-            case "high":
-                return "bg-red-50 border-red-200 text-red-800";
-            case "medium":
-                return "bg-yellow-50 border-yellow-200 text-yellow-800";
-            case "low":
-                return "bg-blue-50 border-blue-200 text-blue-800";
-            default:
-                return "bg-gray-50 border-gray-200 text-gray-800";
-        }
-    };
+
 
     const getTypeColor = (type: string) => {
         switch (type) {
@@ -161,8 +150,8 @@ export const ResearchGapsPanel: React.FC<ResearchGapsPanelProps> = ({ projectId,
                         <div
                             key={index}
                             className={`border rounded-xl p-6 transition-all hover:shadow-lg bg-white ${gap.severity === "high" ? "border-red-300 hover:border-red-400" :
-                                    gap.severity === "medium" ? "border-yellow-300 hover:border-yellow-400" :
-                                        "border-blue-300 hover:border-blue-400"
+                                gap.severity === "medium" ? "border-yellow-300 hover:border-yellow-400" :
+                                    "border-blue-300 hover:border-blue-400"
                                 }`}
                         >
                             {/* Header */}
@@ -174,8 +163,8 @@ export const ResearchGapsPanel: React.FC<ResearchGapsPanelProps> = ({ projectId,
                                     <div className="flex items-center gap-2 mb-2">
                                         <h3 className="font-bold text-base text-gray-900">{gap.title}</h3>
                                         <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${gap.severity === "high" ? "bg-red-100 text-red-700" :
-                                                gap.severity === "medium" ? "bg-yellow-100 text-yellow-700" :
-                                                    "bg-blue-100 text-blue-700"
+                                            gap.severity === "medium" ? "bg-yellow-100 text-yellow-700" :
+                                                "bg-blue-100 text-blue-700"
                                             }`}>
                                             {gap.severity.toUpperCase()}
                                         </span>
