@@ -278,6 +278,9 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
     setInput("");
     setIsLoading(true);
 
+
+    const assistantMessageId = (Date.now() + 1).toString();
+
     try {
       // Use apiClient.download to get raw response for streaming
       // This handles auth headers, token refresh, and timeouts automatically
@@ -301,7 +304,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       const reader = response.body?.getReader();
       if (!reader) throw new Error("No response body");
 
-      const assistantMessageId = (Date.now() + 1).toString();
+
       setMessages((prev) => [
         ...prev,
         { id: assistantMessageId, role: "assistant", content: "" },
