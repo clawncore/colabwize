@@ -414,6 +414,21 @@ const BillingSettingsPage: React.FC = () => {
                             {subscription?.status || 'Active'}
                           </span>
                         </div>
+                        {/* NEW: Action Buttons */}
+                        <div className="flex items-center gap-3 mt-4">
+                          <button
+                            onClick={handleViewAllInvoices} // Reuse portal link
+                            className="text-xs font-medium text-indigo-600 hover:text-indigo-700 border border-indigo-200 rounded-md px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                          >
+                            Manage Subscription
+                          </button>
+                          <button
+                            onClick={handleAddPaymentMethod}
+                            className="text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-md px-3 py-1.5 bg-white hover:bg-gray-50 transition-colors"
+                          >
+                            Update Payment
+                          </button>
+                        </div>
                       </div>
                       <div className="text-right">
                         <div className="text-xl font-bold text-gray-900">
@@ -635,6 +650,29 @@ const BillingSettingsPage: React.FC = () => {
           {/* BILLING INFO TAB */}
           <TabsContent value="billing">
             <div className="space-y-8">
+              {/* Credit Settings (Moved Here) */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <Coins className="h-5 w-5 text-gray-500" />
+                    Credit Settings
+                  </h3>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-base font-medium text-gray-900">Auto-Use Credits</h4>
+                      <p className="text-sm text-gray-500 mt-1">Automatically use credits when your monthly plan limits are reached.</p>
+                    </div>
+                    <Switch
+                      checked={autoUseCredits}
+                      onCheckedChange={handleToggleAutoUse}
+                      className="data-[state=checked]:bg-green-600"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Payment Methods */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 bg-gray-50/50">
@@ -705,27 +743,7 @@ const BillingSettingsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Billing Email */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-base font-bold text-gray-900 mb-1">Billing Email</h3>
-                    <p className="text-sm text-gray-500">Receipts and billing notifications are sent to this address.</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium text-gray-900 mb-1">
-                      {/* Fallback to user email if no specific billing email */}
-                      {(subscription as any)?.user_email || "user@example.com"}
-                    </div>
-                    <button
-                      onClick={() => toast({ title: "Coming Soon", description: "This feature will be available shortly." })}
-                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                    >
-                      Change email
-                    </button>
-                  </div>
-                </div>
-              </div>
+
 
               {/* Invoice History */}
               {/* Invoice History */}

@@ -177,6 +177,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     editorProps: {
       attributes: {
         class: `focus:outline-none min-h-full prose-table:w-full prose-img:rounded-md prose-img:shadow-md`,
+        spellcheck: "false",
       },
     },
   });

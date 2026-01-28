@@ -13,7 +13,8 @@ import {
   Upload,
   AlertTriangle,
   RefreshCw,
-  CheckCircle
+  CheckCircle,
+  Coins
 } from 'lucide-react';
 
 import { documentService, Project } from "../../services/documentService";
@@ -232,11 +233,11 @@ export const Dashboard: React.FC = () => {
         </div>
         <div className="flex gap-3">
           <button
-            data-tour="upload-button"
-            onClick={() => navigate("/dashboard/documents")}
-            className="flex items-center px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors shadow-sm">
-            <Upload className="w-3.5 h-3.5 mr-1.5" />
-            Upload
+            onClick={() => navigate("/purchase-credits")}
+            className="flex items-center px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+          >
+            <Coins className="w-3.5 h-3.5 mr-1.5 text-indigo-500" />
+            Buy Credits
           </button>
           {!['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) && (
             <button
@@ -247,6 +248,13 @@ export const Dashboard: React.FC = () => {
               Upgrade
             </button>
           )}
+          <button
+            data-tour="upload-button"
+            onClick={() => navigate("/dashboard/documents")}
+            className="flex items-center px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors shadow-sm">
+            <Upload className="w-3.5 h-3.5 mr-1.5" />
+            Upload
+          </button>
         </div>
       </div>
 
