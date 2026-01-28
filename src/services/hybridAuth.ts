@@ -14,7 +14,7 @@ const API_BASE_URL = ConfigService.getApiUrl();
 const fetchWithTimeout = (
   url: string,
   options: RequestInit = {},
-  timeout = 15000
+  timeout = 30000 // Increased from 15000ms to 30000ms (30 seconds)
 ): Promise<Response> => {
   return Promise.race([
     fetch(url, options),
