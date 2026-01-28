@@ -5,7 +5,6 @@ import {
   Check,
   Loader2,
   Sparkles,
-  FileText,
   Zap,
   Shield,
   TrendingUp,
@@ -146,47 +145,6 @@ export default function CreditsPage() {
             </div>
           </div>
 
-          {/* How Credits Work */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white max-w-4xl mx-auto mb-16">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <FileText className="h-6 w-6" />
-              <h2 className="text-2xl font-bold">How Credits Work</h2>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6 text-left">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                <div className="flex items-start gap-3">
-                  <div className="bg-white/20 rounded-lg p-2 mt-1">
-                    <CheckCircle2 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2 text-lg">Simple & Transparent</h3>
-                    <p className="text-white/90 text-sm leading-relaxed">
-                      <strong>1 credit ≈ 1,000 words processed.</strong> Whether you're checking citations,
-                      scanning for plagiarism, or getting AI writing help, you only pay for what you use.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                <div className="flex items-start gap-3">
-                  <div className="bg-white/20 rounded-lg p-2 mt-1">
-                    <Sparkles className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2 text-lg">What You Can Do</h3>
-                    <ul className="text-white/90 text-sm space-y-1">
-                      <li>✓ Citation audits & verification</li>
-                      <li>✓ AI-powered rephrasing & editing</li>
-                      <li>✓ Plagiarism & originality checks</li>
-                      <li>✓ Research assistance & summaries</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Pricing Cards */}
@@ -195,15 +153,15 @@ export default function CreditsPage() {
             <div
               key={pkg.id}
               className={`relative bg-white rounded-2xl p-8 transition-all duration-300 ${pkg.featured
-                  ? "border-2 border-indigo-600 shadow-2xl shadow-indigo-200/50 scale-105 z-10"
-                  : "border border-gray-200 hover:border-indigo-300 hover:shadow-xl"
+                ? "border-2 border-indigo-600 shadow-2xl shadow-indigo-200/50 scale-105 z-10"
+                : "border border-gray-200 hover:border-indigo-300 hover:shadow-xl"
                 }`}
             >
               {/* Badge */}
               {pkg.badge && (
                 <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${pkg.featured
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
-                    : "bg-gray-900 text-white"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                  : "bg-gray-900 text-white"
                   }`}>
                   {pkg.badge}
                 </div>
@@ -280,8 +238,8 @@ export default function CreditsPage() {
                 onClick={() => handlePurchaseCredits(pkg.id)}
                 disabled={loading === pkg.id}
                 className={`w-full py-6 text-base font-semibold transition-all duration-300 ${pkg.featured
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl"
-                    : "bg-gray-900 hover:bg-gray-800 text-white"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl"
+                  : "bg-gray-900 hover:bg-gray-800 text-white"
                   }`}
               >
                 {loading === pkg.id ? (
