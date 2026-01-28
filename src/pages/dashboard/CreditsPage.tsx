@@ -1,46 +1,79 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import { Check, Loader2, Info, ChevronDown } from "lucide-react";
+import {
+  Check,
+  Loader2,
+  Sparkles,
+  FileText,
+  Zap,
+  Shield,
+  TrendingUp,
+  ArrowRight,
+  CheckCircle2
+} from "lucide-react";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { useToast } from "../../hooks/use-toast";
 
-// STRICT PACK DEFINITIONS
+// CREDIT PACKAGE DEFINITIONS
 interface CreditPackage {
   id: string;
   name: string;
   credits: number;
-  wordInfo: string;
   price: number;
+  pricePerCredit: string;
   featured?: boolean;
-  useCase: string; // New "What a credit can do" description
+  savings?: string;
+  wordCount: string;
+  examples: string[];
+  badge?: string;
 }
 
 const CREDIT_PACKAGES: CreditPackage[] = [
   {
     id: "credits_trial",
-    name: "Trial",
+    name: "Starter",
     credits: 5,
-    wordInfo: "~5,000 words",
     price: 1.99,
-    useCase: "Good for checking or editing a short document.",
+    pricePerCredit: "$0.40",
+    wordCount: "~5,000 words",
+    badge: "Try it out",
+    examples: [
+      "1 short essay (5 pages)",
+      "2-3 citation checks",
+      "Quick AI assistance"
+    ],
   },
   {
     id: "credits_standard",
-    name: "Standard",
+    name: "Professional",
     credits: 25,
-    wordInfo: "~25,000 words",
     price: 6.99,
+    pricePerCredit: "$0.28",
     featured: true,
-    useCase: "Suitable for multiple assignments or medium-length papers.",
+    savings: "Save 30%",
+    wordCount: "~25,000 words",
+    badge: "Most Popular",
+    examples: [
+      "5 research papers (10 pages each)",
+      "Full thesis chapter review",
+      "Multiple AI rewrites"
+    ],
   },
   {
     id: "credits_power",
-    name: "Power",
+    name: "Enterprise",
     credits: 50,
-    wordInfo: "~50,000 words",
     price: 12.99,
-    useCase: "Best for long documents or frequent usage.",
+    pricePerCredit: "$0.26",
+    savings: "Save 35%",
+    wordCount: "~50,000 words",
+    badge: "Best Value",
+    examples: [
+      "Complete dissertation review",
+      "10+ research papers",
+      "Unlimited AI assistance"
+    ],
   },
 ];
 
@@ -52,7 +85,6 @@ export default function CreditsPage() {
   const handlePurchaseCredits = async (packageId: string) => {
     try {
       setLoading(packageId);
-      // Create checkout for one-time payment
       const checkoutUrl = await SubscriptionService.createCheckout(packageId);
       window.location.href = checkoutUrl;
     } catch (error) {
@@ -68,133 +100,188 @@ export default function CreditsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 font-sans">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Purchase Credits
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20 py-16 px-4 font-sans">
+      <div className="max-w-7xl mx-auto">
+
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <Sparkles className="h-4 w-4" />
+            Pay only for what you use
+          </div>
+
+          <h1 className="text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">
+            Power Your Research with Credits
           </h1>
-          <p className="text-lg text-gray-600 mb-6">
-            Buy credits to extend your usage. No monthly commitment.
+
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+            Get instant access to AI-powered citation checking, plagiarism detection,
+            and writing assistance. <span className="font-semibold text-gray-900">No subscriptions. No commitments.</span>
           </p>
 
-          {/* 1. CORE CREDIT STATEMENT */}
-          <div className="bg-blue-50 border border-blue-200 text-blue-800 px-6 py-4 rounded-lg inline-block text-left max-w-2xl">
-            <p className="font-semibold text-center mb-1">
-              Credits are used based on how much text is processed.
-            </p>
-            <p className="text-center text-blue-700">
-              On average, 1 credit covers about 1,000 words.
-            </p>
+          {/* Value Proposition Cards */}
+          <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-12">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Shield className="h-6 w-6 text-green-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Never Expire</h3>
+              <p className="text-sm text-gray-600">Use your credits anytime, no rush or deadlines</p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Zap className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Instant Access</h3>
+              <p className="text-sm text-gray-600">Credits activate immediately after purchase</p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Better Value</h3>
+              <p className="text-sm text-gray-600">Save up to 35% with larger packages</p>
+            </div>
+          </div>
+
+          {/* How Credits Work */}
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white max-w-4xl mx-auto mb-16">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <FileText className="h-6 w-6" />
+              <h2 className="text-2xl font-bold">How Credits Work</h2>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 text-left">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                <div className="flex items-start gap-3">
+                  <div className="bg-white/20 rounded-lg p-2 mt-1">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2 text-lg">Simple & Transparent</h3>
+                    <p className="text-white/90 text-sm leading-relaxed">
+                      <strong>1 credit ≈ 1,000 words processed.</strong> Whether you're checking citations,
+                      scanning for plagiarism, or getting AI writing help, you only pay for what you use.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                <div className="flex items-start gap-3">
+                  <div className="bg-white/20 rounded-lg p-2 mt-1">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2 text-lg">What You Can Do</h3>
+                    <ul className="text-white/90 text-sm space-y-1">
+                      <li>✓ Citation audits & verification</li>
+                      <li>✓ AI-powered rephrasing & editing</li>
+                      <li>✓ Plagiarism & originality checks</li>
+                      <li>✓ Research assistance & summaries</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 2. HOW CREDITS ARE USED (Simple Expandable) */}
-        <div className="max-w-2xl mx-auto mb-10">
-          <details className="group bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <summary className="flex cursor-pointer items-center justify-between p-4 font-medium text-gray-900 hover:bg-gray-50 transition-colors">
-              <span className="flex items-center gap-2">
-                <Info className="h-4 w-4 text-indigo-500" />
-                How credits are used
-              </span>
-              <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
-            </summary>
-            <div className="px-4 pb-4 pt-0 text-sm text-gray-600 space-y-2 border-t border-gray-100 mt-2 pt-3">
-              <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
-                <span className="font-semibold text-gray-800">Citation audits:</span>
-                <span>Credits are used based on the length of your document.</span>
-              </div>
-              <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
-                <span className="font-semibold text-gray-800">Rephrasing:</span>
-                <span>Credits depend on both the text you submit and the rewritten output.</span>
-              </div>
-              <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
-                <span className="font-semibold text-gray-800">AI assistance:</span>
-                <span>Credits are used based on the size of AI responses.</span>
-              </div>
-              <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
-                <span className="font-semibold text-gray-800">Originality checks:</span>
-                <span>Credits are used based on document length (if available on your plan).</span>
-              </div>
-            </div>
-          </details>
-        </div>
-
-        {/* Packages Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
+        {/* Pricing Cards */}
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
           {CREDIT_PACKAGES.map((pkg) => (
             <div
               key={pkg.id}
-              className={`relative bg-white rounded-xl border-2 p-6 flex flex-col items-center text-center transition-all ${pkg.featured
-                  ? "border-indigo-600 shadow-xl scale-105 z-10"
-                  : "border-gray-200 hover:border-indigo-300 hover:shadow-md"
+              className={`relative bg-white rounded-2xl p-8 transition-all duration-300 ${pkg.featured
+                  ? "border-2 border-indigo-600 shadow-2xl shadow-indigo-200/50 scale-105 z-10"
+                  : "border border-gray-200 hover:border-indigo-300 hover:shadow-xl"
                 }`}
             >
-              {pkg.featured && (
-                <div className="absolute -top-4 bg-indigo-600 text-white px-4 py-1 rounded-full text-sm font-semibold uppercase tracking-wide">
-                  Most Popular
+              {/* Badge */}
+              {pkg.badge && (
+                <div className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${pkg.featured
+                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg"
+                    : "bg-gray-900 text-white"
+                  }`}>
+                  {pkg.badge}
                 </div>
               )}
 
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{pkg.name}</h3>
+              {/* Savings Badge */}
+              {pkg.savings && (
+                <div className="absolute -top-3 -right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                  {pkg.savings}
+                </div>
+              )}
 
-              <div className="mb-2">
-                <span className="text-4xl font-extrabold text-gray-900">
+              {/* Package Name */}
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{pkg.name}</h3>
+                <p className="text-gray-500 text-sm">{pkg.wordCount}</p>
+              </div>
+
+              {/* Price */}
+              <div className="text-center mb-6">
+                <div className="flex items-baseline justify-center gap-1 mb-2">
+                  <span className="text-5xl font-extrabold text-gray-900">${pkg.price}</span>
+                  <span className="text-gray-500 text-sm">one-time</span>
+                </div>
+                <div className="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full">
+                  <span className="text-xs text-gray-600">
+                    {pkg.pricePerCredit} per credit
+                  </span>
+                </div>
+              </div>
+
+              {/* Credits */}
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 mb-6 text-center border border-indigo-100">
+                <div className="text-4xl font-bold text-indigo-600 mb-1">
                   {pkg.credits}
-                </span>
-                <span className="text-gray-600 ml-2 font-medium">credits</span>
+                </div>
+                <div className="text-sm text-gray-600 font-medium">Credits</div>
               </div>
 
-              {/* 5. TOOLTIP / INFO ICON */}
-              <div className="group relative mb-4 inline-flex items-center gap-1.5 bg-gray-100 px-3 py-1 rounded-full cursor-help">
-                <span className="text-sm text-gray-700 font-medium">
-                  {pkg.wordInfo}
-                </span>
-                <Info className="h-3.5 w-3.5 text-gray-500" />
+              {/* What You Get */}
+              <div className="mb-8">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-indigo-600" />
+                  Perfect for:
+                </h4>
+                <ul className="space-y-2.5">
+                  {pkg.examples.map((example, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-sm text-gray-700">
+                      <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                      <span>{example}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-                {/* Tooltip Content */}
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-gray-900 text-white text-xs rounded-md py-2 px-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center shadow-lg">
-                  Word estimates are approximate.
-                  <br />
-                  Credit usage depends on how much text is processed during each action.
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+              {/* Features */}
+              <div className="space-y-2.5 mb-8 pb-8 border-b border-gray-100">
+                <div className="flex items-center gap-2 text-sm text-gray-700">
+                  <CheckCircle2 className="h-4 w-4 text-indigo-600" />
+                  <span>Credits never expire</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-700">
+                  <CheckCircle2 className="h-4 w-4 text-indigo-600" />
+                  <span>No subscription required</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-700">
+                  <CheckCircle2 className="h-4 w-4 text-indigo-600" />
+                  <span>Instant activation</span>
                 </div>
               </div>
 
-              {/* 3. WHAT A CREDIT CAN DO */}
-              <p className="text-sm text-gray-500 mb-6 h-10 flex items-center justify-center px-2">
-                {pkg.useCase}
-              </p>
-
-              <div className="text-3xl font-bold text-indigo-600 mb-1">
-                ${pkg.price}
-              </div>
-              <div className="text-xs text-gray-500 mb-6 uppercase tracking-wider">
-                One-time Payment
-              </div>
-
-              <div className="w-full space-y-3 mb-8 text-left pl-4">
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 bg-green-100 p-1 rounded-full shrink-0">
-                    <Check className="h-3 w-3 text-green-600" />
-                  </div>
-                  <span className="text-sm text-gray-700">Credits never expire</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 bg-green-100 p-1 rounded-full shrink-0">
-                    <Check className="h-3 w-3 text-green-600" />
-                  </div>
-                  <span className="text-sm text-gray-700">No subscription required</span>
-                </div>
-              </div>
-
+              {/* CTA Button */}
               <Button
                 onClick={() => handlePurchaseCredits(pkg.id)}
                 disabled={loading === pkg.id}
-                className={`w-full py-6 text-lg ${pkg.featured
-                    ? "bg-indigo-600 hover:bg-indigo-700 shadow-lg hover:shadow-indigo-500/30"
-                    : "bg-gray-900 hover:bg-gray-800"
+                className={`w-full py-6 text-base font-semibold transition-all duration-300 ${pkg.featured
+                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl"
+                    : "bg-gray-900 hover:bg-gray-800 text-white"
                   }`}
               >
                 {loading === pkg.id ? (
@@ -203,24 +290,91 @@ export default function CreditsPage() {
                     Processing...
                   </>
                 ) : (
-                  "Purchase Credits"
+                  <>
+                    Get Started
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </>
                 )}
               </Button>
 
-              {/* 4. IMPORTANT DISCLAIMERS */}
-              <div className="mt-4 text-[10px] text-gray-400 leading-tight px-1 space-y-1">
-                <p>Credits extend usage limits on features available in your current plan.</p>
-                <p>Credits do not unlock plan-restricted features.</p>
-                <p className="font-medium text-gray-500">Credit usage may vary depending on document length and selected actions.</p>
-              </div>
+              {/* Fine Print */}
+              <p className="text-xs text-gray-400 text-center mt-4 leading-relaxed">
+                Secure payment via Lemon Squeezy
+              </p>
             </div>
           ))}
         </div>
 
+        {/* Trust Section */}
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mb-12 max-w-4xl mx-auto">
+          <h3 className="text-2xl font-bold text-gray-900 text-center mb-6">
+            Trusted by Researchers Worldwide
+          </h3>
+          <div className="grid md:grid-cols-3 gap-6 text-center">
+            <div>
+              <div className="text-3xl font-bold text-indigo-600 mb-2">99.9%</div>
+              <p className="text-sm text-gray-600">Citation Accuracy</p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-indigo-600 mb-2">50K+</div>
+              <p className="text-sm text-gray-600">Papers Analyzed</p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-indigo-600 mb-2">24/7</div>
+              <p className="text-sm text-gray-600">Support Available</p>
+            </div>
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="max-w-3xl mx-auto mb-12">
+          <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">
+            Frequently Asked Questions
+          </h3>
+          <div className="space-y-4">
+            <details className="group bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <summary className="flex cursor-pointer items-center justify-between p-5 font-medium text-gray-900 hover:bg-gray-50 transition-colors">
+                <span>How are credits calculated?</span>
+                <ArrowRight className="h-5 w-5 transition-transform group-open:rotate-90" />
+              </summary>
+              <div className="px-5 pb-5 text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
+                Credits are consumed based on the amount of text processed. On average, <strong>1 credit = 1,000 words</strong>.
+                For citation audits, we count your document length. For AI features, we count both input and output text.
+              </div>
+            </details>
+
+            <details className="group bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <summary className="flex cursor-pointer items-center justify-between p-5 font-medium text-gray-900 hover:bg-gray-50 transition-colors">
+                <span>Do credits really never expire?</span>
+                <ArrowRight className="h-5 w-5 transition-transform group-open:rotate-90" />
+              </summary>
+              <div className="px-5 pb-5 text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
+                Yes! Your credits remain in your account indefinitely. Use them whenever you need them,
+                whether that's tomorrow or next year. No deadlines, no pressure.
+              </div>
+            </details>
+
+            <details className="group bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <summary className="flex cursor-pointer items-center justify-between p-5 font-medium text-gray-900 hover:bg-gray-50 transition-colors">
+                <span>Can I get a refund?</span>
+                <ArrowRight className="h-5 w-5 transition-transform group-open:rotate-90" />
+              </summary>
+              <div className="px-5 pb-5 text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
+                We offer a 7-day money-back guarantee if you're not satisfied with your purchase.
+                Contact our support team and we'll process your refund promptly.
+              </div>
+            </details>
+          </div>
+        </div>
+
         {/* Back Button */}
         <div className="text-center">
-          <Button variant="ghost" onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-900">
-            Cancel / Go Back
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+          >
+            ← Back to Dashboard
           </Button>
         </div>
       </div>
