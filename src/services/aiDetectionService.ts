@@ -17,15 +17,28 @@ export interface AISentenceResult {
 
 export class AIDetectionService {
     /**
-     * Scan content for AI-generated text
+     * Scan content for AI-generated text using GPTZero API
      */
     static async scanContent(content: string): Promise<AIScanResult> {
         try {
             const response = await apiClient.post("/api/ai-detection/scan", { content });
+
+            // Handle new response format with success/data structure
+            if (response.data.success && response.data.data) {
+                return response.data.data;
+            }
+
+            // Fallback for direct data response
             return response.data;
         } catch (error: any) {
             console.error("AI detection scan failed:", error);
-            throw new Error(error.message || "Failed to scan for AI content");
+
+            // Extract error message from response
+            const errorMessage = error.response?.data?.message
+                || error.message
+                || "Failed to scan for AI content";
+
+            throw new Error(errorMessage);
         }
     }
 }

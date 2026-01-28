@@ -34,6 +34,7 @@ import { useToast } from "../../hooks/use-toast";
 import { TableBubbleMenu } from "./TableBubbleMenu";
 import {
   OriginalityMapAdapter,
+  AIDetectionAdapter,
   // CitationConfidenceAdapter, // Removed/Replaced
   AuthorshipCertificateAdapter,
   RephraseAdapter,
@@ -616,12 +617,17 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   Clear Highlights
                 </button>
 
-                {/* Feature Adapter Components */}
-                <OriginalityMapAdapter
+                {/* AI Detection Adapter */}
+                <AIDetectionAdapter
                   projectId={project.id}
                   editor={editor}
-                  onScanComplete={handleOriginalityScanComplete}
+                  onScanComplete={(results) => {
+                    if (onOpenPanel) {
+                      onOpenPanel("ai-results", results);
+                    }
+                  }}
                 />
+
 
                 <button
                   onClick={handleCompareClick}
@@ -768,17 +774,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               Find Papers
             </button>
 
-            {/*<AIDetectionAdapter
-              projectId={project.id}
-              editor={editor}
-              onScanComplete={(results) => {
-                setLastAIScanResult(results);
-                highlightAIResults(results);
-                if (onOpenPanel) {
-                  onOpenPanel("ai-results", results);
-                }
-              }}
-            /> */}
 
             <AuthorshipCertificateAdapter
               projectId={project.id}
