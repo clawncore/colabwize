@@ -107,7 +107,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [isExportWorkflowOpen, setIsExportWorkflowOpen] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  const [lastScanResult, setLastScanResult] = useState<OriginalityScan | null>(
+  const [lastScanResult] = useState<OriginalityScan | null>(
     null
   );
   const [lastAIScanResult, setLastAIScanResult] = useState<AIScanResult | null>(null);
@@ -326,6 +326,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   };
 
   // Function to highlight originality results
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const highlightOriginalityResults = (results: OriginalityScan) => {
     if (!editor || !results || !results.matches) return;
 
@@ -806,6 +807,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 onOpenPanel?.("ai-chat", {
                   selectedText: editor?.getAttributes("highlight")?.message,
                   originalityResults: lastScanResult,
+                  aiScanResult: lastAIScanResult,
                   citationSuggestions: citationSuggestions,
                 })
               }
