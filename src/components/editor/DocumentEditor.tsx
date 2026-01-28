@@ -33,7 +33,6 @@ import "../../styles/column-styles.css";
 import { useToast } from "../../hooks/use-toast";
 import { TableBubbleMenu } from "./TableBubbleMenu";
 import {
-  OriginalityMapAdapter,
   AIDetectionAdapter,
   // CitationConfidenceAdapter, // Removed/Replaced
   AuthorshipCertificateAdapter,
@@ -529,20 +528,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   };
 
   // Callback handlers for adapter components
-  const handleOriginalityScanComplete = (results: OriginalityScan) => {
-    setLastScanResult(results);
-    highlightOriginalityResults(results);
-    toast({
-      title: "Originality Scan Completed",
-      description: `Overall score: ${results.overallScore}%`,
-      variant: "default",
-    });
-
-    if (results.realityCheck && onOpenPanel) {
-      onOpenPanel("reality-check", results.realityCheck);
-    }
-  };
-
   const handleCompareClick = async () => {
     try {
       const hasAccess =
