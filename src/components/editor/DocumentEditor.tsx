@@ -26,6 +26,7 @@ import {
   OriginalityScan,
   SimilarityMatch,
 } from "../../services/originalityService";
+import { AIScanResult, AISentenceResult } from "../../services/aiDetectionService";
 import { AuthorshipService } from "../../services/authorshipService";
 import "../../styles/highlight-styles.css";
 import "../../styles/image-styles.css";
@@ -109,6 +110,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [lastScanResult, setLastScanResult] = useState<OriginalityScan | null>(
     null
   );
+  const [lastAIScanResult, setLastAIScanResult] = useState<AIScanResult | null>(null);
 
   const [citationSuggestions] = useState<any>(null);
   const [editCount, setEditCount] = useState(0);
@@ -414,6 +416,65 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     });
   };
 
+  // Function to highlight AI detection results
+  const highlightAIResults = (results: AIScanResult) => {
+    if (!editor || !results || !results.sentences) return;
+
+    // Clear existing highlights
+    clearHighlights();
+
+    const doc = editor.state.doc;
+    let searchPos = 0;
+
+    // Sort sentences by position
+    const sortedSentences = [...results.sentences].sort(
+      (a, b) => a.positionStart - b.positionStart
+    );
+
+    sortedSentences.forEach((sentence: AISentenceResult) => {
+      // Only highlight if AI or Likely AI
+      if (sentence.classification === "human" || sentence.classification === "likely_human") return;
+
+      if (!sentence.text) return;
+
+      const range = findTextRange(doc, sentence.text, searchPos);
+
+      if (!range) {
+        console.warn("Could not find sentence text in document", sentence.text);
+        return;
+      }
+
+      searchPos = range.to;
+
+      let color = "purple"; // Default for AI
+      let message = "";
+
+      switch (sentence.classification) {
+        case "ai":
+          color = "purple";
+          message = `🤖 High AI probability detected (${Math.round(sentence.score * 100)}%)`;
+          break;
+        case "likely_ai":
+          color = "yellow";
+          message = `⚠️ Possible AI content (${Math.round(sentence.score * 100)}%)`;
+          break;
+        default:
+          return;
+      }
+
+      try {
+        editor.chain().highlightRange(range.from, range.to, {
+          color,
+          type: "ai_detection",
+          similarity: sentence.score * 100,
+          message: message,
+        }).run();
+      } catch (err) {
+        console.error("Failed to highlight AI match:", err);
+      }
+    });
+  };
+
 
 
 
@@ -608,6 +669,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   projectId={project.id}
                   editor={editor}
                   onScanComplete={(results) => {
+                    setLastAIScanResult(results);
+                    highlightAIResults(results);
                     if (onOpenPanel) {
                       onOpenPanel("ai-results", results);
                     }
