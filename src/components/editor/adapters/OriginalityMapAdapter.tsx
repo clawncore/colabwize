@@ -85,10 +85,12 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
 
       if (
         errorMessage.toLowerCase().includes("limit reached") ||
-        errorMessage.toLowerCase().includes("upgrade") ||
-        errorMessage.toLowerCase().includes("credits") // Handle credit exhaustion messages
+        errorMessage.toLowerCase().includes("upgrade")
       ) {
-        setUpgradeMessage(errorMessage);
+        setUpgradeMessage("Oops! You've hit your plan limit. Upgrade for unlimited access!");
+        setShowUpgradeModal(true);
+      } else if (errorMessage.toLowerCase().includes("credits")) {
+        setUpgradeMessage("Oops! You're out of credits. Top up to keep scanning.");
         setShowUpgradeModal(true);
       } else {
         toast({
@@ -107,9 +109,9 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        title="Scan Limit Reached"
-        message={upgradeMessage || "You have reached your usage limit. Please upgrade or top up credits."}
-        feature="Originality Scans"
+        title="Oops! Limit Reached"
+        message={upgradeMessage || "It looks like you've used all your available scans. Upgrade getting unlimited access or top up credits!"}
+        feature="Originality Check"
       />
 
       <button

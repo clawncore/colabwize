@@ -437,7 +437,7 @@ const BillingSettingsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* 4️⃣ FREE FEATURES SIDEBAR (Re-integrated) */}
+                    {/* 4️⃣ FREE FEATURES SIDEBAR (Corrected Display) */}
                     <div className="pt-6 border-t border-gray-100">
                       <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-4 flex items-center gap-2">
                         <Zap className="h-3 w-3 text-indigo-500" />
@@ -451,18 +451,22 @@ const BillingSettingsPage: React.FC = () => {
                           <ul className="space-y-2">
                             <li className="flex items-center text-sm text-gray-600">
                               <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
-                              <span>{limits.scans_per_month || 3} document scans / mo</span>
+                              <span>
+                                {limits.scans_per_month === -1 ? 'Unlimited' : (limits.scans_per_month || 3)} document scans / mo
+                              </span>
                             </li>
                             <li className="flex items-center text-sm text-gray-600">
                               <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
-                              <span>{limits.rephrases_per_month || 3} rephrases / mo</span>
+                              <span>
+                                {limits.rephrases_per_month === -1 ? 'Unlimited' : (limits.rephrases_per_month || 3)} rephrases / mo
+                              </span>
                             </li>
                           </ul>
                         </div>
 
                         {/* Group: Capabilities */}
                         <div>
-                          <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2"> capabilities</p>
+                          <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Capabilities</p>
                           <ul className="space-y-2">
                             <li className="flex items-center text-sm text-gray-600">
                               <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
@@ -471,21 +475,6 @@ const BillingSettingsPage: React.FC = () => {
                             <li className="flex items-center text-sm text-gray-600">
                               <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
                               <span>Max 100,000 characters</span>
-                            </li>
-                          </ul>
-                        </div>
-
-                        {/* Group: Certificates */}
-                        <div>
-                          <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Certificates</p>
-                          <ul className="space-y-2">
-                            <li className="flex items-center text-sm text-gray-600">
-                              <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
-                              <span>Watermarked Verification</span>
-                            </li>
-                            <li className="flex items-center text-sm text-gray-600">
-                              <Check className="h-3.5 w-3.5 text-green-500 mr-2 flex-shrink-0" />
-                              <span>7-day retention</span>
                             </li>
                           </ul>
                         </div>
@@ -502,7 +491,7 @@ const BillingSettingsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* PANEL 2: MONTHLY USAGE METERS (Strictly excluding credits) */}
+              {/* PANEL 2: MONTHLY USAGE METERS (Dynamic & Consistent) */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 h-fit">
                 <div className="flex justify-between items-center mb-8">
                   <h3 className="text-base font-bold text-gray-900 tracking-tight flex items-center gap-2">
@@ -520,31 +509,37 @@ const BillingSettingsPage: React.FC = () => {
                     <div className="flex justify-between items-end mb-3">
                       <span className="text-sm font-medium text-gray-700">Citation Audits</span>
                       <div className="text-right">
-                        <span className={`text-lg font-bold font-mono ${(limits.scans_per_month !== -1 && (usage.scans || 0) >= (limits.scans_per_month || 1)) ? 'text-red-600' : 'text-gray-900'}`}>
+                        <span className={`text-lg font-bold font-mono ${(limits.scans_per_month !== -1 && (usage.scans || 0) >= (limits.scans_per_month || 0)) ? 'text-red-600' : 'text-gray-900'}`}>
                           {usage.scans || 0}
                         </span>
                         <span className="text-gray-400 text-sm font-mono mx-1">/</span>
                         <span className="text-gray-400 text-sm font-mono">
-                          {(!limits.scans_per_month || limits.scans_per_month === -1) ? '∞' : limits.scans_per_month}
+                          {limits.scans_per_month === -1 ? '∞' : (limits.scans_per_month || 3)}
                         </span>
                       </div>
                     </div>
                     {/* Progress Bar */}
                     <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${(limits.scans_per_month !== -1 && (usage.scans || 0) >= limits.scans_per_month)
+                        className={`h-full rounded-full transition-all duration-500 ${(limits.scans_per_month !== -1 && (usage.scans || 0) >= (limits.scans_per_month || 0))
                           ? 'bg-red-500' // Exceeded
-                          : (limits.scans_per_month !== -1 && (usage.scans || 0) / limits.scans_per_month > 0.8)
+                          : (limits.scans_per_month !== -1 && (usage.scans || 0) / (limits.scans_per_month || 1) > 0.8)
                             ? 'bg-amber-400' // Near limit
                             : 'bg-green-500' // Normal or Infinite
                           }`}
-                        style={{ width: `${limits.scans_per_month === -1 ? 100 : Math.min(100, ((usage.scans || 0) / (limits.scans_per_month || 1)) * 100)}%` }}
+                        style={{ width: `${limits.scans_per_month === -1 ? 0 : Math.min(100, ((usage.scans || 0) / (limits.scans_per_month || 1)) * 100)}%` }} // 0% width for infinite to show "empty" or just use full green? Usually full green or empty. Let's start with 0 or 100.
                       />
                     </div>
-                    {(limits.scans_per_month !== -1 && (usage.scans || 0) >= limits.scans_per_month) && (
-                      <div className="mt-2 flex items-center text-xs text-red-600 font-medium animate-pulse">
+                    {limits.scans_per_month === -1 && (
+                      <div className="mt-2 text-xs text-green-600 font-medium flex items-center">
+                        <Check className="h-3 w-3 mr-1" />
+                        Unlimited access
+                      </div>
+                    )}
+                    {limits.scans_per_month !== -1 && (usage.scans || 0) >= (limits.scans_per_month || 0) && (
+                      <div className="mt-2 text-xs text-red-600 font-medium flex items-center animate-pulse">
                         <AlertCircle className="h-3 w-3 mr-1" />
-                        Limit reached. Use credits to continue.
+                        Limit reached
                       </div>
                     )}
                   </div>
@@ -554,26 +549,30 @@ const BillingSettingsPage: React.FC = () => {
                     <div className="flex justify-between items-end mb-3">
                       <span className="text-sm font-medium text-gray-700">Rephrases</span>
                       <div className="text-right">
-                        <span className={`text-lg font-bold font-mono ${(limits.rephrases_per_month !== -1 && (usage.rephrases || 0) >= (limits.rephrases_per_month || 1)) ? 'text-red-600' : 'text-gray-900'}`}>
+                        <span className={`text-lg font-bold font-mono ${(limits.rephrases_per_month !== -1 && (usage.rephrases || 0) >= (limits.rephrases_per_month || 0)) ? 'text-red-600' : 'text-gray-900'}`}>
                           {usage.rephrases || 0}
                         </span>
                         <span className="text-gray-400 text-sm font-mono mx-1">/</span>
                         <span className="text-gray-400 text-sm font-mono">
-                          {(!limits.rephrases_per_month || limits.rephrases_per_month === -1) ? '∞' : limits.rephrases_per_month}
+                          {limits.rephrases_per_month === -1 ? '∞' : (limits.rephrases_per_month || 3)}
                         </span>
                       </div>
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${(limits.rephrases_per_month !== -1 && (usage.rephrases || 0) >= limits.rephrases_per_month)
-                          ? 'bg-red-500'
-                          : (limits.rephrases_per_month !== -1 && (usage.rephrases || 0) / limits.rephrases_per_month > 0.8)
-                            ? 'bg-amber-400'
-                            : 'bg-purple-500'
+                        className={`h-full rounded-full transition-all duration-500 ${limits.rephrases_per_month === -1
+                            ? 'bg-purple-500'
+                            : (usage.rephrases || 0) >= (limits.rephrases_per_month || 0) ? 'bg-red-500' : 'bg-purple-500'
                           }`}
-                        style={{ width: `${limits.rephrases_per_month === -1 ? 100 : Math.min(100, ((usage.rephrases || 0) / (limits.rephrases_per_month || 1)) * 100)}%` }}
+                        style={{ width: `${limits.rephrases_per_month === -1 ? 0 : Math.min(100, ((usage.rephrases || 0) / (limits.rephrases_per_month || 1)) * 100)}%` }}
                       />
                     </div>
+                    {limits.rephrases_per_month === -1 && (
+                      <div className="mt-2 text-xs text-purple-600 font-medium flex items-center">
+                        <Check className="h-3 w-3 mr-1" />
+                        Unlimited access
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1004,7 +1003,7 @@ const BillingSettingsPage: React.FC = () => {
                   <div className="flex flex-col-reverse md:flex-row gap-4 justify-center pt-2">
                     <button
                       onClick={() => setCancelStep('survey')}
-                      className="px-6 py-3 bg-transparent text-gray-400 font-medium hover:text-gray-600 transition-colors text-sm"
+                      className="px-6 py-3 bg-transparent text-red-600 font-medium hover:text-red-700 transition-colors text-sm"
                     >
                       I still want to cancel
                     </button>

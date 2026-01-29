@@ -43,7 +43,7 @@ function FeaturesPresentationFlow() {
   const { toast } = useToast();
   // Simplified loading logic as plans are now static-ish
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("yearly");
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const [currentPlanId, setCurrentPlanId] = useState<string>("free");
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
 

@@ -42,7 +42,7 @@ export const AuthorshipCertificateAdapter: React.FC<
       </button>
 
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto bg-white">
+        <DialogContent className="max-w-7xl w-full h-[85vh] p-0 overflow-hidden bg-white border-none shadow-2xl rounded-xl">
           <VisuallyHidden>Authorship Certificate</VisuallyHidden>
           <AuthorshipCertificate
             projectId={projectId}

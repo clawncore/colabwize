@@ -143,6 +143,24 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
 
         } catch (error: any) {
             console.error("Audit failed", error);
+
+            // Check for Limit Errors that might have been thrown directly
+            const isLimitError =
+                error?.message?.includes("limit reached") ||
+                error?.code === "PLAN_LIMIT_REACHED" ||
+                error?.response?.data?.code === "PLAN_LIMIT_REACHED" ||
+                error?.response?.data?.code === "INSUFFICIENT_CREDITS";
+
+            if (isLimitError) {
+                // Manually construct a "failed" result to trigger the UI
+                setAuditResult({
+                    state: "FAILED_QUOTA_EXCEEDED",
+                    violations: [],
+                    errorMessage: error.message
+                });
+                return; // Skip toast
+            }
+
             toast({
                 variant: "destructive",
                 title: "⚠️ Citation audit could not be completed",

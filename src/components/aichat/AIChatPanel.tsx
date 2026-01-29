@@ -443,7 +443,40 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 p-0 overflow-hidden relative">
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden relative">
+        {originalityResults && (
+          <div className="p-4 bg-slate-50 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Scan Results</h4>
+              {originalityResults.classification && (
+                <span className={cn(
+                  "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                  originalityResults.classification === 'safe' ? 'bg-emerald-100 text-emerald-700' :
+                    originalityResults.classification === 'action_required' ? 'bg-red-100 text-red-700' :
+                      'bg-amber-100 text-amber-700'
+                )}>
+                  {originalityResults.classification.replace('_', ' ')}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-6">
+              <div>
+                <div className={cn(
+                  "text-2xl font-black",
+                  originalityResults.overallScore > 20 ? "text-amber-600" : "text-emerald-600"
+                )}>
+                  {Math.round(originalityResults.overallScore || 0)}%
+                </div>
+                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Plagiarism</div>
+              </div>
+              <div className="h-8 w-px bg-gray-200"></div>
+              <div>
+                <div className="text-2xl font-black text-slate-700">{originalityResults.matches?.length || 0}</div>
+                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Matches</div>
+              </div>
+            </div>
+          </div>
+        )}
         {showHistory ? (
           <ScrollArea className="h-full p-4">
             <div className="space-y-2">
@@ -547,7 +580,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                     <div className="w-full my-4">
                       <InlineLimitMessage
                         type={message.metadata.code}
-                        title={message.metadata.code === "INSUFFICIENT_CREDITS" ? "Credits Required" : "Limit Reached"}
+                        title={message.metadata.code === "INSUFFICIENT_CREDITS" ? "Oops! Credits Required" : "Oops! Limit Reached"}
                         message={message.metadata.message}
                         actionLabel={message.metadata.code === "INSUFFICIENT_CREDITS" ? "Purchase Credits" : "Upgrade Plan"}
                         onAction={() => window.open(message.metadata.data?.upgrade_url || "/pricing", "_blank")}

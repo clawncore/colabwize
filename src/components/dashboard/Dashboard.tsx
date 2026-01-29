@@ -87,7 +87,20 @@ export const Dashboard: React.FC = () => {
         const sorted = [...response.data].sort((a, b) =>
           new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
         );
-        setLatestProject(sorted[0]);
+
+        const latestBasic = sorted[0];
+        // Fetch full details (including content) for the latest project
+        try {
+          const fullProjectResponse = await documentService.getProjectById(latestBasic.id);
+          if (fullProjectResponse.success && fullProjectResponse.data) {
+            setLatestProject(fullProjectResponse.data);
+          } else {
+            setLatestProject(latestBasic);
+          }
+        } catch (innerErr) {
+          console.warn("Failed to fetch full latest project details", innerErr);
+          setLatestProject(latestBasic);
+        }
       }
     } catch (err) {
       console.error("Error fetching latest project", err);

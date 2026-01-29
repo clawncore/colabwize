@@ -93,10 +93,10 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 
         inFlightPromise = (async () => {
             try {
-                // Outer HTTP timeout for safety (5s) to catch network hangs
+                // Outer HTTP timeout for safety (30s) to match backend hard limit
                 const controller = new AbortController();
-                // Reduced timeout to 10s to fail fast if backend is sluggish
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                // Increased to 30s to avoid premature timeouts during cold starts or heavy load
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
 
                 const response: any = await apiClient.get('/api/subscription/current', {
                     signal: controller.signal

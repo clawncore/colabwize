@@ -3,6 +3,7 @@ import {
   OriginalityService,
   RephraseSuggestion,
 } from "../../services/originalityService";
+import { InlineLimitMessage } from "../common/InlineLimitMessage";
 
 interface RephraseSuggestionsPanelProps {
   // Mode 1: Auto-fetch from project (for Editor)
@@ -206,13 +207,24 @@ export const RephraseSuggestionsPanel: React.FC<
               <p className="text-gray-600 text-sm">Generating suggestions...</p>
             </div>
           ) : error ? (
-            <div className="text-center py-12">
-              <div className="text-red-500 mb-2">⚠️</div>
-              <p className="text-red-600 font-semibold">{error}</p>
-              <p className="text-gray-500 text-sm mt-2">
-                Please try again or check your connection
-              </p>
-            </div>
+            error.includes("limit reached") || error.includes("PLAN_LIMIT_REACHED") ? (
+              <div className="p-4">
+                <InlineLimitMessage
+                  type="PLAN_LIMIT_REACHED"
+                  message="You have reached your rephraser limit for this month."
+                  actionLabel="Upgrade Plan"
+                  onAction={() => window.open('/pricing', '_blank')}
+                />
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-red-500 mb-2">⚠️</div>
+                <p className="text-red-600 font-semibold">{error}</p>
+                <p className="text-gray-500 text-sm mt-2">
+                  Please try again or check your connection
+                </p>
+              </div>
+            )
           ) : !projectId && !externalSuggestions ? (
             <div className="text-center py-12">
               <p className="text-gray-500">No document selected</p>
