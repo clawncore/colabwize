@@ -6,7 +6,6 @@ import { useToast } from "../../hooks/use-toast";
 import { VerificationResultsPanel } from "./VerificationResultsPanel";
 import { CitationGraph } from "./CitationGraph";
 import { Network, BadgeCheck, Lock, Zap, Coins } from "lucide-react";
-import { InlineLimitMessage } from "../common/InlineLimitMessage";
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import { Button } from "../ui/button";
 

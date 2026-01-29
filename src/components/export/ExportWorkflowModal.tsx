@@ -128,7 +128,6 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             }
 
             const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
 
             // Check if response was actually a JSON error hidden in blob (edge case)
             if (blob.type === "application/json") {
@@ -261,8 +260,8 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                                             key={item.id}
                                             onClick={() => toggleChecklistItem(item.id)}
                                             className={`group flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${isChecked
-                                                    ? "border-green-500 bg-green-50/30"
-                                                    : "border-gray-100 hover:border-indigo-200 hover:bg-gray-50"
+                                                ? "border-green-500 bg-green-50/30"
+                                                : "border-gray-100 hover:border-indigo-200 hover:bg-gray-50"
                                                 }`}
                                         >
                                             <span className={`font-semibold ${isChecked ? "text-green-800" : "text-gray-700"}`}>
@@ -281,8 +280,8 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                                 onClick={goToNextStep}
                                 disabled={!isChecklistComplete}
                                 className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${isChecklistComplete
-                                        ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg hover:shadow-indigo-200/50"
-                                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg hover:shadow-indigo-200/50"
+                                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
                                     }`}
                             >
                                 Continue
@@ -305,8 +304,8 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                                         key={fmt.id}
                                         onClick={() => setSelectedFormat(fmt.id as ExportFormat)}
                                         className={`relative group flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all ${selectedFormat === fmt.id
-                                                ? `border-${fmt.color.replace('bg-', '')} bg-${fmt.color.replace('bg-', '')}/5 ring-1 ring-${fmt.color.replace('bg-', '')}`
-                                                : `border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50`
+                                            ? `border-${fmt.color.replace('bg-', '')} bg-${fmt.color.replace('bg-', '')}/5 ring-1 ring-${fmt.color.replace('bg-', '')}`
+                                            : `border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50`
                                             }`}
                                     >
                                         <div className={`w-14 h-14 rounded-2xl ${fmt.color} text-white flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform`}>
@@ -330,8 +329,8 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                                 onClick={goToNextStep}
                                 disabled={!selectedFormat}
                                 className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${selectedFormat
-                                        ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg hover:shadow-indigo-200/50"
-                                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg hover:shadow-indigo-200/50"
+                                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
                                     }`}
                             >
                                 Final Review

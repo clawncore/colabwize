@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import {
   CreditCard,
-  Trash2,
   Loader2,
   AlertCircle,
   FileText,
-  XCircle,
   ArrowRight,
   Coins,
   Check,
