@@ -127,7 +127,8 @@ export async function runCitationAudit(
         return CitationAuditStateMachine.handleSuccessfulScan(
             allFlags,
             processingStats,
-            response.verificationResults  // Pass through for sidebar display
+            response.verificationResults,  // Pass through for sidebar display
+            response.integrityIndex // Pass through CII
         );
 
     } catch (error: any) {

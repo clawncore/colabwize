@@ -5,8 +5,24 @@ import { runCitationAudit } from "../../services/citationAudit/citationAuditEngi
 import { useToast } from "../../hooks/use-toast";
 import { VerificationResultsPanel } from "./VerificationResultsPanel";
 import { CitationGraph } from "./CitationGraph";
-import { Network } from "lucide-react";
+import { Network, BadgeCheck } from "lucide-react";
 import { InlineLimitMessage } from "../common/InlineLimitMessage";
+
+// Helper for CII Bars
+const ScoreBar = ({ label, score, weight }: any) => (
+    <div className="text-xs">
+        <div className="flex justify-between mb-1 text-[10px]">
+            <span className="text-slate-300">{label} <span className="text-slate-500">({weight})</span></span>
+            <span className={`font-mono font-bold ${score > 80 ? 'text-green-400' : score > 50 ? 'text-amber-400' : 'text-slate-400'}`}>{score}</span>
+        </div>
+        <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+            <div
+                className={`h-full rounded-full transition-all duration-500 ${score > 80 ? 'bg-green-500' : score > 50 ? 'bg-amber-500' : 'bg-slate-600'}`}
+                style={{ width: `${score}%` }}
+            />
+        </div>
+    </div>
+);
 
 
 interface CitationAuditSidebarProps {
@@ -107,7 +123,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
             // ALWAYS apply Blue Highlights for Verified Citations (if available)
             if (result.verificationResults) {
                 result.verificationResults.forEach((ver: any) => {
-                    const isViolation = ver.status === "VERIFICATION_FAILED" || ver.status === "UNMATCHED_REFERENCE";
+                    const isViolation = ver.existenceStatus !== "CONFIRMED";
 
                     if (!isViolation && ver.inlineLocation) {
                         const start = ver.inlineLocation.start;
@@ -173,37 +189,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                 </div>
             </div>
 
-            {/* NEW: Integrity Score Gauge */}
-            {auditResult && (
-                <div className="px-6 pt-6 pb-2">
-                    <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-4 text-white shadow-lg border border-slate-700">
-                        <div className="flex justify-between items-start mb-2">
-                            <div>
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Integrity Score</h3>
-                                <div className="text-3xl font-black mt-1">
-                                    {Math.max(0, 100 - (auditResult.violations.length * 5) - (auditResult.verificationResults?.filter((r: any) => r.status !== 'VERIFIED').length * 10 || 0))}%
-                                </div>
-                            </div>
-                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                                <ShieldAlert className="w-5 h-5 text-green-400" />
-                            </div>
-                        </div>
 
-                        {/* Progress Bar */}
-                        <div className="w-full h-1.5 bg-slate-700/50 rounded-full overflow-hidden mb-2">
-                            <div
-                                className={`h-full rounded-full transition-all duration-1000 ${(100 - (auditResult.violations.length * 5)) > 80 ? 'bg-green-500' :
-                                    (100 - (auditResult.violations.length * 5)) > 50 ? 'bg-amber-500' : 'bg-red-500'
-                                    }`}
-                                style={{ width: `${Math.max(5, 100 - (auditResult.violations.length * 5) - (auditResult.verificationResults?.filter((r: any) => r.status !== 'VERIFIED').length * 10 || 0))}%` }}
-                            />
-                        </div>
-                        <p className="text-[10px] text-slate-400 text-right">
-                            {auditResult.violations.length > 0 ? "Issues detected requiring attention" : "Document analysis passed"}
-                        </p>
-                    </div>
-                </div>
-            )}
 
             {/* NEW: View Toggle */}
             <div className="px-6 pt-4 flex gap-2">
@@ -328,7 +314,6 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                                             ))}
                                         </div>
                                     </AuditReportCard>
-
                                     {/* Reference Report Accordion */}
                                     <AuditReportCard
                                         title="Reference List"
@@ -373,6 +358,62 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                                             )}
                                         </div>
                                     </AuditReportCard>
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Section 2.5: Citation Integrity Index (CII) */}
+                        {auditResult && auditResult.integrityIndex && (
+                            <section className="border-t border-gray-100 pt-6">
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
+                                    Citation Integrity Index (CII)
+                                </h3>
+                                <div className="bg-slate-900 rounded-lg p-4 text-white">
+                                    <div className="flex justify-between items-end mb-4">
+                                        <div>
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                                                Composite Score
+                                            </div>
+                                            <div className="text-3xl font-black text-white leading-none">
+                                                {auditResult.integrityIndex.totalScore}%
+                                            </div>
+                                            <div className={`text-[10px] font-bold mt-1 inline-block px-1.5 py-0.5 rounded ${auditResult.integrityIndex.confidence === "HIGH" ? "bg-green-500/20 text-green-400 border border-green-500/30" :
+                                                auditResult.integrityIndex.confidence === "MEDIUM" ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" :
+                                                    "bg-red-500/20 text-red-400 border border-red-500/30"
+                                                }`}>
+                                                {auditResult.integrityIndex.confidence} CONFIDENCE
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center ml-auto mb-1">
+                                                <BadgeCheck className={`w-5 h-5 ${auditResult.integrityIndex.totalScore > 80 ? "text-green-400" :
+                                                    auditResult.integrityIndex.totalScore > 50 ? "text-amber-400" : "text-red-400"
+                                                    }`} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Component Breakdown */}
+                                    <div className="space-y-3 mb-4">
+                                        <ScoreBar label="Style Adherence" score={auditResult.integrityIndex.components.styleScore} weight="30%" />
+                                        <ScoreBar label="Reference Check" score={auditResult.integrityIndex.components.referenceScore} weight="20%" />
+                                        <ScoreBar label="Existence Verification" score={auditResult.integrityIndex.components.verificationScore} weight="30%" />
+                                        <ScoreBar label="Semantic Alignment" score={auditResult.integrityIndex.components.semanticScore} weight="20%" />
+                                    </div>
+
+                                    {/* Verification Limits */}
+                                    {auditResult.integrityIndex.verificationLimits.length > 0 && (
+                                        <div className="mt-4 pt-3 border-t border-slate-700/50">
+                                            <h5 className="text-[10px] font-bold text-slate-400 uppercase mb-2">Verification Limits</h5>
+                                            <ul className="space-y-1">
+                                                {auditResult.integrityIndex.verificationLimits.map((limit: string, idx: number) => (
+                                                    <li key={idx} className="text-[10px] text-slate-300 flex items-start gap-1.5">
+                                                        <span className="text-amber-500 mt-0.5">•</span> {limit}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
                                 </div>
                             </section>
                         )}

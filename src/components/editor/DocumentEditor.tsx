@@ -34,7 +34,8 @@ import "../../styles/column-styles.css";
 import { useToast } from "../../hooks/use-toast";
 import { TableBubbleMenu } from "./TableBubbleMenu";
 import {
-  AIDetectionAdapter,
+  // AIDetectionAdapter,
+  OriginalityMapAdapter,
   // CitationConfidenceAdapter, // Removed/Replaced
   AuthorshipCertificateAdapter,
   RephraseAdapter,
@@ -110,7 +111,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [lastScanResult] = useState<OriginalityScan | null>(
     null
   );
-  const [lastAIScanResult, setLastAIScanResult] = useState<AIScanResult | null>(null);
+  // const [lastAIScanResult, setLastAIScanResult] = useState<AIScanResult | null>(null);
 
   const [citationSuggestions] = useState<any>(null);
   const [editCount, setEditCount] = useState(0);
@@ -418,6 +419,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   };
 
   // Function to highlight AI detection results
+  /*
   const highlightAIResults = (results: AIScanResult) => {
     if (!editor || !results || !results.sentences) return;
 
@@ -475,6 +477,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       }
     });
   };
+  */
 
 
 
@@ -665,8 +668,21 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   Clear Highlights
                 </button>
 
-                {/* AI Detection Adapter */}
-                <AIDetectionAdapter
+                {/* Originality Scan Pipeline (Plagiarism Detection) */}
+                <OriginalityMapAdapter
+                  projectId={project.id}
+                  editor={editor}
+                  onScanComplete={(results) => {
+                    // setLastScanResult(results); // Need to expose standard setLastScanResult or just use highlight
+                    highlightOriginalityResults(results);
+                    if (onOpenPanel) {
+                      onOpenPanel("originality-results", results);
+                    }
+                  }}
+                />
+
+                {/* AI Detection Adapter (Disabled per request) */}
+                {/* <AIDetectionAdapter
                   projectId={project.id}
                   editor={editor}
                   onScanComplete={(results) => {
@@ -676,7 +692,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                       onOpenPanel("ai-results", results);
                     }
                   }}
-                />
+                /> */}
 
 
                 <button
@@ -807,7 +823,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 onOpenPanel?.("ai-chat", {
                   selectedText: editor?.getAttributes("highlight")?.message,
                   originalityResults: lastScanResult,
-                  aiScanResult: lastAIScanResult,
+                  aiScanResult: null,
                   citationSuggestions: citationSuggestions,
                 })
               }

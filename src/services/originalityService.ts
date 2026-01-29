@@ -252,11 +252,13 @@ export class OriginalityService {
    */
   static async rewriteSelection(
     selection: string,
+    mode: "QUICK" | "ACADEMIC" | "DEEP" = "ACADEMIC",
     context?: string
   ): Promise<{ variations: string[]; provider: string }> {
     try {
       const response = await apiClient.post("/api/originality/rewrite-selection", {
         selection,
+        mode,
         context
       });
       return response.data;

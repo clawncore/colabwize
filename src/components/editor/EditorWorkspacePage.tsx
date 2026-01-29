@@ -35,6 +35,7 @@ export type RightPanelType =
   | "citation-confidence"
   | "ai-chat"
   | "ai-results"
+  | "originality-results"
   | null;
 
 const EditorWorkspacePage: React.FC = () => {
@@ -362,6 +363,8 @@ const EditorWorkspacePage: React.FC = () => {
         return "AI Copilot";
       case "ai-results":
         return "AI Detection Results";
+      case "originality-results":
+        return "Originality Report";
       default:
         return "Suggestions";
     }

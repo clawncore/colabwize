@@ -26,6 +26,17 @@ export interface CitationAuditResult {
     citationsFound: number;
     flagsDetected: number;
   };
+  integrityIndex?: {
+    totalScore: number;
+    confidence: "HIGH" | "MEDIUM" | "LOW";
+    components: {
+      styleScore: number;
+      referenceScore: number;
+      verificationScore: number;
+      semanticScore: number;
+    };
+    verificationLimits: string[];
+  };
 }
 
 // State transition handlers
@@ -68,14 +79,15 @@ export class CitationAuditStateMachine {
     };
   }
 
-  static handleSuccessfulScan(violations: any[], processingStats?: any, verificationResults?: any[]): CitationAuditResult {
+  static handleSuccessfulScan(violations: any[], processingStats?: any, verificationResults?: any[], integrityIndex?: any): CitationAuditResult {
     const state = violations.length > 0 ? 'COMPLETED_SUCCESS' : 'COMPLETED_NO_ISSUES';
 
     return {
       state,
       violations,
       verificationResults,  // Include verification results for sidebar
-      processingStats
+      processingStats,
+      integrityIndex // Propagate score
     };
   }
 
