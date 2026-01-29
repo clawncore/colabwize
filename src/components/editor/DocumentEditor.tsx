@@ -26,7 +26,7 @@ import {
   OriginalityScan,
   SimilarityMatch,
 } from "../../services/originalityService";
-import { AIScanResult, AISentenceResult } from "../../services/aiDetectionService";
+
 import { AuthorshipService } from "../../services/authorshipService";
 import "../../styles/highlight-styles.css";
 import "../../styles/image-styles.css";

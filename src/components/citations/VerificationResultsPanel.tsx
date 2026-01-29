@@ -54,7 +54,7 @@ export const VerificationResultsPanel: React.FC<VerificationResultsPanelProps> =
 
     // Grouping for Issues (Not Found vs Service Error)
     const notFound = issues.filter(r => r.existenceStatus === "NOT_FOUND");
-    const otherIssues = issues.filter(r => r.existenceStatus !== "NOT_FOUND"); // Pending, Error
+    // const otherIssues = issues.filter(r => r.existenceStatus !== "NOT_FOUND"); // Pending, Error - Unused
 
     const handleFindFix = async (result: VerificationResult, idx: number) => {
         setFixingIndex(idx);
