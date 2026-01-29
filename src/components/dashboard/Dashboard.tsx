@@ -283,8 +283,8 @@ export const Dashboard: React.FC = () => {
               </div>
 
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center">
-                  <FileSearch className="w-7 h-7 text-indigo-600 mr-3" />
+                <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center">
+                  <FileSearch className="w-8 h-8 text-indigo-600 mr-3" />
                   <span className="truncate">{latestProject.title}</span>
                 </h2>
                 <p className="text-sm text-gray-500 mt-2 line-clamp-2 max-w-2xl">
@@ -295,8 +295,8 @@ export const Dashboard: React.FC = () => {
               {/* Reduced Height Visual Page Preview */}
               <div className="relative mt-auto">
                 <div className="bg-white p-6 rounded-t-xl shadow-sm border-x border-t border-gray-200 h-40 overflow-hidden relative mx-2">
-                  <div className="text-sm text-gray-700 leading-relaxed font-serif opacity-80 whitespace-pre-wrap">
-                    {extractTextFromContent(latestProject.content, 400) || (
+                  <div className="text-sm text-gray-700 leading-relaxed font-serif opacity-90 whitespace-pre-wrap">
+                    {extractTextFromContent(latestProject.content, 3000) || (
                       <span className="italic text-gray-400">No content available for preview.</span>
                     )}
                   </div>
@@ -308,10 +308,10 @@ export const Dashboard: React.FC = () => {
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center z-10">
                   <Link
                     to={`/dashboard/editor/${latestProject.id}`}
-                    className="inline-flex items-center px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-bold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+                    className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-base font-bold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
                   >
                     Resume Editing
-                    <ArrowRight className="ml-2 w-4 h-4" />
+                    <ArrowRight className="ml-2 w-5 h-5" />
                   </Link>
                 </div>
               </div>
@@ -642,10 +642,10 @@ export const Dashboard: React.FC = () => {
                 </p>
                 <button
                   onClick={handleUpgradeClick}
-                  className="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-base rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center mx-auto"
+                  className="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold text-base rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center mx-auto transform hover:-translate-y-0.5"
                 >
                   <span>{userPlan?.includes("student") ? "Upgrade to Researcher" : "Unlock Premium Features"}</span>
-                  <ArrowRight className="ml-2 w-4 h-4" />
+                  <ArrowRight className="ml-2 w-5 h-5" />
                 </button>
                 <p className="text-sm text-gray-600 font-semibold mt-4 bg-white/60 inline-block px-3 py-1 rounded-full backdrop-blur-sm">
                   {userPlan?.includes("student") ? "Starting at $12/mo" : "Starting at $4.99/mo"}

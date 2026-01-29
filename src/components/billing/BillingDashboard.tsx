@@ -14,7 +14,8 @@ import {
   CalendarCheck,
 
   Zap,
-  Activity
+  Activity,
+  HeartHandshake
 } from "lucide-react";
 import {
   PaymentMethod,
@@ -521,7 +522,7 @@ const BillingSettingsPage: React.FC = () => {
                     <div className="flex justify-between items-end mb-3">
                       <span className="text-sm font-medium text-gray-700">Citation Audits</span>
                       <div className="text-right">
-                        <span className={`text-lg font-bold font-mono ${(usage.scans || 0) >= (limits.scans_per_month || 1) ? 'text-red-600' : 'text-gray-900'}`}>
+                        <span className={`text-lg font-bold font-mono ${(limits.scans_per_month !== -1 && (usage.scans || 0) >= (limits.scans_per_month || 1)) ? 'text-red-600' : 'text-gray-900'}`}>
                           {usage.scans || 0}
                         </span>
                         <span className="text-gray-400 text-sm font-mono mx-1">/</span>
@@ -533,16 +534,16 @@ const BillingSettingsPage: React.FC = () => {
                     {/* Progress Bar */}
                     <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${(usage.scans || 0) >= (limits.scans_per_month || 1)
+                        className={`h-full rounded-full transition-all duration-500 ${(limits.scans_per_month !== -1 && (usage.scans || 0) >= limits.scans_per_month)
                           ? 'bg-red-500' // Exceeded
-                          : ((usage.scans || 0) / (limits.scans_per_month || 1)) > 0.8
+                          : (limits.scans_per_month !== -1 && (usage.scans || 0) / limits.scans_per_month > 0.8)
                             ? 'bg-amber-400' // Near limit
-                            : 'bg-green-500' // Normal
+                            : 'bg-green-500' // Normal or Infinite
                           }`}
-                        style={{ width: `${Math.min(100, ((usage.scans || 0) / (limits.scans_per_month || 1)) * 100)}%` }}
+                        style={{ width: `${limits.scans_per_month === -1 ? 100 : Math.min(100, ((usage.scans || 0) / (limits.scans_per_month || 1)) * 100)}%` }}
                       />
                     </div>
-                    {(usage.scans || 0) >= (limits.scans_per_month || 1) && (
+                    {(limits.scans_per_month !== -1 && (usage.scans || 0) >= limits.scans_per_month) && (
                       <div className="mt-2 flex items-center text-xs text-red-600 font-medium animate-pulse">
                         <AlertCircle className="h-3 w-3 mr-1" />
                         Limit reached. Use credits to continue.
@@ -555,7 +556,7 @@ const BillingSettingsPage: React.FC = () => {
                     <div className="flex justify-between items-end mb-3">
                       <span className="text-sm font-medium text-gray-700">Rephrases</span>
                       <div className="text-right">
-                        <span className={`text-lg font-bold font-mono ${(usage.rephrases || 0) >= (limits.rephrases_per_month || 1) ? 'text-red-600' : 'text-gray-900'}`}>
+                        <span className={`text-lg font-bold font-mono ${(limits.rephrases_per_month !== -1 && (usage.rephrases || 0) >= (limits.rephrases_per_month || 1)) ? 'text-red-600' : 'text-gray-900'}`}>
                           {usage.rephrases || 0}
                         </span>
                         <span className="text-gray-400 text-sm font-mono mx-1">/</span>
@@ -566,13 +567,13 @@ const BillingSettingsPage: React.FC = () => {
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${(usage.rephrases || 0) >= (limits.rephrases_per_month || 1)
+                        className={`h-full rounded-full transition-all duration-500 ${(limits.rephrases_per_month !== -1 && (usage.rephrases || 0) >= limits.rephrases_per_month)
                           ? 'bg-red-500'
-                          : ((usage.rephrases || 0) / (limits.rephrases_per_month || 1)) > 0.8
+                          : (limits.rephrases_per_month !== -1 && (usage.rephrases || 0) / limits.rephrases_per_month > 0.8)
                             ? 'bg-amber-400'
                             : 'bg-purple-500'
                           }`}
-                        style={{ width: `${Math.min(100, ((usage.rephrases || 0) / (limits.rephrases_per_month || 1)) * 100)}%` }}
+                        style={{ width: `${limits.rephrases_per_month === -1 ? 100 : Math.min(100, ((usage.rephrases || 0) / (limits.rephrases_per_month || 1)) * 100)}%` }}
                       />
                     </div>
                   </div>
@@ -962,35 +963,58 @@ const BillingSettingsPage: React.FC = () => {
           {/* CANCEL SUBSCRIPTION TAB */}
           <TabsContent value="cancel">
             <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-red-100 overflow-hidden">
-              {/* Step 1: Retention Warning */}
+              {/* Step 1: Gratitude & Review (The Friendly Approach) */}
               {cancelStep === 'start' && (
-                <div className="p-8 text-center space-y-6">
-                  <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
-                    <AlertCircle className="h-8 w-8" />
+                <div className="p-8 text-center space-y-8">
+                  <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <HeartHandshake className="h-8 w-8" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Are you sure you want to cancel?</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Your Journey with ColabWize</h2>
                     <p className="text-gray-500 mt-2 max-w-md mx-auto">
-                      All sales are final. You may cancel at any time to prevent future billing, but no refunds are issued for the current billing period. Access remains active until the end of the billing cycle.
+                      We're sorry to see you consider cancelling. You've been doing great work, and we're proud to have supported your research.
                     </p>
                   </div>
 
-                  <div className="bg-gray-50 p-6 rounded-xl text-left space-y-3">
-                    <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">What you will lose:</h4>
-                    <ul className="space-y-2">
-                      <li className="flex items-center text-gray-700"><XCircle className="h-4 w-4 text-red-500 mr-3" /> Unlimited Originality Scans</li>
-                      <li className="flex items-center text-gray-700"><XCircle className="h-4 w-4 text-red-500 mr-3" /> Advanced Citation Analytics</li>
-                      <li className="flex items-center text-gray-700"><XCircle className="h-4 w-4 text-red-500 mr-3" /> Priority Support Access</li>
-                      <li className="flex items-center text-gray-700"><XCircle className="h-4 w-4 text-red-500 mr-3" /> Draft Comparison History</li>
-                    </ul>
+                  {/* Impact Card */}
+                  <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-2xl border border-blue-100 flex flex-col md:flex-row items-center gap-6 md:justify-around">
+                    <div className="text-center">
+                      <div className="text-3xl font-extrabold text-indigo-600 mb-1">{totalDocuments}</div>
+                      <div className="text-sm text-indigo-900 font-medium opacity-80 uppercase tracking-wide">Documents Created</div>
+                    </div>
+                    <div className="hidden md:block w-px h-12 bg-blue-200"></div>
+                    <div className="text-center">
+                      <div className="text-3xl font-extrabold text-blue-600 mb-1">{creditBalance}</div>
+                      <div className="text-sm text-blue-900 font-medium opacity-80 uppercase tracking-wide">Credits Available</div>
+                    </div>
                   </div>
 
-                  <div className="flex gap-4 justify-center pt-4">
-                    <button onClick={() => navigate('/dashboard')} className="px-6 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors">
-                      Keep My Subscription
+                  <div className="bg-gray-50 p-4 rounded-xl text-left border border-gray-100">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-yellow-100 rounded-lg text-yellow-700 mt-1">
+                        <Zap className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900 text-sm">Did you know?</h4>
+                        <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                          You can <strong>pause</strong> your subscription instead of cancelling. This keeps your credits and documents safe until you're ready to write again.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col-reverse md:flex-row gap-4 justify-center pt-2">
+                    <button
+                      onClick={() => setCancelStep('survey')}
+                      className="px-6 py-3 bg-transparent text-gray-400 font-medium hover:text-gray-600 transition-colors text-sm"
+                    >
+                      I still want to cancel
                     </button>
-                    <button onClick={() => setCancelStep('survey')} className="px-6 py-2.5 bg-white border border-red-200 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-colors">
-                      Continue to Cancel
+                    <button
+                      onClick={() => navigate('/dashboard')}
+                      className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200 transform hover:-translate-y-0.5"
+                    >
+                      Keep My Subscription
                     </button>
                   </div>
                 </div>
@@ -1032,26 +1056,38 @@ const BillingSettingsPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Step 3: Final Confirm */}
+              {/* Step 3: Final Confirm (Neutral & Respectful) */}
               {cancelStep === 'confirm' && (
                 <div className="p-8 text-center space-y-6">
-                  <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
-                    <Trash2 className="h-8 w-8" />
+                  <div className="w-16 h-16 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center mx-auto">
+                    <CalendarCheck className="h-8 w-8" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Final Confirmation</h2>
-                  <p className="text-gray-600">
-                    By clicking "Confirm Cancellation" below, your subscription will be set to cancel at the end of the current billing period ({nextBillingDate?.toLocaleDateString()}). You will retain full access until then.
+                  <h2 className="text-2xl font-bold text-gray-900">Confirm Cancellation</h2>
+
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-100 max-w-md mx-auto">
+                    <p className="text-orange-800 text-sm font-medium">
+                      Your access will remain active until <strong>{nextBillingDate?.toLocaleDateString()}</strong>.
+                    </p>
+                    <p className="text-orange-700 text-xs mt-1">
+                      You will not be charged again after this date.
+                    </p>
+                  </div>
+
+                  <p className="text-gray-500 max-w-md mx-auto text-sm">
+                    We hope to see you again soon. Your documents will be saved in case you decide to return.
                   </p>
 
-                  <button
-                    onClick={handleCancelSubscription}
-                    className="w-full py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors shadow-lg shadow-red-200">
-                    Confirm Cancellation
-                  </button>
+                  <div className="space-y-3 pt-2">
+                    <button
+                      onClick={handleCancelSubscription}
+                      className="w-full py-3 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+                      Confirm Cancellation
+                    </button>
 
-                  <button onClick={() => setCancelStep('start')} className="text-gray-500 hover:text-gray-700 text-sm font-medium">
-                    Go Back
-                  </button>
+                    <button onClick={() => setCancelStep('start')} className="text-indigo-600 hover:text-indigo-800 text-xs font-medium uppercase tracking-wide">
+                      Wait, I changed my mind
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

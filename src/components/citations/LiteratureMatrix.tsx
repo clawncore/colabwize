@@ -8,6 +8,7 @@ interface LiteratureMatrixProps {
     projectId?: string;
     onUpdateCitations?: (updatedCitations: any[]) => void;
     isAnalyzing?: boolean;
+    userPlan?: string;
 }
 
 export const LiteratureMatrix: React.FC<LiteratureMatrixProps> = ({
@@ -15,12 +16,15 @@ export const LiteratureMatrix: React.FC<LiteratureMatrixProps> = ({
     projectId,
     onUpdateCitations,
     isAnalyzing: externalIsAnalyzing = false,
+    userPlan = "Free Plan",
 }) => {
     const [localIsAnalyzing, setLocalIsAnalyzing] = useState(false);
     const isAnalyzing = externalIsAnalyzing || localIsAnalyzing;
 
+    const isResearcher = userPlan === "Researcher";
+
     const handleBatchAnalyze = async () => {
-        if (!projectId || isAnalyzing) return;
+        if (!projectId || isAnalyzing || !isResearcher) return;
 
         setLocalIsAnalyzing(true);
         try {
@@ -64,14 +68,25 @@ export const LiteratureMatrix: React.FC<LiteratureMatrixProps> = ({
                         </span>
 
                         {projectId && (
-                            <button
-                                onClick={handleBatchAnalyze}
-                                disabled={isAnalyzing}
-                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg text-sm font-bold shadow-md hover:from-teal-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
-                            >
-                                <CheckCircle2 className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
-                                {isAnalyzing ? "Synthesizing..." : "Synthesize Matrix"}
-                            </button>
+                            <div className="flex flex-col items-end gap-1">
+                                <button
+                                    onClick={handleBatchAnalyze}
+                                    disabled={isAnalyzing || !isResearcher}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold shadow-md transition-all ${isResearcher
+                                            ? "bg-gradient-to-r from-teal-600 to-emerald-600 text-white hover:from-teal-700 hover:to-emerald-700 hover:scale-105"
+                                            : "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                                        }`}
+                                    title={!isResearcher ? "Available on Researcher Plan" : ""}
+                                >
+                                    <CheckCircle2 className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
+                                    {isAnalyzing ? "Synthesizing..." : "Synthesize Matrix"}
+                                </button>
+                                {!isResearcher && (
+                                    <span className="text-[10px] text-orange-500 font-semibold flex items-center gap-1">
+                                        ✨ Researcher Plan Only
+                                    </span>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>

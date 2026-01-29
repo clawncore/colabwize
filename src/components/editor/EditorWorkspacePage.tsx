@@ -47,7 +47,7 @@ const EditorWorkspacePage: React.FC = () => {
 
   // Collapsible state - Start with both sidebars closed
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
 
   // Left Panel State
   const [activeLeftPanel, setActiveLeftPanel] = useState<"documents" | "audit" | "sources" | "outline" | "visual-map" | "research-gaps" | null>(null);
@@ -55,7 +55,7 @@ const EditorWorkspacePage: React.FC = () => {
 
   // Right panel type state
   const [activePanelType, setActivePanelType] =
-    useState<RightPanelType>(null);
+    useState<RightPanelType>("ai-chat");
   const [panelData, setPanelData] = useState<any>(null);
 
   // Resizable widths
@@ -281,13 +281,28 @@ const EditorWorkspacePage: React.FC = () => {
 
   // Check if we should show the editor tour (first time the user opens the editor)
   useEffect(() => {
-    if (selectedProject && !OnboardingService.getEditorTourStatusLocal()) {
-      // Show tour after a short delay to let the UI render
-      const timer = setTimeout(() => {
-        setShowEditorTour(true);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
+    const checkTourStatus = async () => {
+      if (!selectedProject) return;
+
+      // Strict Check: First check local, then check server to be sure
+      const localCompleted = OnboardingService.getEditorTourStatusLocal();
+      if (localCompleted) return; // Don't show if done locally
+
+      try {
+        const status = await OnboardingService.getStatus();
+        if (status.editorTourCompleted) {
+          // Was done on another device, sync local
+          OnboardingService.completeEditorTourLocal();
+        } else {
+          // Not done anywhere, show it
+          // Short delay for UI render
+          setTimeout(() => setShowEditorTour(true), 1000);
+        }
+      } catch (e) {
+        console.error("Failed to sync tour status", e);
+      }
+    };
+    checkTourStatus();
   }, [selectedProject]);
 
   const handleEditorTourComplete = () => {
@@ -578,33 +593,49 @@ const EditorWorkspacePage: React.FC = () => {
                 <button
                   data-tour="visual-map"
                   onClick={() => {
+                    if (userPlan !== "Researcher") return;
                     setActiveLeftPanel("visual-map");
                     setIsLeftSidebarOpen(true);
                   }}
                   className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "visual-map"
                     ? "bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                    : userPlan !== "Researcher"
+                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                     }`}
-                  title={!isNavRailOpen ? "Insight Map" : ""}
+                  title={userPlan !== "Researcher" ? "Available on Researcher Plan" : !isNavRailOpen ? "Insight Map" : ""}
                 >
                   <Network className={`w-4 h-4 ${activeLeftPanel === "visual-map" ? "text-[#10b981]" : "text-gray-400"}`} />
-                  {isNavRailOpen && "Insight Map"}
+                  {isNavRailOpen && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Insight Map</span>
+                      {userPlan !== "Researcher" && <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">PRO</span>}
+                    </div>
+                  )}
                 </button>
 
                 <button
                   data-tour="research-gaps"
                   onClick={() => {
+                    if (userPlan !== "Researcher") return;
                     setActiveLeftPanel("research-gaps");
                     setIsLeftSidebarOpen(true);
                   }}
                   className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "research-gaps"
                     ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                    : userPlan !== "Researcher"
+                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                     }`}
-                  title={!isNavRailOpen ? "Research Gaps" : ""}
+                  title={userPlan !== "Researcher" ? "Available on Researcher Plan" : !isNavRailOpen ? "Research Gaps" : ""}
                 >
                   <Lightbulb className={`w-4 h-4 ${activeLeftPanel === "research-gaps" ? "text-[#f59e0b]" : "text-gray-400"}`} />
-                  {isNavRailOpen && "Research Gaps"}
+                  {isNavRailOpen && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Research Gaps</span>
+                      {userPlan !== "Researcher" && <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">PRO</span>}
+                    </div>
+                  )}
                 </button>
               </div>
 
@@ -754,6 +785,7 @@ const EditorWorkspacePage: React.FC = () => {
             sources={selectedProject?.citations || []}
             projectId={selectedProject?.id}
             onUpdateCitations={handleBatchSourceUpdate}
+            userPlan={userPlan}
           />
         ) : activeLeftPanel === "research-gaps" && selectedProject ? (
           <ResearchGapsPanel

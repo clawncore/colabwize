@@ -78,19 +78,19 @@ export const AuthorshipCertificate: React.FC<AuthorshipCertificateProps> = ({
             </p>
           </div>
 
-          {/* Certificate Preview Card - New Formal Design (Template View) */}
-          <div className={`relative w-[340px] h-[240px] bg-white shadow-2xl rounded-sm transform transition-all duration-700 cursor-default flex-shrink-0 ${downloadStep === 'ready' ? 'rotate-0 scale-100 opacity-100' : 'scale-95 opacity-80'}`}>
+          {/* Certificate Preview Card - New Formal Design (Compact) */}
+          <div className={`relative w-[300px] h-[210px] bg-white shadow-2xl rounded-sm transform transition-all duration-700 cursor-default flex-shrink-0 ${downloadStep === 'ready' ? 'rotate-0 scale-100 opacity-100' : 'scale-95 opacity-80'}`}>
             {/* Paper Texture & Border */}
-            <div className="absolute inset-0 bg-[#fffdf5] border-8 border-double border-slate-800 m-2"></div>
-            <div className="absolute inset-0 m-3 border border-yellow-600/30"></div>
+            <div className="absolute inset-0 bg-[#fffdf5] border-4 border-double border-slate-800 m-1.5"></div>
+            <div className="absolute inset-0 m-2.5 border border-yellow-600/30"></div>
 
             {/* Corner Accents */}
-            <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-slate-800"></div>
-            <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-slate-800"></div>
-            <div className="absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 border-slate-800"></div>
-            <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-slate-800"></div>
+            <div className="absolute top-3 left-3 w-3 h-3 border-t-2 border-l-2 border-slate-800"></div>
+            <div className="absolute top-3 right-3 w-3 h-3 border-t-2 border-r-2 border-slate-800"></div>
+            <div className="absolute bottom-3 left-3 w-3 h-3 border-b-2 border-l-2 border-slate-800"></div>
+            <div className="absolute bottom-3 right-3 w-3 h-3 border-b-2 border-r-2 border-slate-800"></div>
 
-            <div className="relative h-full w-full p-6 flex flex-col items-center justify-between z-10">
+            <div className="relative h-full w-full p-4 flex flex-col items-center justify-between z-10">
 
               {/* Header */}
               <div className="text-center space-y-1">

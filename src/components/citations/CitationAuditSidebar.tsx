@@ -5,8 +5,10 @@ import { runCitationAudit } from "../../services/citationAudit/citationAuditEngi
 import { useToast } from "../../hooks/use-toast";
 import { VerificationResultsPanel } from "./VerificationResultsPanel";
 import { CitationGraph } from "./CitationGraph";
-import { Network, BadgeCheck } from "lucide-react";
+import { Network, BadgeCheck, Lock, Zap, Coins } from "lucide-react";
 import { InlineLimitMessage } from "../common/InlineLimitMessage";
+import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
+import { Button } from "../ui/button";
 
 // Helper for CII Bars
 const ScoreBar = ({ label, score, weight }: any) => (
@@ -46,6 +48,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     const [viewMode, setViewMode] = useState<"list" | "graph">("list");
     const selectedStyle = citationStyle || "APA";
     const { toast } = useToast();
+    const { plan, status: subStatus } = useSubscriptionStore();
 
     // Helper to map Rule IDs to Badge Codes and Colors (Moved inside but could be outside if no external deps)
     // Actually, let's keep it pure and move it outside the component entirely to be safe.
@@ -268,14 +271,48 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
 
                         {/* Section 1.5: Blocking Messages */}
                         {auditResult && (auditResult.state === "FAILED_QUOTA_EXCEEDED" || auditResult.state === "FAILED_SUBSCRIPTION_ERROR") && (
-                            <div className="mb-6">
-                                <InlineLimitMessage
-                                    type={auditResult.quotaInfo?.code || "PLAN_LIMIT_REACHED"}
-                                    title={auditResult.state === "FAILED_QUOTA_EXCEEDED" ? "Limit Reached" : "Feature Locked"}
-                                    message={auditResult.errorMessage || "You cannot perform this action."}
-                                    actionLabel={auditResult.quotaInfo?.code === "INSUFFICIENT_CREDITS" ? "Buy Credits" : "Upgrade Plan"}
-                                    onAction={() => window.open("/pricing", "_blank")}
-                                />
+                            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm">
+                                <div className="flex items-start gap-3">
+                                    <div className="mt-1 p-1.5 bg-red-100 rounded-full">
+                                        <Lock className="w-4 h-4 text-red-600" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="font-bold text-red-900 text-sm mb-1">Limit Reached</h4>
+                                        <p className="text-xs text-red-800 leading-relaxed font-medium">
+                                            Oops you have run out of your plan usage for auditing, to continue using upgrade to another tier, or buy credits.
+                                        </p>
+
+                                        <div className="flex gap-2 mt-4">
+                                            <Button
+                                                size="sm"
+                                                onClick={() => window.open("/pricing", "_blank")}
+                                                disabled={plan !== 'free' && subStatus === 'active'}
+                                                className={`h-8 text-xs font-semibold px-3 ${plan !== 'free' && subStatus === 'active'
+                                                    ? 'bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed hover:bg-gray-200 opacity-80'
+                                                    : 'bg-gradient-to-r from-gray-900 to-gray-800 hover:from-black hover:to-gray-900 text-white border-0 shadow-md'
+                                                    }`}
+                                            >
+                                                <Zap className="w-3 h-3 mr-1.5" />
+                                                Upgrade Plan
+                                            </Button>
+
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => window.open("/pricing", "_blank")}
+                                                className="h-8 text-xs font-semibold px-3 bg-white hover:bg-purple-50 text-purple-700 border-purple-200 hover:border-purple-300 shadow-sm"
+                                            >
+                                                <Coins className="w-3 h-3 mr-1.5" />
+                                                Buy Credits
+                                            </Button>
+                                        </div>
+                                        {plan !== 'free' && subStatus === 'active' && (
+                                            <p className="text-[10px] text-red-600/70 mt-2 font-medium">
+                                                * Upgrade unavailable on active paid plan. Please buy credits.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         )}
 
