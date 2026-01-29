@@ -19,7 +19,7 @@ export const CitationAuditAdapter: React.FC<CitationAuditAdapterProps> = ({
     const [isScanning, setIsScanning] = useState(false);
     const { toast } = useToast();
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-    const [upgradeMessage, setUpgradeMessage] = useState("");
+
 
     const handleScan = async () => {
         const content = editor?.getText() || "";

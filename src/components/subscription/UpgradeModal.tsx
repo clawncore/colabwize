@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+
 import { X, Crown, Zap, HeartCrack } from "lucide-react";
 import { Link } from "react-router-dom";
 
