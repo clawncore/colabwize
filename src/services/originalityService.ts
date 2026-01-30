@@ -66,6 +66,47 @@ export interface RephraseSuggestion {
 
 export class OriginalityService {
   /**
+   * Helper to normalize backend response (handles snake_case -> camelCase migration)
+   */
+  private static normalizeResponse(data: any): OriginalityScan {
+    if (!data) return data;
+
+    // Check if we need to map snake_case
+    const isSnakeCase = data.overall_score !== undefined || data.scan_status !== undefined;
+
+    if (!isSnakeCase) {
+      return data as OriginalityScan;
+    }
+
+    return {
+      id: data.id,
+      projectId: data.project_id || data.projectId,
+      userId: data.user_id || data.userId,
+      overallScore: data.overall_score ?? data.overallScore,
+      classification: data.classification,
+      scanStatus: data.scan_status || data.scanStatus,
+      matches: (data.matches || []).map((m: any) => ({
+        id: m.id,
+        sentenceText: m.sentence_text || m.sentenceText,
+        matchedSource: m.matched_source || m.matchedSource,
+        sourceUrl: m.source_url || m.sourceUrl,
+        viewUrl: m.view_url || m.viewUrl,
+        matchedWords: m.matched_words ?? m.matchedWords,
+        sourceWords: m.source_words ?? m.sourceWords,
+        matchPercent: m.match_percent ?? m.matchPercent,
+        similarityScore: m.similarity_score ?? m.similarityScore,
+        positionStart: m.position_start ?? m.positionStart,
+        positionEnd: m.position_end ?? m.positionEnd,
+        classification: m.classification
+      })),
+      scannedAt: data.scanned_at || data.scannedAt,
+      wordsScanned: data.words_scanned ?? data.wordsScanned,
+      costAmount: data.cost_amount ?? data.costAmount,
+      matchCount: data.match_count ?? data.matchCount
+    };
+  }
+
+  /**
    * Scan a document for originality
    */
   static async scanDocument(
@@ -78,7 +119,7 @@ export class OriginalityService {
         content,
       });
 
-      return response.data;
+      return this.normalizeResponse(response.data);
     } catch (error: any) {
       console.error("Error scanning document:", error);
 
@@ -103,7 +144,7 @@ export class OriginalityService {
     try {
       const response = await apiClient.get(`/api/originality/scan/${scanId}`);
 
-      return response.data;
+      return this.normalizeResponse(response.data);
     } catch (error: any) {
       console.error("Error getting scan results:", error);
       throw new Error(error.message || "Failed to get scan results");
@@ -119,7 +160,7 @@ export class OriginalityService {
         `/api/originality/project/${projectId}`
       );
 
-      return response.data;
+      return (response.data || []).map((item: any) => this.normalizeResponse(item));
     } catch (error: any) {
       console.error("Error getting project scans:", error);
       throw new Error(error.message || "Failed to get project scans");

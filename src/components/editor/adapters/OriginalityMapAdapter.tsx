@@ -74,7 +74,7 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
 
       toast({
         title: "Scan Complete",
-        description: `Originality Score: ${Math.round(result.overallScore)}%. Highlights applied.`,
+        description: `Originality Score: ${Math.round((result.overallScore ?? (result as any).overall_score) ?? 0)}%. Highlights applied.`,
         variant: "default",
       });
     } catch (error: any) {
