@@ -8,6 +8,7 @@ import { useCitationAuditStore } from "../../stores/useCitationAuditStore";
 // import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
+import { CitationAuditModal } from "./CitationAuditModal";
 
 interface CitationAuditSidebarProps {
     projectId: string;
@@ -25,6 +26,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
 }) => {
     const navigate = useNavigate();
     const [localLoading, setLocalLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
     const { setAuditResult, setLoading, auditResult } = useCitationAuditStore();
     const selectedStyle = citationStyle || "APA";
     const { toast } = useToast();
@@ -202,24 +204,70 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                                 )}
 
                                 {/* 3. Integrity Score Summary */}
-                                {auditResult.integrityIndex && (
-                                    <div className="bg-slate-900 rounded-lg p-4 text-white">
-                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                                            Citation Integrity Index
+                                {auditResult.integrityIndex && (() => {
+                                    const score = auditResult.integrityIndex.totalScore;
+                                    let config = {
+                                        gradient: "from-emerald-500 to-green-700",
+                                        shadow: "shadow-green-900/10",
+                                        label: "Excellent Integrity",
+                                        desc: "Sources appear verifiable and reliable."
+                                    };
+
+                                    if (score < 50) {
+                                        config = {
+                                            gradient: "from-red-600 to-rose-800",
+                                            shadow: "shadow-red-900/20",
+                                            label: "Critical Risk",
+                                            desc: "Significant citation issues detected."
+                                        };
+                                    } else if (score < 80) {
+                                        config = {
+                                            gradient: "from-amber-500 to-orange-700",
+                                            shadow: "shadow-orange-900/20",
+                                            label: "Needs Improvement",
+                                            desc: "Some sources may be unverified."
+                                        };
+                                    }
+
+                                    return (
+                                        <div className={`rounded-xl p-5 text-white bg-gradient-to-br ${config.gradient} shadow-lg ${config.shadow} relative overflow-hidden group`}>
+                                            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                                <BadgeCheck className="w-24 h-24 rotate-12 -mr-8 -mt-8" />
+                                            </div>
+
+                                            <div className="relative z-10 flex justify-between items-start">
+                                                <div>
+                                                    <div className="text-[10px] font-bold text-white/80 uppercase tracking-widest mb-1">
+                                                        Integrity Index
+                                                    </div>
+                                                    <div className="text-4xl font-black text-white tracking-tight">
+                                                        {score}%
+                                                    </div>
+                                                    <div className="font-bold text-white mt-1 text-sm">
+                                                        {config.label}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <div className={`text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/20 backdrop-blur-sm`}>
+                                                        {auditResult.integrityIndex.confidence} CONFIDENCE
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="relative z-10 mt-3 pt-3 border-t border-white/20">
+                                                <p className="text-xs text-white/90 font-medium">
+                                                    {config.desc}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div className="text-3xl font-black text-white">
-                                            {auditResult.integrityIndex.totalScore}%
-                                        </div>
-                                        <div className={`text-[10px] font-bold mt-1 inline-block px-1.5 py-0.5 rounded ${auditResult.integrityIndex.confidence === "HIGH" ? "bg-green-500/20 text-green-400" : "bg-amber-500/20 text-amber-400"}`}>
-                                            {auditResult.integrityIndex.confidence} CONFIDENCE
-                                        </div>
-                                    </div>
-                                )}
+                                    );
+                                })()}
 
                                 {/* 4. Full Report Call-to-Action */}
                                 <div className="pt-4 border-t border-gray-100">
                                     <Button
-                                        onClick={() => navigate("/dashboard/citation-audit")}
+                                        onClick={() => setShowModal(true)}
                                         className="w-full justify-between group"
                                         variant="outline"
                                     >
@@ -242,7 +290,20 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                             </button>
                         </div>
                     </>
-                ) : null}
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-64 text-center p-6 text-gray-400">
+                        <BadgeCheck className="w-12 h-12 mb-4 opacity-20" />
+                        <p className="text-sm mb-4">Ready to analyze your citations.</p>
+                        <Button onClick={handleRunStyleAudit} size="sm">
+                            Start Citation Audit
+                        </Button>
+                    </div>
+                )}
+
+                <CitationAuditModal
+                    isOpen={showModal}
+                    onClose={() => setShowModal(false)}
+                />
 
             </div>
         </div>

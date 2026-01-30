@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { EditorOnboardingTour } from "../onboarding/EditorOnboardingTour";
 import { OnboardingService } from "../../services/onboardingService";
 import { HelpCircle } from "lucide-react";
+import { OriginalityMapSidebar } from "../originality/OriginalityMapSidebar";
 
 // Define panel types
 export type RightPanelType =
@@ -951,6 +952,14 @@ const EditorWorkspacePage: React.FC = () => {
                 <AIProbabilityHeatmap
                   content={editorInstance?.getText() || ""}
                   results={panelData.sentences}
+                />
+              </div>
+            )}
+            {activePanelType === "originality-results" && panelData && (
+              <div className="h-full overflow-y-auto custom-scrollbar bg-gray-50">
+                <OriginalityMapSidebar
+                  results={panelData}
+                  documentContent={editorInstance?.getText() || ""}
                 />
               </div>
             )}

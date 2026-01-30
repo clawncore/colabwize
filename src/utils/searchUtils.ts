@@ -111,7 +111,7 @@ const mapStringIndexToPos = (doc: Node, targetIndex: number): number | null => {
  * Robust implementation of finding a single best match for a sentence
  * prioritizing the vicinity of 'estimatedPos'.
  */
-export const findBestMatch = (doc: Node, searchText: string, estimatedPos: number = 0): Range | null => {
+export const findBestMatch = (doc: Node, searchText: string): Range | null => {
     // 1. Convert entire doc to text with a separator that mimics structure slightly
     // using a unique char for block boundaries to avoid matching across paragraphs falsely
     // (though sometimes sentences span paragraphs? Unlikely for originality checker).
@@ -251,7 +251,7 @@ export const findBestMatch = (doc: Node, searchText: string, estimatedPos: numbe
  * Perform a standard search of `searchText` within the document.
  * Returns the first occurrence after `fromPos`.
  */
-export const findTextRange = (doc: Node, searchText: string, fromPos: number = 0): Range | null => {
+export const findTextRange = (doc: Node, searchText: string): Range | null => {
     // Helper to extract all text nodes with their positions
     const textNodes: { pos: number, text: string }[] = [];
     doc.descendants((node, pos) => {

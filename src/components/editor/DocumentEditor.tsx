@@ -327,95 +327,58 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   };
 
   // Function to highlight originality results
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const highlightOriginalityResults = (results: OriginalityScan) => {
     if (!editor || !results || !results.matches) return;
 
-    // Clear existing highlights
+    console.log("Highlighting originality results:", results.matches.length, "matches");
+
+    // Clear existing originality highlights
     clearHighlights();
 
-    // Import the utility dynamically or assumption it's available
-    // We added it to src/utils/searchUtils.ts
-    // For now we assume imports are handled or we need to add the import at top.
-    const doc = editor.state.doc;
-    let searchPos = 0;
-
-    // Sort matches by position to ensure sequential search works best
+    // Sort matches by position to ensure sequential application
     const sortedMatches = [...results.matches].sort(
       (a, b) => a.positionStart - b.positionStart
     );
 
-    sortedMatches.forEach((match: SimilarityMatch) => {
-      if (!match.sentenceText) return;
+    sortedMatches.forEach((match: SimilarityMatch, index) => {
+      // Use the position data from the  match
+      const from = match.positionStart || 0;
+      const to = match.positionEnd || from + (match.sentenceText?.length || 0);
 
-      // Use robust search from utility
-      const range = findTextRange(doc, match.sentenceText, searchPos);
-
-      if (!range) {
-        // Match not found (possibly content changed significantly since scan)
-        console.warn("Could not find match text in document", match.sentenceText);
+      if (from >= to) {
+        console.warn(`Invalid range for match ${index}:`, from, to);
         return;
       }
 
-      // Advance search position to avoid re-matching the same text earlier in doc
-      searchPos = range.to;
-
-      // Determine color based on classification
+      // Determine color based on similarity score
       let color = "yellow";
-      switch (match.classification) {
-        case "green":
-        case "common_phrase":
-          color = "green";
-          break;
-        case "red":
-        case "needs_citation":
-          color = "red";
-          break;
-        case "blue":
-        case "quoted_correctly":
-          color = "blue";
-          break;
-        case "yellow":
-        case "close_paraphrase":
-        default:
-          color = "yellow";
+      if (match.similarityScore >= 80) {
+        color = "red"; // High risk
+      } else if (match.similarityScore >= 60) {
+        color = "orange"; // Moderate risk
+      } else {
+        color = "yellow"; // Low risk
       }
 
       // Create a descriptive message for the tooltip
-      let message = `Similarity found: ${Math.round(match.similarityScore)}% match.`;
-      if (match.matchedSource) {
-        message += ` Source: ${match.matchedSource}`;
-      }
-
-      switch (match.classification) {
-        case "red":
-        case "needs_citation":
-          message = `⚠️ Significant similarity detected (${Math.round(match.similarityScore)}%). ${match.matchedSource ? `Matches text from: ${match.matchedSource}` : "Consider rewriting or citing."}`;
-          break;
-        case "green":
-        case "common_phrase":
-          message = "Common phrase. Likely safe to ignore.";
-          break;
-        case "blue":
-        case "quoted_correctly":
-          message = "Correctly quoted text.";
-          break;
-      }
+      const message = `${Math.round(match.similarityScore)}% similarity - ${match.sourceUrl || 'Unknown source'}`;
 
       // Apply the highlight mark
       try {
-        // Use the specific range command
-        editor.chain().highlightRange(range.from, range.to, {
+        editor.chain().highlightRange(from, to, {
           color,
           type: "originality",
           similarity: match.similarityScore,
           message: message,
         }).run();
 
+        console.log(`Highlighted match ${index}: ${from}-${to} (${color})`);
       } catch (err) {
         console.error("Failed to highlight match:", match, err);
       }
     });
+
+    console.log("Highlighting complete");
   };
 
   // Function to highlight AI detection results

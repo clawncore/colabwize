@@ -1085,6 +1085,34 @@ mark.citation-highlight[data-type="violation"] {
   border-color: #3b82f6;
 }
 
+/* Originality Scan - Copyscape Style Background Highlighting */
+.citation-highlight[data-type="originality"] {
+  background-color: transparent;
+  border-bottom: none;
+  padding: 2px 0;
+  border-radius: 2px;
+}
+
+.citation-highlight[data-type="originality"][data-color="red"] {
+  background-color: rgba(254, 202, 202, 0.7);
+  /* bg-red-200 */
+}
+
+.citation-highlight[data-type="originality"][data-color="orange"] {
+  background-color: rgba(254, 215, 170, 0.7);
+  /* bg-orange-200 */
+}
+
+.citation-highlight[data-type="originality"][data-color="yellow"] {
+  background-color: rgba(254, 240, 138, 0.7);
+  /* bg-yellow-200 */
+}
+
+.citation-highlight[data-type="originality"]:hover {
+  opacity: 0.9;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+}
+
 /* Hover Effect: Stronger underline */
 .citation-highlight:hover {
   text-underline-offset: 2px;

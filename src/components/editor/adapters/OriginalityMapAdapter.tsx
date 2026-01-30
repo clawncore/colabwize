@@ -67,16 +67,32 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
         }
       }
 
-      // Notify parent to highlight
+      // Notify parent to highlight (or open dashboard)
       if (onScanComplete) {
         onScanComplete(result);
       }
 
-      toast({
-        title: "Scan Complete",
-        description: `Originality Score: ${Math.round((result.overallScore ?? (result as any).overall_score) ?? 0)}%. Highlights applied.`,
-        variant: "default",
-      });
+      if (result.scanStatus === "failed") {
+        if ((result as any).failureCode === "MAINTENANCE") {
+          toast({
+            title: "Service Maintenance",
+            description: "Originality checks are currently undergoing maintenance. Please check back in a few minutes.",
+            variant: "default", // Neutral/Info style, not destructive red
+          });
+        } else {
+          toast({
+            title: "Scan Incomplete",
+            description: "We couldn't fully verify the document. Check the dashboard for details.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Scan Complete",
+          description: `Originality Score: ${Math.round((result.overallScore ?? (result as any).overall_score) ?? 0)}%. Highlights applied.`,
+          variant: "default",
+        });
+      }
     } catch (error: any) {
       console.error("Scan failed:", error);
 

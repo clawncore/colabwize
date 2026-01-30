@@ -15,72 +15,107 @@ export const SimilarityMatchCard: React.FC<SimilarityMatchCardProps> = ({
   onViewComparison,
   isLoadingRephrase = false,
 }) => {
+  const score = match.similarityScore || 0;
+
+  // Determine color theme based on score
+  let theme = {
+    color: "text-green-700",
+    bg: "bg-green-100",
+    bar: "bg-green-500",
+    border: "border-green-200",
+    badge: "Original"
+  };
+
+  if (score >= 80) {
+    theme = {
+      color: "text-red-700",
+      bg: "bg-red-100",
+      bar: "bg-red-500",
+      border: "border-red-200",
+      badge: "Review Needed"
+    };
+  } else if (score >= 60) {
+    theme = {
+      color: "text-orange-700",
+      bg: "bg-orange-100",
+      bar: "bg-orange-500",
+      border: "border-orange-200",
+      badge: "Review Needed"
+    };
+  } else if (score >= 40) {
+    theme = {
+      color: "text-amber-700",
+      bg: "bg-amber-100",
+      bar: "bg-amber-500",
+      border: "border-amber-200",
+      badge: "Check Context"
+    };
+  }
+
   return (
-    <div className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
-      {/* Header with classification badge */}
-      <div className="flex items-start justify-between mb-3">
-        <SafetyBadge classification={match.classification} score={match.similarityScore} />
-        <span className="text-xs text-gray-500">
-          {Math.round(match.similarityScore)}% similar
-        </span>
-      </div>
-
-      {/* Flagged sentence */}
-      <div className="mb-3">
-        <p className="text-xs font-semibold text-gray-600 mb-1">Your Text:</p>
-        <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded border-l-4 border-gray-300">
-          {match.sentenceText}
-        </p>
-      </div>
-
-      {/* Matched source */}
-      <div className="mb-3">
-        <p className="text-xs font-semibold text-gray-600 mb-1">Similar Content Found:</p>
-        <p className="text-sm text-gray-700 bg-blue-50 p-2 rounded border-l-4 border-blue-300">
-          {match.matchedSource}
-        </p>
-      </div>
-
-      {/* Source URL & View Comparison */}
-      <div className="mb-3 flex flex-col gap-2">
-        {match.sourceUrl && (
-          <a
-            href={match.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
-          >
-            <span>🔗</span>
-            <span className="truncate max-w-[200px]">{match.sourceUrl}</span>
-          </a>
-        )}
-
-        {match.viewUrl && (
-          <button
-            onClick={() => onViewComparison(match.viewUrl!)}
-            className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded border border-indigo-200 transition-colors mt-1 w-fit group"
-          >
-            <span>👁️</span> View Comparison Report
-          </button>
-        )}
-      </div>
-
-      {/* Stats row */}
-      {match.matchedWords !== undefined && match.matchedWords > 0 && (
-        <div className="mb-3 text-xs text-gray-500 font-medium">
-          Matched {match.matchedWords} {match.sourceWords ? `/ ${match.sourceWords}` : ""} words
-          {match.matchPercent ? ` (${match.matchPercent}% of source)` : ""}
+    <div className={`border rounded-lg p-3 bg-white shadow-sm hover:shadow-md transition-all ${theme.border} group`}>
+      {/* Header with classification badge & Score */}
+      <div className="flex items-center justify-between mb-2">
+        <div className={`text-xs font-bold px-2 py-1 rounded-full ${theme.bg} ${theme.color} flex items-center gap-1.5`}>
+          <span>{theme.badge}</span>
+          <span>•</span>
+          <span>{Math.round(score)}%</span>
         </div>
-      )}
 
-      {/* Rephrase button */}
-      <button
-        onClick={() => onGetRephrase(match)}
-        disabled={isLoadingRephrase}
-        className="w-full mt-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-      >
-        {isLoadingRephrase ? "Loading suggestions..." : "Get Rephrase Suggestions"}
-      </button>
+        {/* Source Hostname */}
+        <div className="text-xs text-gray-400 font-medium truncate max-w-[120px]">
+          {match.sourceUrl ? new URL(match.sourceUrl).hostname : 'Unknown Source'}
+        </div>
+      </div>
+
+      {/* Copyscape-Style Color Bar */}
+      <div className="mb-3 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full ${theme.bar}`}
+          style={{ width: `${score}%` }}
+        />
+      </div>
+
+      {/* Matched Snippet */}
+      <div className="mb-3">
+        <p className="text-sm text-gray-800 leading-relaxed font-medium line-clamp-3">
+          "...{match.sentenceText}..."
+        </p>
+      </div>
+
+      {/* Actions Row */}
+      <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-100">
+        <div className="flex items-center gap-2">
+          {match.sourceUrl && (
+            <a
+              href={match.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+              title="Open Source"
+            >
+              <span role="img" aria-label="link">🔗</span>
+            </a>
+          )}
+
+          {match.viewUrl && (
+            <button
+              onClick={() => onViewComparison(match.viewUrl!)}
+              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium hover:underline"
+            >
+              View Comparison
+            </button>
+          )}
+        </div>
+
+        <button
+          onClick={() => onGetRephrase(match)}
+          disabled={isLoadingRephrase}
+          className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-md font-medium transition-colors"
+        >
+          {isLoadingRephrase ? "..." : "Rephrase"}
+        </button>
+      </div>
     </div>
   );
 };

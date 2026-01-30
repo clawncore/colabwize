@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { AlertCircle, CheckCircle } from "lucide-react";
 import {
   OriginalityService,
   OriginalityScan,
@@ -363,39 +364,44 @@ export const OriginalityMap: React.FC<
             <AnxietyRealityCheckPanel stats={scanResult.realityCheck} />
           )}
 
-          {/* Overall Score */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between">
+          {/* Overall Score - Copyscape Style */}
+          <div className="bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 rounded-lg shadow-lg p-8 text-white">
+            <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+              <SafetyBadge classification={scanResult.classification} score={scanResult.overallScore} />
+              Analysis Complete
+            </h3>
+
+            <div className="flex flex-col md:flex-row md:items-end gap-8">
+              {/* Large Score Display - No Box */}
               <div>
-                <h3 className="text-2xl font-bold mb-2">Analysis Complete</h3>
-                <p className="text-indigo-100">
-                  Originality Report: {Math.round(scanResult.overallScore)}%
-                </p>
+                <div className="text-sm font-medium text-purple-100 mb-2">Overall Originality Score</div>
+                <div className="flex items-center gap-4">
+                  <div className="text-8xl font-bold tracking-tighter">{Math.round(scanResult.overallScore)}%</div>
+                  {scanResult.overallScore < 70 ? (
+                    <div className="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm self-center">
+                      <AlertCircle className="w-4 h-4" />
+                      Review Needed
+                    </div>
+                  ) : (
+                    <div className="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm self-center">
+                      <CheckCircle className="w-4 h-4" />
+                      Original
+                    </div>
+                  )}
+                </div>
               </div>
-              <SafetyBadge
-                classification={scanResult.classification}
-                score={scanResult.overallScore}
-                size="lg"
-              />
-            </div>
-            <div className="mt-4 flex items-center gap-4 text-sm flex-wrap">
-              <span>Matches Found: {scanResult.matches.length}</span>
-              <span>•</span>
-              {scanResult.wordsScanned !== undefined && (
-                <>
-                  <span>Words: {scanResult.wordsScanned.toLocaleString()}</span>
-                  <span>•</span>
-                </>
-              )}
-              {scanResult.costAmount !== undefined && scanResult.costAmount > 0 && (
-                <>
-                  <span>Cost: ${scanResult.costAmount.toFixed(4)}</span>
-                  <span>•</span>
-                </>
-              )}
-              <span>
-                Scanned: {new Date(scanResult.scannedAt).toLocaleString()}
-              </span>
+
+              {/* Metrics */}
+              <div className="flex gap-4">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 border border-white/10 min-w-[140px]">
+                  <div className="text-xs text-purple-100 mb-1">Matches Found</div>
+                  <div className="text-3xl font-bold">{scanResult.matches.length}</div>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 border border-white/10 min-w-[140px]">
+                  <div className="text-xs text-purple-100 mb-1">Words Scanned</div>
+                  <div className="text-3xl font-bold">{scanResult.wordsScanned?.toLocaleString() || 0}</div>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -30,12 +30,12 @@ export const extractTextFromContent = (content: any, maxLength: number = 0): str
                         if (typeof doubleParsed === 'object') {
                             contentObj = doubleParsed;
                         }
-                    } catch (e) {
+                    } catch {
                         // Second parse failed, stick with the first parsed string if meaningful
                         contentObj = parsed;
                     }
                 }
-            } catch (e) {
+            } catch {
                 // Not a JSON string, treat as plain text
                 // If it's a simple string, treat it as text
                 return maxLength && contentObj.length > maxLength

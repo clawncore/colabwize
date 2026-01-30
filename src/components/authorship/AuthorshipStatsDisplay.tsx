@@ -89,15 +89,16 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
       {/* Metrics Grid - 3 Columns */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Total Time Card */}
-        <div className="bg-white rounded-xl p-5 border border-blue-100 shadow-[0_2px_8px_rgba(37,99,235,0.08)] flex flex-col justify-between h-full hover:shadow-lg transition-shadow duration-300">
-          <div className="flex items-start justify-between mb-3">
+        <div className="bg-white relative rounded-xl p-5 border border-blue-100 shadow-[0_2px_8px_rgba(37,99,235,0.08)] flex flex-col justify-between h-full hover:shadow-lg transition-shadow duration-300">
+          <div className="mb-3 pr-14">
             <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">
               Total Time
             </div>
-            <div className="p-3 bg-blue-500 text-white rounded-xl shadow-blue-200 shadow-lg transform transition-transform hover:scale-110 duration-200">
-              <Clock className="w-6 h-6" />
-            </div>
           </div>
+          <div className="absolute top-4 right-4 p-3 bg-blue-500 text-white rounded-xl shadow-blue-200 shadow-lg transform transition-transform hover:scale-110 duration-200">
+            <Clock className="w-6 h-6" />
+          </div>
+
           <div>
             <div className="text-3xl font-black text-gray-900 tracking-tight">
               {formatTime(stats.totalTimeInvestedMinutes || 0)}
@@ -110,15 +111,16 @@ export const AuthorshipStatsDisplay: React.FC<AuthorshipStatsDisplayProps> = ({
         </div>
 
         {/* Manual Edits Card */}
-        <div className="bg-white rounded-xl p-5 border border-green-100 shadow-[0_2px_8px_rgba(22,163,74,0.08)] flex flex-col justify-between h-full hover:shadow-lg transition-shadow duration-300">
-          <div className="flex items-start justify-between mb-3">
+        <div className="bg-white relative rounded-xl p-5 border border-green-100 shadow-[0_2px_8px_rgba(22,163,74,0.08)] flex flex-col justify-between h-full hover:shadow-lg transition-shadow duration-300">
+          <div className="mb-3 pr-14">
             <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">
               Manual Edits
             </div>
-            <div className="p-3 bg-green-500 text-white rounded-xl shadow-green-200 shadow-lg transform transition-transform hover:scale-110 duration-200">
-              <FileEdit className="w-6 h-6" />
-            </div>
           </div>
+          <div className="absolute top-4 right-4 p-3 bg-green-500 text-white rounded-xl shadow-green-200 shadow-lg transform transition-transform hover:scale-110 duration-200">
+            <FileEdit className="w-6 h-6" />
+          </div>
+
           <div>
             <div className="text-3xl font-black text-gray-900 tracking-tight">
               {(stats.manualEditsCount || 0).toLocaleString()}
