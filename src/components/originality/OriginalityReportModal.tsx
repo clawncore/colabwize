@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { OriginalityScan, SimilarityMatch } from "../../services/originalityService";
-import { SimilarityMatchCard } from "./SimilarityMatchCard";
-import { X, Shield, AlertCircle, CheckCircle, ExternalLink } from "lucide-react";
+
+import { X, Shield, ExternalLink, CheckCircle } from "lucide-react";
 import { Button } from "../ui/button";
 
 interface OriginalityReportModalProps {
@@ -68,7 +68,7 @@ export const OriginalityReportModal: React.FC<OriginalityReportModalProps> = ({
             if (similarityScore >= 80) colorClass = "bg-red-200 border-red-400";
             else if (similarityScore >= 60) colorClass = "bg-orange-200 border-orange-400";
 
-            highlightedHTML += `<mark class="${colorClass} border-b-2 cursor-pointer hover:bg-opacity-80 transition-colors" data-match-id=\"${match.id || ''}" title="${similarityScore}% similar to ${match.sourceUrl || 'unknown source'}">${escapeHtml(documentContent.substring(start, end))}</mark>`;
+            highlightedHTML += `<mark class="${colorClass} border-b-2 cursor-pointer hover:bg-opacity-80 transition-colors" data-match-id="${match.id || ''}" title="${similarityScore}% similar to ${match.sourceUrl || 'unknown source'}">${escapeHtml(documentContent.substring(start, end))}</mark>`;
 
             lastIndex = end;
         });

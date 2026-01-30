@@ -7,7 +7,7 @@ import { useToast } from "../../hooks/use-toast";
 import { useCitationAuditStore } from "../../stores/useCitationAuditStore";
 // import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import { Button } from "../ui/button";
-import { useNavigate } from "react-router-dom";
+
 import { CitationAuditModal } from "./CitationAuditModal";
 
 interface CitationAuditSidebarProps {
@@ -24,7 +24,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     onClose,
     citationStyle
 }) => {
-    const navigate = useNavigate();
+
     const [localLoading, setLocalLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const { setAuditResult, setLoading, auditResult } = useCitationAuditStore();

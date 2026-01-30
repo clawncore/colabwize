@@ -3,7 +3,7 @@ import { useCitationAuditStore } from "../../stores/useCitationAuditStore";
 import { VerificationResultsPanel } from "./VerificationResultsPanel";
 import { CitationGraph } from "./CitationGraph";
 import { ShieldAlert, X, Network, BadgeCheck, FileText } from "lucide-react";
-import { Button } from "../ui/button";
+
 
 interface CitationAuditModalProps {
     isOpen: boolean;

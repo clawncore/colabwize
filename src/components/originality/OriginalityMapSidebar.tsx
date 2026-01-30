@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { OriginalityScan, SimilarityMatch } from "../../services/originalityService";
 import { SimilarityMatchCard } from "./SimilarityMatchCard";
-import { SafetyBadge } from "./SafetyBadge";
+
 import { Shield, AlertCircle, CheckCircle, Clock, FileText } from "lucide-react";
 import { OriginalityReportModal } from "./OriginalityReportModal";
-import { Button } from "../ui/button";
+
 
 interface OriginalityMapSidebarProps {
     results: OriginalityScan;
@@ -18,9 +18,7 @@ export const OriginalityMapSidebar: React.FC<OriginalityMapSidebarProps> = ({ re
     const matches = results.matches || [];
 
     // Determine safety level
-    let safetyLevel: "safe" | "moderate" | "high" = "safe";
-    if (score < 50) safetyLevel = "high";
-    else if (score < 80) safetyLevel = "moderate";
+
 
     return (
         <div className="h-full flex flex-col bg-white">

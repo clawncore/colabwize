@@ -1,6 +1,6 @@
 import React from "react";
 import { SimilarityMatch } from "../../services/originalityService";
-import { SafetyBadge } from "./SafetyBadge";
+
 
 interface SimilarityMatchCardProps {
   match: SimilarityMatch;
