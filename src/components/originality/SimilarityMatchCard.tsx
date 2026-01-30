@@ -5,12 +5,14 @@ import { SafetyBadge } from "./SafetyBadge";
 interface SimilarityMatchCardProps {
   match: SimilarityMatch;
   onGetRephrase: (match: SimilarityMatch) => void;
+  onViewComparison: (url: string) => void;
   isLoadingRephrase?: boolean;
 }
 
 export const SimilarityMatchCard: React.FC<SimilarityMatchCardProps> = ({
   match,
   onGetRephrase,
+  onViewComparison,
   isLoadingRephrase = false,
 }) => {
   return (
@@ -39,9 +41,9 @@ export const SimilarityMatchCard: React.FC<SimilarityMatchCardProps> = ({
         </p>
       </div>
 
-      {/* Source URL */}
-      {match.sourceUrl && (
-        <div className="mb-3">
+      {/* Source URL & View Comparison */}
+      <div className="mb-3 flex flex-col gap-2">
+        {match.sourceUrl && (
           <a
             href={match.sourceUrl}
             target="_blank"
@@ -49,8 +51,25 @@ export const SimilarityMatchCard: React.FC<SimilarityMatchCardProps> = ({
             className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
           >
             <span>🔗</span>
-            <span className="truncate">{match.sourceUrl}</span>
+            <span className="truncate max-w-[200px]">{match.sourceUrl}</span>
           </a>
+        )}
+
+        {match.viewUrl && (
+          <button
+            onClick={() => onViewComparison(match.viewUrl!)}
+            className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded border border-indigo-200 transition-colors mt-1 w-fit group"
+          >
+            <span>👁️</span> View Comparison Report
+          </button>
+        )}
+      </div>
+
+      {/* Stats row */}
+      {match.matchedWords !== undefined && match.matchedWords > 0 && (
+        <div className="mb-3 text-xs text-gray-500 font-medium">
+          Matched {match.matchedWords} {match.sourceWords ? `/ ${match.sourceWords}` : ""} words
+          {match.matchPercent ? ` (${match.matchPercent}% of source)` : ""}
         </div>
       )}
 

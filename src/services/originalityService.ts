@@ -5,6 +5,10 @@ export interface SimilarityMatch {
   sentenceText: string;
   matchedSource: string;
   sourceUrl?: string;
+  viewUrl?: string;
+  matchedWords?: number;
+  sourceWords?: number;
+  matchPercent?: number;
   similarityScore: number;
   positionStart: number;
   positionEnd: number;
@@ -29,6 +33,9 @@ export interface OriginalityScan {
   matches: SimilarityMatch[];
   scannedAt: Date;
   realityCheck?: RealityCheckStats;
+  wordsScanned?: number;
+  costAmount?: number;
+  matchCount?: number;
 }
 
 export interface RealityCheckStats {

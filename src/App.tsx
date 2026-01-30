@@ -69,6 +69,7 @@ import BillingSettingsPage from "./components/settings/BillingSettingsPage";
 import HelpSettingsPage from "./components/settings/Help";
 import FeedbackPage from "./components/feedback/FeedbackDashboard";
 import SettingsLayout from "./pages/settings/SettingsLayout";
+import CitationAuditReportPage from "./pages/dashboard/CitationAuditReportPage";
 
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -249,7 +250,7 @@ function App() {
                       <Route path="billing" element={<BillingSettingsPage />} />
                       <Route path="help" element={<HelpSettingsPage />} />
                       <Route path="feedback" element={<FeedbackPage />} />
-
+                      <Route path="citation-audit" element={<CitationAuditReportPage />} />
                     </Route>
                   </Route>
                   {/* Alias for Credit Purchase as per detailed requirement */}

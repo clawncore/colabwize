@@ -12,6 +12,8 @@ import { RephraseSuggestionsPanel } from "./RephraseSuggestionsPanel";
 import { AnxietyRealityCheckPanel } from "./AnxietyRealityCheckPanel";
 import { AnxietyRealityCheckBanner } from "./AnxietyRealityCheckBanner";
 import { UpgradeModal } from "../subscription/UpgradeModal";
+import { ComparisonModal } from "./ComparisonModal";
+import { RescanSafetyModal } from "./RescanSafetyModal";
 
 interface OriginalityMapProps {
   projectId: string;
@@ -32,6 +34,7 @@ export const OriginalityMap: React.FC<
   const [showRephrasePanel, setShowRephrasePanel] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedViewUrl, setSelectedViewUrl] = useState<string | null>(null);
 
   // Hybrid Realtime State
   const [autoScanEnabled, setAutoScanEnabled] = useState(false); // Default to false to give user control
@@ -40,7 +43,11 @@ export const OriginalityMap: React.FC<
   >("idle");
   const lastScannedHashRef = React.useRef<string>("");
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
-  const hasInitialScannedRef = React.useRef(false);
+
+  // Rescan Safety State
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [similarityPercent, setSimilarityPercent] = useState(0);
+  const lastScannedContentRef = React.useRef<string>("");
 
   // Simple hash function for client-side caching
   const simpleHash = (text: string): string => {
@@ -53,23 +60,65 @@ export const OriginalityMap: React.FC<
     return hash.toString(36);
   };
 
+  // Jaccard Similarity Helper
+  const calculateSimilarity = (text1: string, text2: string): number => {
+    const set1 = new Set(text1.toLowerCase().split(/\s+/));
+    const set2 = new Set(text2.toLowerCase().split(/\s+/));
+    const intersection = new Set([...set1].filter(x => set2.has(x)));
+    const union = new Set([...set1, ...set2]);
+    return union.size === 0 ? 0 : Math.round((intersection.size / union.size) * 100);
+  };
+
   // Initialize content from prop if provided
   useEffect(() => {
     if (initialContent && content !== initialContent) {
       setContent(initialContent);
-      // If we have content on load, we can optionally trigger a scan or just set status to idle/ready
-      // Let's set status to idle so user sees the content and can choose to scan
     }
   }, [initialContent]);
 
-  // Handle Scan Logic (with Smart Caching)
+  // Handle Scan Logic
+  const executeScan = async () => {
+    setIsScanning(true);
+    setScanStatus("scanning");
+    setError(null);
+    setShowSafetyModal(false);
+
+    try {
+      const result = await OriginalityService.scanDocument(projectId, content);
+      setScanResult(result);
+      if (onScanComplete) onScanComplete(result);
+
+      // Update caches
+      lastScannedHashRef.current = simpleHash(content);
+      lastScannedContentRef.current = content;
+      setScanStatus("protected");
+    } catch (err: any) {
+      const errorMessage = err.message || "Failed to scan document";
+      if (
+        errorMessage.toLowerCase().includes("limit reached") ||
+        errorMessage.toLowerCase().includes("upgrade") ||
+        errorMessage.toLowerCase().includes("credits")
+      ) {
+        setShowUpgradeModal(true);
+        setError(null);
+      } else if (errorMessage.includes("SERVICE_MAINTENANCE")) {
+        setError("Originality checks are temporarily running a bit slow. We are optimizing the service. Please check back in a few hours!");
+      } else {
+        setError(errorMessage);
+      }
+      setScanStatus("idle");
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
   const handleScan = async () => {
     if (!content.trim()) {
       setError("Please enter some text to scan");
       return;
     }
 
-    // Smart Caching Check
+    // 1. Smart Caching Check (Identical)
     const currentHash = simpleHash(content);
     if (currentHash === lastScannedHashRef.current && scanResult) {
       setScanStatus("protected");
@@ -80,45 +129,22 @@ export const OriginalityMap: React.FC<
       return;
     }
 
-    setIsScanning(true);
-    setScanStatus("scanning");
-    setError(null);
-
-    try {
-      const result = await OriginalityService.scanDocument(projectId, content);
-      setScanResult(result);
-
-      // Notify parent
-      if (onScanComplete) {
-        onScanComplete(result);
+    // 2. Safety Check (Highly Similar)
+    if (lastScannedContentRef.current && scanResult) {
+      const sim = calculateSimilarity(content, lastScannedContentRef.current);
+      if (sim > 85) { // 85% threshold
+        setSimilarityPercent(sim);
+        setShowSafetyModal(true);
+        return;
       }
-
-      // Update cache
-      lastScannedHashRef.current = currentHash;
-      setScanStatus("protected");
-    } catch (err: any) {
-      const errorMessage = err.message || "Failed to scan document";
-      // Check for limit reached error (403 from backend)
-      if (
-        errorMessage.toLowerCase().includes("limit reached") ||
-        errorMessage.toLowerCase().includes("upgrade") ||
-        errorMessage.toLowerCase().includes("credits") // Handle credit exhaustion messages
-      ) {
-        setShowUpgradeModal(true);
-        // Don't show inline error if we show modal
-        setError(null);
-      } else {
-        setError(errorMessage);
-      }
-      setScanStatus("idle");
-    } finally {
-      setIsScanning(false);
     }
+
+    // 3. Proceed
+    await executeScan();
   };
 
   // Auto-Scan Effect
   useEffect(() => {
-    // If auto-scan is disabled, just track status based on result
     if (!autoScanEnabled) {
       if (scanStatus !== "idle" && scanStatus !== "scanning" && !scanResult) {
         setScanStatus("idle");
@@ -130,20 +156,17 @@ export const OriginalityMap: React.FC<
 
     const currentHash = simpleHash(content);
 
-    // If content matches last scan, we are protected
     if (currentHash === lastScannedHashRef.current) {
       setScanStatus("protected");
       return;
     }
 
-    // Otherwise we are typing/waiting
     setScanStatus("typing");
 
-    // Debounce scan
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(() => {
       handleScan();
-    }, 3000); // 3 second pause triggers scan
+    }, 3000);
 
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -178,7 +201,6 @@ export const OriginalityMap: React.FC<
         errorMessage.toLowerCase().includes("credits")
       ) {
         setShowUpgradeModal(true);
-        // setFeature("rephrase"); // ideally we'd set the feature prop on the modal
         setError(null);
       } else {
         setError(errorMessage);
@@ -188,10 +210,13 @@ export const OriginalityMap: React.FC<
     }
   };
 
-  // Handle close rephrase panel
   const handleCloseRephrasePanel = () => {
     setShowRephrasePanel(false);
     setRephrases([]);
+  };
+
+  const handleViewComparison = (url: string) => {
+    setSelectedViewUrl(url);
   };
 
   return (
@@ -312,9 +337,21 @@ export const OriginalityMap: React.FC<
           </div>
 
           {error && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm">{error}</p>
-            </div>
+            error.includes("temporarily running a bit slow") ? (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
+                <div className="text-blue-500 mt-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-blue-800">Service Update</h4>
+                  <p className="text-blue-700 text-sm mt-0.5">{error}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-800 text-sm">{error}</p>
+              </div>
+            )
           )}
         </div>
       )}
@@ -322,7 +359,6 @@ export const OriginalityMap: React.FC<
       {/* Results Section */}
       {scanResult && (
         <div className="space-y-6">
-          {/* Anxiety Reality Check Panel */}
           {scanResult.realityCheck && (
             <AnxietyRealityCheckPanel stats={scanResult.realityCheck} />
           )}
@@ -342,9 +378,21 @@ export const OriginalityMap: React.FC<
                 size="lg"
               />
             </div>
-            <div className="mt-4 flex items-center gap-4 text-sm">
+            <div className="mt-4 flex items-center gap-4 text-sm flex-wrap">
               <span>Matches Found: {scanResult.matches.length}</span>
               <span>•</span>
+              {scanResult.wordsScanned !== undefined && (
+                <>
+                  <span>Words: {scanResult.wordsScanned.toLocaleString()}</span>
+                  <span>•</span>
+                </>
+              )}
+              {scanResult.costAmount !== undefined && scanResult.costAmount > 0 && (
+                <>
+                  <span>Cost: ${scanResult.costAmount.toFixed(4)}</span>
+                  <span>•</span>
+                </>
+              )}
               <span>
                 Scanned: {new Date(scanResult.scannedAt).toLocaleString()}
               </span>
@@ -358,9 +406,7 @@ export const OriginalityMap: React.FC<
                 stats={scanResult.realityCheck}
                 overallScore={scanResult.overallScore}
                 onOpenPanel={() => {
-                  // This would typically open the detailed panel
-                  // For now we'll just log it
-                  console.log("Opening detailed reality check panel");
+                  /* Panel opening logic if needed, currently inline */
                 }}
               />
             </div>
@@ -390,6 +436,7 @@ export const OriginalityMap: React.FC<
                     key={match.id}
                     match={match}
                     onGetRephrase={handleGetRephrase}
+                    onViewComparison={handleViewComparison}
                     isLoadingRephrase={
                       isLoadingRephrases && selectedMatch?.id === match.id
                     }
@@ -419,9 +466,6 @@ export const OriginalityMap: React.FC<
               onClick={() => {
                 setScanResult(null);
                 setRephrases([]);
-                // Keep content for re-scan if needed, or clear it?
-                // Better to keep it if user wants to edit and re-scan.
-                // setContent("");
                 setError(null);
               }}
               className="px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
@@ -441,6 +485,22 @@ export const OriginalityMap: React.FC<
           isLoading={isLoadingRephrases}
         />
       )}
+
+      {/* Comparison Modal (Internal View) */}
+      <ComparisonModal
+        isOpen={!!selectedViewUrl}
+        onClose={() => setSelectedViewUrl(null)}
+        viewUrl={selectedViewUrl}
+      />
+
+      {/* Rescan Safety Warning Modal */}
+      <RescanSafetyModal
+        isOpen={showSafetyModal}
+        onClose={() => setShowSafetyModal(false)}
+        onConfirm={executeScan}
+        similarityPercent={similarityPercent}
+      />
+
       {/* Upgrade Modal */}
       <UpgradeModal
         isOpen={showUpgradeModal}
