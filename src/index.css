@@ -1011,25 +1011,22 @@ li[data-type="taskItem"]>div {
 /* Audit Highlighters - Word Processor Style */
 mark.citation-highlight[data-color="amber"] {
   background-color: transparent;
-  text-decoration: underline wavy #f59e0b;
-  /* amber-500 */
-  text-underline-offset: 4px;
+  border-bottom: 2px solid #f59e0b;
+  text-decoration: none;
   cursor: help;
 }
 
 mark.citation-highlight[data-color="red"] {
   background-color: transparent;
-  text-decoration: underline wavy #ef4444;
-  /* red-500 */
-  text-underline-offset: 4px;
+  border-bottom: 2px solid #ef4444;
+  text-decoration: none;
   cursor: help;
 }
 
 mark.citation-highlight[data-color="blue"] {
   background-color: transparent;
-  text-decoration: underline wavy #3b82f6;
-  /* blue-500 */
-  text-underline-offset: 4px;
+  border-bottom: 2px solid #3b82f6;
+  text-decoration: none;
   cursor: help;
 }
 
@@ -1069,24 +1066,23 @@ mark.citation-highlight[data-type="violation"] {
 /* Base Highlight: Remove background, use distinct underline */
 .citation-highlight {
   background-color: transparent !important;
-  text-decoration: underline wavy;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
+  text-decoration: none;
+  border-bottom: 2px solid;
   cursor: help;
   transition: all 0.2s ease;
 }
 
 /* Color Semantics */
 .citation-highlight[data-color="amber"] {
-  text-decoration-color: #f59e0b;
+  border-color: #f59e0b;
 }
 
 .citation-highlight[data-color="red"] {
-  text-decoration-color: #ef4444;
+  border-color: #ef4444;
 }
 
 .citation-highlight[data-color="blue"] {
-  text-decoration-color: #3b82f6;
+  border-color: #3b82f6;
 }
 
 /* Hover Effect: Stronger underline */

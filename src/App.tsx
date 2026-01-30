@@ -242,6 +242,7 @@ function App() {
                     />
                     <Route path="billing/credits" element={<CreditsPage />} />
                     <Route path="analytics" element={<DocumentAnalyticsPage />} />
+                    <Route path="citation-audit" element={<CitationAuditReportPage />} />
                     <Route path="recycle-bin" element={<RecycleBinPage />} />
                     {/* Settings routes with layout */}
                     <Route path="settings" element={<SettingsLayout />}>
@@ -250,7 +251,7 @@ function App() {
                       <Route path="billing" element={<BillingSettingsPage />} />
                       <Route path="help" element={<HelpSettingsPage />} />
                       <Route path="feedback" element={<FeedbackPage />} />
-                      <Route path="citation-audit" element={<CitationAuditReportPage />} />
+
                     </Route>
                   </Route>
                   {/* Alias for Credit Purchase as per detailed requirement */}

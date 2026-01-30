@@ -1,50 +1,55 @@
 /* Highlight styles for document editor */
 
 /* Base Highlight - Clear background, thick solid underline */
-.highlight {
+.citation-highlight {
   background-color: transparent !important;
   /* Reset padding to avoid layout shifts */
   padding-bottom: 2px;
   border-radius: 0;
   text-decoration: none;
   cursor: pointer;
-  position: relative; /* Essential for tooltip positioning */
+  position: relative;
+  /* Essential for tooltip positioning */
 }
 
 /* --- Colors & Lines --- */
 
 /* Green (Pass/Safe) */
-.highlight[data-color="green"] {
+.citation-highlight[data-color="green"] {
   border-bottom: 4px solid #4caf50;
 }
 
 /* Yellow/Amber (Style Warnings - STY) */
-.highlight[data-color="yellow"],
-.highlight[data-color="amber"] {
-  border-bottom: 4px solid #f59e0b; /* Amber-500 */
+.citation-highlight[data-color="yellow"],
+.citation-highlight[data-color="amber"] {
+  border-bottom: 4px solid #f59e0b;
+  /* Amber-500 */
 }
 
 /* Red (Verification Failures - VER) */
-.highlight[data-color="red"] {
-  border-bottom: 4px solid #ef4444; /* Red-500 */
+.citation-highlight[data-color="red"] {
+  border-bottom: 4px solid #ef4444;
+  /* Red-500 */
 }
 
 /* Blue (Reference Match - REF) */
-.highlight[data-color="blue"] {
-  border-bottom: 4px solid #3b82f6; /* Blue-500 */
+.citation-highlight[data-color="blue"] {
+  border-bottom: 4px solid #3b82f6;
+  /* Blue-500 */
 }
 
 /* Specific Citation Blue (Verified) */
-.highlight[data-color="citation-blue"] {
-  border-bottom: 4px solid #2563eb; /* Blue-600 */
+.citation-highlight[data-color="citation-blue"] {
+  border-bottom: 4px solid #2563eb;
+  /* Blue-600 */
   /* Optional: Make text blue too for verified links */
-  color: #2563eb !important; 
+  color: #2563eb !important;
 }
 
 
 /* --- Hover Effects --- */
 
-.highlight:hover {
+.citation-highlight:hover {
   /* add subtle background opacity on hover */
   background-color: rgba(0, 0, 0, 0.05) !important;
 }
@@ -52,23 +57,26 @@
 
 /* --- Popup Tooltip Box --- */
 
-.highlight[data-message]:hover::after {
+.citation-highlight[data-message]:hover::after {
   content: attr(data-message);
-  
+
   /* Positioning */
   position: absolute;
-  bottom: 100%; /* Above the text */
+  bottom: 100%;
+  /* Above the text */
   left: 50%;
   transform: translateX(-50%) translateY(-8px);
   z-index: 50;
-  
+
   /* Sizing */
   min-width: 200px;
   max-width: 300px;
-  white-space: normal; /* Allow text wrapping */
-  
+  white-space: normal;
+  /* Allow text wrapping */
+
   /* Appearance */
-  background-color: #1e293b; /* Slate-800 */
+  background-color: #1e293b;
+  /* Slate-800 */
   color: #ffffff;
   font-size: 12px;
   font-weight: 500;
@@ -77,21 +85,24 @@
   padding: 8px 12px;
   border-radius: 6px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  
+
   /* Animation */
-  pointer-events: none; /* Let clicks pass through to text */
+  pointer-events: none;
+  /* Let clicks pass through to text */
 }
 
 /* Tooltip Arrow */
-.highlight[data-message]:hover::before {
+.citation-highlight[data-message]:hover::before {
   content: "";
   position: absolute;
   bottom: 100%;
   left: 50%;
-  transform: translateX(-50%) translateY(0px); /* Touch the bottom of tooltip */
+  transform: translateX(-50%) translateY(0px);
+  /* Touch the bottom of tooltip */
   border-width: 6px;
   border-style: solid;
-  border-color: #1e293b transparent transparent transparent; /* Slate-800 arrow */
+  border-color: #1e293b transparent transparent transparent;
+  /* Slate-800 arrow */
   z-index: 50;
   pointer-events: none;
 }
