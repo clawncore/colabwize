@@ -28,7 +28,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     const { setAuditResult, setLoading, auditResult } = useCitationAuditStore();
     const selectedStyle = citationStyle || "APA";
     const { toast } = useToast();
-    const { plan, status: subStatus } = useSubscriptionStore();
+    // const { plan, status: subStatus } = useSubscriptionStore(); // Unused variables removed for build
 
     // Helper: Map Rule IDs to Badge Codes and Colors for Highlighting
     const mapRuleToCodeAndColor = (ruleId: string): { code: string, color: string, label: string } => {
