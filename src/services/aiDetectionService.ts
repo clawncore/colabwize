@@ -24,18 +24,17 @@ export class AIDetectionService {
             const response = await apiClient.post("/api/ai-detection/scan", { content });
 
             // Handle new response format with success/data structure
-            if (response.data.success && response.data.data) {
-                return response.data.data;
+            if (response.success && response.data) {
+                return response.data;
             }
 
             // Fallback for direct data response
-            return response.data;
+            return response;
         } catch (error: any) {
             console.error("AI detection scan failed:", error);
 
             // Extract error message from response
-            const errorMessage = error.response?.data?.message
-                || error.message
+            const errorMessage = error.message
                 || "Failed to scan for AI content";
 
             throw new Error(errorMessage);

@@ -182,7 +182,7 @@ export class OriginalityService {
         originalText,
       });
 
-      return response.data;
+      return response;
     } catch (error: any) {
       console.error("Error getting rephrase suggestions:", error);
 
@@ -313,6 +313,27 @@ export class OriginalityService {
     } catch (e: any) {
       console.error("Error rewriting selection", e);
       throw e;
+    }
+  }
+
+  /**
+   * PROMPT 4: Get forensic risk explanation
+   */
+  static async explainRisk(
+    matchText: string,
+    sourceText: string,
+    riskLevel: string
+  ): Promise<string> {
+    try {
+      const response = await apiClient.post("/api/originality/explain-risk", {
+        matchText,
+        sourceText,
+        riskLevel
+      });
+      return response.data?.explanation || "No explanation available.";
+    } catch (e: any) {
+      console.error("Error getting risk explanation", e);
+      throw new Error(e.message || "Failed to explain risk");
     }
   }
 }

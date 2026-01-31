@@ -88,6 +88,7 @@ export const HighlightExtension = Mark.create<HighlightOptions>({
         renderHTML: (attributes) => {
           return {
             "data-color": attributes.color,
+            "style": `background-color: ${attributes.color}`,
           };
         },
       },

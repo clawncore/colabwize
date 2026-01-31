@@ -186,6 +186,7 @@ export class CitationService {
       pages?: string;
       abstract?: string;
       citationCount?: number;
+      tags?: string[];
     }
   ): Promise<any> {
     try {
@@ -220,6 +221,7 @@ export class CitationService {
         abstract: citation.abstract,
         formatted_citations: formattedCitations,
         added_at: new Date().toISOString(),
+        tags: citation.tags
       });
 
       return response;
@@ -403,5 +405,177 @@ export class CitationService {
       console.error("Batch analysis failed:", error);
       throw new Error(error.message || "Failed to batch analyze citations");
     }
+  }
+
+  /**
+   * Search citations from CrossRef/PubMed
+   */
+  static async searchCitations(query: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(
+        `/api/citations/search?q=${encodeURIComponent(query)}`
+      );
+      return response.data || [];
+    } catch (error: any) {
+      console.error("Error searching citations:", error);
+      throw new Error(error.message || "Failed to search citations");
+    }
+  }
+
+  /**
+   * Get all citations for a project
+   */
+  static async getProjectCitations(projectId: string): Promise<StoredCitation[]> {
+    try {
+      const response = await apiClient.get(`/api/citations/${projectId}`);
+      return response.data || [];
+    } catch (error: any) {
+      console.error("Error getting project citations:", error);
+      throw new Error(error.message || "Failed to get project citations");
+    }
+  }
+
+  /**
+   * Delete a citation
+   */
+  static async deleteCitation(citationId: string): Promise<void> {
+    try {
+      await apiClient.delete(`/api/citations/${citationId}`);
+    } catch (error: any) {
+      console.error("Error deleting citation:", error);
+      throw new Error(error.message || "Failed to delete citation");
+    }
+  }
+
+  /**
+   * Import citation from DOI
+   */
+  static async importFromDOI(doi: string): Promise<any> {
+    try {
+      const response = await apiClient.post("/api/citations/import/doi", { doi });
+      return response.data;
+    } catch (error: any) {
+      console.error("Error importing from DOI:", error);
+      throw new Error(error.message || "Failed to import from DOI");
+    }
+  }
+
+  /**
+   * Import citation from URL
+   */
+  static async importFromURL(url: string): Promise<any> {
+    try {
+      const response = await apiClient.post("/api/citations/import/url", { url });
+      return response.data;
+    } catch (error: any) {
+      console.error("Error importing from URL:", error);
+      throw new Error(error.message || "Failed to import from URL");
+    }
+  }
+
+  /**
+   * Format a citation in a specific style
+   */
+  static formatCitation(citation: any, style: "apa" | "mla" | "chicago"): string {
+    // Use precomputed citations if available
+    if (citation.formatted_citations && citation.formatted_citations[style]) {
+      return citation.formatted_citations[style];
+    }
+
+    // Fallback to generating format
+    const authors = Array.isArray(citation.authors)
+      ? citation.authors
+      : citation.authors
+        ? [citation.authors]
+        : [];
+
+    const authorsString = authors
+      .map((a: any) =>
+        typeof a === 'string'
+          ? a
+          : `${a.lastName || ''}, ${a.firstName || ''}`.trim()
+      )
+      .filter(Boolean)
+      .join("; ");
+
+    const year = citation.year || "n.d.";
+    const title = citation.title || "Untitled";
+
+    switch (style) {
+      case "apa":
+        return `${authorsString} (${year}). ${title}. ${citation.journal || ""}${citation.volume ? `, ${citation.volume}` : ""}${citation.issue ? `(${citation.issue})` : ""}${citation.pages ? `, ${citation.pages}` : ""}.${citation.doi ? ` https://doi.org/${citation.doi}` : ""}`;
+
+      case "mla":
+        return `${authorsString}. "${title}." ${citation.journal || ""}${citation.volume ? ` ${citation.volume}` : ""}${citation.issue ? `.${citation.issue}` : ""} (${year})${citation.pages ? `: ${citation.pages}` : ""}.${citation.doi ? ` DOI: ${citation.doi}` : ""}`;
+
+      case "chicago":
+        return `${authorsString}. "${title}." ${citation.journal || ""}${citation.volume ? ` ${citation.volume}` : ""}${citation.issue ? `, no. ${citation.issue}` : ""} (${year})${citation.pages ? `: ${citation.pages}` : ""}.${citation.doi ? ` https://doi.org/${citation.doi}` : ""}`;
+
+      default:
+        return `${authorsString} (${year}). ${title}.`;
+    }
+  }
+
+  /**
+   * Search external sources (CrossRef/PubMed) for citations
+   */
+  static async searchExternal(query: string, type?: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(
+        `/api/citations/search-external?q=${encodeURIComponent(query)}${type ? `&type=${type}` : ""}`
+      );
+      return response.data || [];
+    } catch (error: any) {
+      console.error("Error searching external sources:", error);
+      throw new Error(error.message || "Failed to search external sources");
+    }
+  }
+
+  /**
+   * Get recent research topics
+   */
+  static async getRecentResearchTopics(limit: number = 10): Promise<any[]> {
+    try {
+      const response = await apiClient.get(
+        `/api/research/topics/recent?limit=${limit}`
+      );
+      return response.data || [];
+    } catch (error: any) {
+      console.error("Error getting recent research topics:", error);
+      return []; // Return empty array on error instead of throwing
+    }
+  }
+
+  /**
+   * Delete a research topic
+   */
+  static async deleteResearchTopic(topicId: string): Promise<boolean> {
+    try {
+      await apiClient.delete(`/api/research/topics/${topicId}`);
+      return true;
+    } catch (error: any) {
+      console.error("Error deleting research topic:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Save a research topic
+   */
+  static async saveResearchTopic(topic: any): Promise<any> {
+    try {
+      const response = await apiClient.post("/api/research/topics", topic);
+      return response.data;
+    } catch (error: any) {
+      console.error("Error saving research topic:", error);
+      throw new Error(error.message || "Failed to save research topic");
+    }
+  }
+
+  /**
+   * Create a citation (alias for addCitation for compatibility)
+   */
+  static async createCitation(projectId: string, citationData: any): Promise<any> {
+    return this.addCitation(projectId, citationData);
   }
 }

@@ -57,7 +57,7 @@ export class BehavioralTrackingService {
                 `/api/behavioral-tracking/analyze/${projectId}`,
                 {}
             );
-            return response.data;
+            return response;
         } catch (error: any) {
             console.error("Error analyzing writing patterns:", error);
             // Return mock data for UI visualization if API fails (Development/Fallback)
@@ -84,7 +84,7 @@ export class BehavioralTrackingService {
             const response = await apiClient.get(
                 `/api/behavioral-tracking/patterns/${projectId}`
             );
-            return response.data;
+            return response;
         } catch (error: any) {
             console.error("Error getting writing patterns:", error);
             throw new Error(error.message || "Failed to get writing patterns");

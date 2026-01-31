@@ -2,8 +2,7 @@
 import React, { useState, useMemo } from "react";
 import { useCitationAuditStore } from "../../stores/useCitationAuditStore";
 import { VerificationResultsPanel } from "../../components/citations/VerificationResultsPanel";
-import { CitationGraph } from "../../components/citations/CitationGraph";
-import { ShieldAlert, ChevronDown, Network, BadgeCheck, ArrowLeft, Download } from "lucide-react";
+import { ShieldAlert, ChevronDown, BadgeCheck, ArrowLeft } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -131,7 +130,7 @@ const CitationAuditReportPage = () => {
                                 Citation Audit Report
                                 {auditResult.integrityIndex?.confidence && (
                                     <span className={`text-xs px-2 py-0.5 rounded-full border ${auditResult.integrityIndex.confidence === "HIGH" ? "bg-green-50 text-green-700 border-green-200" :
-                                            "bg-amber-50 text-amber-700 border-amber-200"
+                                        "bg-amber-50 text-amber-700 border-amber-200"
                                         }`}>
                                         {auditResult.integrityIndex.confidence} Confidence
                                     </span>
@@ -151,19 +150,7 @@ const CitationAuditReportPage = () => {
                             >
                                 Report View
                             </button>
-                            <button
-                                onClick={() => setViewMode("graph")}
-                                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${viewMode === "graph" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"
-                                    }`}
-                            >
-                                <Network className="w-4 h-4" />
-                                Graph View
-                            </button>
                         </div>
-                        <Button variant="outline" size="sm">
-                            <Download className="w-4 h-4 mr-2" />
-                            Export PDF
-                        </Button>
                     </div>
                 </div>
             </header>
@@ -203,84 +190,78 @@ const CitationAuditReportPage = () => {
                         </div>
                     )}
 
-                    {viewMode === "graph" ? (
-                        <div className="lg:col-span-3 bg-white rounded-xl border border-gray-200 shadow-sm p-6 min-h-[600px]">
-                            <CitationGraph />
-                        </div>
-                    ) : (
-                        <div className="lg:col-span-2 space-y-4">
-                            {/* Verification Summary Card */}
-                            <AuditReportCard
-                                title="Source Verification"
-                                code="VER"
-                                count={violationStats['VER'] || 0}
-                                passed={(violationStats['VER'] || 0) === 0}
-                                expanded={activeDetail === 'VER'}
-                                onClick={() => toggleDetail('VER')}
-                            >
-                                <div className="mt-6 pt-6 border-t border-gray-100">
-                                    {auditResult?.verificationResults && (
-                                        <VerificationResultsPanel
-                                            results={auditResult.verificationResults}
-                                            editor={null} // Read-only mode
-                                        />
-                                    )}
-                                </div>
-                            </AuditReportCard>
+                    <div className="lg:col-span-2 space-y-4">
+                        {/* Verification Summary Card */}
+                        <AuditReportCard
+                            title="Source Verification"
+                            code="VER"
+                            count={violationStats['VER'] || 0}
+                            passed={(violationStats['VER'] || 0) === 0}
+                            expanded={activeDetail === 'VER'}
+                            onClick={() => toggleDetail('VER')}
+                        >
+                            <div className="mt-6 pt-6 border-t border-gray-100">
+                                {auditResult?.verificationResults && (
+                                    <VerificationResultsPanel
+                                        results={auditResult.verificationResults}
+                                        editor={null} // Read-only mode
+                                    />
+                                )}
+                            </div>
+                        </AuditReportCard>
 
-                            {/* Reference List Card */}
-                            <AuditReportCard
-                                title="Reference List"
-                                code="REF"
-                                count={violationStats['REF'] || 0}
-                                passed={(violationStats['REF'] || 0) === 0}
-                                expanded={activeDetail === 'REF'}
-                                onClick={() => toggleDetail('REF')}
-                            >
-                                <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
-                                    {filterViolationsByCode(auditResult?.violations, 'REF').map((v: any, i: number) => (
-                                        <div key={i} className="p-4 border rounded-lg bg-blue-50/50 border-blue-100">
-                                            <div className="flex justify-between font-bold text-blue-900 text-sm mb-1">
-                                                <span>Missing Reference</span>
-                                            </div>
-                                            <p className="text-sm text-gray-700">{v.message}</p>
+                        {/* Reference List Card */}
+                        <AuditReportCard
+                            title="Reference List"
+                            code="REF"
+                            count={violationStats['REF'] || 0}
+                            passed={(violationStats['REF'] || 0) === 0}
+                            expanded={activeDetail === 'REF'}
+                            onClick={() => toggleDetail('REF')}
+                        >
+                            <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
+                                {filterViolationsByCode(auditResult?.violations, 'REF').map((v: any, i: number) => (
+                                    <div key={i} className="p-4 border rounded-lg bg-blue-50/50 border-blue-100">
+                                        <div className="flex justify-between font-bold text-blue-900 text-sm mb-1">
+                                            <span>Missing Reference</span>
                                         </div>
-                                    ))}
-                                    {filterViolationsByCode(auditResult?.violations, 'REF').length === 0 && (
-                                        <p className="text-gray-500 italic">No reference mismatches found.</p>
-                                    )}
-                                </div>
-                            </AuditReportCard>
+                                        <p className="text-sm text-gray-700">{v.message}</p>
+                                    </div>
+                                ))}
+                                {filterViolationsByCode(auditResult?.violations, 'REF').length === 0 && (
+                                    <p className="text-gray-500 italic">No reference mismatches found.</p>
+                                )}
+                            </div>
+                        </AuditReportCard>
 
-                            {/* Style Card */}
-                            <AuditReportCard
-                                title="Citation Style"
-                                code="STY"
-                                count={violationStats['STY'] || 0}
-                                passed={(violationStats['STY'] || 0) === 0}
-                                expanded={activeDetail === 'STY'}
-                                onClick={() => toggleDetail('STY')}
-                            >
-                                <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
-                                    {filterViolationsByCode(auditResult?.violations, 'STY').map((v: any, i: number) => (
-                                        <div key={i} className="p-4 border rounded-lg bg-amber-50/50 border-amber-100">
-                                            <div className="flex justify-between font-bold text-amber-900 text-sm mb-1">
-                                                <span>Formatting Rule</span>
-                                            </div>
-                                            <p className="text-sm text-gray-700">{v.message}</p>
-                                            <div className="mt-2 text-xs text-amber-700/70 font-mono bg-amber-100/50 inline-block px-2 py-1 rounded">
-                                                Expected: {v.expected || 'Correct format'}
-                                            </div>
+                        {/* Style Card */}
+                        <AuditReportCard
+                            title="Citation Style"
+                            code="STY"
+                            count={violationStats['STY'] || 0}
+                            passed={(violationStats['STY'] || 0) === 0}
+                            expanded={activeDetail === 'STY'}
+                            onClick={() => toggleDetail('STY')}
+                        >
+                            <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
+                                {filterViolationsByCode(auditResult?.violations, 'STY').map((v: any, i: number) => (
+                                    <div key={i} className="p-4 border rounded-lg bg-amber-50/50 border-amber-100">
+                                        <div className="flex justify-between font-bold text-amber-900 text-sm mb-1">
+                                            <span>Formatting Rule</span>
                                         </div>
-                                    ))}
-                                    {filterViolationsByCode(auditResult?.violations, 'STY').length === 0 && (
-                                        <p className="text-gray-500 italic">No style violations found.</p>
-                                    )}
-                                </div>
-                            </AuditReportCard>
+                                        <p className="text-sm text-gray-700">{v.message}</p>
+                                        <div className="mt-2 text-xs text-amber-700/70 font-mono bg-amber-100/50 inline-block px-2 py-1 rounded">
+                                            Expected: {v.expected || 'Correct format'}
+                                        </div>
+                                    </div>
+                                ))}
+                                {filterViolationsByCode(auditResult?.violations, 'STY').length === 0 && (
+                                    <p className="text-gray-500 italic">No style violations found.</p>
+                                )}
+                            </div>
+                        </AuditReportCard>
 
-                        </div>
-                    )}
+                    </div>
                 </div>
             </main>
         </div>

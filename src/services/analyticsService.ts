@@ -58,7 +58,7 @@ export class AnalyticsService {
         // Determine authorship verification based on certificates downloaded
         const authorshipVerified =
           summary.certificates_downloaded_count &&
-          summary.certificates_downloaded_count > 0
+            summary.certificates_downloaded_count > 0
             ? true
             : false;
 

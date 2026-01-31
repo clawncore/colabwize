@@ -3,7 +3,8 @@ import { Editor } from "@tiptap/react";
 import { OriginalityService } from "../../../services/originalityService";
 import { useToast } from "../../../hooks/use-toast";
 import { UpgradePromptDialog } from "../../subscription/UpgradePromptDialog";
-import { Sparkles, Loader2 } from "lucide-react"; // Import Icons
+import { SystemMaintenanceModal } from "../../common/SystemMaintenanceModal";
+import { Sparkles, Loader2 } from "lucide-react";
 
 interface RephraseAdapterProps {
   editor: Editor | null;
@@ -18,14 +19,9 @@ export const RephraseAdapter: React.FC<RephraseAdapterProps> = ({
 }) => {
   const [isRephrasing, setIsRephrasing] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
-  // Default to ACADEMIC mode, setter removed as UI is hidden
+  const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  // Default to ACADEMIC mode
   const [rephraseMode] = useState<"QUICK" | "ACADEMIC" | "DEEP">("ACADEMIC");
-
-  // Debounce/Batching Ref
-  // In a real implementation with high-frequency typing, we'd use a useRef timer.
-  // For this button-triggered action, "auto-batching" effectively just means 
-  // we wait for the user to click (manual batching) or we could strictly enforce a timer.
-  // Given the requirements, we'll keep the button trigger but add the Mode UI.
 
   const { toast } = useToast();
 
@@ -76,7 +72,7 @@ export const RephraseAdapter: React.FC<RephraseAdapterProps> = ({
       }
 
       // Map variations
-      const rephraseSuggestions = result.variations.map((text, idx) => ({
+      const rephraseSuggestions = result.variations.map((text: string, idx: number) => ({
         id: `rephrased-${idx}`,
         originalText: selectedText,
         suggestedText: text,
@@ -93,11 +89,8 @@ export const RephraseAdapter: React.FC<RephraseAdapterProps> = ({
       if (backendCode === "PLAN_LIMIT_REACHED") {
         setShowUpgradePrompt(true);
       } else {
-        toast({
-          title: "Rephraser Busy",
-          description: "We're experiencing high load. Please try a shorter selection.",
-          variant: "default" // Not destructive, keeps it neutral
-        });
+        // Show maintenance modal with generic helpful message
+        setShowMaintenanceModal(true);
       }
     } finally {
       setIsRephrasing(false);
@@ -109,19 +102,6 @@ export const RephraseAdapter: React.FC<RephraseAdapterProps> = ({
 
   return (
     <div className="flex items-center gap-2">
-      {/* Mode Selector */}
-      {/* Mode Selector Removed per user request - Defaulting to ACADEMIC internally */}
-      {/* <select
-        value={rephraseMode}
-        onChange={(e) => setRephraseMode(e.target.value as any)}
-        className="h-9 text-xs border border-gray-200 rounded-md bg-white text-gray-600 focus:ring-purple-500 focus:border-purple-500"
-        title="Select Rewrite Mode"
-      >
-        <option value="QUICK">⚡ Quick</option>
-        <option value="ACADEMIC">🎓 Academic</option>
-        <option value="DEEP">🧠 Deep</option>
-      </select> */}
-
       <button
         onClick={handleRephrase}
         disabled={isRephrasing || !editor || isSelectionTooShort}
@@ -153,6 +133,13 @@ export const RephraseAdapter: React.FC<RephraseAdapterProps> = ({
           feature="rephrase_suggestions"
         />
       )}
+
+      <SystemMaintenanceModal
+        isOpen={showMaintenanceModal}
+        onClose={() => setShowMaintenanceModal(false)}
+        title="Service Temporarily Unavailable"
+        message="The rephraser services are down. Please check back after some time."
+      />
     </div>
   );
 };

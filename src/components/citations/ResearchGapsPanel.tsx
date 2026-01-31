@@ -94,94 +94,98 @@ export const ResearchGapsPanel: React.FC<ResearchGapsPanelProps> = ({ projectId,
     }
 
     return (
-        <div className="h-full w-full flex flex-col bg-gradient-to-br from-gray-50 to-white">
+        <div className="h-full w-full flex flex-col bg-gray-50/50">
             {/* Header */}
-            <div className="p-6 border-b border-gray-200 bg-white shadow-sm">
-                <div className="max-w-7xl mx-auto">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Research Gaps & Opportunities</h1>
-                    <p className="text-sm text-gray-600">AI-detected opportunities for deeper exploration in your literature</p>
+            <div className="p-4 border-b border-gray-200 bg-white shadow-sm flex-shrink-0">
+                <h1 className="text-lg font-bold text-gray-900 mb-1">Research Gaps</h1>
+                <p className="text-xs text-gray-500 mb-3 leading-snug">
+                    AI-detected opportunities for deeper exploration.
+                </p>
 
-                    {/* Filters */}
-                    <div className="flex gap-2 mt-4">
-                        <button
-                            onClick={() => setFilterType(null)}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${filterType === null
-                                ? "bg-indigo-600 text-white shadow-md"
-                                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                                }`}
-                        >
-                            All Gaps ({gaps.length})
-                        </button>
-                        <button
-                            onClick={() => setFilterType("temporal")}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${filterType === "temporal"
-                                ? "bg-purple-600 text-white shadow-md"
-                                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                                }`}
-                        >
-                            🕐 Temporal
-                        </button>
-                        <button
-                            onClick={() => setFilterType("topical")}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${filterType === "topical"
-                                ? "bg-emerald-600 text-white shadow-md"
-                                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                                }`}
-                        >
-                            📚 Topical
-                        </button>
-                        <button
-                            onClick={() => setFilterType("methodological")}
-                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${filterType === "methodological"
-                                ? "bg-blue-600 text-white shadow-md"
-                                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                                }`}
-                        >
-                            🔬 Methodological
-                        </button>
-                    </div>
+                {/* Filters */}
+                <div className="flex flex-wrap gap-2">
+                    <button
+                        onClick={() => setFilterType(null)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filterType === null
+                            ? "bg-indigo-600 text-white shadow-sm"
+                            : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                            }`}
+                    >
+                        All
+                    </button>
+                    <button
+                        onClick={() => setFilterType("temporal")}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filterType === "temporal"
+                            ? "bg-purple-600 text-white shadow-sm"
+                            : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                            }`}
+                    >
+                        Time
+                    </button>
+                    <button
+                        onClick={() => setFilterType("topical")}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filterType === "topical"
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                            }`}
+                    >
+                        Topic
+                    </button>
+                    <button
+                        onClick={() => setFilterType("methodological")}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filterType === "methodological"
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+                            }`}
+                    >
+                        Method
+                    </button>
                 </div>
             </div>
 
             {/* Gap Cards */}
-            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
+                <div className="flex flex-col gap-3">
                     {filteredGaps.map((gap, index) => (
                         <div
                             key={index}
-                            className={`border rounded-xl p-6 transition-all hover:shadow-lg bg-white ${gap.severity === "high" ? "border-red-300 hover:border-red-400" :
-                                gap.severity === "medium" ? "border-yellow-300 hover:border-yellow-400" :
-                                    "border-blue-300 hover:border-blue-400"
+                            className={`border rounded-lg p-4 transition-all bg-white hover:shadow-md ${gap.severity === "high" ? "border-red-200 hover:border-red-300" :
+                                gap.severity === "medium" ? "border-yellow-200 hover:border-yellow-300" :
+                                    "border-blue-200 hover:border-blue-300"
                                 }`}
                         >
                             {/* Header */}
-                            <div className="flex items-start gap-4 mb-4">
-                                <div className={`p-3 rounded-xl ${getTypeColor(gap.type)}`}>
+                            <div className="flex items-start gap-3 mb-3">
+                                <div className={`p-2 rounded-lg flex-shrink-0 ${getTypeColor(gap.type)}`}>
                                     {getIcon(gap.type)}
                                 </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <h3 className="font-bold text-base text-gray-900">{gap.title}</h3>
-                                        <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${gap.severity === "high" ? "bg-red-100 text-red-700" :
-                                            gap.severity === "medium" ? "bg-yellow-100 text-yellow-700" :
-                                                "bg-blue-100 text-blue-700"
-                                            }`}>
-                                            {gap.severity.toUpperCase()}
-                                        </span>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                        <h3 className="font-semibold text-sm text-gray-900 leading-tight line-clamp-2">
+                                            {gap.title}
+                                        </h3>
                                     </div>
-                                    <p className="text-sm text-gray-600 leading-relaxed">{gap.description}</p>
+                                    <span className={`inline-block px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-wide rounded ${gap.severity === "high" ? "bg-red-50 text-red-700" :
+                                        gap.severity === "medium" ? "bg-yellow-50 text-yellow-700" :
+                                            "bg-blue-50 text-blue-700"
+                                        }`}>
+                                        {gap.severity} Priority
+                                    </span>
                                 </div>
                             </div>
 
+                            <p className="text-xs text-gray-600 leading-relaxed mb-3">
+                                {gap.description}
+                            </p>
+
                             {/* Suggested Keywords */}
                             {gap.suggestedKeywords.length > 0 && (
-                                <div className="mb-4">
-                                    <p className="text-sm font-semibold text-gray-700 mb-2">📌 Suggested keywords:</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {gap.suggestedKeywords.map((kw, i) => (
+                                <div className="mb-3">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {gap.suggestedKeywords.slice(0, 3).map((kw, i) => (
                                             <span
                                                 key={i}
-                                                className="px-3 py-1.5 text-xs bg-gray-100 border border-gray-300 rounded-lg text-gray-800 font-medium hover:bg-gray-200 transition-colors"
+                                                className="px-2 py-0.5 text-[10px] bg-gray-100 border border-gray-200 rounded text-gray-600 truncate max-w-full"
                                             >
                                                 {kw}
                                             </span>
@@ -193,10 +197,10 @@ export const ResearchGapsPanel: React.FC<ResearchGapsPanelProps> = ({ projectId,
                             {/* Action Button */}
                             <button
                                 onClick={() => onSearchGap?.(gap.suggestedKeywords)}
-                                className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow-md"
+                                className="flex items-center justify-center gap-1.5 w-full px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-md text-xs font-medium transition-colors"
                             >
-                                <ExternalLink className="w-4 h-4" />
-                                Explore Papers for this Gap
+                                <ExternalLink className="w-3 h-3" />
+                                Explore Papers
                             </button>
                         </div>
                     ))}

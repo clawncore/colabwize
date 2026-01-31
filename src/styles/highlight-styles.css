@@ -2,7 +2,7 @@
 
 /* Base Highlight - Clear background, thick solid underline */
 .citation-highlight {
-  background-color: transparent !important;
+  /* background-color: transparent !important; -- Removed to allow inline style overlap */
   /* Reset padding to avoid layout shifts */
   padding-bottom: 2px;
   border-radius: 0;

@@ -7,6 +7,7 @@ import {
 import { useToast } from "../../../hooks/use-toast";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { UpgradeModal } from "../../subscription/UpgradeModal";
+import { SystemMaintenanceModal } from "../../common/SystemMaintenanceModal";
 
 interface OriginalityMapAdapterProps {
   projectId: string;
@@ -21,6 +22,7 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
 }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
   const { toast } = useToast();
 
@@ -73,12 +75,9 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
       }
 
       if (result.scanStatus === "failed") {
-        if ((result as any).failureCode === "MAINTENANCE") {
-          toast({
-            title: "Service Maintenance",
-            description: "Originality checks are currently undergoing maintenance. Please check back in a few minutes.",
-            variant: "default", // Neutral/Info style, not destructive red
-          });
+        if ((result as any).failureCode === "MAINTENANCE" || (result as any).failureCode === "SYSTEM_CREDITS") {
+          // Show the new Maintenance Modal
+          setShowMaintenanceModal(true);
         } else {
           toast({
             title: "Scan Incomplete",
@@ -128,6 +127,11 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
         title="Oops! Limit Reached"
         message={upgradeMessage || "It looks like you've used all your available scans. Upgrade getting unlimited access or top up credits!"}
         feature="Originality Check"
+      />
+
+      <SystemMaintenanceModal
+        isOpen={showMaintenanceModal}
+        onClose={() => setShowMaintenanceModal(false)}
       />
 
       <button

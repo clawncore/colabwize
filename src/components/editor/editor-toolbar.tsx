@@ -178,19 +178,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
-      {/* Column Layout Toggle */}
-      <Toggle
-        size="sm"
-        title="Two Columns"
-        pressed={editor.isActive("columnLayout")}
-        onPressedChange={() => editor.chain().focus().toggleColumnLayout().run()}
-        className="h-8 w-8"
-      >
-        <ColumnsIcon className="h-4 w-4" />
-      </Toggle>
-
-      <Separator orientation="vertical" className="mx-1 h-6" />
-
       <Toggle
         size="sm"
         title="Bold"

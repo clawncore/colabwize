@@ -14,7 +14,8 @@ import { Project, documentService } from "../../services/documentService";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { UsageMeter } from "../../components/subscription/UsageMeter";
 import { useAuth } from "../../hooks/useAuth";
-import { FileText, BookOpen, PenTool, ChevronLeft, ChevronRight, ArrowLeft, Network, Lightbulb } from "lucide-react";
+import { FileText, BookOpen, PenTool, ChevronLeft, ChevronRight, ArrowLeft, Network, Lightbulb, Bell } from "lucide-react";
+import { SearchAlertsPanel } from "./SearchAlertsPanel";
 import { AIProbabilityHeatmap } from "../originality/AIProbabilityHeatmap";
 import { OutlineBuilder } from "./OutlineBuilder";
 import { LiteratureMatrix } from "../citations/LiteratureMatrix";
@@ -26,6 +27,9 @@ import { EditorOnboardingTour } from "../onboarding/EditorOnboardingTour";
 import { OnboardingService } from "../../services/onboardingService";
 import { HelpCircle } from "lucide-react";
 import { OriginalityMapSidebar } from "../originality/OriginalityMapSidebar";
+import AIResearchAssistant from "./ResearchAssistant";
+import AddCitationModal from "../citations/AddCitationModal";
+import { Microscope, PlusSquare } from "lucide-react";
 
 // Define panel types
 export type RightPanelType =
@@ -37,6 +41,7 @@ export type RightPanelType =
   | "ai-chat"
   | "ai-results"
   | "originality-results"
+  | "add-citation"
   | null;
 
 const EditorWorkspacePage: React.FC = () => {
@@ -48,20 +53,27 @@ const EditorWorkspacePage: React.FC = () => {
 
   // Collapsible state - Start with both sidebars closed
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(false);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
 
   // Left Panel State
-  const [activeLeftPanel, setActiveLeftPanel] = useState<"documents" | "audit" | "sources" | "outline" | "visual-map" | "research-gaps" | null>(null);
+  const [activeLeftPanel, setActiveLeftPanel] = useState<"documents" | "audit" | "sources" | "outline" | "visual-map" | "research-gaps" | "search-alerts" | "research-assistant" | null>(null);
   const [leftPanelData, setLeftPanelData] = useState<any>(null);
+
+  // Visual Map View Mode
+  const [visualMapMode, setVisualMapMode] = useState<"split" | "full">("split");
 
   // Right panel type state
   const [activePanelType, setActivePanelType] =
-    useState<RightPanelType>("ai-chat");
+    useState<RightPanelType>(null);
   const [panelData, setPanelData] = useState<any>(null);
 
   // Resizable widths
   const [leftSidebarWidth, setLeftSidebarWidth] = useState(280); // Now represents ONLY the content panel width
   const [rightSidebarWidth, setRightSidebarWidth] = useState(300); // Reduced from 340 for better fit
+
+  // Search Alerts notification state
+  const [unreadAlertCount, setUnreadAlertCount] = useState(0);
+  const prevUnreadCountRef = useRef(0);
 
   // Focus Mode state
   const [isFocusMode, setIsFocusMode] = useState(false);
@@ -152,9 +164,29 @@ const EditorWorkspacePage: React.FC = () => {
 
   const handleProjectUpdate = (updatedProject: Project) => {
     setSelectedProject(updatedProject);
-    // setProjects((prev) =>
-    //   prev.map((p) => (p.id === updatedProject.id ? updatedProject : p))
-    // );
+  };
+
+  const reloadProjectCitations = async () => {
+    if (!selectedProject) return;
+    try {
+      const result = await documentService.getProjectById(selectedProject.id);
+      if (result.success && result.data) {
+        // We only want to update the citation data to avoid overwriting the editor's content state
+        setSelectedProject((prev) => {
+          if (!prev) return result.data!;
+          return {
+            ...result.data!,
+            // Keep existing title/content if we are just refreshing citations
+            // Actually, result.data is the source of truth, but we want to avoid 
+            // the DocumentEditor's project.content useEffect triggering if possible.
+            // But since DocumentEditor only sets content IF !hasInitializedContentRef, 
+            // updating the reference here is safe as long as the component doesn't unmount.
+          };
+        });
+      }
+    } catch (error) {
+      console.error("Failed to reload project citations:", error);
+    }
   };
 
   const handleStyleSet = async (style: string) => {
@@ -324,6 +356,35 @@ const EditorWorkspacePage: React.FC = () => {
     );
   };
 
+  // Poll for search alerts
+  useEffect(() => {
+    if (!user) return;
+
+    const checkAlerts = async () => {
+      try {
+        const { default: SearchAlertService } = await import("../../services/searchAlertService");
+        const alerts = await SearchAlertService.getAlerts();
+        const totalNew = alerts.reduce((acc, alert) => acc + (alert.new_matches_count || 0), 0);
+
+        if (totalNew > prevUnreadCountRef.current) {
+          // Play notification sound
+          const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+          audio.volume = 0.5;
+          audio.play().catch(e => console.log("Sound play failed:", e));
+        }
+
+        setUnreadAlertCount(totalNew);
+        prevUnreadCountRef.current = totalNew;
+      } catch (err) {
+        // Silent fail for polling
+      }
+    };
+
+    checkAlerts();
+    const interval = setInterval(checkAlerts, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, [user]);
+
 
   // Handle mouse move for resizing
   useEffect(() => {
@@ -381,6 +442,8 @@ const EditorWorkspacePage: React.FC = () => {
         return "AI Detection Results";
       case "originality-results":
         return "Originality Report";
+      case "add-citation":
+        return "Add Citation";
       default:
         return "Suggestions";
     }
@@ -426,6 +489,23 @@ const EditorWorkspacePage: React.FC = () => {
         console.groupEnd();
         // Future: dispatch to Authorship Certificate service
       }
+
+      // 3. Trigger immediate save to ensure persistence
+      if (selectedProject) {
+        setTimeout(async () => {
+          const content = editorInstance.getJSON();
+          const words = editorInstance.storage.characterCount.words();
+          await documentService.updateProject(
+            selectedProject.id,
+            selectedProject.title,
+            selectedProject.description || "",
+            content,
+            words,
+            selectedProject.citation_style
+          );
+          console.log("Immediate save complete after citation insertion");
+        }, 500);
+      }
     }
   };
 
@@ -460,7 +540,7 @@ const EditorWorkspacePage: React.FC = () => {
         <>
           <div
             style={{
-              width: `${(isNavRailOpen ? 240 : 60) + (isLeftSidebarOpen ? leftSidebarWidth : 0)}px`
+              width: `${(isNavRailOpen ? 240 : 60) + (isLeftSidebarOpen && activeLeftPanel !== "visual-map" && !(activeLeftPanel === "sources" && activeSourceTab === "matrix") ? leftSidebarWidth : 0)}px`
             }}
             className="flex-shrink-0 h-full border-r border-gray-200 transition-all relative flex bg-white overflow-hidden">
 
@@ -638,6 +718,77 @@ const EditorWorkspacePage: React.FC = () => {
                     </div>
                   )}
                 </button>
+
+                <button
+                  data-tour="search-alerts"
+                  onClick={() => {
+                    if (userPlan !== "Researcher") return;
+                    setActiveLeftPanel("search-alerts");
+                    setIsLeftSidebarOpen(true);
+                  }}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "search-alerts"
+                    ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                    : userPlan !== "Researcher"
+                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                    }`}
+                  title={userPlan !== "Researcher" ? "Available on Researcher Plan" : !isNavRailOpen ? "Search Alerts" : ""}
+                >
+                  <div className="relative">
+                    <Bell className={`w-4 h-4 ${activeLeftPanel === "search-alerts" ? "text-indigo-600" : "text-gray-400"}`} />
+                    {userPlan === "Researcher" && unreadAlertCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white border-2 border-[#f9fafb]">
+                        {unreadAlertCount > 9 ? '9+' : unreadAlertCount}
+                      </span>
+                    )}
+                  </div>
+                  {isNavRailOpen && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Search Alerts</span>
+                      {userPlan !== "Researcher" && <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">PRO</span>}
+                    </div>
+                  )}
+                </button>
+
+                <button
+                  data-tour="research-assistant"
+                  onClick={() => {
+                    if (userPlan !== "Researcher") return;
+                    setActiveLeftPanel("research-assistant");
+                    setIsLeftSidebarOpen(true);
+                  }}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "research-assistant"
+                    ? "bg-purple-100 text-purple-600 border border-purple-200"
+                    : userPlan !== "Researcher"
+                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                    }`}
+                  title={userPlan !== "Researcher" ? "Available on Researcher Plan" : !isNavRailOpen ? "Research Assistant" : ""}
+                >
+                  <Microscope className={`w-4 h-4 ${activeLeftPanel === "research-assistant" ? "text-purple-600" : "text-gray-400"}`} />
+                  {isNavRailOpen && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Research Assistant</span>
+                      {userPlan !== "Researcher" && <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">PRO</span>}
+                    </div>
+                  )}
+                </button>
+
+                <button
+                  data-tour="add-citation"
+                  onClick={() => {
+                    setActivePanelType("add-citation");
+                    setIsRightSidebarOpen(true);
+                  }}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activePanelType === "add-citation"
+                    ? "bg-blue-100 text-blue-600 border border-blue-200"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                    }`}
+                  title={!isNavRailOpen ? "Add Citation" : ""}
+                >
+                  <PlusSquare className={`w-4 h-4 ${activePanelType === "add-citation" ? "text-blue-600" : "text-gray-400"}`} />
+                  {isNavRailOpen && "Add Citation"}
+                </button>
               </div>
 
               {/* Credit Meter Fixed at Bottom of Rail */}
@@ -654,7 +805,7 @@ const EditorWorkspacePage: React.FC = () => {
 
 
             {/* Sidebar Content Area */}
-            {!(activeLeftPanel === "sources" && activeSourceTab === "matrix") && activeLeftPanel !== "research-gaps" && activeLeftPanel !== "visual-map" && (
+            {!(activeLeftPanel === "sources" && activeSourceTab === "matrix") && activeLeftPanel !== "visual-map" && (
               <div className={`flex-1 flex flex-col min-w-0 bg-white relative`}>
                 {activeLeftPanel === "documents" && isLeftSidebarOpen && (
                   <div className="flex-1 overflow-hidden flex flex-col">
@@ -698,6 +849,19 @@ const EditorWorkspacePage: React.FC = () => {
                   />
                 )}
 
+                {activeLeftPanel === "research-gaps" && isLeftSidebarOpen && selectedProject && (
+                  <div className="flex-1 overflow-hidden flex flex-col bg-white">
+                    <ResearchGapsPanel
+                      projectId={selectedProject.id}
+                      onSearchGap={(keywords) => {
+                        openPanel("citations", { contextKeywords: keywords });
+                      }}
+                    />
+                  </div>
+                )}
+
+
+
                 {activeLeftPanel === "outline" && isLeftSidebarOpen && selectedProject && (
                   <div className="flex-1 overflow-hidden flex flex-col">
                     <OutlineBuilder
@@ -724,11 +888,36 @@ const EditorWorkspacePage: React.FC = () => {
                     />
                   </div>
                 )}
+
+                {activeLeftPanel === "search-alerts" && isLeftSidebarOpen && (
+                  <div className="flex-1 overflow-hidden flex flex-col bg-white">
+                    <SearchAlertsPanel projectId={selectedProject?.id} />
+                  </div>
+                )}
+
+                {activeLeftPanel === "research-assistant" && isLeftSidebarOpen && (
+                  <div className="flex-1 overflow-hidden flex flex-col bg-white">
+                    <AIResearchAssistant
+                      isOpen={true}
+                      isPanel={true}
+                      onClose={() => setIsLeftSidebarOpen(false)}
+                      projectId={selectedProject?.id}
+                      onInsertContent={(content) => {
+                        if (editorInstance) {
+                          editorInstance.chain().focus().insertContent(content).run();
+                        }
+                      }}
+                      onCitationAdded={() => {
+                        reloadProjectCitations();
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
           {/* Left Resize Handle */}
-          {!(activeLeftPanel === "sources" && activeSourceTab === "matrix") && activeLeftPanel !== "research-gaps" && activeLeftPanel !== "visual-map" && (
+          {!(activeLeftPanel === "sources" && activeSourceTab === "matrix") && activeLeftPanel !== "visual-map" && (
             <div
               onMouseDown={() => setIsResizingLeft(true)}
               className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors"
@@ -737,8 +926,8 @@ const EditorWorkspacePage: React.FC = () => {
         </>
       )}
 
-      {/* Toggle Left Sidebar Button - Hidden in Focus Mode */}
-      {!isFocusMode && (
+      {/* Toggle Left Sidebar Button - Hidden in Focus Mode, Visual Map Mode, and Matrix Mode */}
+      {!isFocusMode && activeLeftPanel !== "visual-map" && !(activeLeftPanel === "sources" && activeSourceTab === "matrix") && (
         <button
           onClick={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
           className={`absolute top-4 z-20 p-1.5 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-all duration-300`}
@@ -788,19 +977,60 @@ const EditorWorkspacePage: React.FC = () => {
             onUpdateCitations={handleBatchSourceUpdate}
             userPlan={userPlan}
           />
-        ) : activeLeftPanel === "research-gaps" && selectedProject ? (
-          <ResearchGapsPanel
-            projectId={selectedProject.id}
-            onSearchGap={(keywords) => {
-              openPanel("citations", { contextKeywords: keywords });
-            }}
-          />
         ) : activeLeftPanel === "visual-map" && selectedProject ? (
-          <CitationGraph
-            projectId={selectedProject.id}
-            width={typeof window !== 'undefined' ? window.innerWidth : 1920}
-            height={typeof window !== 'undefined' ? window.innerHeight : 1080}
-          />
+          visualMapMode === "split" ? (
+            <div className="flex h-full w-full">
+              <div className="w-1/4 border-r border-gray-200">
+                <CitationGraph
+                  projectId={selectedProject.id}
+                  project={selectedProject}
+                  onTopicSelect={(topic) => {
+                    openPanel("citations", { contextKeywords: [topic] });
+                  }}
+                  onAskAI={(topic) => {
+                    const prompt = `Discuss what these sources say about "${topic}", in the larger context of "${selectedProject.title}". (Note: Provide a direct response only, without conversational filler or introductory text.)`;
+                    openPanel("ai-chat", { initialInput: prompt });
+                  }}
+                  viewMode="split"
+                  onToggleViewMode={() => setVisualMapMode("full")}
+                  width={(typeof window !== 'undefined' ? window.innerWidth : 1920) / 3}
+                  height={typeof window !== 'undefined' ? window.innerHeight : 1080}
+                />
+              </div>
+              <div className="flex-1 h-full">
+                <DocumentEditor
+                  project={selectedProject}
+                  onProjectUpdate={handleProjectUpdate}
+                  onOpenPanel={openPanel}
+                  onOpenLeftPanel={(panel, data) => {
+                    setLeftPanelData(data);
+                    setActiveLeftPanel(panel);
+                    if (!isLeftSidebarOpen) setIsLeftSidebarOpen(true);
+                  }}
+                  onEditorReady={setEditorInstance}
+                  isFocusMode={isFocusMode}
+                  onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
+                />
+              </div>
+            </div>
+          ) : (
+            <CitationGraph
+              projectId={selectedProject.id}
+              project={selectedProject}
+              onTopicSelect={(topic) => {
+                openPanel("citations", { contextKeywords: [topic] });
+              }}
+              onAskAI={(topic) => {
+                const prompt = `Discuss what these sources say about "${topic}", in the larger context of "${selectedProject.title}".`;
+                const hiddenInstruction = "(Note: Provide a direct response only, without conversational filler or introductory text.)";
+                openPanel("ai-chat", { initialInput: prompt, initialHiddenInstruction: hiddenInstruction });
+              }}
+              viewMode="full"
+              onToggleViewMode={() => setVisualMapMode("split")}
+              width={typeof window !== 'undefined' ? window.innerWidth : 1920}
+              height={typeof window !== 'undefined' ? window.innerHeight : 1080}
+            />
+          )
         ) : isEditorLoading ? (
           <div className="h-full flex flex-col items-center justify-center bg-gray-50">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
@@ -850,7 +1080,8 @@ const EditorWorkspacePage: React.FC = () => {
       </div>
 
       {/* Toggle Right Sidebar Button - Hidden in Focus Mode */}
-      {!isFocusMode && !(activeLeftPanel === "sources" && activeSourceTab === "matrix") && activeLeftPanel !== "research-gaps" && activeLeftPanel !== "visual-map" && (
+      {/* Toggle Right Sidebar Button - Hidden in Focus Mode OR Visual Map. ALLOWED in Research Gaps */}
+      {!isFocusMode && !(activeLeftPanel === "sources" && activeSourceTab === "matrix") && (
         <button
           onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
           className={`absolute top-4 z-10 p-2 bg-white border border-gray-300 rounded-md shadow-md hover:bg-gray-50 transition-all`}
@@ -887,7 +1118,8 @@ const EditorWorkspacePage: React.FC = () => {
       )}
 
       {/* Right Sidebar - Feature-Specific Panels - Hidden in Focus Mode */}
-      {!isFocusMode && !(activeLeftPanel === "sources" && activeSourceTab === "matrix") && activeLeftPanel !== "research-gaps" && activeLeftPanel !== "visual-map" && isRightSidebarOpen && activePanelType && (
+      {/* Right Sidebar - Feature-Specific Panels - Hidden in Focus Mode OR Visual Map. ALLOWED in Research Gaps */}
+      {!isFocusMode && !(activeLeftPanel === "sources" && activeSourceTab === "matrix") && isRightSidebarOpen && activePanelType && (
         <>
           {/* Right Resize Handle */}
           <div
@@ -903,11 +1135,8 @@ const EditorWorkspacePage: React.FC = () => {
                 projectId={selectedProject.id}
                 onClose={() => setIsRightSidebarOpen(false)}
                 onInsertCitation={handleInsertCitation}
-                onSourceAdded={async () => {
-                  const result = await documentService.getProjectById(selectedProject.id);
-                  if (result.success && result.data) {
-                    setSelectedProject(result.data);
-                  }
+                onSourceAdded={() => {
+                  reloadProjectCitations();
                 }}
                 contextKeywords={panelData?.contextKeywords}
               />
@@ -944,6 +1173,9 @@ const EditorWorkspacePage: React.FC = () => {
                 projectDescription={selectedProject.description}
                 originalityResults={panelData?.originalityResults}
                 citationSuggestions={panelData?.citationSuggestions}
+                initialInput={panelData?.initialInput}
+                initialHiddenInstruction={panelData?.initialHiddenInstruction}
+                projectSources={selectedProject.citations} // Added prop
                 onClose={() => setIsRightSidebarOpen(false)}
               />
             )}
@@ -960,8 +1192,27 @@ const EditorWorkspacePage: React.FC = () => {
                 <OriginalityMapSidebar
                   results={panelData}
                   documentContent={editorInstance?.getText() || ""}
+                  onAskAI={(prompt, hiddenCtx) => {
+                    openPanel("ai-chat", {
+                      initialInput: prompt,
+                      initialHiddenInstruction: hiddenCtx
+                    });
+                  }}
                 />
               </div>
+            )}
+            {activePanelType === "add-citation" && (
+              <AddCitationModal
+                isOpen={true}
+                isPanel={true}
+                onClose={() => setIsRightSidebarOpen(false)}
+                projectId={selectedProject?.id}
+                citations={selectedProject?.citations || []}
+                onInsertCitation={handleInsertCitation}
+                onCitationAdded={() => {
+                  reloadProjectCitations();
+                }}
+              />
             )}
           </div>
         </>

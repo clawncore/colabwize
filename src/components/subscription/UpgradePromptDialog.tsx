@@ -92,8 +92,7 @@ export const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({
           </DialogTitle>
 
           <DialogDescription className="text-gray-600 mb-6">
-            {config.description} Upgrade to unlock more scans and premium
-            features.
+            {config.description} Upgrade your plan, buy more credits, or wait for your monthly reset.
           </DialogDescription>
         </div>
 
@@ -126,17 +125,27 @@ export const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={() => onOpenChange(false)}
-            className="order-2 sm:order-1 flex-1 px-4 py-3 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-            Maybe Later
-          </button>
+        <div className="flex flex-col gap-2 w-full">
           <button
             onClick={handleUpgrade}
-            className="order-1 sm:order-2 flex-1 px-4 py-3 sm:py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all font-semibold shadow-md hover:shadow-lg">
-            Upgrade Now
+            className="w-full px-4 py-3 sm:py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all font-semibold shadow-md hover:shadow-lg">
+            Upgrade Plan
           </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                onOpenChange(false);
+                navigate("/credits");
+              }}
+              className="flex-1 px-4 py-2 border border-purple-200 text-purple-700 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors font-medium">
+              Buy Credits
+            </button>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+              Wait
+            </button>
+          </div>
         </div>
 
         {/* Plan Comparison */}

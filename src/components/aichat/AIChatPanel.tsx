@@ -6,8 +6,6 @@ import {
   AlertTriangle,
   X,
   PlusCircle,
-  Lightbulb,
-  FileText,
   History,
   MoreVertical,
   Trash2,
@@ -47,6 +45,9 @@ interface AIChatPanelProps {
   projectDescription?: string;
   originalityResults?: any;
   citationSuggestions?: any;
+  initialInput?: string;
+  initialHiddenInstruction?: string;
+  projectSources?: any[]; // New prop
   onClose?: () => void;
 }
 
@@ -65,6 +66,9 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
   projectDescription,
   originalityResults,
   citationSuggestions,
+  initialInput,
+  initialHiddenInstruction,
+  projectSources, // Added param
   onClose,
 }) => {
   const [messages, setMessages] = useState<Message[]>([
@@ -75,7 +79,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
         "Hello! I'm your Academic Integrity Assistant. I can explain citation rules, analyze similarity, and clarify academic policies. **I cannot write or edit text for you.** How can I help?",
     },
   ]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialInput || "");
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -257,9 +261,19 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
     }
   }, [input]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const hasAutoSent = useRef(false);
+
+  useEffect(() => {
+    if (initialInput && !hasAutoSent.current) {
+      hasAutoSent.current = true;
+      handleSubmit(undefined, initialInput, initialHiddenInstruction);
+    }
+  }, [initialInput, initialHiddenInstruction]);
+
+  const handleSubmit = async (e?: React.FormEvent, overrideInput?: string, hiddenInstruction?: string) => {
     e?.preventDefault();
-    if (!input.trim() || isLoading) return;
+    const textToSend = overrideInput || input;
+    if (!textToSend.trim() || isLoading) return;
 
     // Ensure we have a session
     let currentSessionId = sessionId;
@@ -271,23 +285,28 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input,
+      content: textToSend, // UI message (clean)
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
-
     const assistantMessageId = (Date.now() + 1).toString();
 
     try {
+      // Prepare messages for API
+      // If hiddenInstruction is provided, append it to the LAST message's content
+      const messagesForApi = messages.map(m => ({ role: m.role, content: m.content }));
+
+      messagesForApi.push({
+        role: "user",
+        content: hiddenInstruction ? `${textToSend}\n\n${hiddenInstruction}` : textToSend
+      });
+
       // Use apiClient.download to get raw response for streaming
-      // This handles auth headers, token refresh, and timeouts automatically
       const response = await apiClient.download("/api/chat", {
-        messages: messages
-          .concat(userMessage)
-          .map((m) => ({ role: m.role, content: m.content })),
+        messages: messagesForApi,
         context: {
           documentContent,
           selectedText,
@@ -295,6 +314,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
           projectDescription,
           originalityResults,
           citationSuggestions,
+          projectSources, // Send to API
         },
         sessionId: currentSessionId, // Send active session ID
       });
@@ -418,27 +438,27 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
         </div>
 
         {/* Quick Explanation Buttons */}
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-1">
           <Button
             variant="outline"
             size="sm"
             className="text-xs px-2 py-1 h-7 bg-blue-500 text-white"
             onClick={() => setInput("Explain why this sentence is marked red")}>
-            <Lightbulb className="w-3 h-3 mr-1" /> Explain Red Flag
+            Explain Red Flag
           </Button>
           <Button
             variant="outline"
             size="sm"
             className="text-xs px-2 py-1 h-7 bg-blue-500 text-white"
             onClick={() => setInput("Do I need to cite common knowledge?")}>
-            <Lightbulb className="w-3 h-3 mr-1" /> Common Knowledge
+            Common Knowledge
           </Button>
           <Button
             variant="outline"
             size="sm"
             className="text-xs px-2 py-1 h-7 bg-blue-500 text-white"
             onClick={() => setInput("Explain proper citation format")}>
-            <FileText className="w-3 h-3 mr-1" /> Citation Format
+            Citation Format
           </Button>
         </div>
       </CardHeader>

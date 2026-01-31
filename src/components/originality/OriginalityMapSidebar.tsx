@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { OriginalityScan, SimilarityMatch } from "../../services/originalityService";
 import { SimilarityMatchCard } from "./SimilarityMatchCard";
@@ -9,9 +10,10 @@ import { OriginalityReportModal } from "./OriginalityReportModal";
 interface OriginalityMapSidebarProps {
     results: OriginalityScan;
     documentContent?: string;
+    onAskAI?: (prompt: string, hiddenCtx: string) => void;
 }
 
-export const OriginalityMapSidebar: React.FC<OriginalityMapSidebarProps> = ({ results, documentContent = "" }) => {
+export const OriginalityMapSidebar: React.FC<OriginalityMapSidebarProps> = ({ results, documentContent = "", onAskAI }) => {
     const [showFullReport, setShowFullReport] = useState(false);
     const score = results.overallScore ?? 0;
     const matchCount = results.matchCount ?? 0;
@@ -22,73 +24,85 @@ export const OriginalityMapSidebar: React.FC<OriginalityMapSidebarProps> = ({ re
 
     return (
         <div className="h-full flex flex-col bg-white">
-            {/* Purple Gradient Header with Score */}
-            <div className="bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 text-white p-6 shadow-md z-10">
+            {/* Header with Originality Summary */}
+            <div className="bg-white p-6 border-b border-gray-200">
                 {/* Title */}
-                <h2 className="text-lg font-semibold mb-6 flex items-center gap-2">
-                    <Shield className="w-5 h-5" />
+                <h2 className="text-lg font-semibold mb-6 flex items-center gap-2 text-gray-900">
+                    <Shield className="w-5 h-5 text-gray-600" />
                     Originality Report
                 </h2>
 
-                {/* Large Score Display - No Box */}
-                <div className="mb-6">
-                    <div className="text-sm font-medium text-purple-100 mb-2">Overall Score</div>
-                    <div className="flex items-center gap-4">
-                        <div className="text-7xl font-bold tracking-tighter">{Math.round(score)}%</div>
-                        {score < 70 ? (
-                            <div className="bg-red-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-                                <AlertCircle className="w-3.5 h-3.5" />
-                                Review Needed
+                {/* Originality Summary - Forensic Design */}
+                <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Originality Summary</div>
+
+                    <div className="space-y-4">
+                        {/* Similarity Exposure */}
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-slate-600">Similarity Exposure</span>
+                            <span className="text-lg font-bold text-slate-900">{Math.round(100 - (score || 100))}%</span>
+                        </div>
+
+                        {/* High-Risk Matches */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-rose-500"></div>
+                                <span className="text-sm font-medium text-slate-600">High-Risk Matches</span>
                             </div>
-                        ) : (
-                            <div className="bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm">
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                Original
+                            <span className="text-sm font-bold text-slate-900">
+                                {matches.filter(m => (m.similarityScore || 0) >= 80).length}
+                            </span>
+                        </div>
+
+                        {/* Moderate Matches */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                                <span className="text-sm font-medium text-slate-600">Moderate Matches</span>
                             </div>
-                        )}
+                            <span className="text-sm font-bold text-slate-900">
+                                {matches.filter(m => (m.similarityScore || 0) >= 60 && (m.similarityScore || 0) < 80).length}
+                            </span>
+                        </div>
                     </div>
-                </div>
-
-                {/* Metrics Row */}
-                <div className="grid grid-cols-2 gap-3 mb-2">
-                    {/* Matches Found */}
-                    <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                        <div className="text-xs text-purple-100 mb-1">Matches Found</div>
-                        <div className="text-2xl font-bold">{matchCount}</div>
-                    </div>
-
-                    {/* Words Scanned */}
-                    <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-                        <div className="text-xs text-purple-100 mb-1">Words Scanned</div>
-                        <div className="text-2xl font-bold">{results.wordsScanned || 0}</div>
-                    </div>
-                </div>
-
-                {/* Warning Message */}
-                {matchCount > 0 && (
-                    <div className="mt-4 flex items-start gap-2 text-xs bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/5 text-purple-50">
-                        <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                        <span>Some similar content detected. Review flagged sections.</span>
-                    </div>
-                )}
-
-                {/* Timestamp */}
-                <div className="mt-4 flex items-center gap-1.5 text-[10px] text-purple-200/70">
-                    <Clock className="w-3 h-3" />
-                    <span>Scanned {new Date().toLocaleTimeString()} • {new Date().toLocaleDateString()}</span>
                 </div>
             </div>
+
+            {/* Metrics Row - Simplified */}
+            <div className="px-6 py-4">
+                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div className="text-xs text-slate-500 font-medium">Words Scanned</div>
+                    <div className="text-lg font-bold text-slate-900">{results.wordsScanned || 0}</div>
+                </div>
+            </div>
+
+            {/* Warning Message - Policy Tone */}
+            {matchCount > 0 && (
+                <div className="mt-4 mx-6 flex items-start gap-3 text-xs bg-[#fef2f2] text-[#991b1b] rounded-lg p-3 border border-[#fecaca]">
+                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 opacity-80" />
+                    <span className="leading-relaxed">
+                        Detected overlap with external sources. Paraphrased content may require citation or revision to meet originality standards.
+                    </span>
+                </div>
+            )}
+
+            {/* Timestamp */}
+            <div className="mt-4 px-6 flex items-center gap-1.5 text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                <Clock className="w-3 h-3" />
+                <span>Scanned {new Date().toLocaleTimeString()} • {new Date().toLocaleDateString()}</span>
+            </div>
+
 
             {/* Matched Content Section */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {matchCount === 0 ? (
                     <div className="text-center py-12 px-4">
-                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <CheckCircle className="w-8 h-8 text-green-600" />
+                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FileText className="w-8 h-8 text-slate-400" />
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No Matches Found</h3>
-                        <p className="text-sm text-gray-500">
-                            Your content appears to be original. No significant similarities were detected.
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2">No Significant Overlap</h3>
+                        <p className="text-sm text-slate-500">
+                            Scan did not detect matches with external sources.
                         </p>
                     </div>
                 ) : (
@@ -104,6 +118,7 @@ export const OriginalityMapSidebar: React.FC<OriginalityMapSidebarProps> = ({ re
                                 onViewComparison={(url) => {
                                     window.open(url, "_blank");
                                 }}
+                                onAskAI={onAskAI}
                             />
                         ))}
 
@@ -119,7 +134,8 @@ export const OriginalityMapSidebar: React.FC<OriginalityMapSidebarProps> = ({ re
                         {/* Full Report Button */}
                         <button
                             onClick={() => setShowFullReport(true)}
-                            className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2">
+                            className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 mt-4"
+                        >
                             <FileText className="w-4 h-4" />
                             View Full Report
                         </button>
@@ -133,7 +149,8 @@ export const OriginalityMapSidebar: React.FC<OriginalityMapSidebarProps> = ({ re
                 onClose={() => setShowFullReport(false)}
                 results={results}
                 documentContent={documentContent}
+                onAskAI={onAskAI}
             />
-        </div>
+        </div >
     );
 };
