@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Loader2, ChevronRight, ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw, Search, Bot } from "lucide-react";
+import { Loader2, ZoomIn, ZoomOut, Maximize2, Minimize2, RotateCcw, Search, Bot } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 interface CitationGraphProps {
@@ -27,7 +27,7 @@ interface MindMapNode {
 
 export const CitationGraph: React.FC<CitationGraphProps> = ({ width = 800, height = 600, projectId: propProjectId, project, onTopicSelect, onAskAI, viewMode = "full", onToggleViewMode }) => {
     const params = useParams<{ projectId?: string; id?: string }>();
-    const projectId = propProjectId || params.projectId || params.id;
+    // const projectId = propProjectId || params.projectId || params.id;
     const [loading, setLoading] = useState(true);
     const [nodes, setNodes] = useState<MindMapNode[]>([]);
     const [scale, setScale] = useState(1);
