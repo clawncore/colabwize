@@ -24,7 +24,6 @@ import Subscript from "@tiptap/extension-subscript";
 import { documentService, Project } from "../../services/documentService";
 import {
   OriginalityScan,
-  SimilarityMatch,
 } from "../../services/originalityService";
 
 import { AuthorshipService } from "../../services/authorshipService";
