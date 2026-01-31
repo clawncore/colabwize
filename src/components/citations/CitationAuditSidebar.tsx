@@ -20,8 +20,10 @@ interface CitationAuditSidebarProps {
 }
 
 export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
+    projectId,
     editor,
     onClose,
+    initialResults,
     citationStyle
 }) => {
 
@@ -105,8 +107,19 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     }, [editor, selectedStyle, toast, setAuditResult, setLoading]);
 
     useEffect(() => {
-        if (!auditResult && !localLoading) handleRunStyleAudit();
-    }, [auditResult, localLoading, handleRunStyleAudit]);
+        // Only run style audit if we don't already have results and are not loading
+        if (!auditResult && !localLoading) {
+            if (initialResults && initialResults.suggestions) {
+                // If we have "Fast Scan" results, we can still run a "Full Audit" 
+                // but let's prioritize showing what we have if the user just clicked from the adapter.
+                // For now, we'll run the style audit anyway to get the full picture, 
+                // but we keep the suggestions in mind.
+                handleRunStyleAudit();
+            } else {
+                handleRunStyleAudit();
+            }
+        }
+    }, [auditResult, localLoading, initialResults, handleRunStyleAudit]);
 
 
     const handleAddSource = async (source: any) => {
@@ -164,14 +177,14 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-[#111827]">High Risk</span>
                                     <span className="font-semibold text-[#dc2626]">
-                                        {auditResult.violations.filter((v: any) => v.ruleId?.includes("REF") || v.ruleId?.includes("VERIFICATION")).length +
+                                        {(auditResult.violations?.filter((v: any) => v.ruleId?.includes("REF") || v.ruleId?.includes("VERIFICATION")).length || 0) +
                                             (auditResult.verificationResults?.filter((v: any) => v.existenceStatus === "NOT_FOUND").length || 0)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-[#111827]">Formatting</span>
                                     <span className="font-semibold text-[#f59e0b]">
-                                        {auditResult.violations.filter((v: any) => !v.ruleId?.includes("REF") && !v.ruleId?.includes("VERIFICATION")).length}
+                                        {auditResult.violations?.filter((v: any) => !v.ruleId?.includes("REF") && !v.ruleId?.includes("VERIFICATION")).length || 0}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
@@ -180,8 +193,34 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                                         {auditResult.verificationResults?.filter((v: any) => v.existenceStatus === "CONFIRMED").length || 0}
                                     </span>
                                 </div>
+                                {initialResults?.suggestions && initialResults.suggestions.length > 0 && (
+                                    <div className="flex justify-between items-center text-sm pt-2 border-t border-gray-50">
+                                        <span className="text-[#111827]">Missing Citations</span>
+                                        <span className="font-semibold text-blue-600">
+                                            {initialResults.suggestions.length}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </div>
+
+                        {initialResults?.suggestions && initialResults.suggestions.length > 0 && (
+                            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-3">
+                                <h4 className="text-xs font-bold text-blue-800 uppercase tracking-tight">Missing Citations</h4>
+                                <div className="space-y-2">
+                                    {initialResults.suggestions.slice(0, 3).map((s: any, i: number) => (
+                                        <div key={i} className="text-xs text-blue-700 bg-white/50 p-2 rounded border border-blue-100/50">
+                                            "{s.sentence.substring(0, 60)}..."
+                                        </div>
+                                    ))}
+                                    {initialResults.suggestions.length > 3 && (
+                                        <div className="text-[10px] text-blue-500 text-center italic">
+                                            + {initialResults.suggestions.length - 3} more suggestions
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Metadata Anchor */}
                         <div className="flex items-center justify-center gap-2 text-[10px] text-[#6b7280] uppercase tracking-wide font-medium bg-[#f1f5f9] py-1.5 rounded border border-[#e5e7eb]">
