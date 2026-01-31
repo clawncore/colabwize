@@ -5,9 +5,11 @@ import {
 } from 'lucide-react';
 import { documentService, Project } from '../../services/documentService';
 import {
-    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     LineChart, Line, AreaChart, Area
 } from "recharts";
+import { OriginalityService, OriginalityScan } from '../../services/originalityService';
+import { AnalyticsService } from '../../services/analyticsService';
+import { OriginalityReportModal } from '../originality/OriginalityReportModal';
 
 interface DocumentMetric extends Project {
     keystrokes?: number;
@@ -17,14 +19,7 @@ interface DocumentMetric extends Project {
     dueDate?: string;
 }
 
-// Mock Scan Data
-const mockScans = [
-    { id: 1, type: 'originality', score: 98, status: 'pass', date: '2023-10-24T10:30:00', document: 'Thesis_Final_v2.docx' },
-    { id: 2, type: 'citation', score: 85, status: 'warning', date: '2023-10-23T14:15:00', document: 'Lit_Review_Draft.docx' },
-    { id: 3, type: 'ai_detection', score: 12, status: 'pass', date: '2023-10-22T09:00:00', document: 'Abstract_Proposal.txt' },
-    { id: 4, type: 'originality', score: 45, status: 'fail', date: '2023-10-20T16:45:00', document: 'Notes_Raw.docx' },
-    { id: 5, type: 'authorship', score: 100, status: 'verified', date: '2023-10-18T11:20:00', document: 'Thesis_Final_v1.docx' },
-];
+// Scan data interfaces are handled by services
 
 export const DocumentAnalyticsPage: React.FC = () => {
     const navigate = useNavigate();
@@ -32,22 +27,26 @@ export const DocumentAnalyticsPage: React.FC = () => {
     const [documents, setDocuments] = useState<DocumentMetric[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Mock Trend Data
-    const monthlyData = [
-        { name: 'Jan', docs: 4 }, { name: 'Feb', docs: 6 }, { name: 'Mar', docs: 8 },
-        { name: 'Apr', docs: 5 }, { name: 'May', docs: 12 }, { name: 'Jun', docs: 15 },
-    ];
-
-    const yearlyData = [
-        { name: '2021', docs: 24 }, { name: '2022', docs: 45 }, { name: '2023', docs: 82 },
-    ];
+    const [scans, setScans] = useState<OriginalityScan[]>([]);
+    const [monthlyData, setMonthlyData] = useState<any[]>([]);
+    const [yearlyData, setYearlyData] = useState<any[]>([]);
+    const [productivity, setProductivity] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedReport, setSelectedReport] = useState<OriginalityScan | null>(null);
+    const [isReportOpen, setIsReportOpen] = useState(false);
 
     useEffect(() => {
-        const fetchDocuments = async () => {
+        const loadAllData = async () => {
+            setLoading(true);
             try {
-                const response = await documentService.getProjects();
-                if (response.success && response.data) {
-                    const enrichedData = response.data.map((doc: any, index: number) => {
+                const [docsRes, scansRes, trendsRes] = await Promise.all([
+                    documentService.getProjects(),
+                    OriginalityService.getScanHistory(),
+                    AnalyticsService.getDetailedTrends()
+                ]);
+
+                if (docsRes.success && docsRes.data) {
+                    const enrichedData = docsRes.data.map((doc: any, index: number) => {
                         const mockKeystrokes = (doc.word_count || 0) * 6 + Math.floor(Math.random() * 500);
                         const mockTimeMinutes = Math.floor((doc.word_count || 0) / 10) + Math.floor(Math.random() * 60);
 
@@ -71,11 +70,27 @@ export const DocumentAnalyticsPage: React.FC = () => {
                     });
                     setDocuments(enrichedData);
                 }
+
+                if (scansRes) setScans(scansRes);
+
+                if (trendsRes) {
+                    // Map monthlyGrowth (monthKey/month_name/count) to recharts (name/docs)
+                    setMonthlyData(trendsRes.monthlyGrowth.map((m: any) => ({
+                        name: m.month_name,
+                        docs: m.count
+                    })));
+
+                    setYearlyData(trendsRes.yearlyOverview);
+                    setProductivity(trendsRes.productivityInsight);
+                }
+
             } catch (error) {
-                console.error('Error fetching documents:', error);
+                console.error('Error fetching analytics data:', error);
+            } finally {
+                setLoading(false);
             }
         };
-        fetchDocuments();
+        loadAllData();
     }, []);
 
     const formatTime = (minutes: number) => {
@@ -96,6 +111,22 @@ export const DocumentAnalyticsPage: React.FC = () => {
             default: return 'bg-blue-50 text-blue-700 border-blue-100';
         }
     };
+
+    const handleViewReport = (scan: OriginalityScan) => {
+        setSelectedReport(scan);
+        setIsReportOpen(true);
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-gray-500 font-medium">Loading analytics...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 max-w-7xl mx-auto">
@@ -259,12 +290,20 @@ export const DocumentAnalyticsPage: React.FC = () => {
                         <div>
                             <h3 className="text-2xl font-bold mb-2 font-serif tracking-tight">Productivity Insight</h3>
                             <p className="text-slate-300 max-w-xl text-lg leading-relaxed">
-                                You are most productive on <span className="text-white font-semibold">Wednesdays</span>, creating 40% more content than other days.
-                                Try scheduling your writing sessions then.
+                                {productivity ? (
+                                    <>
+                                        You are most productive on <span className="text-white font-semibold">{productivity.most_productive_day}s</span>,
+                                        contributing <span className="text-white font-semibold">{productivity.percentage_contribution}%</span> of your total content ({productivity.total_words} words).
+                                    </>
+                                ) : (
+                                    "Start writing in the editor to see your productivity trends and insights appear here."
+                                )}
                             </p>
                         </div>
                         <div className="mt-6 md:mt-0 p-4 bg-white/5 rounded-lg border border-white/10">
-                            <div className="text-3xl font-bold mb-1 font-mono">Top 1%</div>
+                            <div className="text-3xl font-bold mb-1 font-mono">
+                                {productivity && productivity.total_words > 1000 ? "Top 1%" : "Novice"}
+                            </div>
                             <div className="text-xs text-slate-400 uppercase tracking-widest">Writer Rank</div>
                         </div>
                     </div>
@@ -292,33 +331,52 @@ export const DocumentAnalyticsPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {mockScans.map(scan => (
+                                {scans.length > 0 ? scans.map(scan => (
                                     <tr key={scan.id} className="group hover:bg-gray-50/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
-                                                {scan.type === 'originality' && <Shield className="w-4 h-4 text-indigo-600" />}
-                                                {scan.type === 'citation' && <BarChart2 className="w-4 h-4 text-blue-600" />}
-                                                {scan.type === 'ai_detection' && <Laptop className="w-4 h-4 text-orange-600" />}
-                                                <span className="capitalize font-medium text-gray-700">{scan.type.replace('_', ' ')}</span>
+                                                <Shield className="w-4 h-4 text-indigo-600" />
+                                                <span className="capitalize font-medium text-gray-700">Originality</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 font-medium text-gray-900">{scan.document}</td>
-                                        <td className="px-6 py-4 text-gray-500">{new Date(scan.date).toLocaleDateString()}</td>
-                                        <td className="px-6 py-4 font-bold text-gray-900">{scan.score}%</td>
+                                        <td className="px-6 py-4 font-medium text-gray-900">{scan.documentTitle}</td>
+                                        <td className="px-6 py-4 text-gray-500">{new Date(scan.scannedAt).toLocaleDateString()}</td>
+                                        <td className="px-6 py-4 font-bold text-gray-900">{Math.round(scan.overallScore)}%</td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase border ${getStatusColor(scan.status)}`}>
-                                                {scan.status}
+                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase border ${getStatusColor(scan.classification === 'safe' ? 'pass' : scan.classification === 'action_required' ? 'fail' : 'warning')}`}>
+                                                {scan.classification === 'safe' ? 'PASS' : scan.classification === 'action_required' ? 'FAIL' : 'REVIEW'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button className="text-gray-500 hover:text-indigo-600 text-xs font-bold uppercase tracking-wide">View</button>
+                                            <button
+                                                onClick={() => handleViewReport(scan)}
+                                                className="text-gray-500 hover:text-indigo-600 text-xs font-bold uppercase tracking-wide"
+                                            >
+                                                View
+                                            </button>
                                         </td>
                                     </tr>
-                                ))}
+                                )) : (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                                            No scan history available. Start scanning documents in the editor to see results here.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
                 </div>
+            )}
+
+            {/* Report Modal */}
+            {selectedReport && (
+                <OriginalityReportModal
+                    isOpen={isReportOpen}
+                    onClose={() => setIsReportOpen(false)}
+                    results={selectedReport}
+                    content={selectedReport.scannedContent || ""}
+                />
             )}
         </div>
     );

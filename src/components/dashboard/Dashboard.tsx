@@ -60,16 +60,8 @@ export const Dashboard: React.FC = () => {
   const [latestProject, setLatestProject] = useState<Project | null>(null);
 
 
-  // Memoize data to prevent re-renders
-  const documentTrendData = React.useMemo(() => [
-    { name: 'Jan', documents: 4 },
-    { name: 'Feb', documents: 3 },
-    { name: 'Mar', documents: 2 },
-    { name: 'Apr', documents: 6 },
-    { name: 'May', documents: 8 },
-    { name: 'Jun', documents: 9 },
-    { name: 'Jul', documents: 12 },
-  ], []);
+  // Trend data is now handled via dashboardData.trendData
+
 
   // Helper to ensure consistency with sidebar logic
   const userPlan = plan || 'free';
@@ -469,9 +461,9 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div className="flex items-center mt-3 space-x-2">
                   <div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                    <div className={`h-1.5 rounded-full shadow-sm ${dashboardData.citationStatus === 'strong' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`} style={{ width: '85%' }}></div>
+                    <div className={`h-1.5 rounded-full shadow-sm ${dashboardData.citationStatus === 'strong' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`} style={{ width: dashboardData.citationStatus === 'strong' ? '85%' : dashboardData.citationStatus === 'good' ? '70%' : '40%' }}></div>
                   </div>
-                  <span className="text-xs font-bold text-gray-500">85/100</span>
+                  <span className="text-xs font-bold text-gray-500">{dashboardData.citationStatus === 'strong' ? '85/100' : dashboardData.citationStatus === 'good' ? '70/100' : dashboardData.citationStatus ? '40/100' : '0/100'}</span>
                 </div>
               </div>
 
@@ -487,12 +479,12 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 <div className="flex items-center mt-1 mb-2">
-                  <CheckCircle className="w-6 h-6 text-green-500 mr-2 fill-green-50" />
-                  <span className="text-2xl font-bold text-gray-900">Verified</span>
+                  <CheckCircle className={`w-6 h-6 ${dashboardData.authorshipVerified ? 'text-green-500' : 'text-gray-300'} mr-2 fill-green-50`} />
+                  <span className="text-2xl font-bold text-gray-900">{dashboardData.authorshipVerified ? "Verified" : "Pending"}</span>
                 </div>
                 <p className="text-xs font-medium text-gray-500 mt-2 flex items-center bg-gray-50 py-1 px-2 rounded-lg inline-block">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2"></span>
-                  Certificate Active
+                  <span className={`w-1.5 h-1.5 ${dashboardData.authorshipVerified ? 'bg-green-500' : 'bg-gray-400'} rounded-full mr-2`}></span>
+                  {dashboardData.authorshipVerified ? "Certificate Active" : "No Certificate"}
                 </p>
               </div>
             </div>
@@ -517,7 +509,7 @@ export const Dashboard: React.FC = () => {
                 <div className="h-72 w-full min-h-[300px]">
                   <ResponsiveContainer width="99%" height="100%">
                     <BarChart
-                      data={documentTrendData}
+                      data={dashboardData.trendData || []}
                       margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                       barSize={40}
                     >
@@ -551,8 +543,8 @@ export const Dashboard: React.FC = () => {
                         radius={[4, 4, 0, 0]}
                       >
                         {
-                          documentTrendData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={index === documentTrendData.length - 1 ? '#4F46E5' : '#C7D2FE'} />
+                          (dashboardData.trendData || []).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={index === (dashboardData.trendData || []).length - 1 ? '#4F46E5' : '#C7D2FE'} />
                           ))
                         }
                       </Bar>
@@ -592,7 +584,7 @@ export const Dashboard: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                      {(latestProject ? [latestProject, { title: "Literature Review Draft", due_date: new Date(Date.now() + 86400000).toISOString(), word_count: 1200 }, { title: "Research Proposal", due_date: new Date(Date.now() + 172800000).toISOString(), word_count: 450 }] : []).map((doc: any, i) => {
+                      {dashboardData.upcomingDeadlines && dashboardData.upcomingDeadlines.length > 0 && dashboardData.upcomingDeadlines.map((doc: any, i) => {
                         const dueDate = doc.due_date ? new Date(doc.due_date) : null;
                         const isDueSoon = dueDate && (dueDate.getTime() - Date.now() < 172800000); // 2 days
                         // Mock progress
@@ -621,15 +613,16 @@ export const Dashboard: React.FC = () => {
                             </td>
                           </tr>
                         );
-                      })
+                      })}
+                      {
+                        (!dashboardData.upcomingDeadlines || dashboardData.upcomingDeadlines.length === 0) && (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-8 text-center text-gray-400 italic">
+                              No active deadlines.
+                            </td>
+                          </tr>
+                        )
                       }
-                      {!latestProject && (
-                        <tr>
-                          <td colSpan={4} className="px-6 py-8 text-center text-gray-400 italic">
-                            No active deadlines.
-                          </td>
-                        </tr>
-                      )}
                     </tbody>
                   </table>
                 </div>

@@ -122,14 +122,14 @@ export const OriginalityReportModal: React.FC<OriginalityReportModalProps> = ({
                         <div className="p-6 border-b border-[#e5e7eb] bg-white">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-lg font-bold text-[#111827]">Scan Summary</h2>
-                                <span className={`text-lg font-bold`} style={{ color: score < 80 ? '#dc2626' : '#16a34a' }}>
-                                    {Math.round(100 - score)}% Similarity
+                                <span className={`text-lg font-bold`} style={{ color: score > 20 ? '#dc2626' : '#16a34a' }}>
+                                    {Math.round(score)}% Similarity
                                 </span>
                             </div>
 
                             {/* Simple Bar */}
                             <div className="h-2 w-full bg-[#f1f5f9] rounded-full overflow-hidden mb-6">
-                                <div className="h-full bg-[#dc2626]" style={{ width: `${100 - score}%` }}></div>
+                                <div className="h-full bg-[#dc2626]" style={{ width: `${score}%` }}></div>
                             </div>
 
                             {/* Legend (Moved Here) */}

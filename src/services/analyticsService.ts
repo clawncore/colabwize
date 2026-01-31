@@ -16,6 +16,8 @@ interface DashboardData {
   citationStatus?: "strong" | "good" | "weak" | "poor";
   authorshipVerified?: boolean;
   projects?: any[]; // Array of user's projects/documents
+  trendData?: any[];
+  upcomingDeadlines?: any[];
 }
 
 export class AnalyticsService {
@@ -43,10 +45,12 @@ export class AnalyticsService {
 
       // Return the actual dashboard metrics from the backend
       return {
-        originalityScore: dashboardData.originality_score || undefined,
+        originalityScore: dashboardData.originality_score ?? undefined,
         citationStatus: dashboardData.citation_status || undefined,
 
-        authorshipVerified: dashboardData.authorship_verified || undefined,
+        authorshipVerified: dashboardData.authorship_verified ?? undefined,
+        trendData: dashboardData.trend_data || [],
+        upcomingDeadlines: dashboardData.upcoming_deadlines || []
       };
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -79,6 +83,19 @@ export class AnalyticsService {
           authorshipVerified: undefined,
         };
       }
+    }
+  }
+
+  /**
+   * Get detailed trends for the Analytics page
+   */
+  static async getDetailedTrends(): Promise<any> {
+    try {
+      const response = await apiClient.get("/api/analytics/detailed");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching detailed trends:", error);
+      throw error;
     }
   }
 }

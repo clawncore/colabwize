@@ -33,9 +33,11 @@ export interface OriginalityScan {
   matches: SimilarityMatch[];
   scannedAt: Date;
   realityCheck?: RealityCheckStats;
+  matchCount?: number;
   wordsScanned?: number;
   costAmount?: number;
-  matchCount?: number;
+  documentTitle?: string;
+  scannedContent?: string;
 }
 
 export interface RealityCheckStats {
@@ -102,7 +104,9 @@ export class OriginalityService {
       scannedAt: data.scanned_at || data.scannedAt,
       wordsScanned: data.words_scanned ?? data.wordsScanned,
       costAmount: data.cost_amount ?? data.costAmount,
-      matchCount: data.match_count ?? data.matchCount
+      matchCount: data.match_count ?? data.matchCount,
+      documentTitle: data.documentTitle || data.document_title || "Untitled Document",
+      scannedContent: data.scannedContent || data.scanned_content
     };
   }
 
@@ -164,6 +168,19 @@ export class OriginalityService {
     } catch (error: any) {
       console.error("Error getting project scans:", error);
       throw new Error(error.message || "Failed to get project scans");
+    }
+  }
+
+  /**
+   * Get all scans for a user (History)
+   */
+  static async getScanHistory(): Promise<OriginalityScan[]> {
+    try {
+      const response = await apiClient.get("/api/originality/history");
+      return (response.data || []).map((item: any) => this.normalizeResponse(item));
+    } catch (error: any) {
+      console.error("Error getting scan history:", error);
+      throw new Error(error.message || "Failed to get scan history");
     }
   }
 

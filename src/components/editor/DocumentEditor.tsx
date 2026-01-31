@@ -631,8 +631,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   Clear Highlights
                 </button>
 
-                {/* Originality Scan Pipeline (Plagiarism Detection) */}
-                <OriginalityMapAdapter
+                {/* Originality Scan Pipeline (Plagiarism Detection) - Hidden per request */}
+                {/* <OriginalityMapAdapter
                   projectId={project.id}
                   editor={editor}
                   onScanComplete={(results) => {
@@ -642,7 +642,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                       onOpenPanel("originality-results", results);
                     }
                   }}
-                />
+                /> */}
 
                 {/* AI Detection Adapter (Disabled per request) */}
                 {/* <AIDetectionAdapter
