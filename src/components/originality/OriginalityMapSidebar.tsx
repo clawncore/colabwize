@@ -40,7 +40,7 @@ export const OriginalityMapSidebar: React.FC<OriginalityMapSidebarProps> = ({ re
                         {/* Similarity Exposure */}
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-slate-600">Similarity Exposure</span>
-                            <span className="text-lg font-bold text-slate-900">{Math.round(100 - (score || 100))}%</span>
+                            <span className="text-lg font-bold text-slate-900">{score === -1 ? "N/A" : `${Math.round(score)}%`}</span>
                         </div>
 
                         {/* High-Risk Matches */}

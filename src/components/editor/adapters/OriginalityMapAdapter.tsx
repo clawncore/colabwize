@@ -81,7 +81,7 @@ export const OriginalityMapAdapter: React.FC<OriginalityMapAdapterProps> = ({
         } else {
           toast({
             title: "Scan Incomplete",
-            description: "We couldn't fully verify the document. Check the dashboard for details.",
+            description: (result as any).failureMessage || "We couldn't fully verify the document. Check the dashboard for details.",
             variant: "destructive",
           });
         }

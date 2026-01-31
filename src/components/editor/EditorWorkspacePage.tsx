@@ -1035,6 +1035,7 @@ const EditorWorkspacePage: React.FC = () => {
           <div className="h-full flex flex-col items-center justify-center bg-gray-50">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
             <p className="text-gray-500 font-medium">Loading Document...</p>
+            <p className="text-gray-400 text-sm mt-2">This may take up to a minute, please wait...</p>
           </div>
         ) : selectedProject ? (
           <DocumentEditor
