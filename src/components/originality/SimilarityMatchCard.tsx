@@ -1,7 +1,7 @@
 
 import React from "react";
 import { SimilarityMatch } from "../../services/originalityService";
-import { ExternalLink, Globe } from "lucide-react";
+import { Globe } from "lucide-react";
 
 interface SimilarityMatchCardProps {
   match: SimilarityMatch;

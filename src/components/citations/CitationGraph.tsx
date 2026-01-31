@@ -59,7 +59,7 @@ export const CitationGraph: React.FC<CitationGraphProps> = ({ width = 800, heigh
 
             // 2. Generate Data (Mock AI)
             const rootLabel = project.title || "Untitled Document";
-            const rootId = "root";
+            // const rootId = "root";
 
             let topics: { label: string; subtopics: string[] }[] = [];
 

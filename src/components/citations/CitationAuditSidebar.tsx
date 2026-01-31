@@ -1,12 +1,11 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { Editor } from "@tiptap/react";
-import { ArrowLeft, ShieldAlert, BadgeCheck, FileText, ChevronRight, Clock } from "lucide-react";
+import { ArrowLeft, FileText, Clock } from "lucide-react";
 import { runCitationAudit } from "../../services/citationAudit/citationAuditEngine";
 import { useToast } from "../../hooks/use-toast";
 import { useCitationAuditStore } from "../../stores/useCitationAuditStore";
 // import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
-import { Button } from "../ui/button";
 import { CitationService } from "../../services/citationService";
 
 import { CitationAuditModal } from "./CitationAuditModal";

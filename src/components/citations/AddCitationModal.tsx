@@ -7,10 +7,7 @@ import { ManualCitationForm, CitationData } from "./ManualCitationForm";
 import { SearchCitationForm } from "./SearchCitationForm";
 import { ImportCitationForm } from "./ImportCitationForm";
 
-interface Author {
-  firstName: string;
-  lastName: string;
-}
+
 
 interface AddCitationModalProps {
   isOpen: boolean;
@@ -57,7 +54,7 @@ const AddCitationModal: React.FC<AddCitationModalProps> = ({
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [accessChecked, setAccessChecked] = useState(true);
+
 
   // New state for Library Search
   const [librarySearchQuery, setLibrarySearchQuery] = useState("");
@@ -313,15 +310,7 @@ const AddCitationModal: React.FC<AddCitationModalProps> = ({
 
   if (!isOpen) return null;
 
-  if (!accessChecked) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
+
 
   // Panel mode rendering
   if (isPanel) {

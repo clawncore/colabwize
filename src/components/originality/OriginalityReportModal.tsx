@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { OriginalityScan, SimilarityMatch } from "../../services/originalityService";
 
 import { X, Shield, ExternalLink, CheckCircle, Globe } from "lucide-react";
-import { Button } from "../ui/button";
+
 
 interface OriginalityReportModalProps {
     isOpen: boolean;

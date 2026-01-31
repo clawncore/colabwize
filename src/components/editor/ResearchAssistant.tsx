@@ -86,8 +86,8 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
   const [researchSources, setResearchSources] = useState<ResearchSource[]>([]);
   const [insights, setInsights] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [, setUserPlan] = useState<string | null>(null);
-  const [hasAccess, setHasAccess] = useState<boolean>(true);
+  const [,] = useState<string | null>(null);
+  const [hasAccess,] = useState<boolean>(true);
   const [recentSearches, setRecentSearches] = useState<ResearchTopic[]>([]);
   // Add state for trending research data
   const [trendingResearch, setTrendingResearch] = useState<any[]>([]);

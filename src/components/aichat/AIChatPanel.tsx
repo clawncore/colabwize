@@ -268,6 +268,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       hasAutoSent.current = true;
       handleSubmit(undefined, initialInput, initialHiddenInstruction);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialInput, initialHiddenInstruction]);
 
   const handleSubmit = async (e?: React.FormEvent, overrideInput?: string, hiddenInstruction?: string) => {

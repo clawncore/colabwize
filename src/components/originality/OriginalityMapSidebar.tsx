@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { OriginalityScan, SimilarityMatch } from "../../services/originalityService";
 import { SimilarityMatchCard } from "./SimilarityMatchCard";
 
-import { Shield, AlertCircle, CheckCircle, Clock, FileText } from "lucide-react";
+import { Shield, AlertCircle, Clock, FileText } from "lucide-react";
 import { OriginalityReportModal } from "./OriginalityReportModal";
 
 
