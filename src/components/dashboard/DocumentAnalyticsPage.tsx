@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { documentService, Project } from '../../services/documentService';
 import {
-    LineChart, Line, AreaChart, Area, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar, Cell, Legend
+    LineChart, Line, AreaChart, Area, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip
 } from "recharts";
 import { OriginalityService, OriginalityScan } from '../../services/originalityService';
 import { AnalyticsService } from '../../services/analyticsService';

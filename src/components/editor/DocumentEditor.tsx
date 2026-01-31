@@ -35,7 +35,7 @@ import { useToast } from "../../hooks/use-toast";
 import { TableBubbleMenu } from "./TableBubbleMenu";
 import {
   // AIDetectionAdapter,
-  OriginalityMapAdapter,
+  // OriginalityMapAdapter,
   // CitationConfidenceAdapter, // Removed/Replaced
   AuthorshipCertificateAdapter,
   RephraseAdapter,
@@ -324,61 +324,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       // Remove all highlight marks from the entire document using custom command
       editor.commands.clearAllHighlights();
     }
-  };
-
-  // Function to highlight originality results
-  const highlightOriginalityResults = (results: OriginalityScan) => {
-    if (!editor || !results || !results.matches) return;
-
-    console.log("Highlighting originality results:", results.matches.length, "matches");
-
-    // Clear existing originality highlights
-    clearHighlights();
-
-    // Sort matches by position to ensure sequential application
-    const sortedMatches = [...results.matches].sort(
-      (a, b) => a.positionStart - b.positionStart
-    );
-
-    sortedMatches.forEach((match: SimilarityMatch, index) => {
-      // Use the position data from the  match
-      const from = match.positionStart || 0;
-      const to = match.positionEnd || from + (match.sentenceText?.length || 0);
-
-      if (from >= to) {
-        console.warn(`Invalid range for match ${index}:`, from, to);
-        return;
-      }
-
-      // Determine color based on similarity score
-      let color = "yellow";
-      if (match.similarityScore >= 80) {
-        color = "red"; // High risk
-      } else if (match.similarityScore >= 60) {
-        color = "orange"; // Moderate risk
-      } else {
-        color = "yellow"; // Low risk
-      }
-
-      // Create a descriptive message for the tooltip
-      const message = `${Math.round(match.similarityScore)}% similarity - ${match.sourceUrl || 'Unknown source'}`;
-
-      // Apply the highlight mark
-      try {
-        editor.chain().highlightRange(from, to, {
-          color,
-          type: "originality",
-          similarity: match.similarityScore,
-          message: message,
-        }).run();
-
-        console.log(`Highlighted match ${index}: ${from}-${to} (${color})`);
-      } catch (err) {
-        console.error("Failed to highlight match:", match, err);
-      }
-    });
-
-    console.log("Highlighting complete");
   };
 
   // Function to highlight AI detection results
