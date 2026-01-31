@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { documentService, Project } from '../../services/documentService';
 import {
-    LineChart, Line, AreaChart, Area
+    LineChart, Line, AreaChart, Area, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar, Cell, Legend
 } from "recharts";
 import { OriginalityService, OriginalityScan } from '../../services/originalityService';
 import { AnalyticsService } from '../../services/analyticsService';
@@ -375,7 +375,7 @@ export const DocumentAnalyticsPage: React.FC = () => {
                     isOpen={isReportOpen}
                     onClose={() => setIsReportOpen(false)}
                     results={selectedReport}
-                    content={selectedReport.scannedContent || ""}
+                    documentContent={selectedReport.scannedContent || ""}
                 />
             )}
         </div>
