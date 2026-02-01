@@ -10,7 +10,6 @@ import {
   AlertDialogTitle,
 } from "../../components/ui/alert-dialog";
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
-import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect, useCallback } from "react";
 import { Search, Loader2 } from "lucide-react";
