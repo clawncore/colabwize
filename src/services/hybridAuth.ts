@@ -265,6 +265,51 @@ export async function signInWithEmail(
 }
 
 /**
+ * Sync user session with backend (check if user exists in DB)
+ * Useful for OAuth callbacks to determine if user is new or returning
+ */
+export async function syncUser(): Promise<{ success: boolean; user: any; requires_2fa?: boolean; userId?: string }> {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error || !session?.access_token) {
+      throw new Error("No active session");
+    }
+
+    const tokenToUse = session.access_token;
+
+    const response = await fetchWithTimeout(
+      `${API_BASE_URL}/api/auth/hybrid/signin`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${tokenToUse}`
+        },
+        body: JSON.stringify({
+          idToken: tokenToUse,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      if (result.user) {
+        // Also update local session user if needed
+        logger.info("User synced successfully", { uid: result.user.id });
+      }
+      return result;
+    } else {
+      throw new Error(result.error || "Failed to verify user with backend");
+    }
+  } catch (error: any) {
+    logger.authError("Sync user error", { error: error.message });
+    throw error;
+  }
+}
+
+/**
  * Sign in with Google using hybrid approach
  */
 export async function signInWithGoogle(): Promise<{

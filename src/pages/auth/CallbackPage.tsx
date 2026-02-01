@@ -17,110 +17,18 @@ const CallbackPage: React.FC = () => {
 
         // Get the code from URL parameters
         const code = searchParams.get("code");
-        const error = searchParams.get("error");
+        const errorParam = searchParams.get("error");
         const errorDescription = searchParams.get("error_description");
 
         // Handle OAuth errors
-        if (error) {
-          console.error("OAuth error:", error, errorDescription);
-          setError(`OAuth error: ${errorDescription || error}`);
+        if (errorParam) {
+          console.error("OAuth error:", errorParam, errorDescription);
+          setError(`OAuth error: ${errorDescription || errorParam}`);
           setLoading(false);
           return;
         }
 
-        // If no code, it might be a session refresh or already handled
-        if (!code) {
-          console.log("No code in URL, checking for existing session");
-
-          // Get current session
-          const {
-            data: { session },
-            error: sessionError,
-          } = await supabase.auth.getSession();
-
-          if (sessionError) {
-            console.error("Session error:", sessionError);
-            setError("Authentication failed");
-            setLoading(false);
-            return;
-          }
-
-          if (session) {
-            console.log("Session found, checking if OAuth signup");
-
-            // Get the user info from the session
-            const user = session.user;
-
-            // Check if this is an OAuth user
-            const provider = user.app_metadata?.provider;
-
-            if (
-              provider &&
-              (provider === "google" ||
-                provider === "microsoft" ||
-                provider === "azure")
-            ) {
-              console.log("OAuth session detected, processing signup flow");
-              console.log("User data:", {
-                id: user.id,
-                email: user.email,
-                provider,
-              });
-
-              // Store OAuth user data temporarily in session storage
-              const oauthUserData = {
-                id: user.id,
-                email: user.email,
-                fullName:
-                  user.user_metadata?.full_name ||
-                  user.user_metadata?.name ||
-                  user.email?.split("@")[0],
-                provider: provider,
-              };
-
-              console.log("Storing OAuth user data:", oauthUserData);
-              sessionStorage.setItem(
-                "oauthUserData",
-                JSON.stringify(oauthUserData)
-              );
-
-              // Redirect to signup page with OAuth flag
-              let redirectUrl = "/signup";
-              const plan = searchParams.get("plan");
-              const redirect = searchParams.get("redirect");
-
-              const params = new URLSearchParams();
-              if (plan) params.set("plan", plan);
-              if (redirect) params.set("redirect", redirect);
-              params.set("oauth", "true");
-
-              if ([...params.keys()].length > 0) {
-                redirectUrl += `?${params.toString()}`;
-              }
-
-              console.log("Redirecting to:", redirectUrl);
-              navigate(redirectUrl, { replace: true });
-              setLoading(false);
-              return;
-            } else {
-              // Regular email user with session
-              console.log("Regular email user, going to dashboard");
-              await refreshUser();
-              navigate("/dashboard", { replace: true });
-              setLoading(false);
-              return;
-            }
-          } else {
-            // No session, redirect to login
-            console.log("No session, redirecting to login");
-            navigate("/login", { replace: true });
-          }
-
-          setLoading(false);
-          return;
-        }
-
-        // Get the session to check if the user just signed up via OAuth
+        // Check for existing session (handles both "fresh login with code" and "returning user without code")
         const {
           data: { session },
           error: sessionError,
@@ -134,19 +42,75 @@ const CallbackPage: React.FC = () => {
         }
 
         if (session) {
-          console.log("OAuth session established, getting user info");
-
-          // Get the user info from the session
+          console.log("Session established, attempting to sync with backend");
           const user = session.user;
 
-          // Check if this is a new user (has email but might need to be registered in our database)
+          // Optimistic verification: Check if user exists in DB (or create them)
           if (user) {
-            // The user has successfully authenticated with OAuth
-            // We need to check if they exist in our database and handle accordingly
-            // For new OAuth users, we'll redirect to the signup page with OAuth data
-            // but in a way that continues the signup flow (OTP verification and survey)
+            try {
+              const { syncUser } = await import("../../services/hybridAuth");
+              const syncResult = await syncUser();
+
+              if (syncResult.success && syncResult.user) {
+                console.log("User verified/synced in backend");
+
+                // Refresh client-side user state
+                await refreshUser();
+
+                // Check if user has completed the survey
+                if (!syncResult.user.survey_completed) {
+                  console.log("User needs to complete survey, redirecting to signup/onboarding");
+
+                  // Store OAuth user data for the signup flow
+                  const oauthUserData = {
+                    id: user.id,
+                    email: user.email,
+                    fullName:
+                      user.user_metadata?.full_name ||
+                      user.user_metadata?.name ||
+                      user.email?.split("@")[0],
+                    provider: user.app_metadata?.provider || "oauth",
+                  };
+
+                  sessionStorage.setItem(
+                    "oauthUserData",
+                    JSON.stringify(oauthUserData)
+                  );
+
+                  // Redirect to signup page for survey completion
+                  let redirectUrl = "/signup";
+                  const plan = searchParams.get("plan");
+                  const redirect = searchParams.get("redirect");
+
+                  const params = new URLSearchParams();
+                  if (plan) params.set("plan", plan);
+                  if (redirect) params.set("redirect", redirect);
+                  params.set("oauth", "true");
+
+                  if ([...params.keys()].length > 0) {
+                    redirectUrl += `?${params.toString()}`;
+                  }
+
+                  console.log("Redirecting to:", redirectUrl);
+                  navigate(redirectUrl, { replace: true });
+                  return;
+                }
+
+                // User has completed survey, go to dashboard
+                console.log("User has completed survey, redirecting to dashboard");
+                await new Promise((r) => setTimeout(r, 500));
+                navigate("/dashboard", { replace: true });
+                return;
+              }
+            } catch (err) {
+              console.warn("Sync failed, proceeding to signup flow:", err);
+            }
+
+            // If sync failed or user requires additional setup, proceed to signup/onboarding
+            console.log("User not found in backend or sync failed, redirecting to signup for onboarding");
 
             // Store OAuth user data temporarily in session storage
+            // We treat this as an OAuth-style signup since they have a session but no backend record
             const oauthUserData = {
               id: user.id,
               email: user.email,
@@ -162,7 +126,7 @@ const CallbackPage: React.FC = () => {
               JSON.stringify(oauthUserData)
             );
 
-            // Redirect to signup page - it will detect the OAuth data and handle the rest of the flow
+            // Redirect to signup page
             let redirectUrl = "/signup";
             const plan = searchParams.get("plan");
             const redirect = searchParams.get("redirect");
@@ -170,18 +134,20 @@ const CallbackPage: React.FC = () => {
             const params = new URLSearchParams();
             if (plan) params.set("plan", plan);
             if (redirect) params.set("redirect", redirect);
-            params.set("oauth", "true"); // Flag to indicate this is an OAuth signup
+            params.set("oauth", "true");
 
             if ([...params.keys()].length > 0) {
               redirectUrl += `?${params.toString()}`;
             }
 
+            console.log("Redirecting to:", redirectUrl);
             navigate(redirectUrl, { replace: true });
             return;
           }
         }
 
         // If no session was established, redirect to login
+        console.log("No session found, redirecting to login");
         navigate("/login", { replace: true });
       } catch (err) {
         console.error("OAuth callback error:", err);

@@ -15,9 +15,10 @@ import {
 
 interface SurveyFormProps {
   onSuccess: () => void;
+  onBack?: () => void;
 }
 
-export default function SurveyForm({ onSuccess }: SurveyFormProps) {
+export default function SurveyForm({ onSuccess, onBack }: SurveyFormProps) {
   const [formData, setFormData] = useState({
     role: "", // Changed from userRole to match SurveyData interface
     institution: "",
@@ -190,19 +191,30 @@ export default function SurveyForm({ onSuccess }: SurveyFormProps) {
             />
           </div>
 
-          <Button
-            type="submit"
-            className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200"
-            disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              "Complete Setup"
+          <div className="flex space-x-3">
+            {onBack && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onBack}
+                className="flex-1 h-12 border-gray-300 text-gray-700 hover:bg-gray-50 font-medium rounded-xl transition-all duration-200">
+                Back
+              </Button>
             )}
-          </Button>
+            <Button
+              type="submit"
+              className="flex-1 h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200"
+              disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Complete Setup"
+              )}
+            </Button>
+          </div>
         </div>
 
         <p className="text-xs text-center text-gray-500 mt-4">

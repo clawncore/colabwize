@@ -12,6 +12,7 @@ import { Checkbox } from "../../components/ui/checkbox";
 import {
   signInWithEmail,
   resendVerificationEmail,
+  signUpWithGoogle,
 } from "../../services/hybridAuth";
 import authService from "../../services/authService";
 
@@ -82,6 +83,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 const LoginPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [socialLoading, setSocialLoading] = React.useState(false);
 
   const [error, setError] = React.useState<string | null>(null);
   const [isEmailNotConfirmed, setIsEmailNotConfirmed] = React.useState(false);
@@ -118,6 +120,21 @@ const LoginPage: React.FC = () => {
       setRedirectPath(redirect);
     }
   }, [searchParams]);
+
+  const handleGoogleLogin = async () => {
+    setSocialLoading(true);
+    try {
+      const redirectParams = {
+        plan: selectedPlan || undefined,
+        redirect: redirectPath || undefined,
+      };
+      await signUpWithGoogle(redirectParams);
+    } catch (error: any) {
+      console.error("Google login failed:", error);
+      setError("Google login failed. Please try again.");
+      setSocialLoading(false);
+    }
+  };
 
   const onSubmit = async (data: LoginFormData) => {
     // Prevent duplicate submissions
@@ -406,6 +423,52 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Social Login */}
+      <div className="grid grid-cols-1 gap-3 mb-6">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleGoogleLogin}
+          disabled={socialLoading || isLoading}
+          className="flex items-center justify-center gap-2 h-12 bg-white text-gray-900 border-gray-300 hover:bg-gray-100 font-medium transition-all"
+        >
+          {socialLoading ? (
+            <div className="h-5 w-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M22.56 12.25C22.56 11.47 22.49 10.72 22.36 10H12V14.26H17.92C17.66 15.63 16.88 16.79 15.71 17.57V20.34H19.28C21.36 18.42 22.56 15.58 22.56 12.25Z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23C14.97 23 17.46 22.02 19.28 20.34L15.71 17.57C14.73 18.23 13.48 18.64 12 18.64C9.14 18.64 6.71 16.69 5.84 14.09H2.18V16.96C4 20.53 7.7 23 12 23Z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09C5.62 13.44 5.49 12.74 5.49 12C5.49 11.26 5.62 10.56 5.84 9.91V7.04H2.18C1.43 8.55 1 10.22 1 12C1 13.78 1.43 15.45 2.18 16.96L5.84 14.09Z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.36C13.62 5.36 15.06 5.93 16.21 7.04L19.36 4.04C17.45 2.24 14.97 1 12 1C7.7 1 4 3.47 2.18 7.04L5.84 9.91C6.71 7.31 9.14 5.36 12 5.36Z"
+                  fill="#EA4335"
+                />
+              </svg>
+              <span>Sign in with Google</span>
+            </>
+          )}
+        </Button>
+      </div>
+
+      <div className="relative mb-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 text-gray-500 bg-white">Or continue with email</span>
+        </div>
+      </div>
 
       {/* Email/Password Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

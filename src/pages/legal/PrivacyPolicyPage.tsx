@@ -83,13 +83,33 @@ function FeaturesPresentationFlow() {
 
               <section>
                 <h2 className="text-2xl font-bold mb-4 text-gray-900">
-                  2. How We Use Your Information
+                  2. Google User Data & Limited Use
+                </h2>
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 rounded-r">
+                  <p className="text-sm text-blue-700">
+                    <strong>Compliance Notice:</strong> We strictly adhere to the Google API Services User Data Policy, including the Limited Use requirements.
+                  </p>
+                </div>
+                <p className="text-gray-600 mb-4">
+                  If you choose to sign in with Google, we access the following information:
+                </p>
+                <ul className="list-disc list-inside text-gray-600 space-y-2 mb-4">
+                  <li><strong>Basic Profile:</strong> Name, Email, and Profile Picture to create your account.</li>
+                </ul>
+                <p className="text-gray-600 mb-4">
+                  <strong>Limited Use Disclosure:</strong> Use of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google API Services User Data Policy</a>, including the Limited Use requirements. We do not use Google user data for advertising purposes.
+                </p>
+              </section>
+
+              <section>
+                <h2 className="text-2xl font-bold mb-4 text-gray-900">
+                  3. How We Use Your Information
                 </h2>
                 <p className="text-gray-600 mb-4">
                   We use the information we collect to:
                 </p>
                 <ul className="list-disc list-inside text-gray-600 space-y-2">
-                  <li>Provide, maintain, and improve our services</li>
+                  <li>Provide, maintain, and improve our services users</li>
                   <li>Process your documents and generate reports</li>
                   <li>Send you technical notices and support messages</li>
                   <li>Respond to your comments and questions</li>
@@ -99,7 +119,7 @@ function FeaturesPresentationFlow() {
 
               <section>
                 <h2 className="text-2xl font-bold mb-4 text-gray-900">
-                  3. Data Security
+                  4. Data Security
                 </h2>
                 <p className="text-gray-600">
                   We implement industry-standard security measures to protect
@@ -117,7 +137,7 @@ function FeaturesPresentationFlow() {
 
               <section>
                 <h2 className="text-2xl font-bold mb-4 text-gray-900">
-                  4. Data Retention
+                  5. Data Retention
                 </h2>
                 <p className="text-gray-600">
                   We retain your documents for 30 days after deletion. You can
@@ -128,7 +148,7 @@ function FeaturesPresentationFlow() {
 
               <section>
                 <h2 className="text-2xl font-bold mb-4 text-gray-900">
-                  5. Your Rights
+                  6. Your Rights
                 </h2>
                 <p className="text-gray-600 mb-4">You have the right to:</p>
                 <ul className="list-disc list-inside text-gray-600 space-y-2">
@@ -142,7 +162,7 @@ function FeaturesPresentationFlow() {
 
               <section>
                 <h2 className="text-2xl font-bold mb-4 text-gray-900">
-                  6. Contact Us
+                  7. Contact Us
                 </h2>
                 <p className="text-gray-600">
                   If you have questions about this Privacy Policy, please

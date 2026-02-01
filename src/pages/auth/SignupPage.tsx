@@ -17,7 +17,6 @@ import {
   verifyOTP as hybridVerifyOTP,
   signInWithEmail,
   signUpWithGoogle,
-  signUpWithMicrosoft,
   resendVerificationEmail,
 } from "../../services/hybridAuth";
 import { SubscriptionService } from "../../services/subscriptionService";
@@ -227,10 +226,11 @@ const SignupPage: React.FC = () => {
             const result = await response.json();
 
             if (response.ok && result.success) {
-              console.log("OAuth user registered successfully, OTP sent");
-              // Set the user ID and proceed to OTP verification
+              console.log("OAuth user registered successfully, skipping OTP");
+              // Set the user ID and proceed directly to Survey step (skip OTP)
               setUserId(oauthUserData.id);
-              setShowOtpStep(true);
+              setShowOtpStep(false);
+              setShowSurveyStep(true);
             } else {
               throw new Error(
                 result.message || "Failed to register OAuth user"
@@ -895,29 +895,7 @@ const SignupPage: React.FC = () => {
     }
   };
 
-  // Function to handle Microsoft signup
-  const handleMicrosoftSignup = async () => {
-    setSocialLoading(true);
-    try {
-      // Prepare redirect parameters if needed
-      const redirectParams = {
-        plan: selectedPlan || undefined,
-        redirect: redirectPath || undefined,
-      };
 
-      // Call the hybrid auth function to initiate Microsoft signup
-      await signUpWithMicrosoft(redirectParams);
-
-      // The function will redirect to Microsoft OAuth, so no further action needed here
-      console.log("Microsoft signup initiated");
-    } catch (error: any) {
-      console.error("Microsoft signup failed:", error);
-      setError("root", {
-        message: error.message || "Microsoft signup failed. Please try again.",
-      });
-      setSocialLoading(false);
-    }
-  };
 
   return (
     <AuthLayout
@@ -958,7 +936,7 @@ const SignupPage: React.FC = () => {
           {!showOtpStep && (
             <>
               {/* Social Signup Buttons - Re-enabled */}
-              <div className="grid grid-cols-2 gap-3 hidden">
+              <div className="grid grid-cols-1 gap-3 ">
                 <Button
                   type="button"
                   variant="outline"
@@ -991,41 +969,7 @@ const SignupPage: React.FC = () => {
                           fill="#EA4335"
                         />
                       </svg>
-                      <span className="text-gray-900">Google</span>
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleMicrosoftSignup}
-                  disabled={socialLoading || isLoading}
-                  className="flex items-center justify-center gap-2 h-12 bg-blue-600 text-gray-500 border-blue-700 hover:bg-blue-700">
-                  {socialLoading ? (
-                    <div className="h-5 w-5 border-2 bg-gray-50 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none">
-                        <path
-                          d="M11.4 24h12.6v-12.6h-12.6v12.6z"
-                          fill="#f25022"
-                        />
-                        <path d="M0 24h12.6v-12.6h-12.6v12.6z" fill="#7fba00" />
-                        <path
-                          d="M11.4 12.6h12.6v-12.6h-12.6v12.6z"
-                          fill="#ffb900"
-                        />
-                        <path
-                          d="M0 12.6h12.6v-12.6h-12.6v12.6z"
-                          fill="#00a4ef"
-                        />
-                      </svg>
-                      <span>Microsoft</span>
+                      <span className="text-gray-900">Sign up with Google</span>
                     </>
                   )}
                 </Button>
@@ -1270,16 +1214,7 @@ const SignupPage: React.FC = () => {
       {/* Survey Step - MOVED OUTSIDE THE MAIN FORM */}
       {showSurveyStep && (
         <div className="space-y-4">
-          <SurveyForm onSuccess={handleSurveyComplete} />
-          <div className="flex space-x-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleBackToSignup}
-              className="flex-1 bg-blue-500 text-gray-500 hover:bg-blue-600">
-              Back
-            </Button>
-          </div>
+          <SurveyForm onSuccess={handleSurveyComplete} onBack={handleBackToSignup} />
         </div>
       )}
 
