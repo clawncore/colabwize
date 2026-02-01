@@ -507,10 +507,10 @@ const BillingSettingsPage: React.FC = () => {
                   {/* Scans Meter */}
                   <div>
                     <div className="flex justify-between items-end mb-3">
-                      <span className="text-sm font-medium text-gray-700">Citation Audits</span>
+                      <span className="text-sm font-medium text-gray-700">Document Scans</span>
                       <div className="text-right">
-                        <span className={`text-lg font-bold font-mono ${(limits.scans_per_month !== -1 && (usage.scans || 0) >= (limits.scans_per_month || 0)) ? 'text-red-600' : 'text-gray-900'}`}>
-                          {usage.scans || 0}
+                        <span className={`text-lg font-bold font-mono ${(limits.scans_per_month !== -1 && (usage.scan || 0) >= (limits.scans_per_month || 0)) ? 'text-red-600' : 'text-gray-900'}`}>
+                          {usage.scan || 0}
                         </span>
                         <span className="text-gray-400 text-sm font-mono mx-1">/</span>
                         <span className="text-gray-400 text-sm font-mono">
@@ -521,13 +521,13 @@ const BillingSettingsPage: React.FC = () => {
                     {/* Progress Bar */}
                     <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${(limits.scans_per_month !== -1 && (usage.scans || 0) >= (limits.scans_per_month || 0))
+                        className={`h-full rounded-full transition-all duration-500 ${(limits.scans_per_month !== -1 && (usage.scan || 0) >= (limits.scans_per_month || 0))
                           ? 'bg-red-500' // Exceeded
-                          : (limits.scans_per_month !== -1 && (usage.scans || 0) / (limits.scans_per_month || 1) > 0.8)
+                          : (limits.scans_per_month !== -1 && (usage.scan || 0) / (limits.scans_per_month || 1) > 0.8)
                             ? 'bg-amber-400' // Near limit
                             : 'bg-green-500' // Normal or Infinite
                           }`}
-                        style={{ width: `${limits.scans_per_month === -1 ? 0 : Math.min(100, ((usage.scans || 0) / (limits.scans_per_month || 1)) * 100)}%` }} // 0% width for infinite to show "empty" or just use full green? Usually full green or empty. Let's start with 0 or 100.
+                        style={{ width: `${limits.scans_per_month === -1 ? 0 : Math.min(100, ((usage.scan || 0) / (limits.scans_per_month || 1)) * 100)}%` }} // 0% width for infinite to show "empty" or just use full green? Usually full green or empty. Let's start with 0 or 100.
                       />
                     </div>
                     {limits.scans_per_month === -1 && (
@@ -536,7 +536,7 @@ const BillingSettingsPage: React.FC = () => {
                         Unlimited access
                       </div>
                     )}
-                    {limits.scans_per_month !== -1 && (usage.scans || 0) >= (limits.scans_per_month || 0) && (
+                    {limits.scans_per_month !== -1 && (usage.scan || 0) >= (limits.scans_per_month || 0) && (
                       <div className="mt-2 text-xs text-red-600 font-medium flex items-center animate-pulse">
                         <AlertCircle className="h-3 w-3 mr-1" />
                         Limit reached
@@ -544,30 +544,52 @@ const BillingSettingsPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Rephrases Meter */}
+                  {/* Citation Audits Meter */}
                   <div>
                     <div className="flex justify-between items-end mb-3">
-                      <span className="text-sm font-medium text-gray-700">Rephrases</span>
+                      <span className="text-sm font-medium text-gray-700">Forensic Citation Audits</span>
                       <div className="text-right">
-                        <span className={`text-lg font-bold font-mono ${(limits.rephrases_per_month !== -1 && (usage.rephrases || 0) >= (limits.rephrases_per_month || 0)) ? 'text-red-600' : 'text-gray-900'}`}>
-                          {usage.rephrases || 0}
+                        <span className={`text-lg font-bold font-mono ${(limits.citation_audit !== -1 && (usage.citation_audit || 0) >= (limits.citation_audit || 0)) ? 'text-red-600' : 'text-gray-900'}`}>
+                          {usage.citation_audit || 0}
                         </span>
                         <span className="text-gray-400 text-sm font-mono mx-1">/</span>
                         <span className="text-gray-400 text-sm font-mono">
-                          {limits.rephrases_per_month === -1 ? '∞' : (limits.rephrases_per_month || 3)}
+                          {limits.citation_audit === -1 ? '∞' : (limits.citation_audit || 0)}
                         </span>
                       </div>
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${limits.rephrases_per_month === -1
-                            ? 'bg-purple-500'
-                            : (usage.rephrases || 0) >= (limits.rephrases_per_month || 0) ? 'bg-red-500' : 'bg-purple-500'
-                          }`}
-                        style={{ width: `${limits.rephrases_per_month === -1 ? 0 : Math.min(100, ((usage.rephrases || 0) / (limits.rephrases_per_month || 1)) * 100)}%` }}
+                        className={`h-full rounded-full transition-all duration-500 ${(limits.citation_audit !== -1 && (usage.citation_audit || 0) >= (limits.citation_audit || 0)) ? 'bg-red-500' : 'bg-blue-500'}`}
+                        style={{ width: `${limits.citation_audit === -1 ? 0 : Math.min(100, ((usage.citation_audit || 0) / (limits.citation_audit || 1)) * 100)}%` }}
                       />
                     </div>
-                    {limits.rephrases_per_month === -1 && (
+                  </div>
+
+                  {/* Rephrases Meter */}
+                  <div>
+                    <div className="flex justify-between items-end mb-3">
+                      <span className="text-sm font-medium text-gray-700">Rephrases</span>
+                      <div className="text-right">
+                        <span className={`text-lg font-bold font-mono ${(limits.rephrase_suggestions !== -1 && (usage.rephrase_suggestions || 0) >= (limits.rephrase_suggestions || 0)) ? 'text-red-600' : 'text-gray-900'}`}>
+                          {usage.rephrase_suggestions || 0}
+                        </span>
+                        <span className="text-gray-400 text-sm font-mono mx-1">/</span>
+                        <span className="text-gray-400 text-sm font-mono">
+                          {limits.rephrase_suggestions === -1 ? '∞' : (limits.rephrase_suggestions || 0)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${limits.rephrase_suggestions === -1
+                          ? 'bg-purple-500'
+                          : (usage.rephrase_suggestions || 0) >= (limits.rephrase_suggestions || 0) ? 'bg-red-500' : 'bg-purple-500'
+                          }`}
+                        style={{ width: `${limits.rephrase_suggestions === -1 ? 0 : Math.min(100, ((usage.rephrase_suggestions || 0) / (limits.rephrase_suggestions || 1)) * 100)}%` }}
+                      />
+                    </div>
+                    {limits.rephrase_suggestions === -1 && (
                       <div className="mt-2 text-xs text-purple-600 font-medium flex items-center">
                         <Check className="h-3 w-3 mr-1" />
                         Unlimited access

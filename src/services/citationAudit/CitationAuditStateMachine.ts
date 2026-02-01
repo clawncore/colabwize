@@ -37,6 +37,8 @@ export interface CitationAuditResult {
     };
     verificationLimits: string[];
   };
+  tierMetadata?: Record<string, any>;  // Backend tier execution metadata
+  tiersExecuted?: string[];  // List of tiers that were executed
 }
 
 // State transition handlers
@@ -79,7 +81,7 @@ export class CitationAuditStateMachine {
     };
   }
 
-  static handleSuccessfulScan(violations: any[], processingStats?: any, verificationResults?: any[], integrityIndex?: any): CitationAuditResult {
+  static handleSuccessfulScan(violations: any[], processingStats?: any, verificationResults?: any[], integrityIndex?: any, tierMetadata?: Record<string, any>, tiersExecuted?: string[]): CitationAuditResult {
     const state = violations.length > 0 ? 'COMPLETED_SUCCESS' : 'COMPLETED_NO_ISSUES';
 
     return {
@@ -87,7 +89,9 @@ export class CitationAuditStateMachine {
       violations,
       verificationResults,  // Include verification results for sidebar
       processingStats,
-      integrityIndex // Propagate score
+      integrityIndex, // Propagate score
+      tierMetadata,  // Backend tier execution data
+      tiersExecuted  // List of executed tiers
     };
   }
 

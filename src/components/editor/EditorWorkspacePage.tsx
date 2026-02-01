@@ -328,6 +328,9 @@ const EditorWorkspacePage: React.FC = () => {
           OnboardingService.completeEditorTourLocal();
         } else {
           // Not done anywhere, show it
+          // 🛡️ Guard: Mark locally immediately to prevent re-trigger on rapid refresh
+          OnboardingService.completeEditorTourLocal();
+
           // Short delay for UI render
           setTimeout(() => setShowEditorTour(true), 1000);
         }
@@ -846,6 +849,7 @@ const EditorWorkspacePage: React.FC = () => {
                     }}
                     initialResults={leftPanelData}
                     citationStyle={selectedProject?.citation_style}
+                    citationLibrary={selectedProject?.citations}
                   />
                 )}
 
@@ -969,6 +973,7 @@ const EditorWorkspacePage: React.FC = () => {
             projectId={selectedProject?.id || ""}
             onBack={() => setSelectedLibrarySource(null)}
             onUpdate={handleSourceUpdate}
+            isResearcher={userPlan === "Researcher"}
           />
         ) : activeLeftPanel === "sources" && activeSourceTab === "matrix" ? (
           <LiteratureMatrix

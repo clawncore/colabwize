@@ -4,16 +4,21 @@ import { CitationService } from "../../../services/citationService";
 import { Loader2, BarChart } from "lucide-react";
 import { useToast } from "../../../hooks/use-toast";
 import { UpgradeModal } from "../../subscription/UpgradeModal";
+import { runCitationAudit } from "../../../services/citationAudit/citationAuditEngine";
 
 interface CitationAuditAdapterProps {
     projectId: string;
+    citationStyle: string;
     editor: Editor | null;
+    citationLibrary?: any[];
     onScanComplete: (results: any) => void;
 }
 
 export const CitationAuditAdapter: React.FC<CitationAuditAdapterProps> = ({
     projectId,
+    citationStyle,
     editor,
+    citationLibrary,
     onScanComplete,
 }) => {
     const [isScanning, setIsScanning] = useState(false);
@@ -34,9 +39,13 @@ export const CitationAuditAdapter: React.FC<CitationAuditAdapterProps> = ({
 
         try {
             setIsScanning(true);
-            const results = await CitationService.scanContent(content, projectId);
+            const result = await runCitationAudit(
+                editor?.getJSON() as any, // Type assertion for compatibility
+                citationStyle || "APA",
+                citationLibrary
+            );
 
-            onScanComplete(results);
+            onScanComplete(result);
 
         } catch (error: any) {
             console.error("Audit failed", error);

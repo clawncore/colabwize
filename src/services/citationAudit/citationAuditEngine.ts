@@ -9,7 +9,7 @@ import {
 } from "./types";
 import { extractPatterns } from "./patterns";
 import { apiClient } from "../apiClient";
-import { DocumentExtractor } from "../../utils/documentExtractor";
+
 
 import { CitationAuditStateMachine, CitationAuditResult } from "./CitationAuditStateMachine";
 
@@ -19,7 +19,8 @@ import { CitationAuditStateMachine, CitationAuditResult } from "./CitationAuditS
  */
 export async function runCitationAudit(
     content: EditorContent,
-    citationStyle: string
+    citationStyle: string,
+    citationLibrary?: Record<string, any>
 ): Promise<CitationAuditResult> {
 
     console.log("🚀 Starting Enhanced Citation Audit with State Machine");
@@ -37,7 +38,8 @@ export async function runCitationAudit(
             },
             sections: extracted.sections,
             patterns: extracted.patterns,
-            referenceList: extracted.referenceList
+            referenceList: extracted.referenceList,
+            citationLibrary
         };
 
         console.log("📤 Sending to backend:", {
@@ -109,6 +111,12 @@ export async function runCitationAudit(
         console.log("✅ Backend audit completed successfully");
         console.log("📊 Processing Results:", processingStats);
 
+        // [AUDIT DIAGNOSTICS]
+        console.log(`🔍 Extraction Summary: ${extracted.patterns.length} patterns found, ${extracted.referenceList?.entries.length || 0} references found.`);
+        if (extracted.patterns.length === 0 && (extracted.referenceList?.entries.length || 0) > 0) {
+            console.warn("⚠️ CRITICAL: 0 citations extracted but references exist. The backend will flag all references as orphans.");
+        }
+
         // If we have flags, the audit found issues
         if (allFlags.length > 0) {
             console.log(`🚩 ${allFlags.length} total violations detected (style + verification):`);
@@ -128,7 +136,9 @@ export async function runCitationAudit(
             allFlags,
             processingStats,
             response.verificationResults,  // Pass through for sidebar display
-            response.integrityIndex // Pass through CII
+            response.integrityIndex, // Pass through CII
+            response.tierMetadata,  // Pass through tier execution data
+            response.tiersExecuted  // Pass through executed tiers list
         );
 
     } catch (error: any) {
@@ -241,11 +251,10 @@ async function runSimulatedAudit(
 
 /**
  * STRICT DECOMPOSITION
- * Walks the doc to identify Sections and Patterns.
+ * Priority: Normalized Citations First, Regex Fallback Second
  */
 function decomposeAndExtract(
-    doc: EditorContent,
-    extractedContent?: ReturnType<typeof DocumentExtractor.extractTextWithPositions>
+    doc: EditorContent
 ): {
     sections: DocumentSection[],
     patterns: ExtractedPattern[],
@@ -254,31 +263,56 @@ function decomposeAndExtract(
     const sections: DocumentSection[] = [];
     const patterns: ExtractedPattern[] = [];
     let referenceList: ReferenceListExtraction | null = null;
-
     let currentOffset = 0;
 
     // Tracking current section state
     let currentSectionType: SectionType = "BODY";
-    let currentSectionTitle: string = "Introduction"; // Default implicit start
+    let currentSectionTitle: string = "Introduction";
 
-    // Check if doc has content
     if (!doc.content) return { sections, patterns, referenceList };
 
-    // Linear walk relative to top-level blocks for simpler section tracking
+    // PHASE 1: Extract ALL Tiptap Citation Nodes (Primary Source)
+    const normalizedCitations: ExtractedPattern[] = [];
     doc.content.forEach((block) => {
+        const blockSize = calculateNodeSize(block);
+
+        // Extract Tiptap citation marks from this block
+        const citationMarks = findCitationMarksInBlock(block, currentOffset);
+        citationMarks.forEach(mark => {
+            normalizedCitations.push({
+                text: mark.text || "Citation",
+                start: mark.start,
+                end: mark.end,
+                patternType: "NORMALIZED",
+                section: "BODY",
+                citationId: mark.attrs?.citationId,
+                normalizationStatus: mark.attrs?.normalizationStatus || "resolved",
+                confidence: mark.attrs?.confidence || 1.0
+            });
+        });
+
+        currentOffset += blockSize;
+    });
+
+    console.log(`✅ [AUDIT] Extracted ${normalizedCitations.length} normalized citations (blue chips)`);
+
+    // Reset offset for second pass
+    currentOffset = 0;
+
+    // PHASE 2: Linear walk for sections, references, and regex fallback
+    doc.content.forEach((block) => {
+        const blockSize = calculateNodeSize(block);
+
         // 1. Check for Section Heading
         if (block.type === "heading" && block.content) {
-            const titleText = block.content.map(c => c.text).join("");
+            const titleText = extractTextFromNode(block);
 
-            // Classify Section
             if (isReferenceHeader(titleText)) {
                 currentSectionType = "REFERENCE_SECTION";
                 currentSectionTitle = titleText;
-                // Initialize reference list container if strictly this is the start
                 if (!referenceList) {
                     referenceList = { sectionTitle: titleText, entries: [] };
                 } else {
-                    // Update title if we found the actual header
                     referenceList.sectionTitle = titleText;
                 }
             } else {
@@ -289,18 +323,17 @@ function decomposeAndExtract(
             sections.push({
                 title: currentSectionTitle,
                 type: currentSectionType,
-                range: { start: currentOffset, end: currentOffset + calculateNodeSize(block) }
+                range: { start: currentOffset, end: currentOffset + blockSize }
             });
         }
-        // 2. Extract Reference Entries - Support BOTH lists AND paragraphs
+        // 2. Extract Reference Entries
         else if (currentSectionType === "REFERENCE_SECTION") {
             if (referenceList) {
-                // Case A: List-based references (ordered or bullet lists)
                 if (block.type === "orderedList" || block.type === "bulletList") {
                     if (block.content) {
-                        block.content.forEach((listItem, idx) => {
+                        block.content.forEach((listItem) => {
                             const itemText = extractTextFromNode(listItem);
-                            if (itemText.trim()) {  // Only add non-empty entries
+                            if (itemText.trim()) {
                                 const itemStart = currentOffset + 1;
                                 referenceList!.entries.push({
                                     index: referenceList!.entries.length,
@@ -311,11 +344,8 @@ function decomposeAndExtract(
                             }
                         });
                     }
-                }
-                // Case B: Paragraph-based references (common in APA/MLA)
-                else if (block.type === "paragraph") {
+                } else if (block.type === "paragraph") {
                     const paraText = extractTextFromNode(block);
-                    // Only add if it looks like a reference (has author/year pattern or is substantial)
                     if (paraText.trim() && paraText.length > 20) {
                         referenceList!.entries.push({
                             index: referenceList!.entries.length,
@@ -328,32 +358,77 @@ function decomposeAndExtract(
             }
         }
 
-        // 3. Extract Patterns (Always run regex sensing)
-        const blockText = extractTextFromNode(block);
-        if (blockText) {
-            const extracted = extractPatterns(
-                blockText,
-                currentOffset,
-                // Context for extraction helper (deprecated by explicit section tracking, but used for range)
-            );
+        // 3. REGEX FALLBACK (Only for un-normalized citations)
+        if (currentSectionType === "BODY") {
+            const blockText = extractTextFromNode(block);
+            if (blockText.trim()) {
+                const rawPatterns = extractPatterns(blockText, currentOffset);
 
-            // Map to ExtractedPattern with Section info
-            extracted.forEach(p => {
-                patterns.push({
-                    patternType: p.patternType,
-                    text: p.text,
-                    start: p.start,
-                    end: p.end,
-                    section: currentSectionType
+                rawPatterns.forEach(raw => {
+                    // Check if this pattern is already covered by a normalized citation
+                    const alreadyNormalized = normalizedCitations.some(norm =>
+                        (raw.start >= norm.start && raw.start < norm.end) ||
+                        (raw.end > norm.start && raw.end <= norm.end) ||
+                        (raw.start <= norm.start && raw.end >= norm.end)
+                    );
+
+                    if (!alreadyNormalized) {
+                        patterns.push({
+                            ...raw,
+                            section: currentSectionType,
+                            normalizationStatus: "unresolved",
+                            confidence: 0
+                        });
+                    }
                 });
-            });
+            }
         }
 
         // Advance offset
-        currentOffset += calculateNodeSize(block);
+        currentOffset += blockSize;
     });
 
-    return { sections, patterns, referenceList };
+    // PHASE 3: Merge normalized citations with regex fallback
+    const finalPatterns = [...normalizedCitations, ...patterns];
+    console.log(`📊 [AUDIT] Total citations: ${finalPatterns.length} (${normalizedCitations.length} normalized + ${patterns.length} regex)`);
+
+    return { sections, patterns: finalPatterns, referenceList };
+}
+
+/**
+ * Helper to find all citation marks and their absolute offsets within a block
+ */
+function findCitationMarksInBlock(node: EditorContent, baseOffset: number): Array<{ start: number, end: number, text: string, attrs: any }> {
+    const marks: Array<{ start: number, end: number, text: string, attrs: any }> = [];
+
+    function walk(n: EditorContent, offset: number) {
+        if (n.marks) {
+            const citation = n.marks.find(m => {
+                const typeName = typeof m.type === 'string' ? m.type : (m.type as any)?.name;
+                return typeName === "citation";
+            });
+
+            if (citation && n.text) {
+                marks.push({
+                    start: offset,
+                    end: offset + n.text.length,
+                    text: n.text,
+                    attrs: citation.attrs
+                });
+            }
+        }
+
+        if (n.content) {
+            let localOffset = (n.type === "text") ? 0 : 1;
+            n.content.forEach(child => {
+                walk(child, offset + localOffset);
+                localOffset += calculateNodeSize(child);
+            });
+        }
+    }
+
+    walk(node, baseOffset);
+    return marks;
 }
 
 // Helpers

@@ -124,10 +124,10 @@
     "zustand": "^5.0.8"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "dev": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "craco start",
+    "dev": "craco start",
+    "build": "craco build",
+    "test": "craco test",
     "eject": "react-scripts eject"
   },
   "browserslist": {
@@ -143,6 +143,7 @@
     ]
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.20",
     "@types/micromatch": "^4.0.9",

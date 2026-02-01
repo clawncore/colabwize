@@ -1,12 +1,24 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useToast } from "../../hooks/use-toast";
-import { Search, Loader2 } from "lucide-react";
+
 import {
-  SuggestedPaper,
-  CitationService,
-} from "../../services/citationService";
-import { CredibilityBadge } from "./CredibilityBadge";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../components/ui/alert-dialog";
+import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
+import { useAuth } from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { Search, Loader2 } from "lucide-react";
+import { useToast } from "../../hooks/use-toast";
+import { CitationService, SuggestedPaper } from "../../services/citationService";
 import { apiClient } from "../../services/apiClient";
+import { CredibilityBadge } from "./CredibilityBadge";
+
 
 
 interface PaperSuggestionsPanelProps {
@@ -29,11 +41,26 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
   onSourceAdded,
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  // Subscription State
+  const {
+    plan,
+    limits: planLimits,
+    usage: planUsage,
+    creditBalance,
+    fetchSubscription
+  } = useSubscriptionStore();
+  const { user } = useAuth();
+
   const [suggestedPapers, setSuggestedPapers] =
     useState<SuggestedPaper[]>(initialSuggestions);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [addedPaperIds, setAddedPaperIds] = useState<Set<string>>(new Set());
+
+  // Dialog State
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  const [pendingQuery, setPendingQuery] = useState<string | null>(null);
 
   // Pagination
   const [displayCount, setDisplayCount] = useState(10);
@@ -75,32 +102,58 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     }
   }, [suggestedPapers, calculateCredibilityScores]);
 
-  // Removed auto-search useEffect and isLoadingInitial as per requirements to make this a passive "Sources" panel.
 
-  const executeSearch = useCallback(async (query: string) => {
-    if (!query.trim()) return;
+  const performSearch = async (query: string) => {
     setIsSearching(true);
-    setDisplayCount(10); // Reset to first page on new search
+    setDisplayCount(10); // Reset
     try {
       const results = await CitationService.searchPapers(query);
       setSuggestedPapers(results || []);
+      // Refresh subscription to update usage
+      fetchSubscription(true);
     } catch (error: any) {
       console.error("Search failed:", error);
-
       const isLimitError = error.response?.status === 403 || error.message?.includes("limit");
 
+      if (isLimitError) {
+        // If we hit backend limit (e.g. no credits), show dialog
+        setShowLimitDialog(true);
+        return;
+      }
+
       toast({
-        title: isLimitError ? "Search Limit Reached" : "Search Failed",
-        description: isLimitError
-          ? "You have reached your monthly paper search limit. Please upgrade your plan or buy credits."
-          : "Failed to search for papers. Please try again.",
+        title: "Search Failed",
+        description: "Failed to search for papers. Please try again.",
         variant: "destructive",
         duration: 5000,
       });
     } finally {
       setIsSearching(false);
     }
-  }, [toast]);
+  };
+
+  const executeSearch = useCallback(async (query: string, force = false) => {
+    if (!query.trim()) return;
+
+    // Check Limits BEFORE searching (Client-side pre-check)
+    const limit = planLimits?.paper_search ?? 3;
+    const used = planUsage?.paper_search ?? 0;
+    const isFree = plan?.toLowerCase().includes('free');
+
+    // If free plan and limit reached/exceeded, and NOT forcing
+    if (isFree && used >= limit && !force) {
+      setPendingQuery(query);
+      setShowLimitDialog(true);
+      return;
+    }
+
+    await performSearch(query);
+  }, [planLimits, planUsage, plan]); // Removed performSearch dependency to avoid loop if not memoized, but define performSearch outside or memoize it. 
+  // Wait, performSearch is defined inside component and uses state/props? No, it uses setSuggestedPapers etc.
+  // It should be memoized or defined inside useCallback.
+  // I will define performSearch inside the component body (as above) but I should useCallback it or just include it here.
+  // To be safe and clean, I'll move performSearch logic inside executeSearch or memoize it.
+  // Actually, I'll just leave it as consistent function in component scope. But reusing it in handleProceedWithCredits requires it to be stable or accessible.
 
   const handleManualSearch = async (e?: React.FormEvent, searchStr?: string) => {
     if (e) e.preventDefault();
@@ -133,11 +186,6 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
       if (onSourceAdded) {
         onSourceAdded();
       }
-
-      // Source added silently - no need to confirm obvious actions
-
-      // We do NOT remove it from the list, just mark as added.
-      // We do NOT insert it into the text.
     } catch (error) {
       console.error("Failed to add citation", error);
       alert("Failed to add source. Please try again.");
@@ -154,8 +202,27 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     setDisplayCount(prev => prev + PAPERS_PER_PAGE);
   };
 
+  // Dialog Actions
+  const handleProceedWithCredits = () => {
+    setShowLimitDialog(false);
+    if (pendingQuery) {
+      // Proceed logic: we assume backend will charge credits
+      // We could explicitly check credit balance here
+      if (creditBalance <= 0) {
+        toast({
+          title: "Insufficient Credits",
+          description: "You don't have enough credits. Please top up.",
+          variant: "destructive"
+        });
+        navigate("/pricing");
+      } else {
+        performSearch(pendingQuery);
+      }
+    }
+  };
+
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white relative">
       {/* Header */}
       <div className="px-4 py-3 border-b bg-gradient-to-r from-blue-600 to-cyan-600 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -283,6 +350,33 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
           </div>
         )}
       </div>
+
+      {/* Limit Reached Dialog */}
+      <AlertDialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
+        <AlertDialogContent className="bg-white text-gray-900 border-gray-200">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-gray-900">Free Plan Limit Reached</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-500">
+              You've used all 3 free searches for this month.
+              {creditBalance > 0
+                ? " Would you like to use 1 credit to perform this search?"
+                : " You need credits to continue searching."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowLimitDialog(false)} className="text-gray-700 bg-gray-100 hover:bg-gray-200 border-gray-200">Cancel</AlertDialogCancel>
+            {creditBalance > 0 ? (
+              <AlertDialogAction onClick={handleProceedWithCredits}>
+                Use 1 Credit
+              </AlertDialogAction>
+            ) : (
+              <AlertDialogAction onClick={() => navigate("/pricing")}>
+                Upgrade / Top Up
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -326,6 +326,11 @@ const FEATURE_CONFIG: Record<
     label: "Advanced Analytics",
     type: "boolean",
   },
+  paper_search: {
+    label: "Paper Searches",
+    usageKey: "paper_search",
+    type: "consumable",
+  },
 };
 
 const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
@@ -361,22 +366,6 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
             // Get usage using the mapped key or fallback to feature name
             const usageKey = config?.usageKey || feature;
             let current = usage[usageKey] || 0;
-
-            // Special handling for Scans Used - limits reached derived logic
-            if (feature === "scans_per_month") {
-              const origUsage = usage['originality_scan'] || 0;
-              const origLimit = limits['originality_scan'] ?? 3;
-
-              const citeUsage = usage['citation_check'] || 0;
-              const citeLimit = typeof limits['citation_check'] === 'number' ? limits['citation_check'] : 0;
-
-              const rephraseUsage = usage['rephrase'] || 0;
-              const rephraseLimit = limits['rephrase_per_month'] ?? 3;
-
-              current = (origUsage >= origLimit ? 1 : 0) +
-                (citeUsage >= citeLimit ? 1 : 0) +
-                (rephraseUsage >= rephraseLimit ? 1 : 0);
-            }
 
             const percentage = isUnlimited
               ? 0

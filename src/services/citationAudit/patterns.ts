@@ -4,16 +4,18 @@ import { EditorContent } from "./types";
 /**
  * Strict Regex Patterns for Citation Signals
  * These are style-agnostic detectors.
+ * Note: NORMALIZED citations don't use regex (they're extracted from Tiptap nodes)
  */
-const PATTERNS: Record<PatternType, RegExp> = {
+const PATTERNS: Record<Exclude<PatternType, "NORMALIZED">, RegExp> = {
     // [1], [12], [1, 2], [1-3]
     "NUMERIC_BRACKET": /\[\s*\d+(?:[\s,-]+\d+)*\s*\]/g,
 
-    // (Smith, 2023) or (Smith et al., 2023)
-    "AUTHOR_YEAR": /\([A-Z][a-zA-Z\s.'-]+,?\s*\d{4}[a-z]?\)/g,
+    // (Smith, 2023) or (Smith et al., 2023) or (Agency & Dept, 2023)
+    // Anchored by a 4-digit year at the end.
+    "AUTHOR_YEAR": /\((?:[^)]+,?\s+)*(?:19|20)\d{2}[a-z]?\)/g,
 
-    // (Smith 24) or (Smith et al. 24)
-    "AUTHOR_PAGE": /\([A-Z][a-zA-Z\s.'-']+\s+\d+(?:-\d+)?\)/g,
+    // (Smith 24) or (Smith et al. 24) or (Smith, 24)
+    "AUTHOR_PAGE": /\((?:[A-Z][a-zA-Z\s.'-']+(?:,\s+)?)\d+(?:-\d+)?\)/g,
 
     // et al NOT followed by period
     "et_al_no_period": /\bet\s+al(?!\.)/g,

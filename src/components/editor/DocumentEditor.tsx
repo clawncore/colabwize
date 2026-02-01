@@ -40,8 +40,10 @@ import {
   RephraseAdapter,
 
 } from "./adapters";
+import { CitationNode } from "../../extensions/CitationNode";
 import { CitationAuditAdapter } from "./adapters/CitationAuditAdapter";
 import { UpgradeModal } from "../subscription/UpgradeModal";
+import { CitationStyleDialog } from "../citations/CitationStyleDialog";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { DraftComparisonSelector } from "../originality/DraftComparisonSelector";
 import { RightPanelType } from "./EditorWorkspacePage";
@@ -61,6 +63,7 @@ import { formatContentForTiptap } from "../../utils/editorUtils";
 
 import { EditorToolbar } from "./editor-toolbar";
 import { ExportWorkflowModal } from "../export/ExportWorkflowModal";
+import { detectAndNormalizeCitations, scanAndIngestReferences } from "./utils/normalization";
 import {
   Download,
   GitCompare,
@@ -72,6 +75,7 @@ import {
   Maximize2,
   Minimize2
 } from "lucide-react";
+import { Button } from "../ui/button";
 
 
 
@@ -106,6 +110,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     useState(false);
   const [isExportWorkflowOpen, setIsExportWorkflowOpen] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isStyleDialogOpen, setIsStyleDialogOpen] = useState(false);
 
   const [lastScanResult] = useState<OriginalityScan | null>(
     null
@@ -170,6 +175,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       PlaceholderMarkExtension,
       Superscript,
       Subscript,
+      CitationNode,
     ],
     content: formatContentForTiptap(project.content),
     onUpdate: () => {
@@ -187,7 +193,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // Load project content only once per document
   useEffect(() => {
     if (editor) {
-      // Notify parent that editor is ready
       if (onEditorReady) {
         onEditorReady(editor);
       }
@@ -198,7 +203,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       project.content &&
       currentProjectIdRef.current !== project.id
     ) {
-      // If we're switching to a different project, reset the initialization flag
       if (
         currentProjectIdRef.current &&
         currentProjectIdRef.current !== project.id
@@ -206,14 +210,105 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         hasInitializedContentRef.current = false;
       }
 
-      // Only set content if we haven't initialized for this project yet
       if (!hasInitializedContentRef.current) {
         editor.commands.setContent(formatContentForTiptap(project.content));
         hasInitializedContentRef.current = true;
         currentProjectIdRef.current = project.id;
+
+        // --- Silent Normalization on Load ---
+        // Convert plain text citations to blue interactive nodes
+        // Use timeout to ensure editor is stable and we don't conflict with initial render transactions
+        setTimeout(() => {
+          if (editor && !editor.isDestroyed) {
+            detectAndNormalizeCitations(editor, project.citations || []);
+          }
+        }, 500);
       }
     }
-  }, [project.id, project.content, editor, onEditorReady]);
+  }, [project.id, project.content, editor, onEditorReady, project.citations]);
+
+  // --- Periodic Normalization (Debounced) ---
+  useEffect(() => {
+    if (!editor || !project.citations) return;
+
+    const timeoutId = setTimeout(() => {
+      // Run normalization 2 seconds after last edit
+      // This ensures new citations turn blue without reload
+      detectAndNormalizeCitations(editor, project.citations || []);
+
+      // Auto-Ingest: Scan References section and add to library
+      // User requested removal of this feature (Step 675)
+      // void scanAndIngestReferences(editor, project.id, project.citations || []);
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [editCount, editor, project.citations]);
+
+  // --- Citation Click Navigation ---
+  // Global click listener to handle clicks on citation pills
+  useEffect(() => {
+    const handleEditorClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Check if clicked element is a citation pill
+      const citationPill = target.closest('[data-type="citation"]');
+
+      if (citationPill) {
+        const text = citationPill.textContent || "";
+        // Extract probable author from "(Smith, 2020)" -> "Smith"
+        // Regex looks for words before comma or year
+        const match = text.match(/\(([^,0-9]+)/);
+        const author = match ? match[1].trim() : text.replace(/[()]/g, "").trim();
+
+        if (author) {
+          // Find References section in the DOM
+          // We assume standard APA/MLA "References" or "Works Cited" heading
+          // This is a DOM search, not Tiptap node search, for scrolling simplicity
+          const headings = document.querySelectorAll("h1, h2, h3, h4");
+          let referencesHeader: Element | null = null;
+
+          for (const h of Array.from(headings)) {
+            if (/References|Works Cited|Bibliography/i.test(h.textContent || "")) {
+              referencesHeader = h;
+              break;
+            }
+          }
+
+          if (referencesHeader) {
+            // Search siblings after header for the author
+            let current = referencesHeader.nextElementSibling;
+            while (current) {
+              if (current.textContent?.includes(author)) {
+                // Found it! Scroll to it.
+                current.scrollIntoView({ behavior: "smooth", block: "center" });
+                // Add temporary highlight effect
+                const originalBg = (current as HTMLElement).style.backgroundColor;
+                (current as HTMLElement).style.backgroundColor = "#FEF3C7"; // yellow-100
+                (current as HTMLElement).style.transition = "background-color 0.5s";
+                setTimeout(() => {
+                  (current as HTMLElement).style.backgroundColor = originalBg;
+                }, 2000);
+                return;
+              }
+              current = current.nextElementSibling;
+            }
+            // If specific author not found, at least scroll to References
+            referencesHeader.scrollIntoView({ behavior: "smooth", block: "start" });
+          } else {
+            // Fallback: Try to find text anywhere? No, too risky.
+            console.warn("References section not found");
+          }
+        }
+      }
+    };
+
+    // Attach to the editor's container or document
+    // Document is safest to catch bubbles from shadow DOM or editor container
+    document.addEventListener("click", handleEditorClick);
+
+    return () => {
+      document.removeEventListener("click", handleEditorClick);
+    };
+  }, []);
 
   // Track time spent and periodically save activity
   // Refs to track current state without triggering re-renders in the interval
@@ -345,46 +440,46 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       // Only highlight if AI or Likely AI
       if (sentence.classification === "human" || sentence.classification === "likely_human") return;
 
-      if (!sentence.text) return;
+    if (!sentence.text) return;
 
-      const range = findTextRange(doc, sentence.text, searchPos);
+    const range = findTextRange(doc, sentence.text, searchPos);
 
-      if (!range) {
-        console.warn("Could not find sentence text in document", sentence.text);
-        return;
+    if (!range) {
+      console.warn("Could not find sentence text in document", sentence.text);
+    return;
       }
 
-      searchPos = range.to;
+    searchPos = range.to;
 
-      let color = "purple"; // Default for AI
-      let message = "";
+    let color = "purple"; // Default for AI
+    let message = "";
 
-      switch (sentence.classification) {
+    switch (sentence.classification) {
         case "ai":
-          color = "purple";
-          message = `🤖 High AI probability detected (${Math.round(sentence.score * 100)}%)`;
-          break;
-        case "likely_ai":
-          color = "yellow";
-          message = `⚠️ Possible AI content (${Math.round(sentence.score * 100)}%)`;
-          break;
-        default:
-          return;
+    color = "purple";
+    message = `🤖 High AI probability detected (${Math.round(sentence.score * 100)}%)`;
+    break;
+    case "likely_ai":
+    color = "yellow";
+    message = `⚠️ Possible AI content (${Math.round(sentence.score * 100)}%)`;
+    break;
+    default:
+    return;
       }
 
-      try {
-        editor.chain().highlightRange(range.from, range.to, {
-          color,
-          type: "ai_detection",
-          similarity: sentence.score * 100,
-          message: message,
-        }).run();
+    try {
+      editor.chain().highlightRange(range.from, range.to, {
+        color,
+        type: "ai_detection",
+        similarity: sentence.score * 100,
+        message: message,
+      }).run();
       } catch (err) {
-        console.error("Failed to highlight AI match:", err);
+      console.error("Failed to highlight AI match:", err);
       }
     });
   };
-  */
+    */
 
 
 
@@ -423,6 +518,31 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isFocusMode, onToggleFocusMode]);
+
+  // Listen for citation insertion events
+  useEffect(() => {
+    const handleInsertCitation = (e: CustomEvent) => {
+      if (editor && e.detail) {
+        const { citationId, text } = e.detail;
+
+        if (citationId) {
+          // Use semantic citation node
+          editor.commands.insertCitation({
+            citationId,
+            fallback: text,
+          });
+        } else {
+          // Fallback to text insertion if no ID (should not happen with new logic)
+          editor.commands.insertContent(text);
+        }
+      }
+    };
+
+    window.addEventListener("insert-citation", handleInsertCitation as EventListener);
+    return () => {
+      window.removeEventListener("insert-citation", handleInsertCitation as EventListener);
+    };
+  }, [editor]);
 
 
 
@@ -541,12 +661,27 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               </div>
               <div className="flex items-center space-x-2 flex-wrap">
                 <button
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
                   onClick={() => setIsExportWorkflowOpen(true)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
-                  title="Export Document">
+                >
                   <Download className="w-4 h-4" />
                   Export
                 </button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsStyleDialogOpen(true)}
+                  className="gap-2 h-9 border-blue-400 text-blue-800 bg-white hover:bg-blue-50 hover:text-blue-900 transition-colors shadow-sm"
+                  title={`Current Style: ${project.citation_style || 'APA'} - Click to change`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <BookOpen className="w-4 h-4 text-blue-600" />
+                    <span className="font-bold text-xs">
+                      {project.citation_style || "APA"}
+                    </span>
+                  </div>
+                </Button>
 
                 <button
                   onClick={onToggleFocusMode}
@@ -717,6 +852,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
             <CitationAuditAdapter
               projectId={project.id}
+              citationStyle={project.citation_style || "APA"}
+              citationLibrary={project.citations}
               editor={editor}
               onScanComplete={(results) => {
                 if (onOpenLeftPanel) {
@@ -797,8 +934,27 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           project={{ ...project, title }}
           currentContent={editor?.getJSON()}
           currentHtmlContent={editor?.getHTML()}
+          editor={editor} // Pass editor instance for live normalization
+          onProjectUpdate={onProjectUpdate}
         />
       </div>
-    </EditorProvider>
+      <CitationStyleDialog
+        open={isStyleDialogOpen}
+        onOpenChange={setIsStyleDialogOpen}
+        currentStyle={project.citation_style}
+        onSave={(style) => {
+          if (onProjectUpdate) {
+            onProjectUpdate({
+              ...project,
+              citation_style: style
+            });
+            toast({
+              title: "Citation Style Updated",
+              description: `Default style set to ${style}. Run an audit to enforce rules.`,
+            });
+          }
+        }}
+      />
+    </EditorProvider >
   );
 };

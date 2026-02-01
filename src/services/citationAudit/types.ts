@@ -9,7 +9,8 @@ export type PatternType =
     | "et_al_no_period"   // et al
     | "et_al_with_period" // et al.
     | "AMPERSAND_IN_PAREN" // (Smith & Jones)
-    | "AND_IN_PAREN";      // (Smith and Jones)
+    | "AND_IN_PAREN"      // (Smith and Jones)
+    | "NORMALIZED";       // Blue chip (Tiptap citation node)
 
 export interface DocumentMeta {
     language: string;
@@ -31,6 +32,9 @@ export interface ExtractedPattern {
     end: number;
     section: SectionType;
     context?: string; // Surrounding sentence
+    citationId?: string; // For normalization mapping
+    normalizationStatus?: "resolved" | "ambiguous" | "unresolved";
+    confidence?: number;
 }
 
 export interface RawExtractedPattern {
@@ -60,9 +64,10 @@ export interface AuditRequest {
     sections: DocumentSection[];
     patterns: ExtractedPattern[];
     referenceList: ReferenceListExtraction | null;
+    citationLibrary?: Record<string, any>; // [NEW] Map of citationId -> metadata for Tier 1 matching
 }
 
-export type CitationViolationType = "INLINE_STYLE" | "REF_LIST_ENTRY" | "STRUCTURAL";
+export type CitationViolationType = "INLINE_STYLE" | "REF_LIST_ENTRY" | "STRUCTURAL" | "VERIFICATION" | "RISK";
 
 export interface CitationFlag {
     type: CitationViolationType;
@@ -75,6 +80,17 @@ export interface CitationFlag {
     };
     section?: string;
     expected?: string;
+    tier?: AuditTier; // Which tier generated this flag
+    reason?: string;  // Forensic requirement: Why this issue exists
+    action?: string;  // Forensic requirement: What the user can do
+    source?: string;  // Forensic requirement: Normalized citation reference
+}
+
+// TIERED AUDIT DEFINITIONS
+export enum AuditTier {
+    STRUCTURAL = "STRUCTURAL", // Tier 1: Format only
+    CLAIM = "CLAIM",           // Tier 2: Claim verification
+    RISK = "RISK"              // Tier 3: Risk & Bias
 }
 
 export interface AuditReport {
@@ -82,6 +98,16 @@ export interface AuditReport {
     timestamp: string;
     flags: CitationFlag[];
     detectedStyles?: string[];
+    verificationResults?: any[]; // Keep for compatibility
+    integrityIndex?: number;
+    tiersExecuted?: AuditTier[];
+    tierMetadata?: {
+        [key in AuditTier]?: {
+            executed: boolean;
+            skippedReason?: string;
+            stats?: any;
+        }
+    };
 }
 
 // Editor Interface (Frontend only helper)
@@ -90,6 +116,10 @@ export interface EditorContent {
     content?: EditorContent[];
     text?: string;
     attrs?: Record<string, any>;
+    marks?: Array<{
+        type: string | { name: string };
+        attrs?: Record<string, any>;
+    }>;
 }
 
 // LEGACY TYPES (To support old rule files until deletion)

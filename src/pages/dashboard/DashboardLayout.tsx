@@ -767,17 +767,20 @@ export default function DashboardLayout({
                         />
                       )}
 
-                      {/* Scans Meter - Derived from sub-limits */}
-                      {/* Scans Meter - Derived from sub-limits */}
+                      {/* Scans Meter */}
                       <UsageMeter
-                        current={
-                          ((planUsage?.originality_scan || 0) >= (planLimits?.originality_scan ?? 3) ? 1 : 0) +
-                          ((planUsage?.citation_check || 0) >= (typeof planLimits?.citation_check === 'number' ? planLimits.citation_check : 0) ? 1 : 0) +
-                          ((planUsage?.rephrase || 0) >= (planLimits?.rephrase_per_month ?? 3) ? 1 : 0)
-                        }
-                        limit={(userPlan.toLowerCase().includes('researcher') || userPlan.toLowerCase().includes('student')) ? 'unlimited' : 3}
+                        current={planUsage?.scan || planUsage?.scans_per_month || 0}
+                        limit={planLimits?.scans_per_month ?? 3}
                         planName={userPlan}
                         featureName="scans"
+                      />
+
+                      {/* Paper Search Meter */}
+                      <UsageMeter
+                        current={planUsage?.paper_search || 0}
+                        limit={planLimits?.paper_search ?? 3}
+                        planName={userPlan}
+                        featureName="searches"
                       />
 
                       {/* Originality Meter */}
@@ -790,15 +793,15 @@ export default function DashboardLayout({
 
                       {/* Citations Meter */}
                       <UsageMeter
-                        current={planUsage?.citation_check || 0}
-                        limit={planLimits?.citation_check ?? 0}
+                        current={planUsage?.citation_check || planUsage?.citation_audit || 0}
+                        limit={planLimits?.citation_audit ?? planLimits?.citation_check ?? 0}
                         planName={userPlan}
                         featureName="citations"
                       />
 
                       {/* Rephrase Meter */}
                       <UsageMeter
-                        current={planUsage?.rephrase_suggestions || 0}
+                        current={planUsage?.rephrase || planUsage?.rephrase_suggestions || 0}
                         limit={planLimits?.rephrase_suggestions ?? 3}
                         planName={userPlan}
                         featureName="rephrase"
@@ -809,8 +812,8 @@ export default function DashboardLayout({
                   {isUsageCollapsed && (() => {
                     const derivedCurrent =
                       ((planUsage?.originality_scan || 0) >= (planLimits?.originality_scan ?? 3) ? 1 : 0) +
-                      ((planUsage?.citation_check || 0) >= (typeof planLimits?.citation_check === 'number' ? planLimits.citation_check : 0) ? 1 : 0) +
-                      ((planUsage?.rephrase || 0) >= (planLimits?.rephrase_per_month ?? 3) ? 1 : 0);
+                      ((planUsage?.citation_check || planUsage?.citation_audit || 0) >= (planLimits?.citation_audit ?? planLimits?.citation_check ?? 0) ? 1 : 0) +
+                      ((planUsage?.rephrase || planUsage?.rephrase_suggestions || 0) >= (planLimits?.rephrase_suggestions ?? 3) ? 1 : 0);
 
                     // Use actual limit or fallback for Free, but treat Premium as unlimited visually if needed
                     const isPremium = userPlan.toLowerCase().includes('researcher') || userPlan.toLowerCase().includes('student');

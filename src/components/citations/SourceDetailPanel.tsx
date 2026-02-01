@@ -10,7 +10,8 @@ import {
     Globe,
     Sparkles,
     Activity,
-    Loader2
+    Loader2,
+    Lock
 } from "lucide-react";
 import { ConsensusBadge } from "./ConsensusBadge";
 import { apiClient } from "../../services/apiClient";
@@ -43,13 +44,15 @@ interface SourceDetailPanelProps {
     projectId: string; // Added
     onBack: () => void;
     onUpdate: (updatedSource: StoredCitation) => void; // Added
+    isResearcher?: boolean; // Added for entitlement check
 }
 
 export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
     source,
     projectId,
     onBack,
-    onUpdate
+    onUpdate,
+    isResearcher = false // Default to false if not provided
 }) => {
     // Normalize authors
     const getAuthors = () => {
@@ -286,19 +289,35 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
                 </div>
 
                 {/* Literature Matrix Themes */}
-                <div className="mb-8 p-4 bg-teal-50/50 border border-teal-100 rounded-xl relative">
+                <div className="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-xl relative overflow-hidden">
+                    {/* Entitlement Lock Overlay */}
+                    {!isResearcher && (
+                        <div className="absolute inset-0 z-10 bg-gray-50/60 backdrop-blur-[1px] flex items-center justify-center">
+                            <div className="flex flex-col items-center gap-2 p-4 text-center">
+                                <div className="p-2 bg-gray-100 rounded-full">
+                                    <Lock className="w-5 h-5 text-gray-500" />
+                                </div>
+                                <p className="text-sm font-medium text-gray-900">Researcher Plan Feature</p>
+                                <p className="text-xs text-gray-500 max-w-[200px] mb-2">
+                                    Upgrade to tag sources for your Literature Matrix.
+                                </p>
+                                {/* We could add a button here to trigger upgrade modal if we had the handler passed down */}
+                            </div>
+                        </div>
+                    )}
+
                     {isSaving && (
-                        <div className="absolute top-4 right-4 text-[10px] font-bold text-teal-600 animate-pulse flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-teal-600"></span>
+                        <div className="absolute top-4 right-4 text-[10px] font-bold text-gray-400 animate-pulse flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
                             SAVING...
                         </div>
                     )}
                     <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-bold text-teal-900">Literature Matrix Tags</h3>
+                        <h3 className="text-sm font-bold text-gray-700">Literature Matrix Tags</h3>
                         <button
                             onClick={handleAnalyze}
-                            disabled={isAnalyzing}
-                            className="text-[10px] text-teal-600 font-bold uppercase tracking-wider flex items-center gap-1 hover:text-teal-800 disabled:opacity-50 transition-colors"
+                            disabled={isAnalyzing || !isResearcher}
+                            className="text-[10px] text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 hover:text-blue-800 disabled:opacity-50 transition-colors"
                             title={!source.abstract ? "Abstract required for analysis" : "Analyze with AI"}
                         >
                             <Sparkles className={`w-3 h-3 ${isAnalyzing ? 'animate-spin' : ''}`} />
@@ -312,9 +331,10 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
                                 <button
                                     key={theme}
                                     onClick={() => handleToggleTheme(theme)}
+                                    disabled={!isResearcher}
                                     className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${isSelected
-                                        ? "bg-teal-600 text-white border-teal-600 shadow-md transform scale-105"
-                                        : "bg-white text-teal-700 border-teal-200 hover:border-teal-400 hover:bg-teal-50"
+                                        ? "bg-slate-700 text-white border-slate-700 shadow-sm"
+                                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                                         }`}
                                 >
                                     {theme}
@@ -323,24 +343,39 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
                         })}
                     </div>
                     <div className="mt-4">
-                        <label className="block text-[10px] font-bold text-teal-600 uppercase tracking-wider mb-1.5">Matrix Notes</label>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Matrix Notes</label>
                         <textarea
-                            className="w-full p-3 text-sm bg-white border border-teal-100 rounded-lg focus:ring-2 focus:ring-teal-200 focus:border-teal-400 outline-none transition-all placeholder:text-gray-300 min-h-[80px]"
+                            className="w-full p-3 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none transition-all placeholder:text-gray-300 min-h-[80px]"
                             placeholder="Identify specific gaps or findings in this source for the Literature Matrix..."
                             defaultValue={source.matrix_notes}
                             onBlur={handleUpdateNotes}
+                            disabled={!isResearcher}
                         />
                     </div>
                 </div>
 
                 {/* Consensus Meter */}
-                <div className="mb-6 p-4 bg-purple-50/50 border border-purple-100 rounded-xl">
+                <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl relative overflow-hidden">
+                    {/* Entitlement Lock Overlay */}
+                    {!isResearcher && (
+                        <div className="absolute inset-0 z-10 bg-gray-50/60 backdrop-blur-[1px] flex items-center justify-center">
+                            <div className="flex flex-col items-center gap-2 p-4 text-center">
+                                <div className="p-2 bg-gray-100 rounded-full">
+                                    <Lock className="w-5 h-5 text-gray-500" />
+                                </div>
+                                <p className="text-sm font-medium text-gray-900">Researcher Plan Feature</p>
+                                <p className="text-xs text-gray-500 max-w-[200px] mb-2">
+                                    Upgrade to analyze consensus for this source.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                     <div className="flex items-center gap-2 mb-3">
-                        <Activity className="w-4 h-4 text-purple-600" />
-                        <h3 className="text-sm font-bold text-purple-900">Consensus Analysis</h3>
+                        <Activity className="w-4 h-4 text-gray-600" />
+                        <h3 className="text-sm font-bold text-gray-700">Consensus Analysis</h3>
                     </div>
-                    <p className="text-xs text-purple-600 mb-3">
-                        Analyze how this paper aligns with a research claim.
+                    <p className="text-xs text-gray-500 mb-3 leading-relaxed">
+                        Assess whether this paper supports, opposes, or remains neutral regarding a specific research claim.
                     </p>
 
                     {/* Claim Input */}
@@ -349,16 +384,16 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
                             type="text"
                             value={consensusClaim}
                             onChange={(e) => setConsensusClaim(e.target.value)}
-                            placeholder="Enter a claim to analyze (e.g., 'AI will replace human jobs')"
-                            className="w-full px-3 py-2 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-400 outline-none transition-all placeholder:text-gray-400"
-                            disabled={isAnalyzingConsensus}
+                            placeholder="Enter a claim (e.g., 'AI replaces jobs')"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 focus:border-gray-400 outline-none transition-all placeholder:text-gray-400"
+                            disabled={isAnalyzingConsensus || !isResearcher}
                         />
                     </div>
 
                     <button
                         onClick={handleAnalyzeConsensus}
-                        disabled={!consensusClaim.trim() || isAnalyzingConsensus}
-                        className="w-full py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!consensusClaim.trim() || isAnalyzingConsensus || !isResearcher}
+                        className="w-full py-2 bg-slate-800 text-white rounded-lg text-sm font-medium hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isAnalyzingConsensus ? (
                             <>
@@ -375,9 +410,9 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
 
                     {/* Results */}
                     {consensusResult && (
-                        <div className="mt-4 p-3 bg-white border border-purple-200 rounded-lg">
+                        <div className="mt-4 p-3 bg-white border border-gray-200 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold text-purple-900">Analysis Result:</span>
+                                <span className="text-xs font-bold text-gray-900">Analysis Result:</span>
                                 <ConsensusBadge
                                     consensusLevel={consensusResult.consensusLevel}
                                     agreementPercentage={consensusResult.agreementPercentage}

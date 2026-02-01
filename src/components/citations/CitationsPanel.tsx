@@ -147,6 +147,7 @@ export function CitationsPanel({
     const event = new CustomEvent("insert-citation", {
       detail: {
         text: `(${authorText}, ${citation.year || "N.d."})`,
+        citationId: citation.id,
       },
     });
     window.dispatchEvent(event);
