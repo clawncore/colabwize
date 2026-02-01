@@ -15,8 +15,7 @@ const CallbackPage: React.FC = () => {
       try {
         console.log("OAuth callback page loaded");
 
-        // Get the code from URL parameters
-        const code = searchParams.get("code");
+        // Check for OAuth errors from URL parameters
         const errorParam = searchParams.get("error");
         const errorDescription = searchParams.get("error_description");
 
