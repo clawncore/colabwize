@@ -63,7 +63,7 @@ import { formatContentForTiptap } from "../../utils/editorUtils";
 
 import { EditorToolbar } from "./editor-toolbar";
 import { ExportWorkflowModal } from "../export/ExportWorkflowModal";
-import { detectAndNormalizeCitations, scanAndIngestReferences } from "./utils/normalization";
+import { detectAndNormalizeCitations } from "./utils/normalization";
 import {
   Download,
   GitCompare,
@@ -279,13 +279,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             while (current) {
               if (current.textContent?.includes(author)) {
                 // Found it! Scroll to it.
-                current.scrollIntoView({ behavior: "smooth", block: "center" });
+                // Found it! Scroll to it.
+                const targetElement = current as HTMLElement;
+                targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
                 // Add temporary highlight effect
-                const originalBg = (current as HTMLElement).style.backgroundColor;
-                (current as HTMLElement).style.backgroundColor = "#FEF3C7"; // yellow-100
-                (current as HTMLElement).style.transition = "background-color 0.5s";
+                const originalBg = targetElement.style.backgroundColor;
+                targetElement.style.backgroundColor = "#FEF3C7"; // yellow-100
+                targetElement.style.transition = "background-color 0.5s";
                 setTimeout(() => {
-                  (current as HTMLElement).style.backgroundColor = originalBg;
+                  targetElement.style.backgroundColor = originalBg;
                 }, 2000);
                 return;
               }

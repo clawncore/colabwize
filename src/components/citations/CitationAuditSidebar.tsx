@@ -118,7 +118,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
             setLocalLoading(false);
             setLoading(false);
         }
-    }, [editor, selectedStyle, toast, setAuditResult, setLoading, reset]);
+    }, [editor, selectedStyle, toast, setAuditResult, setLoading, reset, citationLibrary]);
 
     // Clear cache and re-run when citation library changes
     useEffect(() => {
@@ -126,7 +126,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
             console.log("📚 Citation library changed - clearing audit cache for fresh results");
             reset();
         }
-    }, [citationLibrary, reset]);
+    }, [citationLibrary, reset, auditResult]);
 
     // Auto-run audit when sidebar opens (triggered by green button)
     useEffect(() => {
@@ -146,7 +146,6 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
             const pos = view.posAtCoords({ left: e.clientX, top: e.clientY });
 
             if (pos && pos.pos) {
-                const node = state.doc.nodeAt(pos.pos);
                 // Check for marks at this position
                 // Note: nodeAt returns the node *after* the pos usually.
                 // We better check attributes at resolved pos.

@@ -50,7 +50,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     creditBalance,
     fetchSubscription
   } = useSubscriptionStore();
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Unused
 
   const [suggestedPapers, setSuggestedPapers] =
     useState<SuggestedPaper[]>(initialSuggestions);
@@ -103,7 +103,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
   }, [suggestedPapers, calculateCredibilityScores]);
 
 
-  const performSearch = async (query: string) => {
+  const performSearch = useCallback(async (query: string) => {
     setIsSearching(true);
     setDisplayCount(10); // Reset
     try {
@@ -130,7 +130,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [fetchSubscription, toast]);
 
   const executeSearch = useCallback(async (query: string, force = false) => {
     if (!query.trim()) return;
@@ -148,12 +148,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     }
 
     await performSearch(query);
-  }, [planLimits, planUsage, plan]); // Removed performSearch dependency to avoid loop if not memoized, but define performSearch outside or memoize it. 
-  // Wait, performSearch is defined inside component and uses state/props? No, it uses setSuggestedPapers etc.
-  // It should be memoized or defined inside useCallback.
-  // I will define performSearch inside the component body (as above) but I should useCallback it or just include it here.
-  // To be safe and clean, I'll move performSearch logic inside executeSearch or memoize it.
-  // Actually, I'll just leave it as consistent function in component scope. But reusing it in handleProceedWithCredits requires it to be stable or accessible.
+  }, [planLimits, planUsage, plan, performSearch]);
 
   const handleManualSearch = async (e?: React.FormEvent, searchStr?: string) => {
     if (e) e.preventDefault();

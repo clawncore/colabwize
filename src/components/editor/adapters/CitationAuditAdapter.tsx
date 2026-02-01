@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Editor } from "@tiptap/react";
-import { CitationService } from "../../../services/citationService";
+
 import { Loader2, BarChart } from "lucide-react";
 import { useToast } from "../../../hooks/use-toast";
 import { UpgradeModal } from "../../subscription/UpgradeModal";
