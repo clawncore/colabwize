@@ -57,16 +57,15 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
 
-      // Validate file type
+      // Validate file type (PDF support coming soon)
       const allowedTypes = [
-        "application/pdf",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "text/plain",
         "application/rtf",
         "application/vnd.oasis.opendocument.text",
       ];
       if (!allowedTypes.includes(selectedFile.type)) {
-        setError("Please upload a PDF, DOCX, TXT, RTF, or ODT file");
+        setError("Please upload a DOCX, TXT, RTF, or ODT file (PDF support coming soon)");
         return;
       }
 
@@ -159,10 +158,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     setDocumentContent("");
     setPdfPreviewUrl(null);
 
-    if (selectedFile.type === "application/pdf") {
-      const url = URL.createObjectURL(selectedFile);
-      setPdfPreviewUrl(url);
-    } else if (
+    if (
       selectedFile.type ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
@@ -267,14 +263,14 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
                       drag and drop
                     </p>
                     <p className="text-xs text-gray-500">
-                      PDF, DOCX, TXT, RTF, ODT (MAX. 10MB)
+                      DOCX, TXT, RTF, ODT (MAX. 10MB)
                     </p>
                   </div>
                   <input
                     type="file"
                     className="hidden"
                     onChange={handleFileChange}
-                    accept=".pdf,.docx,.txt,.rtf,.odt"
+                    accept=".docx,.txt,.rtf,.odt"
                     required={!projectId}
                   />
                 </label>

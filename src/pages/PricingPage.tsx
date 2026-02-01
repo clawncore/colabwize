@@ -614,7 +614,9 @@ function FeaturesPresentationFlow() {
                     Safe AI Integrity Assistant
                   </td>
                   <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
+                  <td className="py-4 px-4 text-center">
+                    <Check className="h-5 w-5 text-green-500 mx-auto" />
+                  </td>
                   <td className="py-4 px-4 text-center">
                     <Check className="h-5 w-5 text-green-500 mx-auto" />
                   </td>
