@@ -20,7 +20,10 @@ const fetchWithTimeout = (
     fetch(url, options),
     new Promise<Response>((_, reject) =>
       setTimeout(
-        () => reject(new Error("Request timeout after " + timeout + "ms")),
+        () => {
+          console.error(`[Timeout] Request to ${url} timed out after ${timeout}ms`);
+          reject(new Error("Request timeout after " + timeout + "ms"));
+        },
         timeout
       )
     ),
@@ -216,10 +219,12 @@ export async function signInWithEmail(
       (typeof error.message === "string" &&
         error.message.includes("Failed to fetch"))
     ) {
+      console.error("Network/Fetch Error Details:", error);
       const networkErr: any = new Error(
         "Network error: failed to reach authentication service"
       );
       networkErr.code = "NETWORK_ERROR";
+      networkErr.originalError = error; // Attach original error
       logger.authError("Network/CORS failure during sign-in", {
         email,
         original: error.message,

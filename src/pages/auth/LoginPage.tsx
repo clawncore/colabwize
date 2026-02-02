@@ -152,12 +152,22 @@ const LoginPage: React.FC = () => {
       console.log("Attempting login with email:", data.email);
       console.log("Remember me option:", data.rememberMe);
 
+      const startTime = performance.now(); // Start timer
+
       // Use Supabase authentication with remember me option
       const result = await signInWithEmail(
         data.email,
         data.password,
         data.rememberMe
       );
+
+      const endTime = performance.now(); // End timer
+      const duration = endTime - startTime;
+      console.log(`Login completed in ${duration.toFixed(2)}ms`);
+
+      if (duration > 3000) {
+        console.warn(`⚠️ Login took longer than 3000ms (${duration.toFixed(2)}ms) - investigating slowness...`);
+      }
 
       if (result.user) {
         // Handle successful login directly
@@ -174,6 +184,14 @@ const LoginPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Login failed:", error);
+
+      // Log full error details for debugging
+      console.group("Login Error Details");
+      console.error("Message:", error.message);
+      console.error("Code:", error.code);
+      console.error("Stack:", error.stack);
+      console.table(error);
+      console.groupEnd();
 
       // Check if it's an AbortError from duplicate submission
       if (error.name === "AbortError") {
