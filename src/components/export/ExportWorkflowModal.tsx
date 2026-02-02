@@ -9,7 +9,6 @@ import {
     ChevronRight,
     ChevronLeft,
     Loader2,
-    ShieldAlert,
     AlertTriangle,
     FileSearch
 } from "lucide-react";
@@ -275,11 +274,6 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
         const tier1 = violations.filter((v: any) => v.ruleId.includes("REF") || v.ruleId.includes("STY"));
 
         const riskLevel = tier3.length > 0 ? "High" : tier1.length > 0 ? "Moderate" : "Low";
-        const riskColor = riskLevel === "High"
-            ? "bg-red-50 border-red-200 text-red-800"
-            : riskLevel === "Moderate"
-                ? "bg-amber-50 border-amber-200 text-amber-800"
-                : "bg-green-50 border-green-200 text-green-800";
 
         return (
             <div className="space-y-6">
