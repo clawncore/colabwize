@@ -468,7 +468,12 @@ const EditorWorkspacePage: React.FC = () => {
 
         // Simple duplicate check
         if (!widthRef.includes(fullRef)) {
-          let chain = editorInstance.chain().focus('end');
+          // Save current cursor position
+          const currentPos = editorInstance.state.selection.anchor;
+
+          // Move to end WITHOUT focusing (to avoid scroll jumping)
+          const endPos = editorInstance.state.doc.content.size;
+          let chain = editorInstance.chain().setTextSelection(endPos);
 
           // Check if References header exists (heuristic)
           // We look for "References" on its own line or loosely. 
@@ -484,6 +489,9 @@ const EditorWorkspacePage: React.FC = () => {
             type: 'paragraph',
             content: [{ type: 'text', text: fullRef }]
           }).run();
+
+          // Restore cursor position to where the citation was inserted
+          editorInstance.commands.setTextSelection(currentPos + text.length);
         }
       }
 

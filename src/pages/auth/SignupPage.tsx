@@ -360,8 +360,8 @@ const SignupPage: React.FC = () => {
         // Clear validation errors for this field
         clearErrors(name);
 
-        // Also trigger validation if needed
-        validateUserDetails(name, e.target.value);
+        // DO NOT trigger immediate validation here - rely on debounced useEffect
+        // This prevents excessive API calls that trigger rate limiting
       },
     };
   };
@@ -434,7 +434,15 @@ const SignupPage: React.FC = () => {
             return newErrors;
           });
         } else if (!response.ok) {
-          // Handle HTTP errors (like 500 Internal Server Error)
+          // Handle specific HTTP errors
+          if (response.status === 429) {
+            // Rate limit error - don't clear validation, just log it
+            console.warn("Rate limit reached for validation API. Please wait before retrying.");
+            // Don't update validation errors - maintain current state
+            return;
+          }
+
+          // Handle other HTTP errors (like 500 Internal Server Error)
           console.error("Validation API error:", {
             status: response.status,
             statusText: response.statusText,
@@ -480,7 +488,7 @@ const SignupPage: React.FC = () => {
       if (email) {
         validateUserDetails("email", email);
       }
-    }, 500); // 500ms debounce
+    }, 1000); // 1000ms debounce (increased from 500ms to reduce API calls)
 
     // Return cleanup function
     return () => {
@@ -1134,14 +1142,14 @@ const SignupPage: React.FC = () => {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-gray-500 font-medium rounded-xl transition-all duration-200 btn-glow"
+                className="w-full h-12 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-medium rounded-xl transition-all duration-200 btn-glow"
                 disabled={
                   !isValid ||
                   isLoading ||
                   Object.keys(validationErrors).length > 0
                 }>
                 {isLoading ? (
-                  <div className="h-5 w-5 border-2 bg-gray-800 border-t-transparent rounded-full animate-spin" />
+                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   "Continue"
                 )}

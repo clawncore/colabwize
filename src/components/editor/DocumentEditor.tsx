@@ -10,6 +10,8 @@ import { CalloutBlockExtension } from "../../extensions/CalloutBlockExtension";
 import { CoverPageExtension } from "../../extensions/CoverPageExtension";
 import { CustomCodeBlockExtension } from "../../extensions/CustomCodeBlockExtension";
 import { FigureExtension } from "../../extensions/FigureExtension";
+import { EnhancedFigureNode } from "../../extensions/EnhancedFigureNode";
+import { AutoNumbering } from "../../extensions/AutoNumbering";
 import { KeywordsExtension } from "../../extensions/KeywordsExtension";
 import { PricingTableExtension } from "../../extensions/PricingTableExtension";
 import { SectionExtension } from "../../extensions/SectionExtension";
@@ -164,7 +166,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       CalloutBlockExtension,
       CoverPageExtension,
       CustomCodeBlockExtension,
-      FigureExtension,
+      EnhancedFigureNode, // Replaces FigureExtension with auto-numbering
       KeywordsExtension,
       AITrackingExtension, // Add Custom AI Tracking Extension
       PricingTableExtension,
@@ -176,6 +178,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       Superscript,
       Subscript,
       CitationNode,
+      AutoNumbering, // Enable automatic figure and table numbering
     ],
     content: formatContentForTiptap(project.content),
     onUpdate: () => {

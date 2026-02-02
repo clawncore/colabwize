@@ -22,12 +22,7 @@ export const CitationStylePopover: React.FC<CitationStylePopoverProps> = ({
     fixedStyle,
 }) => {
     const [open, setOpen] = useState(false);
-    const [style, setStyle] = useState<CitationStyle>(fixedStyle || "APA");
-
-    // Update style if fixedStyle changes
-    React.useEffect(() => {
-        if (fixedStyle) setStyle(fixedStyle);
-    }, [fixedStyle]);
+    const style = fixedStyle || "APA"; // Use fixed style or default to APA
 
     const handleInsert = () => {
         let inText = "";
@@ -67,27 +62,14 @@ export const CitationStylePopover: React.FC<CitationStylePopoverProps> = ({
                             {title || "Insert Citation"}
                         </h4>
 
-                        {/* Style Selector */}
+                        {/* Citation Style Display (Read-only) */}
                         <div className="space-y-1">
                             <label className="text-[10px] font-semibold text-gray-500 uppercase">
                                 Style
                             </label>
-                            {fixedStyle ? (
-                                <div className="text-xs text-gray-900 font-medium px-2 py-1 bg-gray-100 rounded border border-gray-200">
-                                    {fixedStyle} <span className="text-[9px] text-gray-400 font-normal ml-1">(Document Default)</span>
-                                </div>
-                            ) : (
-                                <select
-                                    value={style}
-                                    onChange={(e) => setStyle(e.target.value as CitationStyle)}
-                                    className="w-full text-xs border-gray-300 rounded-md py-1 px-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="APA">APA</option>
-                                    <option value="MLA">MLA</option>
-                                    <option value="Chicago">Chicago</option>
-                                    <option value="IEEE">IEEE</option>
-                                </select>
-                            )}
+                            <div className="text-xs text-gray-900 font-medium px-2 py-1 bg-gray-100 rounded border border-gray-200">
+                                {style} <span className="text-[9px] text-gray-400 font-normal ml-1">(Document Default)</span>
+                            </div>
                         </div>
 
                         {/* Insert Button */}
