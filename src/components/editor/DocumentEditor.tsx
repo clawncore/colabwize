@@ -9,7 +9,7 @@ import { AuthorExtension } from "../../extensions/AuthorExtension";
 import { CalloutBlockExtension } from "../../extensions/CalloutBlockExtension";
 import { CoverPageExtension } from "../../extensions/CoverPageExtension";
 import { CustomCodeBlockExtension } from "../../extensions/CustomCodeBlockExtension";
-import { FigureExtension } from "../../extensions/FigureExtension";
+
 import { EnhancedFigureNode } from "../../extensions/EnhancedFigureNode";
 import { AutoNumbering } from "../../extensions/AutoNumbering";
 import { KeywordsExtension } from "../../extensions/KeywordsExtension";
