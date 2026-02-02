@@ -34,6 +34,7 @@ type Step = "audit" | "details" | "format" | "review";
 type ExportFormat = "docx" | "pdf" | "latex" | "rtf" | "txt";
 
 export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
+    // Optimized Modal Component
     isOpen,
     onClose,
     project,
