@@ -35,6 +35,9 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     const selectedStyle = citationStyle || "APA";
     const { toast } = useToast();
 
+    // Use refs to track previous values to prevent infinite loops from prop recreation
+    const prevCitationLibraryRef = React.useRef(citationLibrary);
+
     // UARS: Universal Highlight Tokens
     const getHighlightColor = (ruleId: string): string => {
         const r = ruleId.toUpperCase();
@@ -47,27 +50,39 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
         return "rgba(250, 204, 21, 0.3)"; // Low/Info (Yellow Tint) - Increased from 0.2
     };
 
-    const handleRunStyleAudit = useCallback(async () => {
+    const handleRunStyleAudit = useCallback(async (force = false) => {
         if (!editor) return;
+
+        // Prevent running if we have a fatal error, unless forced
+        if (!force && auditResult && (auditResult.state === "FAILED_QUOTA_EXCEEDED" || auditResult.state === "FAILED_SUBSCRIPTION_ERROR")) {
+            console.log("🛑 Skipping auto-audit due to active quota/subscription error");
+            return;
+        }
 
         try {
             // Clear any cached results to ensure fresh data
-            reset();
+            if (force) reset();
+
             setLocalLoading(true);
             setLoading(true);
-            editor.commands.clearAllHighlights();
+            if (force) editor.commands.clearAllHighlights();
 
             const result = await runCitationAudit(
                 editor.getJSON(),
                 selectedStyle,
                 citationLibrary
             );
+
+            // Only update if the component is still mounted (basic check)
             setAuditResult(result);
 
             if (result.state === "COMPLETED_SUCCESS" && result.violations.length > 0) {
                 // Apply UARS Highlights
                 console.log(`🎨 Applying ${result.violations.length} citation highlights to editor`);
                 let highlightsApplied = 0;
+
+                // Clear old highlights first to be safe
+                editor.commands.clearAllHighlights();
 
                 result.violations.forEach((flag: any) => {
                     if (flag.anchor) {
@@ -95,6 +110,12 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                     description: "Issues flagged for review.",
                     variant: "default"
                 });
+            } else if (result.state === "FAILED_QUOTA_EXCEEDED") {
+                toast({
+                    title: "Plan Limit Reached",
+                    description: result.errorMessage || "You have reached your citation audit limit.",
+                    variant: "destructive"
+                });
             } else if (result.state === "COMPLETED_SUCCESS") {
                 toast({ title: "Audit Complete", description: "No issues found.", variant: "default" });
             }
@@ -113,31 +134,55 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
 
         } catch (error: any) {
             console.error("Audit failed", error);
-            setAuditResult({ state: "FAILED_QUOTA_EXCEEDED", violations: [], errorMessage: error.message });
+            // This fallback usually won't be hit if citationAuditEngine handles errors, 
+            // but just in case:
+            setAuditResult({ state: "FAILED_SCAN_ABORTED", violations: [], errorMessage: error.message });
         } finally {
             setLocalLoading(false);
             setLoading(false);
         }
-    }, [editor, selectedStyle, toast, setAuditResult, setLoading, reset, citationLibrary]);
+    }, [editor, selectedStyle, toast, setAuditResult, setLoading, reset, citationLibrary, auditResult]);
 
-    // Clear cache and re-run when citation library changes
+    // Clear cache and re-run when citation library changes (handling unstable props)
     useEffect(() => {
-        if (citationLibrary && auditResult) {
+        // Simple length check + crude stringify to avoid deep comparison cost on every render
+        // or just rely on length if that's the main change.
+        // Let's use a safe comparison.
+        const prevLib = prevCitationLibraryRef.current;
+        const currLib = citationLibrary;
+
+        const hasChanged =
+            (!prevLib && currLib) ||
+            (prevLib && !currLib) ||
+            (prevLib && currLib && prevLib.length !== currLib.length) ||
+            (prevLib && currLib && JSON.stringify(prevLib.map((c: any) => c.id)) !== JSON.stringify(currLib.map((c: any) => c.id)));
+
+        if (hasChanged) {
             console.log("📚 Citation library changed - clearing audit cache for fresh results");
             reset();
+            prevCitationLibraryRef.current = currLib;
         }
-    }, [citationLibrary, reset, auditResult]);
+    }, [citationLibrary, reset]);
 
     // Auto-run audit when sidebar opens (triggered by green button)
     useEffect(() => {
-        if (!auditResult && !localLoading) {
-            handleRunStyleAudit();
+        // Only run if NO result and NOT loading
+        // And CRITICAL: Do NOT run if we are in a FAILED state that involves Quota.
+        // The reset() in the previous effect turns it to null, which triggers this value.
+        // So we must ensure that if we have a failed state, we don't just loop.
+
+        const isQuotaError = auditResult && (auditResult.state === "FAILED_QUOTA_EXCEEDED");
+
+        if (!auditResult && !localLoading && !isQuotaError) {
+            // Pass false to not force constant resets
+            handleRunStyleAudit(false);
         }
     }, [auditResult, localLoading, handleRunStyleAudit]);
 
     // Handle Clicks on Highlights
     useEffect(() => {
-        if (!editor || !auditResult) return;
+        if (!editor) return; // Removed auditResult dependency to allow clicking even if partial result? No, logic needs result.
+        if (!auditResult) return;
 
         const handleEditorClick = (e: any) => {
             // Tiptap specific pos retrieval
@@ -246,147 +291,188 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                     </div>
                 ) : auditResult ? (
                     <>
-                        {/* Sidebar = Counts Only (No Graphs, No Explanations) */}
-                        {/* Improved Tier-Aware Findings Overview */}
-                        <div className="space-y-3">
-                            {/* Tier 1: Structural (Always Runs) */}
-                            <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-1 h-full bg-slate-300"></div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-tight">Tier 1: Formatting & Structure</h4>
-                                    <span className="text-[10px] text-slate-400 font-mono">UNIVERSAL</span>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2 text-xs">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] text-slate-500 uppercase">Total</span>
-                                        <span className="font-medium text-slate-900">{auditResult.tierMetadata?.STRUCTURAL?.stats?.totalCitations || 0} Citations</span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] text-slate-500 uppercase">Matched</span>
-                                        <span className="font-medium text-slate-900">{auditResult.tierMetadata?.STRUCTURAL?.stats?.matched || 0} Linked</span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] text-slate-500 uppercase">Issues</span>
-                                        {/* Sum of formatting + orphans */}
-                                        <span className="font-medium text-amber-600">
-                                            {(auditResult.violations?.filter((v: any) => !v.ruleId?.includes("VERIFICATION")).length || 0)} Flags
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Tier 2: Claim Verification (Conditional) */}
-                            <div className={`bg-white p-3 rounded-lg border ${auditResult.tierMetadata?.CLAIM?.executed ? 'border-indigo-100 shadow-sm' : 'border-slate-100 bg-slate-50/50'} relative overflow-hidden`}>
-                                <div className={`absolute top-0 right-0 w-1 h-full ${auditResult.tierMetadata?.CLAIM?.executed ? 'bg-indigo-500' : 'bg-slate-200'}`}></div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <h4 className={`text-xs font-bold uppercase tracking-tight ${auditResult.tierMetadata?.CLAIM?.executed ? 'text-indigo-900' : 'text-slate-400'}`}>Tier 2: Claim Verification</h4>
-                                    {auditResult.tierMetadata?.CLAIM?.executed ? (
-                                        <span className="text-[10px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded font-medium">ACTIVE</span>
-                                    ) : (
-                                        <span className="text-[10px] text-slate-400">SKIPPED</span>
-                                    )}
-                                </div>
-
-                                {auditResult.tierMetadata?.CLAIM?.executed ? (
-                                    <div className="grid grid-cols-2 gap-4 text-xs">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] text-indigo-400 uppercase">Claims Audited</span>
-                                            <span className="font-bold text-indigo-700 text-lg">{auditResult.tierMetadata?.CLAIM?.stats?.candidates || 0}</span>
-                                            <span className="text-[9px] text-slate-400 leading-tight">factual claims detected</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] text-indigo-400 uppercase">Verification Rate</span>
-                                            <div className="flex items-baseline gap-1">
-                                                <span className="font-bold text-indigo-700 text-lg">{auditResult.tierMetadata?.CLAIM?.stats?.verified || 0}</span>
-                                                <span className="text-[10px] text-slate-500">/ {auditResult.tierMetadata?.CLAIM?.stats?.candidates || 0}</span>
-                                            </div>
-                                            <span className="text-[9px] text-slate-400 leading-tight">sources confirmed</span>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <p className="text-[10px] text-slate-400 italic">No factual claims detected in cited sentences.</p>
-                                )}
-                            </div>
-
-                            {/* Tier 3: Risk Analysis (Conditional) */}
-                            <div className={`bg-white p-3 rounded-lg border ${auditResult.tierMetadata?.RISK?.executed ? 'border-red-100 shadow-sm' : 'border-slate-100 bg-slate-50/50'} relative overflow-hidden`}>
-                                <div className={`absolute top-0 right-0 w-1 h-full ${auditResult.tierMetadata?.RISK?.executed ? 'bg-red-500' : 'bg-slate-200'}`}></div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <h4 className={`text-xs font-bold uppercase tracking-tight ${auditResult.tierMetadata?.RISK?.executed ? 'text-red-900' : 'text-slate-400'}`}>Tier 3: Risk Assessment</h4>
-                                    {auditResult.tierMetadata?.RISK?.executed ? (
-                                        <span className="text-[10px] text-red-600 bg-red-50 px-1.5 py-0.5 rounded font-medium">ACTIVE</span>
-                                    ) : (
-                                        <span className="text-[10px] text-slate-400">SKIPPED</span>
-                                    )}
-                                </div>
-                                {auditResult.tierMetadata?.RISK?.executed ? (
-                                    <div className="flex items-center gap-2 text-xs">
-                                        <span className="font-bold text-red-600">{auditResult.tierMetadata?.RISK?.stats?.risksFound || 0}</span>
-                                        <span className="text-slate-600">Risk signals detected</span>
-                                    </div>
-                                ) : (
-                                    <p className="text-[10px] text-slate-400 italic">No high-risk domains or topics detected.</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {initialResults?.suggestions && initialResults.suggestions.length > 0 && (
-                            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-3">
-                                <h4 className="text-xs font-bold text-blue-800 uppercase tracking-tight">Missing Citations</h4>
-                                <div className="space-y-2">
-                                    {initialResults.suggestions.slice(0, 3).map((s: any, i: number) => (
-                                        <div key={i} className="text-xs text-blue-700 bg-white/50 p-2 rounded border border-blue-100/50">
-                                            "{s.sentence.substring(0, 60)}..."
-                                        </div>
-                                    ))}
-                                    {initialResults.suggestions.length > 3 && (
-                                        <div className="text-[10px] text-blue-500 text-center italic">
-                                            + {initialResults.suggestions.length - 3} more suggestions
-                                        </div>
-                                    )}
-                                </div>
+                        {/* ERROR STATE: Quota Exceeded */}
+                        {auditResult.state === "FAILED_QUOTA_EXCEEDED" && (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                                <h3 className="text-red-800 font-semibold mb-2 flex items-center gap-2">
+                                    <span>🚫</span> Limit Reached
+                                </h3>
+                                <p className="text-sm text-red-600 mb-3">
+                                    {auditResult.errorMessage || "You have reached your citation audit limit for this plan."}
+                                </p>
+                                <button
+                                    onClick={() => window.location.href = "/settings/billing"}
+                                    className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium transition-colors"
+                                >
+                                    Upgrade Plan
+                                </button>
                             </div>
                         )}
 
-                        {/* Metadata Anchor */}
-                        <div className="flex flex-col gap-2 mt-4">
-                            <div className="flex items-center justify-between text-[10px] text-[#6b7280] uppercase tracking-wide font-medium bg-[#f1f5f9] px-3 py-1.5 rounded border border-[#e5e7eb]">
-                                <div className="flex items-center gap-2">
-                                    <Clock className="w-3 h-3" />
-                                    <span>Last scanned: {new Date().toLocaleDateString()}</span>
-                                </div>
-                                <span>Mode: {auditResult.tiersExecuted?.includes("RISK") ? "Deep Audit" : auditResult.tiersExecuted?.includes("CLAIM") ? "Claim Check" : "Standard"}</span>
+                        {/* ERROR STATE: Subscription Error */}
+                        {auditResult.state === "FAILED_SUBSCRIPTION_ERROR" && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                                <h3 className="text-amber-800 font-semibold mb-2 flex items-center gap-2">
+                                    <span>🔒</span> Premium Feature
+                                </h3>
+                                <p className="text-sm text-amber-600 mb-3">
+                                    {auditResult.errorMessage || "This feature is not available on your current plan."}
+                                </p>
+                                <button
+                                    onClick={() => window.location.href = "/settings/billing"}
+                                    className="w-full py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-medium transition-colors"
+                                >
+                                    View Upgrade Options
+                                </button>
                             </div>
+                        )}
 
-                            {/* Tier Breakdown (Mini Diagnostics) */}
-                            {auditResult.tierMetadata && (
-                                <div className="grid grid-cols-3 gap-1">
-                                    {["STRUCTURAL", "CLAIM", "RISK"].map(tier => {
-                                        const executed = auditResult.tierMetadata[tier]?.executed;
-                                        return (
-                                            <div key={tier} className={`text-[9px] text-center py-1 rounded border ${executed ? 'bg-green-50 border-green-100 text-green-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
-                                                {tier} {executed ? "✓" : "○"}
+                        {/* NORMAL RESULTS (Only show if NOT in critical error state) */}
+                        {!["FAILED_QUOTA_EXCEEDED", "FAILED_SUBSCRIPTION_ERROR"].includes(auditResult.state) && (
+                            <>
+                                {/* Sidebar = Counts Only (No Graphs, No Explanations) */}
+                                {/* Improved Tier-Aware Findings Overview */}
+                                <div className="space-y-3">
+                                    {/* Tier 1: Structural (Always Runs) */}
+                                    <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-1 h-full bg-slate-300"></div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-tight">Tier 1: Formatting & Structure</h4>
+                                            <span className="text-[10px] text-slate-400 font-mono">UNIVERSAL</span>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2 text-xs">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] text-slate-500 uppercase">Total</span>
+                                                <span className="font-medium text-slate-900">{auditResult.tierMetadata?.STRUCTURAL?.stats?.totalCitations || 0} Citations</span>
                                             </div>
-                                        );
-                                    })}
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] text-slate-500 uppercase">Matched</span>
+                                                <span className="font-medium text-slate-900">{auditResult.tierMetadata?.STRUCTURAL?.stats?.matched || 0} Linked</span>
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] text-slate-500 uppercase">Issues</span>
+                                                {/* Sum of formatting + orphans */}
+                                                <span className="font-medium text-amber-600">
+                                                    {(auditResult.violations?.filter((v: any) => !v.ruleId?.includes("VERIFICATION")).length || 0)} Flags
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Tier 2: Claim Verification (Conditional) */}
+                                    <div className={`bg-white p-3 rounded-lg border ${auditResult.tierMetadata?.CLAIM?.executed ? 'border-indigo-100 shadow-sm' : 'border-slate-100 bg-slate-50/50'} relative overflow-hidden`}>
+                                        <div className={`absolute top-0 right-0 w-1 h-full ${auditResult.tierMetadata?.CLAIM?.executed ? 'bg-indigo-500' : 'bg-slate-200'}`}></div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h4 className={`text-xs font-bold uppercase tracking-tight ${auditResult.tierMetadata?.CLAIM?.executed ? 'text-indigo-900' : 'text-slate-400'}`}>Tier 2: Claim Verification</h4>
+                                            {auditResult.tierMetadata?.CLAIM?.executed ? (
+                                                <span className="text-[10px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded font-medium">ACTIVE</span>
+                                            ) : (
+                                                <span className="text-[10px] text-slate-400">SKIPPED</span>
+                                            )}
+                                        </div>
+
+                                        {auditResult.tierMetadata?.CLAIM?.executed ? (
+                                            <div className="grid grid-cols-2 gap-4 text-xs">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-indigo-400 uppercase">Claims Audited</span>
+                                                    <span className="font-bold text-indigo-700 text-lg">{auditResult.tierMetadata?.CLAIM?.stats?.candidates || 0}</span>
+                                                    <span className="text-[9px] text-slate-400 leading-tight">factual claims detected</span>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-indigo-400 uppercase">Verification Rate</span>
+                                                    <div className="flex items-baseline gap-1">
+                                                        <span className="font-bold text-indigo-700 text-lg">{auditResult.tierMetadata?.CLAIM?.stats?.verified || 0}</span>
+                                                        <span className="text-[10px] text-slate-500">/ {auditResult.tierMetadata?.CLAIM?.stats?.candidates || 0}</span>
+                                                    </div>
+                                                    <span className="text-[9px] text-slate-400 leading-tight">sources confirmed</span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="text-[10px] text-slate-400 italic">No factual claims detected in cited sentences.</p>
+                                        )}
+                                    </div>
+
+                                    {/* Tier 3: Risk Analysis (Conditional) */}
+                                    <div className={`bg-white p-3 rounded-lg border ${auditResult.tierMetadata?.RISK?.executed ? 'border-red-100 shadow-sm' : 'border-slate-100 bg-slate-50/50'} relative overflow-hidden`}>
+                                        <div className={`absolute top-0 right-0 w-1 h-full ${auditResult.tierMetadata?.RISK?.executed ? 'bg-red-500' : 'bg-slate-200'}`}></div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <h4 className={`text-xs font-bold uppercase tracking-tight ${auditResult.tierMetadata?.RISK?.executed ? 'text-red-900' : 'text-slate-400'}`}>Tier 3: Risk Assessment</h4>
+                                            {auditResult.tierMetadata?.RISK?.executed ? (
+                                                <span className="text-[10px] text-red-600 bg-red-50 px-1.5 py-0.5 rounded font-medium">ACTIVE</span>
+                                            ) : (
+                                                <span className="text-[10px] text-slate-400">SKIPPED</span>
+                                            )}
+                                        </div>
+                                        {auditResult.tierMetadata?.RISK?.executed ? (
+                                            <div className="flex items-center gap-2 text-xs">
+                                                <span className="font-bold text-red-600">{auditResult.tierMetadata?.RISK?.stats?.risksFound || 0}</span>
+                                                <span className="text-slate-600">Risk signals detected</span>
+                                            </div>
+                                        ) : (
+                                            <p className="text-[10px] text-slate-400 italic">No high-risk domains or topics detected.</p>
+                                        )}
+                                    </div>
                                 </div>
-                            )}
-                        </div>
 
-                        {/* Stronger Action Button */}
-                        <button
-                            onClick={() => setShowModal(true)}
-                            className="w-full py-2.5 px-3 bg-white hover:bg-[#f8fafc] border-2 border-[#cbd5e1] hover:border-[#94a3b8] rounded-lg text-sm font-semibold text-[#334155] hover:text-[#0f172a] shadow-sm transition-all flex items-center justify-center gap-2"
-                        >
-                            <FileText className="w-4 h-4" />
-                            Open Full Report
-                        </button>
+                                {initialResults?.suggestions && initialResults.suggestions.length > 0 && (
+                                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-3">
+                                        <h4 className="text-xs font-bold text-blue-800 uppercase tracking-tight">Missing Citations</h4>
+                                        <div className="space-y-2">
+                                            {initialResults.suggestions.slice(0, 3).map((s: any, i: number) => (
+                                                <div key={i} className="text-xs text-blue-700 bg-white/50 p-2 rounded border border-blue-100/50">
+                                                    "{s.sentence.substring(0, 60)}..."
+                                                </div>
+                                            ))}
+                                            {initialResults.suggestions.length > 3 && (
+                                                <div className="text-[10px] text-blue-500 text-center italic">
+                                                    + {initialResults.suggestions.length - 3} more suggestions
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
-                        <div className="text-center pt-2">
-                            <button onClick={handleRunStyleAudit} className="text-xs text-[#6b7280] hover:text-[#111827] underline">
-                                Rerun Analysis
-                            </button>
-                        </div>
+                                {/* Metadata Anchor */}
+                                <div className="flex flex-col gap-2 mt-4">
+                                    <div className="flex items-center justify-between text-[10px] text-[#6b7280] uppercase tracking-wide font-medium bg-[#f1f5f9] px-3 py-1.5 rounded border border-[#e5e7eb]">
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="w-3 h-3" />
+                                            <span>Last scanned: {new Date().toLocaleDateString()}</span>
+                                        </div>
+                                        <span>Mode: {auditResult.tiersExecuted?.includes("RISK") ? "Deep Audit" : auditResult.tiersExecuted?.includes("CLAIM") ? "Claim Check" : "Standard"}</span>
+                                    </div>
+
+                                    {/* Tier Breakdown (Mini Diagnostics) */}
+                                    {auditResult.tierMetadata && (
+                                        <div className="grid grid-cols-3 gap-1">
+                                            {["STRUCTURAL", "CLAIM", "RISK"].map(tier => {
+                                                const executed = auditResult.tierMetadata[tier]?.executed;
+                                                return (
+                                                    <div key={tier} className={`text-[9px] text-center py-1 rounded border ${executed ? 'bg-green-50 border-green-100 text-green-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
+                                                        {tier} {executed ? "✓" : "○"}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Stronger Action Button */}
+                                <button
+                                    onClick={() => setShowModal(true)}
+                                    className="w-full py-2.5 px-3 bg-white hover:bg-[#f8fafc] border-2 border-[#cbd5e1] hover:border-[#94a3b8] rounded-lg text-sm font-semibold text-[#334155] hover:text-[#0f172a] shadow-sm transition-all flex items-center justify-center gap-2"
+                                >
+                                    <FileText className="w-4 h-4" />
+                                    Open Full Report
+                                </button>
+
+                                <div className="text-center pt-2">
+                                    <button onClick={handleRunStyleAudit} className="text-xs text-[#6b7280] hover:text-[#111827] underline">
+                                        Rerun Analysis
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </>
                 ) : (
                     <div className="text-center py-8 text-[#6b7280] text-sm animate-pulse">

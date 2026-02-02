@@ -853,13 +853,21 @@ export default function DashboardLayout({
                     </div>
                   )}
 
-                  {/* Show error message if there was an API error */}
+                  {/* Graceful Error Handling - Retry Button */}
                   {subscriptionError && (
                     <div className="mt-3 pt-3 border-t border-gray-200">
-                      <p className="text-xs text-red-500 flex items-center">
-                        <AlertCircle className="h-3 w-3 mr-1" />
-                        {typeof subscriptionError === 'string' ? subscriptionError : 'Error loading subscription'}
-                      </p>
+                      <div className="flex flex-col gap-2">
+                        <p className="text-xs text-gray-500 flex items-center">
+                          <AlertCircle className="h-3 w-3 mr-1 text-orange-500" />
+                          <span>Status: Offline</span>
+                        </p>
+                        <button
+                          onClick={() => fetchSubscription(true, true)}
+                          className="text-xs flex items-center justify-center gap-1 w-full py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
+                        >
+                          Retry Connection
+                        </button>
+                      </div>
                     </div>
                   )}
 

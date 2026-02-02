@@ -124,43 +124,22 @@ export async function signInWithEmail(
 
     // Retry logic for "Email not confirmed" race condition
     // When backend verifies email via admin API, Supabase might take a moment to propagate
-    let attempt = 0;
-    const maxRetries = 3;
-    let authData = { data: null as any, error: null as any };
-
-    while (attempt < maxRetries) {
-      const result = await supabase.auth.signInWithPassword({
-        email: sanitizedEmail,
-        password,
-      });
-      authData = result;
-
-      if (!result.error) break; // Success
-
-      // Check if error is related to unconfirmed email
-      const isEmailNotConfirmed =
-        result.error.message.toLowerCase().includes("email not confirmed") ||
-        (result.error as any).code === "EMAIL_NOT_CONFIRMED";
-
-      if (isEmailNotConfirmed && attempt < maxRetries - 1) {
-        // Wait 1 second before retrying
-        console.log(`Login failed with unconfirmed email, retrying... (${attempt + 1}/${maxRetries})`);
-        await new Promise(r => setTimeout(r, 1000));
-        attempt++;
-        continue;
-      }
-
-      // If other error or max retries reached, break
-      break;
-    }
-
-    const { data, error } = authData;
+    const result = await supabase.auth.signInWithPassword({
+      email: sanitizedEmail,
+      password,
+    });
+    const { data, error } = result;
 
     if (error) {
       // Normalize AuthApiError for UI handling
       const normalized: any = new Error(error.message);
       normalized.name = error.name;
       normalized.status = (error as any).status;
+
+      // Enhance error message for potential OAuth users
+      if (error.message === "Invalid login credentials") {
+        normalized.message = "Invalid login credentials. If you usually sign in with Google or Microsoft, please use that login method instead.";
+      }
       if (
         typeof error.message === "string" &&
         error.message.toLowerCase().includes("email not confirmed")
@@ -180,23 +159,15 @@ export async function signInWithEmail(
       throw normalized;
     }
 
-    // Get Supabase ID token (access token)
-    const idToken = data.session?.access_token;
 
-    // CRITICAL FIX: Ensure session is actually available for ApiClient before proceeding
-    // Sometimes there is a delay between signIn returning and getSession returning the session
+    // Get Supabase ID token (access token)
+    let idToken = data.session?.access_token;
+
+    // session availability check - optimized
     if (!idToken) {
-      console.warn("Sign in successful but no session returned immediately. Waiting for session...");
-      let sessionAttempts = 0;
-      while (sessionAttempts < 5) {
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData.session?.access_token) {
-          console.log("Session established successfully after wait");
-          break;
-        }
-        await new Promise(r => setTimeout(r, 500));
-        sessionAttempts++;
-      }
+      // Quick check if session is available immediately
+      const { data: sessionData } = await supabase.auth.getSession();
+      idToken = sessionData.session?.access_token;
     }
 
     // Then, verify token with our hybrid backend endpoint
@@ -222,9 +193,9 @@ export async function signInWithEmail(
       }
     );
 
-    const result = await response.json();
+    const backendResult = await response.json();
 
-    if (response.ok && result.success) {
+    if (response.ok && backendResult.success) {
       logger.info("User signed in with hybrid auth", {
         email: sanitizedEmail,
         uid: data.user?.id,
@@ -234,9 +205,9 @@ export async function signInWithEmail(
       // Perform any additional session management
       sessionManager.handleSessionCleanup();
 
-      return result;
+      return backendResult;
     } else {
-      throw new Error(result.error || "Failed to verify user with backend");
+      throw new Error(backendResult.error || "Failed to verify user with backend");
     }
   } catch (error: any) {
     // Map network/CORS issues for clearer UI feedback

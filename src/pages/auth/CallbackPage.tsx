@@ -56,9 +56,12 @@ const CallbackPage: React.FC = () => {
                 // Refresh client-side user state
                 await refreshUser();
 
-                // Check if user has completed the survey
-                if (!syncResult.user.survey_completed) {
-                  console.log("User needs to complete survey, redirecting to signup/onboarding");
+                // Only redirect to survey if explicitly required and user is NEW
+                // We default to dashboard for existing users to prevent loops
+                const isNewUser = syncResult.user.created_at && (new Date().getTime() - new Date(syncResult.user.created_at).getTime() < 60000); // Created in last minute
+
+                if (isNewUser && !syncResult.user.survey_completed) {
+                  console.log("New user needs to complete survey, redirecting to signup/onboarding");
 
                   // Store OAuth user data for the signup flow
                   const oauthUserData = {
@@ -95,52 +98,22 @@ const CallbackPage: React.FC = () => {
                   return;
                 }
 
-                // User has completed survey, go to dashboard
-                console.log("User has completed survey, redirecting to dashboard");
-                await new Promise((r) => setTimeout(r, 500));
+                // Default: Go to Dashboard
+                console.log("User authenticated, redirecting to dashboard");
+                await new Promise((r) => setTimeout(r, 100)); // Small delay for state propagation
                 navigate("/dashboard", { replace: true });
                 return;
               }
             } catch (err) {
-              console.warn("Sync failed, proceeding to signup flow:", err);
+              console.warn("Sync failed, but session exists. Proceeding to dashboard optimistically:", err);
+              // Fallback: Proceed to Dashboard if sync fails but we have a session
+              // This prevents locking users out due to backend glitches
+              navigate("/dashboard", { replace: true });
+              return;
             }
 
-            // If sync failed or user requires additional setup, proceed to signup/onboarding
-            console.log("User not found in backend or sync failed, redirecting to signup for onboarding");
-
-            // Store OAuth user data temporarily in session storage
-            // We treat this as an OAuth-style signup since they have a session but no backend record
-            const oauthUserData = {
-              id: user.id,
-              email: user.email,
-              fullName:
-                user.user_metadata?.full_name ||
-                user.user_metadata?.name ||
-                user.email?.split("@")[0],
-              provider: user.app_metadata?.provider || "oauth",
-            };
-
-            sessionStorage.setItem(
-              "oauthUserData",
-              JSON.stringify(oauthUserData)
-            );
-
-            // Redirect to signup page
-            let redirectUrl = "/signup";
-            const plan = searchParams.get("plan");
-            const redirect = searchParams.get("redirect");
-
-            const params = new URLSearchParams();
-            if (plan) params.set("plan", plan);
-            if (redirect) params.set("redirect", redirect);
-            params.set("oauth", "true");
-
-            if ([...params.keys()].length > 0) {
-              redirectUrl += `?${params.toString()}`;
-            }
-
-            console.log("Redirecting to:", redirectUrl);
-            navigate(redirectUrl, { replace: true });
+            // Fallback for logic flow (should ideally not reach here if session exists)
+            navigate("/dashboard", { replace: true });
             return;
           }
         }

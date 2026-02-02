@@ -11,7 +11,8 @@ import { SourcesLibraryPanel } from "../citations/SourcesLibraryPanel";
 import { AIChatPanel } from "../aichat/AIChatPanel";
 import { SourceDetailPanel } from "../citations/SourceDetailPanel";
 import { Project, documentService } from "../../services/documentService";
-import { SubscriptionService } from "../../services/subscriptionService";
+// Custom hook usage instead of direct service
+import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import { UsageMeter } from "../../components/subscription/UsageMeter";
 import { useAuth } from "../../hooks/useAuth";
 import { FileText, BookOpen, PenTool, ChevronLeft, ChevronRight, ArrowLeft, Network, Lightbulb, Bell } from "lucide-react";
@@ -78,8 +79,16 @@ const EditorWorkspacePage: React.FC = () => {
   // Focus Mode state
   const [isFocusMode, setIsFocusMode] = useState(false);
 
-  // Subscription state
-  const [creditBalance, setCreditBalance] = useState<number>(0);
+  // Subscription state from global store
+  const {
+    creditBalance,
+    plan: rawPlan,
+    fetchSubscription,
+    loading: subLoading,
+    error: subError
+  } = useSubscriptionStore();
+
+  // Computed user plan name
   const [userPlan, setUserPlan] = useState<string>("Free Plan");
   const { user } = useAuth();
 
@@ -285,32 +294,25 @@ const EditorWorkspacePage: React.FC = () => {
     loadProjectById();
   }, [id]);
 
-  // Fetch subscription data for credits
+  // Sync global store plan to local display state
   useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        const { subscription, creditBalance } = await SubscriptionService.getCurrentSubscription();
-        setCreditBalance(creditBalance || 0);
-
-        // Get plan usage name logic
-        let planName = "Free Plan";
-        if (subscription?.plan) {
-          const planId = typeof subscription.plan === 'object' ? subscription.plan.id : subscription.plan;
-          if (planId === 'student') planName = "Student Pro";
-          else if (planId === 'researcher') planName = "Researcher";
-          else if (planId === 'payg') planName = "Pay As You Go";
-        }
-        setUserPlan(planName);
-
-      } catch (error) {
-        console.error("Failed to fetch subscription:", error);
-      }
-    };
-
-    if (user) {
-      fetchSubscription();
+    let planName = "Free Plan";
+    if (rawPlan) {
+      const planId = typeof rawPlan === 'object' ? (rawPlan as any).id : rawPlan;
+      if (planId === 'student') planName = "Student Pro";
+      else if (planId === 'researcher') planName = "Researcher";
+      else if (planId === 'payg') planName = "Pay As You Go";
     }
-  }, [user]);
+    setUserPlan(planName);
+  }, [rawPlan]);
+
+  // Trigger subscription fetch if not already loaded or stale
+  useEffect(() => {
+    if (user && !subLoading && !subError) {
+      // Pass true for isAuthSettled
+      fetchSubscription(true);
+    }
+  }, [user, fetchSubscription]);
 
   // Check if we should show the editor tour (first time the user opens the editor)
   useEffect(() => {

@@ -214,37 +214,42 @@ class ApiClient {
 
       // If response is not ok, try to parse error message
       if (!response.ok) {
+        let errorData: any = {};
         try {
-          const errorData = await response.json();
-          // Check for 'error' property first, then 'message'
-          const errorMessage =
-            errorData.error ||
-            errorData.message ||
-            `HTTP error! status: ${response.status}`;
-
-          // Attach debug info to the error object if available
-          const error = new Error(errorMessage);
-          if (errorData.debug) {
-            (error as any).debug = errorData.debug;
-          }
-
-          throw error;
-        } catch (parseError) {
-          // If we can't parse the JSON, throw a generic error if it wasn't already thrown above
-          if (
-            parseError instanceof Error &&
-            parseError.message !== "Unexpected end of JSON input"
-          ) {
-            if (
-              parseError.message &&
-              parseError.message !== "HTTP error! status: " + response.status
-            ) {
-              // It's likely the error we just threw in the try block
-              throw parseError;
-            }
-          }
-          throw new Error(`HTTP error! status: ${response.status}`);
+          errorData = await response.json();
+        } catch (e) {
+          // Ignore parsing error, keep empty object
         }
+
+        // Check for 'error' property first, then 'message'
+        const errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `HTTP error! status: ${response.status}`;
+
+        // Create error object
+        const error = new Error(errorMessage);
+
+        // Attach structured response data for consumers (like citationAuditEngine)
+        // Mimic axios structure: error.response.data
+        (error as any).response = {
+          data: errorData,
+          status: response.status,
+          statusText: response.statusText
+        };
+
+        // Attach debug info to the error object if available
+        if (errorData.debug) {
+          (error as any).debug = errorData.debug;
+        }
+
+        // Specifically handle 402 Payment Required
+        if (response.status === 402) {
+          console.warn("💰 Payment Required (402) intercepted in apiClient");
+          // We still throw, but the consumer can now read error.response.status === 402
+        }
+
+        throw error;
       }
 
       return response.json ? await response.json() : response;
