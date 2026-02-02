@@ -89,7 +89,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
 
     // --- Step 1: Compliance Logic (formerly Audit) ---
     // (Checklist logic removed)
-    const performAudit = async () => {
+    const performAudit = React.useCallback(async () => {
         if (auditResult) return; // Already audited
 
         setIsAuditing(true);
@@ -114,15 +114,14 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
         } finally {
             setIsAuditing(false);
         }
-    };
+    }, [auditResult, editor, project.citations, project.citation_style, currentContent]);
 
     // Trigger audit when entering audit step
     useEffect(() => {
         if (currentStep === "audit" && !auditResult && !isAuditing) {
             performAudit();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentStep, auditResult, isAuditing]);
+    }, [currentStep, auditResult, isAuditing, performAudit]);
 
 
     // --- Step 4: Format Logic ---

@@ -312,7 +312,7 @@ const EditorWorkspacePage: React.FC = () => {
       // Pass true for isAuthSettled
       fetchSubscription(true);
     }
-  }, [user, fetchSubscription]);
+  }, [user, fetchSubscription, subLoading, subError]);
 
   // Check if we should show the editor tour (first time the user opens the editor)
   useEffect(() => {
