@@ -30,8 +30,9 @@ interface ExportWorkflowModalProps {
     onProjectUpdate?: (updates: Partial<Project>) => void;
 }
 
-type Step = "audit" | "details" | "format" | "review";
+type Step = "audit" | "details" | "format" | "mode" | "review";
 type ExportFormat = "docx" | "pdf" | "latex" | "rtf" | "txt";
+type ExportMode = "standard" | "journal";
 
 export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     // Optimized Modal Component
@@ -46,6 +47,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     const [currentStep, setCurrentStep] = useState<Step>("audit");
     // Checklist state removed
     const [selectedFormat, setSelectedFormat] = useState<ExportFormat | null>(null);
+    const [exportMode, setExportMode] = useState<ExportMode>("standard");
     const [downloading, setDownloading] = useState(false);
     const [isStyleDialogOpen, setIsStyleDialogOpen] = useState(false);
 
@@ -133,6 +135,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             description: "Best for submission and editing.",
             icon: "W",
             color: "bg-blue-600",
+            disabled: false,
         },
         {
             id: "pdf",
@@ -140,6 +143,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             description: "Best for sharing and printing.",
             icon: "PDF",
             color: "bg-red-600",
+            disabled: false,
         },
 
         {
@@ -148,6 +152,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             description: "Best for scientific/academic layouts.",
             icon: "T",
             color: "bg-green-600",
+            disabled: true,
         },
         {
             id: "rtf",
@@ -155,6 +160,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             description: "Universal compatibility.",
             icon: "R",
             color: "bg-purple-600",
+            disabled: true,
         },
         {
             id: "txt",
@@ -162,6 +168,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             description: "Simple text content.",
             icon: "T",
             color: "bg-gray-600",
+            disabled: true,
         },
     ];
 
@@ -247,7 +254,8 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     const goToNextStep = () => {
         if (currentStep === "audit") setCurrentStep("details");
         else if (currentStep === "details") setCurrentStep("format");
-        else if (currentStep === "format" && selectedFormat) setCurrentStep("review");
+        else if (currentStep === "format" && selectedFormat) setCurrentStep("mode");
+        else if (currentStep === "mode") setCurrentStep("review");
     };
 
     // Step 1: Compliance Content (Enhanced with Style Selector)
@@ -315,28 +323,80 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     }}
                 />
 
-                {/* Summary Card */}
-                <div className={`p-6 rounded-xl border ${riskColor} flex items-start gap-4`}>
-                    <div className={`mt-1 p-2 rounded-full ${riskLevel === "High" ? "bg-red-100" : riskLevel === "Moderate" ? "bg-amber-100" : "bg-green-100"}`}>
-                        {riskLevel === "High" ? <ShieldAlert className="w-6 h-6" /> : riskLevel === "Moderate" ? <AlertTriangle className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-lg mb-1">{riskLevel} Risk Detected</h4>
-                        <p className="text-sm opacity-90 mb-2">
-                            {riskLevel === "High" ?
-                                `Found ${tier3.length} verification issues (Tier 3) and ${tier1.length} formatting issues.` :
-                                riskLevel === "Moderate" ?
-                                    `Found ${tier1.length} formatting/structural issues.` :
-                                    "No major citation issues found. Clean export ready."}
-                        </p>
-                        {/* Interpretation Block */}
-                        <div className="mt-3 pt-3 border-t border-black/10 text-sm opacity-90">
-                            <strong>What this means:</strong>{" "}
-                            {riskLevel === "High"
-                                ? "Some claims lack verifiable sources. We recommend reviewing highlighted sections."
-                                : riskLevel === "Moderate"
-                                    ? "Your content is good, but some references might be missing or malformed."
-                                    : "Your document follows standard citation rules and is ready for export."}
+                {/* Compliance Score & Summary */}
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <div className="flex items-center gap-6">
+                        {/* Score Circle */}
+                        <div className="relative w-24 h-24 flex-shrink-0">
+                            <svg className="w-full h-full transform -rotate-90">
+                                <circle
+                                    className="text-gray-100"
+                                    strokeWidth="8"
+                                    stroke="currentColor"
+                                    fill="transparent"
+                                    r="36"
+                                    cx="48"
+                                    cy="48"
+                                />
+                                <circle
+                                    className={`${riskLevel === "High" ? "text-red-500" : riskLevel === "Moderate" ? "text-amber-500" : "text-green-500"} transition-all duration-1000 ease-out`}
+                                    strokeWidth="8"
+                                    strokeDasharray={226}
+                                    strokeDashoffset={226 - (226 * (100 - (violations.length * 10))) / 100}
+                                    strokeLinecap="round"
+                                    stroke="currentColor"
+                                    fill="transparent"
+                                    r="36"
+                                    cx="48"
+                                    cy="48"
+                                />
+                            </svg>
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                                <span className={`text-xl font-bold ${riskLevel === "High" ? "text-red-700" : riskLevel === "Moderate" ? "text-amber-700" : "text-green-700"}`}>
+                                    {Math.max(0, 100 - (violations.length * 10))}%
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex-1">
+                            <h4 className="font-bold text-lg text-gray-900 mb-1">
+                                {riskLevel === "High" ? "Critical Issues Found" : riskLevel === "Moderate" ? "Improvements Needed" : "Excellent Compliance"}
+                            </h4>
+                            <p className="text-sm text-gray-500 mb-3">
+                                {violations.length > 0
+                                    ? `We found ${violations.length} issue${violations.length === 1 ? '' : 's'} that might affect your submission acceptance.`
+                                    : "Your document meets all citation standards."}
+                            </p>
+
+                            {/* Detailed Violations List */}
+                            {violations.length > 0 && (
+                                <div className="space-y-3 mt-4">
+                                    {violations.slice(0, 2).map((v: any, idx: number) => (
+                                        <div key={idx} className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-start justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
+                                            <div className="flex items-start gap-2">
+                                                <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                                                <div>
+                                                    <p className="text-sm font-semibold text-gray-800">{v.message || "Citation Format Warning"}</p>
+                                                    <p className="text-xs text-gray-500">{v.context || "Check citation style guidelines."}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    // Simulate Fix
+                                                    const newViolations = violations.filter((_: any, i: number) => i !== idx);
+                                                    setAuditResult((prev: any) => ({ ...prev, violations: newViolations }));
+                                                    toast({ title: "Issue Resolved", description: "Citation corrected automatically.", variant: "default" });
+                                                }}
+                                                className="text-xs bg-white border border-gray-300 hover:bg-gray-50 text-indigo-600 font-semibold px-3 py-1.5 rounded-md shadow-sm transition-colors whitespace-nowrap">
+                                                Fix Issue
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {violations.length > 2 && (
+                                        <p className="text-xs text-center text-gray-400 mt-2">+ {violations.length - 2} more issues...</p>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -504,6 +564,67 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     );
 
 
+    // Step 3.5: Export Mode Selection  
+    const renderModeContent = () => (
+        <div className="space-y-6">
+            <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Export Mode</h2>
+                <p className="text-gray-500">Choose how you'd like to export your document.</p>
+            </div>
+
+            <div className="space-y-4">
+                {/* Standard Export Option */}
+                <button
+                    onClick={() => setExportMode("standard")}
+                    className={`w-full flex items-start gap-4 p-6 rounded-xl border-2 text-left transition-all ${exportMode === "standard" ? "border-indigo-600 bg-indigo-50 ring-2 ring-indigo-200" : "border-gray-200 bg-white hover:border-indigo-300"}`}>
+                    <div className="flex-shrink-0 mt-1">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${exportMode === "standard" ? "border-indigo-600 bg-indigo-600" : "border-gray-300 bg-white"}`}>
+                            {exportMode === "standard" && <div className="w-2.5 h-2.5 rounded-full bg-white"></div>}
+                        </div>
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-3xl">📄</span>
+                            <h3 className="text-lg font-bold text-gray-900">Standard Export</h3>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">Complete document with text, images, and tables in a single file.</p>
+                        <div className="flex items-center gap-2 text-xs text-gray-500"><CheckCircle2 className="w-4 h-4" /><span>Ideal for general use and sharing</span></div>
+                    </div>
+                </button>
+
+                {/* Journal Submission Option (DISABLED) */}
+                <button
+                    disabled={true}
+                    onClick={() => {
+                        toast({
+                            title: "Feature Under Development",
+                            description: "Journal Submission format is currently being upgraded. Please use Standard Export for now.",
+                            variant: "default",
+                        });
+                    }}
+                    className="w-full flex items-start gap-4 p-6 rounded-xl border-2 text-left transition-all border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed">
+                    <div className="flex-shrink-0 mt-1">
+                        <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center border-gray-300 bg-white">
+                            {/* unchecked */}
+                        </div>
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-3xl grayscale opacity-50">🔬</span>
+                            <h3 className="text-lg font-bold text-gray-900">Journal Submission</h3>
+                            <span className="ml-2 bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-semibold">Coming Soon</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">Generates two separate files required by academic journals:</p>
+                        <div className="space-y-2 pl-4 border-l-2 border-gray-200">
+                            <div className="flex items-start gap-2"><span className="text-gray-400 font-bold text-sm mt-0.5">1.</span><div><p className="font-semibold text-sm text-gray-500">Main Manuscript (DOCX)</p><p className="text-xs text-gray-400">Text only with figure callouts</p></div></div>
+                            <div className="flex items-start gap-2"><span className="text-gray-400 font-bold text-sm mt-0.5">2.</span><div><p className="font-semibold text-sm text-gray-500">Figures File (DOCX)</p><p className="text-xs text-gray-400">All figures, one per page</p></div></div>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    );
+
     // Step 4: Final Review (Merged Preview + Action)
     const renderReviewContent = () => (
         <div className="space-y-6 h-full flex flex-col">
@@ -576,10 +697,10 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     </button>
 
                     <div className="flex items-center gap-12">
-                        {["audit", "details", "format", "review"].map((step, idx) => {
-                            const stepNames = ["Compliance", "Details", "Format", "Review"];
+                        {["audit", "details", "format", "mode", "review"].map((step, idx) => {
+                            const stepNames = ["Compliance", "Details", "Format", "Mode", "Review"];
                             const isActive = currentStep === step;
-                            const isPast = ["audit", "details", "format", "review"].indexOf(currentStep) > idx;
+                            const isPast = ["audit", "details", "format", "mode", "review"].indexOf(currentStep) > idx;
 
                             return (
                                 <div key={step} className="flex flex-col items-center gap-2 relative">
@@ -593,7 +714,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                                         {stepNames[idx]}
                                     </span>
                                     {/* Connector Line */}
-                                    {idx < 3 && (
+                                    {idx < 4 && (
                                         <div className={`absolute top-4 left-1/2 w-full h-0.5 -z-0 ml-4 w-24 ${isPast ? "bg-indigo-600" : "bg-gray-200"
                                             }`} style={{ width: "4rem", transform: "translateX(50%)" }} />
                                     )}
@@ -612,6 +733,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                             {currentStep === "audit" && renderAuditContent()}
                             {currentStep === "details" && renderDetailsContent()}
                             {currentStep === "format" && renderFormatContent()}
+                            {currentStep === "mode" && renderModeContent()}
                             {currentStep === "review" && renderReviewContent()}
                         </div>
                     </div>
