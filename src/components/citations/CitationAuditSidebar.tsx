@@ -467,7 +467,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                                 </button>
 
                                 <div className="text-center pt-2">
-                                    <button onClick={handleRunStyleAudit} className="text-xs text-[#6b7280] hover:text-[#111827] underline">
+                                    <button onClick={() => handleRunStyleAudit(true)} className="text-xs text-[#6b7280] hover:text-[#111827] underline">
                                         Rerun Analysis
                                     </button>
                                 </div>
