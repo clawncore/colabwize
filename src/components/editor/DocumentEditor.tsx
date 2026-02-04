@@ -36,7 +36,7 @@ import { useToast } from "../../hooks/use-toast";
 import { TableBubbleMenu } from "./TableBubbleMenu";
 import {
   // AIDetectionAdapter,
-  // OriginalityMapAdapter,
+  OriginalityMapAdapter,
   // CitationConfidenceAdapter, // Removed/Replaced
   AuthorshipCertificateAdapter,
   RephraseAdapter,
@@ -715,18 +715,16 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   Clear Highlights
                 </button>
 
-                {/* Originality Scan Pipeline (Plagiarism Detection) - Hidden per request */}
-                {/* <OriginalityMapAdapter
+                {/* Originality Scan Pipeline (Plagiarism Detection) */}
+                <OriginalityMapAdapter
                   projectId={project.id}
                   editor={editor}
                   onScanComplete={(results) => {
-                    // setLastScanResult(results); // Need to expose standard setLastScanResult or just use highlight
-                    highlightOriginalityResults(results);
                     if (onOpenPanel) {
                       onOpenPanel("originality-results", results);
                     }
                   }}
-                /> */}
+                />
 
                 {/* AI Detection Adapter (Disabled per request) */}
                 {/* <AIDetectionAdapter
