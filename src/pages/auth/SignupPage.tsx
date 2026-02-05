@@ -723,13 +723,27 @@ const SignupPage: React.FC = () => {
         console.log("OTP verified, signing in user...");
 
         // Sign in user to allow survey submission (establishes Supabase session)
+        // This MUST succeed for the survey to work
         try {
           await signInWithEmail(data.email, data.password);
           console.log("User signed in successfully");
-        } catch (loginError) {
+
+          // Wait a moment for the session to be fully established
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Verify the session was established
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            throw new Error("Failed to establish authenticated session. Please try signing in manually.");
+          }
+          console.log("Session verified, user is authenticated");
+        } catch (loginError: any) {
           console.error("Auto-login failed:", loginError);
-          // We continue anyway, hoping the survey might work or user can sign in later
-          // But realistically survey submission will fail without auth
+          // Don't continue to survey if login fails - this will cause survey submission to fail
+          throw new Error(
+            loginError.message ||
+            "Failed to sign you in after verification. Please try signing in manually from the login page."
+          );
         }
 
         setShowOtpStep(false);
