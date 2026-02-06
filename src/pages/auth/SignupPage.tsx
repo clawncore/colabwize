@@ -576,6 +576,11 @@ const SignupPage: React.FC = () => {
           affiliate_ref: affiliateRef,
         });
 
+        // Check if signup was successful before attempting to extract user ID
+        if (!result.success) {
+          throw new Error(result.message || "Signup failed");
+        }
+
         // Store the user ID for OTP verification
         const newUserId = result.user ? result.user.id : null;
         if (newUserId) {
