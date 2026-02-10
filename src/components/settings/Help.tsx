@@ -18,6 +18,7 @@ import apiClient from "../../services/apiClient";
 import WaitlistService from "../../services/waitlistService";
 import { SubscriptionService } from "../../services/subscriptionService";
 import ConfigService from "../../services/ConfigService";
+import { VideoTutorial, videoTutorials } from "../../data/helpData";
 
 interface HelpArticle {
   id: string;
@@ -26,7 +27,7 @@ interface HelpArticle {
   views: number;
 }
 
-import { VideoTutorial, videoTutorials } from "../../data/helpData";
+
 
 const HelpSettingsPage: React.FC = () => {
   const { toast } = useToast();
