@@ -26,11 +26,18 @@ import { ResearchGapsPanel } from "../citations/ResearchGapsPanel";
 import { useNavigate } from "react-router-dom";
 import { EditorOnboardingTour } from "../onboarding/EditorOnboardingTour";
 import { OnboardingService } from "../../services/onboardingService";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, Video } from "lucide-react";
 import { OriginalityMapSidebar } from "../originality/OriginalityMapSidebar";
 import AIResearchAssistant from "./ResearchAssistant";
 import AddCitationModal from "../citations/AddCitationModal";
 import { Microscope, PlusSquare } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
+import { EditorHelpDialog } from "./EditorHelpDialog";
 
 // Define panel types
 export type RightPanelType =
@@ -103,6 +110,7 @@ const EditorWorkspacePage: React.FC = () => {
 
   // Editor onboarding tour state
   const [showEditorTour, setShowEditorTour] = useState(false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
 
   // Resize state
   const [isResizingLeft, setIsResizingLeft] = useState(false);
@@ -574,13 +582,30 @@ const EditorWorkspacePage: React.FC = () => {
                       <span className="text-sm font-bold text-gray-900">Display</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setShowEditorTour(true)}
-                        className="p-1.5 hover:bg-indigo-100 rounded-md transition-colors group"
-                        title="Show Editor Tour"
-                      >
-                        <HelpCircle className="w-4 h-4 text-gray-400 group-hover:text-indigo-600" />
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="p-1.5 hover:bg-indigo-100 rounded-md transition-colors group"
+                            title="Help & Resources"
+                          >
+                            <HelpCircle className="w-4 h-4 text-gray-400 group-hover:text-indigo-600" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          <DropdownMenuItem onClick={() => setShowEditorTour(true)}>
+                            <HelpCircle className="mr-2 h-4 w-4" />
+                            <span>Show Tour</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setShowHelpDialog(true)}>
+                            <Video className="mr-2 h-4 w-4" />
+                            <span>Video Tutorials</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <EditorHelpDialog
+                        open={showHelpDialog}
+                        onOpenChange={setShowHelpDialog}
+                      />
                       <button onClick={() => setIsNavRailOpen(false)} title="Collapse Sidebar" className="cursor-pointer hover:bg-gray-200 p-1 rounded-md transition-colors">
                         <ChevronLeft className="w-4 h-4 text-gray-400 hover:text-gray-600" />
                       </button>

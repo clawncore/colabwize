@@ -11,6 +11,7 @@ import {
   Lightbulb,
   Star,
   Copy,
+  X,
 } from "lucide-react";
 
 import apiClient from "../../services/apiClient";
@@ -25,12 +26,7 @@ interface HelpArticle {
   views: number;
 }
 
-interface VideoTutorial {
-  id: string;
-  title: string;
-  duration: string;
-  thumbnail: string;
-}
+import { VideoTutorial, videoTutorials } from "../../data/helpData";
 
 const HelpSettingsPage: React.FC = () => {
   const { toast } = useToast();
@@ -55,6 +51,8 @@ const HelpSettingsPage: React.FC = () => {
   const [submittingFeature, setSubmittingFeature] = useState(false);
   const [featureSubmitted, setFeatureSubmitted] = useState(false);
   const [votedFeatures, setVotedFeatures] = useState<string[]>([]);
+  const [selectedVideo, setSelectedVideo] = useState<VideoTutorial | null>(null);
+
   const [featureVotes, setFeatureVotes] = useState<Record<string, number>>({
     "dark-mode": 128,
     "offline-mode": 96,
@@ -85,33 +83,6 @@ const HelpSettingsPage: React.FC = () => {
       title: "Keyboard Shortcuts",
       category: "Tips",
       views: 1100,
-    },
-  ];
-
-  const videoTutorials: VideoTutorial[] = [
-    {
-      id: "1",
-      title: "Creating Your First Document",
-      duration: "5:22",
-      thumbnail: "🎬",
-    },
-    {
-      id: "2",
-      title: "Adding Citations and References",
-      duration: "8:45",
-      thumbnail: "📚",
-    },
-    {
-      id: "3",
-      title: "Collaborating with Your Team",
-      duration: "6:18",
-      thumbnail: "👥",
-    },
-    {
-      id: "4",
-      title: "Using the AI Writing Assistant",
-      duration: "12:30",
-      thumbnail: "🤖",
     },
   ];
 
@@ -491,8 +462,25 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 <div
                   key={video.id}
                   className="border border-gray-200  rounded-lg overflow-hidden hover:border-blue-300  cursor-pointer">
-                  <div className="bg-gray-100  h-32 flex items-center justify-center text-4xl">
-                    {video.thumbnail}
+                  <div className="bg-gray-100 aspect-video relative group overflow-hidden">
+                    {video.videoId ? (
+                      <>
+                        <img
+                          src={`https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`}
+                          alt={video.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-colors">
+                          <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm shadow-md transition-transform group-hover:scale-110">
+                            <Play className="h-5 w-5 text-blue-600 ml-1 fill-blue-600" />
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-4xl">
+                        {video.thumbnail}
+                      </div>
+                    )}
                   </div>
                   <div className="p-4">
                     <div className="flex justify-between items-start">
@@ -503,9 +491,12 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                         {video.duration}
                       </span>
                     </div>
-                    <button className="mt-3 flex items-center text-sm font-medium text-blue-600 hover:text-blue-700  ">
+                    <button
+                      onClick={() => video.videoId && setSelectedVideo(video)}
+                      disabled={!video.videoId}
+                      className={`mt-3 flex items-center text-sm font-medium ${video.videoId ? 'text-blue-600 hover:text-blue-700' : 'text-gray-400 cursor-not-allowed'}`}>
                       <Play className="h-4 w-4 mr-1" />
-                      Watch Tutorial
+                      {video.videoId ? 'Watch Tutorial' : 'Coming Soon'}
                     </button>
                   </div>
                 </div>
@@ -959,6 +950,27 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
           </div>
         </div>
       </div>
+
+      {/* Video Modal */}
+      {selectedVideo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedVideo(null)}>
+          <div className="relative w-full max-w-4xl bg-black rounded-xl overflow-hidden shadow-2xl aspect-video" onClick={e => e.stopPropagation()}>
+            <button
+              className="absolute top-4 right-4 p-2 text-white/70 hover:text-white bg-black/50 hover:bg-black/70 rounded-full transition-colors z-10"
+              onClick={() => setSelectedVideo(null)}
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <iframe
+              src={`https://www.youtube.com/embed/${selectedVideo.videoId}?autoplay=1`}
+              title={selectedVideo.title}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clip-board-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
