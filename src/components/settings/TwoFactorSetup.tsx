@@ -389,21 +389,29 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
 
                             <div className="space-y-4">
                                 <h3 className="text-3xl font-bold text-gray-900">You're All Set!</h3>
-                                <p className="text-gray-600">Two-factor authentication is active. We've sent a confirmation email to you.</p>
+                                <p className="text-gray-600">Your account is now more secure. When you sign in, you'll be required to enter a code from your authenticator app.</p>
                             </div>
 
                             <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6 text-left shadow-sm">
                                 <div className="flex items-center gap-3 mb-4 text-amber-900">
-                                    <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                                    <h4 className="font-bold">Save Backup Codes</h4>
+                                    <span className="text-xl">🔐</span>
+                                    <h4 className="font-bold">Important: Keep it Secure</h4>
                                 </div>
-                                <p className="text-amber-800 text-sm mb-4 leading-relaxed">
-                                    If you lose your device, these codes are the <strong>only way</strong> to access your account. Store them somewhere safe (e.g. password manager).
-                                </p>
+                                <div className="space-y-3 text-amber-900 text-sm leading-relaxed">
+                                    <p>
+                                        <strong>Backup Codes:</strong> Ensure you have saved your recovery codes in a safe place (like a password manager). These are the only way to access your account if you lose your phone.
+                                    </p>
+                                    <p>
+                                        <strong>Lost Device:</strong> If you lose your device, use a backup code to login immediately and disable 2FA, then re-enable it on a new device.
+                                    </p>
+                                    <p>
+                                        <strong>Don't Share:</strong> Never share your verification codes with anyone, even support agents.
+                                    </p>
+                                </div>
 
-                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="grid grid-cols-2 gap-3 my-6">
                                     {backupCodes.map((c, i) => (
-                                        <div key={i} className="bg-white border border-amber-200 rounded p-2 text-center font-mono text-sm text-gray-700 tracking-wider">
+                                        <div key={i} className="bg-white border border-amber-200 rounded p-2 text-center font-mono text-sm text-gray-700 tracking-wider font-bold">
                                             {c}
                                         </div>
                                     ))}
@@ -411,7 +419,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
 
                                 <Button
                                     variant="outline"
-                                    className="w-full bg-white border-amber-300 text-amber-900 hover:bg-amber-100"
+                                    className="w-full bg-white border-amber-300 text-amber-900 hover:bg-amber-100 mb-2"
                                     onClick={() => {
                                         navigator.clipboard.writeText(backupCodes.join("\n"));
                                         toast({ title: "Copied", description: "Backup codes copied to clipboard" });
@@ -424,6 +432,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
                                 className="w-full h-12 text-lg rounded-xl bg-gray-900 hover:bg-black text-white shadow-xl hover:shadow-2xl transition-all"
                                 onClick={() => {
                                     setStep('intro');
+                                    // Optionally refresh page or something if needed, but intro state checks props
                                 }}>
                                 Done
                             </Button>
