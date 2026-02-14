@@ -12,6 +12,9 @@ const CallbackPage: React.FC = () => {
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
+      // Set auth provider for apiClient
+      localStorage.setItem("auth_provider", "google");
+
       try {
         console.log("OAuth callback page loaded");
 
@@ -95,6 +98,14 @@ const CallbackPage: React.FC = () => {
 
                   console.log("Redirecting to:", redirectUrl);
                   navigate(redirectUrl, { replace: true });
+                  return;
+                }
+
+                // Check for 2FA requirement
+                if (syncResult.requires_2fa && syncResult.userId) {
+                  console.log("2FA required for Google user, redirecting to verification");
+                  // We need to pass the userId and indicate it's a google login needing 2FA
+                  navigate(`/login?requires_2fa=true&userId=${syncResult.userId}&provider=google`, { replace: true });
                   return;
                 }
 

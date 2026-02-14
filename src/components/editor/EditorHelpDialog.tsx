@@ -17,6 +17,7 @@ interface EditorHelpDialogProps {
 
 export function EditorHelpDialog({ open, onOpenChange }: EditorHelpDialogProps) {
     const [selectedVideo, setSelectedVideo] = useState<VideoTutorial | null>(null);
+    const [imgError, setImgError] = useState<Record<string, boolean>>({});
 
     const handleVideoSelect = (video: VideoTutorial) => {
         if (video.videoId) {
@@ -28,11 +29,15 @@ export function EditorHelpDialog({ open, onOpenChange }: EditorHelpDialogProps) 
         setSelectedVideo(null);
     };
 
+    const handleImgError = (id: string) => {
+        setImgError((prev) => ({ ...prev, [id]: true }));
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[800px] h-[80vh] flex flex-col p-0">
-                <DialogHeader className="p-6 pb-2">
-                    <DialogTitle className="flex items-center gap-2">
+            <DialogContent className="sm:max-w-[900px] h-[80vh] flex flex-col p-0 gap-0">
+                <DialogHeader className="p-6 pb-4 border-b">
+                    <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
                         {selectedVideo ? (
                             <>
                                 <Button
@@ -51,10 +56,10 @@ export function EditorHelpDialog({ open, onOpenChange }: EditorHelpDialogProps) 
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-hidden p-6 pt-2">
+                <div className="flex-1 overflow-hidden bg-gray-50/50">
                     {selectedVideo ? (
-                        <div className="w-full h-full flex flex-col gap-4">
-                            <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden shrink-0">
+                        <div className="w-full h-full flex flex-col">
+                            <div className="flex-1 bg-black w-full relative">
                                 <iframe
                                     width="100%"
                                     height="100%"
@@ -63,57 +68,74 @@ export function EditorHelpDialog({ open, onOpenChange }: EditorHelpDialogProps) 
                                     frameBorder="0"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowFullScreen
+                                    className="absolute inset-0"
                                 ></iframe>
                             </div>
-                            <p className="text-sm text-gray-500">
-                                Duration: {selectedVideo.duration}
-                            </p>
+                            <div className="p-4 bg-white border-t">
+                                <h3 className="font-semibold text-lg">{selectedVideo.title}</h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Duration: {selectedVideo.duration}
+                                </p>
+                            </div>
                         </div>
                     ) : (
                         <ScrollArea className="h-full">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
+                            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {videoTutorials.map((video) => (
                                     <div
                                         key={video.id}
-                                        className="border border-gray-200 rounded-lg overflow-hidden hover:border-blue-300 cursor-pointer group transition-all"
+                                        className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col h-full relative"
                                         onClick={() => handleVideoSelect(video)}
                                     >
+                                        {/* Thumbnail Container */}
                                         <div className="aspect-video relative bg-gray-100 overflow-hidden">
                                             {video.videoId ? (
                                                 <>
                                                     <img
-                                                        src={`https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`}
+                                                        src={
+                                                            video.customThumbnail && !imgError[video.id]
+                                                                ? video.customThumbnail
+                                                                : `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`
+                                                        }
+                                                        onError={() => handleImgError(video.id)}
                                                         alt={video.title}
-                                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                     />
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-colors">
-                                                        <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm shadow-md transition-transform group-hover:scale-110">
-                                                            <Play className="h-4 w-4 text-blue-600 ml-0.5 fill-blue-600" />
-                                                        </div>
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors z-10">
+                                                        <button
+                                                            className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-md shadow-lg transform transition-transform group-hover:scale-110 cursor-pointer hover:bg-white"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleVideoSelect(video);
+                                                            }}
+                                                        >
+                                                            <Play className="h-5 w-5 text-blue-600 ml-1 fill-blue-600" />
+                                                        </button>
+                                                    </div>
+                                                    {/* Duration Badge */}
+                                                    <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm text-white text-xs px-2 py-1 rounded font-medium">
+                                                        {video.duration}
                                                     </div>
                                                 </>
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-4xl">
+                                                <div className="w-full h-full flex items-center justify-center text-4xl bg-gray-50">
                                                     {video.thumbnail}
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="p-3">
-                                            <div className="flex justify-between items-start mb-1">
-                                                <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
-                                                    {video.title}
-                                                </h4>
-                                            </div>
-                                            <div className="flex items-center justify-between mt-2">
-                                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                                                    {video.duration}
-                                                </span>
-                                                {!video.videoId && (
-                                                    <span className="text-[10px] uppercase font-bold text-gray-400">
+
+                                        {/* Content */}
+                                        <div className="p-4 flex flex-col flex-1 gap-2">
+                                            <h4 className="font-semibold text-base text-gray-900 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
+                                                {video.title}
+                                            </h4>
+                                            {!video.videoId && (
+                                                <div className="mt-auto pt-2">
+                                                    <span className="inline-block px-2 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold uppercase tracking-wide">
                                                         Coming Soon
                                                     </span>
-                                                )}
-                                            </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

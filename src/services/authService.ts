@@ -200,15 +200,40 @@ class AuthService {
   }
 
   /**
-   * Verify 2FA (Login Challenge)
+   * Verify 2FA (Organic/Email)
    */
-  async verify2FA(userId: string, token: string): Promise<{ success: boolean; message: string }> {
+  async verify2FAOrganic(userId: string, token: string): Promise<{ success: boolean; message: string }> {
     try {
+      // Ensure we identifying as organic for this request
+      localStorage.setItem("auth_provider", "organic");
       const response = await apiClient.post("/api/auth/hybrid/verify-2fa", { userId, token });
       return response;
     } catch (error: any) {
       return { success: false, message: error.message || "Invalid code" };
     }
+  }
+
+  /**
+   * Verify 2FA (Google/OAuth)
+   */
+  async verify2FAGoogle(userId: string, token: string): Promise<{ success: boolean; message: string }> {
+    try {
+      // Ensure we identifying as google for this request
+      localStorage.setItem("auth_provider", "google");
+      const response = await apiClient.post("/api/auth/hybrid/verify-2fa", { userId, token });
+      return response;
+    } catch (error: any) {
+      return { success: false, message: error.message || "Invalid code" };
+    }
+  }
+
+  /**
+   * Verify 2FA (Legacy/Generic)
+   * @deprecated Use verify2FAOrganic or verify2FAGoogle
+   */
+  async verify2FA(userId: string, token: string): Promise<{ success: boolean; message: string }> {
+    // Default to organic if not specified, or checks current state
+    return this.verify2FAOrganic(userId, token);
   }
 
   /**

@@ -119,6 +119,23 @@ const LoginPage: React.FC = () => {
     if (redirect) {
       setRedirectPath(redirect);
     }
+
+    // Check for 2FA requirement (e.g. from Google Callback)
+    const requires2fa = searchParams.get("requires_2fa") === "true";
+    const userId = searchParams.get("userId");
+    const provider = searchParams.get("provider");
+
+    if (requires2fa && userId) {
+      setIs2FARequired(true);
+      setUserIdFor2FA(userId);
+
+      // If provider is specified (e.g. google), we can store it or just use it in the submit handler
+      // For now, let's store it in a ref or state if needed, or implied by logic?
+      // Let's store it in localStorage to be safe for apiClient immediately
+      if (provider) {
+        localStorage.setItem("auth_provider", provider);
+      }
+    }
   }, [searchParams]);
 
   const handleGoogleLogin = async () => {
@@ -226,6 +243,10 @@ const LoginPage: React.FC = () => {
         }
       }
     } finally {
+      if (!error && !isEmailNotConfirmed) {
+        // Store auth provider for apiClient to use
+        localStorage.setItem("auth_provider", "organic");
+      }
       isSubmittingRef.current = false;
       setIsLoading(false);
     }
@@ -280,7 +301,16 @@ const LoginPage: React.FC = () => {
     try {
       if (!userIdFor2FA) throw new Error("Session invalid");
 
-      const result = await authService.verify2FA(userIdFor2FA, otp);
+      // Determine method based on stored provider or context
+      const provider = localStorage.getItem("auth_provider");
+      let result;
+
+      if (provider === "google") {
+        result = await authService.verify2FAGoogle(userIdFor2FA, otp);
+      } else {
+        result = await authService.verify2FAOrganic(userIdFor2FA, otp);
+      }
+
       if (result.success) {
         await handleLoginSuccess(redirectPath, selectedPlan);
       } else {

@@ -141,11 +141,43 @@ class ApiClient {
       signal: controller.signal,
       headers: {
         ...(!isFormData && { "Content-Type": "application/json" }),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
       },
       ...options,
     };
+
+    // Add authentication headers
+    if (token) {
+      // Determine user provider from token or session metadata if available
+      // Since we don't have direct access to user metadata here without another call,
+      // we'll try to infer or check local storage if stored during login
+      const oauthUserData = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem("oauthUserData") : null;
+      let isGoogle = false;
+
+      if (oauthUserData) {
+        try {
+          const userData = JSON.parse(oauthUserData);
+          isGoogle = userData.provider === 'google';
+        } catch (e) {
+          // Ignore parse error
+        }
+      } else {
+        // Fallback inference: If no oauth data, assume organic for now,
+        // OR check if we can get user details cheaply.
+        // Ideally hybridAuth.ts sets a flag.
+        // For now, let's look for a specific flag in localStorage set by login
+        isGoogle = typeof localStorage !== 'undefined' && localStorage.getItem("auth_provider") === "google";
+      }
+
+      if (isGoogle) {
+        (defaultOptions.headers as any)["X-Auth-Google"] = `Bearer ${token}`;
+      } else {
+        (defaultOptions.headers as any)["X-Auth-Organic"] = `Bearer ${token}`;
+      }
+
+      // Keep Authorization as fallback to ensure compatibility and robustness
+      (defaultOptions.headers as any)["Authorization"] = `Bearer ${token}`;
+    }
 
     console.log("Request headers being sent:", defaultOptions.headers);
 
@@ -177,9 +209,20 @@ class ApiClient {
           errorData.message === "jwt expired"
         ) {
           // Clear any stored data
-          console.log("Clearing session due to auth error:", errorData.message);
+          console.error("CRITICAL: Auth error detected. Wiping session.", { message: errorData.message });
+
+          // Prevent infinite reload loops - check if we just redirected
+          const lastAuthError = sessionStorage.getItem("last_auth_error_time");
+          const now = Date.now();
+          if (lastAuthError && (now - parseInt(lastAuthError)) < 5000) {
+            console.error("Redirect loop detected. Stopping redirect.");
+            throw new Error("Authentication failed - Loop detected");
+          }
+
+          sessionStorage.setItem("last_auth_error_time", now.toString());
+
           localStorage.clear();
-          sessionStorage.clear();
+          // sessionStorage.clear(); // Don't clear session storage wholly so we can track the loop
 
           // Force redirect to login
           if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {

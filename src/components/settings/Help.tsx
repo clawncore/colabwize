@@ -53,6 +53,11 @@ const HelpSettingsPage: React.FC = () => {
   const [featureSubmitted, setFeatureSubmitted] = useState(false);
   const [votedFeatures, setVotedFeatures] = useState<string[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<VideoTutorial | null>(null);
+  const [imgError, setImgError] = useState<Record<string, boolean>>({});
+
+  const handleImgError = (id: string) => {
+    setImgError((prev) => ({ ...prev, [id]: true }));
+  };
 
   const [featureVotes, setFeatureVotes] = useState<Record<string, number>>({
     "dark-mode": 128,
@@ -462,19 +467,29 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
               {videoTutorials.map((video) => (
                 <div
                   key={video.id}
-                  className="border border-gray-200  rounded-lg overflow-hidden hover:border-blue-300  cursor-pointer">
+                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col h-full"
+                >
                   <div className="bg-gray-100 aspect-video relative group overflow-hidden">
                     {video.videoId ? (
                       <>
                         <img
-                          src={`https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`}
+                          src={
+                            video.customThumbnail && !imgError[video.id]
+                              ? video.customThumbnail
+                              : `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`
+                          }
+                          onError={() => handleImgError(video.id)}
                           alt={video.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-colors">
-                          <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm shadow-md transition-transform group-hover:scale-110">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                          <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-md shadow-lg transform transition-transform group-hover:scale-110">
                             <Play className="h-5 w-5 text-blue-600 ml-1 fill-blue-600" />
                           </div>
+                        </div>
+                        {/* Duration Badge */}
+                        <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm text-white text-xs px-2 py-1 rounded font-medium">
+                          {video.duration}
                         </div>
                       </>
                     ) : (
@@ -483,22 +498,25 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                       </div>
                     )}
                   </div>
-                  <div className="p-4">
-                    <div className="flex justify-between items-start">
-                      <h3 className="font-medium text-gray-900 ">
+                  <div className="p-4 flex flex-col flex-1">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-gray-900 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
                         {video.title}
                       </h3>
-                      <span className="text-xs text-gray-500  bg-gray-100  px-2 py-1 rounded">
-                        {video.duration}
-                      </span>
                     </div>
-                    <button
-                      onClick={() => video.videoId && setSelectedVideo(video)}
-                      disabled={!video.videoId}
-                      className={`mt-3 flex items-center text-sm font-medium ${video.videoId ? 'text-blue-600 hover:text-blue-700' : 'text-gray-400 cursor-not-allowed'}`}>
-                      <Play className="h-4 w-4 mr-1" />
-                      {video.videoId ? 'Watch Tutorial' : 'Coming Soon'}
-                    </button>
+                    <div className="mt-auto">
+                      <button
+                        onClick={() => video.videoId && setSelectedVideo(video)}
+                        disabled={!video.videoId}
+                        className={`flex items-center text-sm font-medium ${video.videoId
+                          ? "text-blue-600 hover:text-blue-700"
+                          : "text-gray-400 cursor-not-allowed"
+                          }`}
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        {video.videoId ? "Watch Tutorial" : "Coming Soon"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

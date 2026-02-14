@@ -4,6 +4,7 @@ export interface VideoTutorial {
     duration: string;
     thumbnail: string;
     videoId?: string;
+    customThumbnail?: string;
 }
 
 export const videoTutorials: VideoTutorial[] = [
@@ -13,6 +14,7 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "3:45",
         thumbnail: "🎥",
         videoId: "Zsid3NSL188",
+        customThumbnail: "/assets/images/thumbnails/intro.jpg"
     },
     {
         id: "2",
@@ -20,6 +22,7 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "4:00",
         thumbnail: "👤",
         videoId: "alIzg6uC_sY",
+        customThumbnail: "/assets/images/thumbnails/account-creation.jpg"
     },
     {
         id: "3",
@@ -27,6 +30,7 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "3:30",
         thumbnail: "🎬",
         videoId: "22CkOWWOkl4",
+        customThumbnail: "/assets/images/thumbnails/upload-document.jpg"
     },
     {
         id: "4",
@@ -34,17 +38,20 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "5:45",
         thumbnail: "📊",
         videoId: "g_HyTIMTaiE",
+        customThumbnail: "/assets/images/thumbnails/dashboard.jpg"
     },
     {
         id: "5",
         title: "Adding Citations and References",
         duration: "8:45",
         thumbnail: "📚",
+        customThumbnail: "/assets/images/thumbnails/citations.jpg"
     },
     {
         id: "6",
         title: "Collaborating with Your Team",
         duration: "6:18",
         thumbnail: "👥",
+        customThumbnail: "/assets/images/thumbnails/collaborating.jpg"
     },
 ];

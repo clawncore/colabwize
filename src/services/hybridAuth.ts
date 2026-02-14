@@ -188,7 +188,7 @@ export async function signInWithEmail(
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${tokenToUse}` // Explicitly pass headers for this call too
+          "X-Auth-Organic": `Bearer ${tokenToUse}`
         },
         body: JSON.stringify({
           idToken: tokenToUse,
@@ -254,13 +254,17 @@ export async function syncUser(): Promise<{ success: boolean; user: any; require
 
     const tokenToUse = session.access_token;
 
+    // Determine header based on current provider
+    const isGoogle = typeof localStorage !== 'undefined' && localStorage.getItem("auth_provider") === "google";
+    const authHeader = isGoogle ? { "X-Auth-Google": `Bearer ${tokenToUse}` } : { "X-Auth-Organic": `Bearer ${tokenToUse}` };
+
     const response = await fetchWithTimeout(
       `${API_BASE_URL}/api/auth/hybrid/signin`,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${tokenToUse}`
+          ...authHeader
         },
         body: JSON.stringify({
           idToken: tokenToUse,
@@ -486,6 +490,10 @@ export async function updateUserProfile(updates: {
       throw updateError;
     }
 
+    // Determine header based on current provider
+    const isGoogle = typeof localStorage !== 'undefined' && localStorage.getItem("auth_provider") === "google";
+    const authHeader = isGoogle ? { "X-Auth-Google": `Bearer ${idToken}` } : { "X-Auth-Organic": `Bearer ${idToken}` };
+
     // Send updates to our hybrid backend endpoint
     const response = await fetchWithTimeout(
       `${API_BASE_URL}/api/auth/hybrid/profile`,
@@ -493,6 +501,7 @@ export async function updateUserProfile(updates: {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          ...authHeader
         },
         body: JSON.stringify({
           idToken,
@@ -633,6 +642,7 @@ export async function verifyEmailOTP(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-Auth-Organic": `Bearer ${(await getIdToken()) || ""}`
         },
         body: JSON.stringify({
           userId: user.id,
@@ -681,6 +691,7 @@ export async function verifyOTP(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "X-Auth-Organic": `Bearer ${(await getIdToken()) || ""}`
           },
           body: JSON.stringify({
             userId,
@@ -753,6 +764,7 @@ export async function resendVerificationEmail(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "X-Auth-Organic": `Bearer ${(await getIdToken()) || ""}`
           },
           body: JSON.stringify(payload),
         }
