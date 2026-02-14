@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useUser } from "../../services/useUser";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { toast } from "../../hooks/use-toast";
@@ -28,7 +27,6 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
     const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [backupCodes, setBackupCodes] = useState<string[]>([]);
-    const { user } = useUser();
 
     // Disable Flow
     const [showDisableModal, setShowDisableModal] = useState(false);
