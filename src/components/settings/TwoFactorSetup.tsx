@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useUser } from "../../services/useUser";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { toast } from "../../hooks/use-toast";
@@ -27,10 +28,10 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
     const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [backupCodes, setBackupCodes] = useState<string[]>([]);
+    const { user } = useUser();
 
     // Disable Flow
     const [showDisableModal, setShowDisableModal] = useState(false);
-    const [disablePassword, setDisablePassword] = useState("");
     const [disableCode, setDisableCode] = useState("");
 
     const handleStartSetup = () => {
@@ -76,12 +77,15 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
     };
 
     const handleDisable = async () => {
+        if (!disableCode || disableCode.length !== 6) return;
+
         setLoading(true);
         try {
-            const result = await authService.disable2FA(disablePassword, disableCode);
+            // Backend call (Enforces 2FA Code Check)
+            const result = await authService.disable2FA(undefined, disableCode);
+
             if (result.success) {
                 setShowDisableModal(false);
-                setDisablePassword("");
                 setDisableCode("");
                 onStatusChange();
                 toast({ title: "Success", description: "2FA Disabled" });
@@ -89,7 +93,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
                 throw new Error(result.message);
             }
         } catch (err: any) {
-            toast({ title: "Error", description: err.message, variant: "destructive" });
+            toast({ title: "Disable Failed", description: err.message, variant: "destructive" });
         } finally {
             setLoading(false);
         }
@@ -121,31 +125,22 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
                     </div>
 
                     <Dialog open={showDisableModal} onOpenChange={setShowDisableModal}>
-                        <DialogContent className="sm:max-w-[425px] bg-slate-900 border-slate-800 text-slate-50 shadow-xl">
+                        <DialogContent className="sm:max-w-[425px] bg-white border-gray-200 text-gray-900 shadow-xl">
                             <DialogHeader>
-                                <DialogTitle className="text-xl font-semibold text-slate-50">Disable 2FA</DialogTitle>
-                                <DialogDescription className="text-slate-400">
-                                    Enter your password and a code to confirm.
+                                <DialogTitle className="text-xl font-semibold text-gray-900">Disable 2FA</DialogTitle>
+                                <DialogDescription className="text-gray-500">
+                                    Enter the code from your authenticator app to confirm.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-6 py-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-200">Password</label>
-                                    <Input
-                                        type="password"
-                                        value={disablePassword}
-                                        onChange={e => setDisablePassword(e.target.value)}
-                                        className="bg-white text-slate-900 border-slate-200 focus-visible:ring-slate-400"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-slate-200">Authentication Code</label>
+                                    <label className="text-sm font-medium text-gray-700">Authentication Code</label>
                                     <Input
                                         value={disableCode}
-                                        onChange={e => setDisableCode(e.target.value)}
+                                        onChange={e => setDisableCode(e.target.value.replace(/[^0-9]/g, ''))}
                                         maxLength={6}
-                                        placeholder="000000"
-                                        className="bg-white text-slate-900 border-slate-200 focus-visible:ring-slate-400 tracking-wider placeholder:tracking-normal"
+                                        placeholder="000 000"
+                                        className="bg-white text-gray-900 border-gray-200 focus-visible:ring-blue-600 tracking-wider placeholder:tracking-normal text-center font-mono text-lg"
                                     />
                                 </div>
                             </div>
@@ -153,17 +148,17 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
                                 <Button
                                     variant="ghost"
                                     onClick={() => setShowDisableModal(false)}
-                                    className="text-slate-300 hover:text-white hover:bg-slate-800"
+                                    className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
                                 >
                                     Cancel
                                 </Button>
                                 <Button
                                     variant="destructive"
                                     onClick={handleDisable}
-                                    disabled={loading || !disablePassword || !disableCode}
+                                    disabled={loading || disableCode.length !== 6}
                                     className="bg-red-600 hover:bg-red-700 text-white border-none"
                                 >
-                                    {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Disable"}
+                                    {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Disable 2FA"}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -395,23 +390,23 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
                             <div className="bg-amber-50 border border-amber-100 rounded-2xl p-6 text-left shadow-sm">
                                 <div className="flex items-center gap-3 mb-4 text-amber-900">
                                     <span className="text-xl">🔐</span>
-                                    <h4 className="font-bold">Important: Keep it Secure</h4>
+                                    <h4 className="font-bold">Store Your Backup Codes Securely</h4>
                                 </div>
                                 <div className="space-y-3 text-amber-900 text-sm leading-relaxed">
                                     <p>
-                                        <strong>Backup Codes:</strong> Ensure you have saved your recovery codes in a safe place (like a password manager). These are the only way to access your account if you lose your phone.
+                                        <strong>Copy and Save:</strong> These codes are the <strong>ONLY</strong> way to access your account if you lose your phone.
                                     </p>
                                     <p>
-                                        <strong>Lost Device:</strong> If you lose your device, use a backup code to login immediately and disable 2FA, then re-enable it on a new device.
+                                        <strong>Best Practice:</strong> Store them in a secure password manager or print them out and keep them in a safe place.
                                     </p>
                                     <p>
-                                        <strong>Don't Share:</strong> Never share your verification codes with anyone, even support agents.
+                                        <strong>Warning:</strong> If you lose your device and these codes, you may lose access to your account permanently.
                                     </p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 my-6">
                                     {backupCodes.map((c, i) => (
-                                        <div key={i} className="bg-white border border-amber-200 rounded p-2 text-center font-mono text-sm text-gray-700 tracking-wider font-bold">
+                                        <div key={i} className="bg-white border border-amber-200 rounded p-2 text-center font-mono text-sm text-gray-700 tracking-wider font-bold select-all">
                                             {c}
                                         </div>
                                     ))}
@@ -419,12 +414,12 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
 
                                 <Button
                                     variant="outline"
-                                    className="w-full bg-white border-amber-300 text-amber-900 hover:bg-amber-100 mb-2"
+                                    className="w-full bg-white border-amber-300 text-amber-900 hover:bg-amber-100 mb-2 font-medium"
                                     onClick={() => {
                                         navigator.clipboard.writeText(backupCodes.join("\n"));
-                                        toast({ title: "Copied", description: "Backup codes copied to clipboard" });
+                                        toast({ title: "Copied!", description: "Backup codes copied to clipboard." });
                                     }}>
-                                    <Copy className="w-4 h-4 mr-2" /> Copy to Clipboard
+                                    <Copy className="w-4 h-4 mr-2" /> Copy All Codes
                                 </Button>
                             </div>
 

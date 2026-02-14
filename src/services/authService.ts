@@ -239,12 +239,27 @@ class AuthService {
   /**
    * Disable 2FA
    */
-  async disable2FA(password: string, token: string): Promise<{ success: boolean; message: string }> {
+  async disable2FA(password?: string, token?: string): Promise<{ success: boolean; message: string }> {
     try {
       const response = await apiClient.post("/api/auth/2fa/disable", { password, token });
       return response;
     } catch (error: any) {
       return { success: false, message: error.message || "Failed to disable 2FA" };
+    }
+  }
+
+  /**
+   * Verify password (Sudo Mode)
+   */
+  async signInWithStartPassword(email: string, password: string): Promise<{ user?: any; error?: any }> {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      return { user: data.user, error };
+    } catch (err) {
+      return { error: err };
     }
   }
 
