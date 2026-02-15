@@ -75,7 +75,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
     };
 
     const handleDisable = async () => {
-        if (!disableCode || disableCode.length !== 6) return;
+        if (!disableCode || disableCode.length < 6) return;
 
         setLoading(true);
         try {
@@ -97,7 +97,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
         }
     };
 
-    if (isEnabled) {
+    if (isEnabled && step !== 'backup') {
         return (
             <Card className="border-green-100 bg-green-50/10 transition-all hover:shadow-md">
                 <CardHeader>
@@ -127,17 +127,17 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
                             <DialogHeader>
                                 <DialogTitle className="text-xl font-semibold text-gray-900">Disable 2FA</DialogTitle>
                                 <DialogDescription className="text-gray-500">
-                                    Enter the code from your authenticator app to confirm.
+                                    Enter the code from your authenticator app or a backup code to confirm.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-6 py-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Authentication Code</label>
+                                    <label className="text-sm font-medium text-gray-700">Authentication Code or Backup Code</label>
                                     <Input
                                         value={disableCode}
-                                        onChange={e => setDisableCode(e.target.value.replace(/[^0-9]/g, ''))}
-                                        maxLength={6}
-                                        placeholder="000 000"
+                                        onChange={e => setDisableCode(e.target.value.trim())}
+                                        maxLength={10}
+                                        placeholder="000 000 or backup code"
                                         className="bg-white text-gray-900 border-gray-200 focus-visible:ring-blue-600 tracking-wider placeholder:tracking-normal text-center font-mono text-lg"
                                     />
                                 </div>
@@ -153,7 +153,7 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({ isEnabled, onSta
                                 <Button
                                     variant="destructive"
                                     onClick={handleDisable}
-                                    disabled={loading || disableCode.length !== 6}
+                                    disabled={loading || disableCode.length < 6}
                                     className="bg-red-600 hover:bg-red-700 text-white border-none"
                                 >
                                     {loading ? <Loader2 className="animate-spin w-4 h-4" /> : "Disable 2FA"}

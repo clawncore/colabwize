@@ -53,67 +53,76 @@ const CallbackPage: React.FC = () => {
               const { syncUser } = await import("../../services/hybridAuth");
               const syncResult = await syncUser();
 
-              if (syncResult.success && syncResult.user) {
-                console.log("User verified/synced in backend");
+              if (syncResult.success) {
+                // Check for 2FA requirement FIRST (Backend might return requires_2fa: true without a full user object)
+                if (syncResult.requires_2fa && (syncResult.userId || syncResult.user?.id)) {
+                  const uid = syncResult.userId || syncResult.user?.id;
+                  navigate(`/login?requires_2fa=true&userId=${uid}&provider=google`, { replace: true });
+                  return;
+                }
 
-                // Refresh client-side user state
-                await refreshUser();
+                if (syncResult.user) {
+                  console.log("User verified/synced in backend");
 
-                // Only redirect to survey if explicitly required and user is NEW
-                // We default to dashboard for existing users to prevent loops
-                const isNewUser = syncResult.user.created_at && (new Date().getTime() - new Date(syncResult.user.created_at).getTime() < 60000); // Created in last minute
+                  // Refresh client-side user state
+                  await refreshUser();
 
-                if (isNewUser && !syncResult.user.survey_completed) {
-                  console.log("New user needs to complete survey, redirecting to signup/onboarding");
+                  // Only redirect to survey if explicitly required and user is NEW
+                  // We default to dashboard for existing users to prevent loops
+                  const isNewUser = syncResult.user.created_at && (new Date().getTime() - new Date(syncResult.user.created_at).getTime() < 60000); // Created in last minute
 
-                  // Store OAuth user data for the signup flow
-                  const oauthUserData = {
-                    id: user.id,
-                    email: user.email,
-                    fullName:
-                      user.user_metadata?.full_name ||
-                      user.user_metadata?.name ||
-                      user.email?.split("@")[0],
-                    provider: user.app_metadata?.provider || "oauth",
-                  };
+                  if (isNewUser && !syncResult.user.survey_completed) {
+                    console.log("New user needs to complete survey, redirecting to signup/onboarding");
 
-                  sessionStorage.setItem(
-                    "oauthUserData",
-                    JSON.stringify(oauthUserData)
-                  );
+                    // Store OAuth user data for the signup flow
+                    const oauthUserData = {
+                      id: user.id,
+                      email: user.email,
+                      fullName:
+                        user.user_metadata?.full_name ||
+                        user.user_metadata?.name ||
+                        user.email?.split("@")[0],
+                      provider: user.app_metadata?.provider || "oauth",
+                    };
 
-                  // Redirect to signup page for survey completion
-                  let redirectUrl = "/signup";
-                  const plan = searchParams.get("plan");
-                  const redirect = searchParams.get("redirect");
+                    sessionStorage.setItem(
+                      "oauthUserData",
+                      JSON.stringify(oauthUserData)
+                    );
 
-                  const params = new URLSearchParams();
-                  if (plan) params.set("plan", plan);
-                  if (redirect) params.set("redirect", redirect);
-                  params.set("oauth", "true");
+                    // Redirect to signup page for survey completion
+                    let redirectUrl = "/signup";
+                    const plan = searchParams.get("plan");
+                    const redirect = searchParams.get("redirect");
 
-                  if ([...params.keys()].length > 0) {
-                    redirectUrl += `?${params.toString()}`;
+                    const params = new URLSearchParams();
+                    if (plan) params.set("plan", plan);
+                    if (redirect) params.set("redirect", redirect);
+                    params.set("oauth", "true");
+
+                    if ([...params.keys()].length > 0) {
+                      redirectUrl += `?${params.toString()}`;
+                    }
+
+                    console.log("Redirecting to:", redirectUrl);
+                    navigate(redirectUrl, { replace: true });
+                    return;
                   }
 
-                  console.log("Redirecting to:", redirectUrl);
-                  navigate(redirectUrl, { replace: true });
+                  // Check for 2FA requirement
+                  if (syncResult.requires_2fa && syncResult.userId) {
+                    console.log("2FA required for Google user, redirecting to verification");
+                    // We need to pass the userId and indicate it's a google login needing 2FA
+                    navigate(`/login?requires_2fa=true&userId=${syncResult.userId}&provider=google`, { replace: true });
+                    return;
+                  }
+
+                  // Default: Go to Dashboard
+                  console.log("User authenticated, redirecting to dashboard");
+                  await new Promise((r) => setTimeout(r, 100)); // Small delay for state propagation
+                  navigate("/dashboard", { replace: true });
                   return;
                 }
-
-                // Check for 2FA requirement
-                if (syncResult.requires_2fa && syncResult.userId) {
-                  console.log("2FA required for Google user, redirecting to verification");
-                  // We need to pass the userId and indicate it's a google login needing 2FA
-                  navigate(`/login?requires_2fa=true&userId=${syncResult.userId}&provider=google`, { replace: true });
-                  return;
-                }
-
-                // Default: Go to Dashboard
-                console.log("User authenticated, redirecting to dashboard");
-                await new Promise((r) => setTimeout(r, 100)); // Small delay for state propagation
-                navigate("/dashboard", { replace: true });
-                return;
               }
             } catch (err) {
               console.warn("Sync failed, but session exists. Proceeding to dashboard optimistically:", err);

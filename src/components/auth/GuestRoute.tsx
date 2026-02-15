@@ -19,11 +19,14 @@ const GuestRoute: React.FC<GuestRouteProps> = ({ children }) => {
 
     // If we've finished loading and auth is initialized, check auth status
     if (!loading && isInitialized) {
-      if (user) {
+      // Check if 2FA is required (via URL query param)
+      const searchParams = new URLSearchParams(location.search);
+      const is2FARequired = searchParams.get("requires_2fa") === "true";
+
+      if (user && !is2FARequired) {
         console.log("GuestRoute: User found, redirecting to dashboard");
 
         // Check if there's a redirect parameter in the URL
-        const searchParams = new URLSearchParams(location.search);
         const redirectPath = searchParams.get("redirect");
 
         // Add a small delay to prevent race conditions
@@ -51,13 +54,16 @@ const GuestRoute: React.FC<GuestRouteProps> = ({ children }) => {
   }
 
   // If we've checked auth status and user is authenticated, redirect to dashboard (useEffect will handle this)
-  // If not authenticated, render children
-  if (checked && !user) {
+  // If not authenticated OR 2FA is required, render children
+  const searchParams = new URLSearchParams(location.search);
+  const is2FARequired = searchParams.get("requires_2fa") === "true";
+
+  if (checked && (!user || is2FARequired)) {
     return <>{children}</>;
   }
 
-  // If we've checked and there is a user, don't render anything while redirecting
-  if (checked && user) {
+  // If we've checked and there is a user (and no 2FA required), don't render anything while redirecting
+  if (checked && user && !is2FARequired) {
     return null;
   }
 

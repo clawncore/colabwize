@@ -91,6 +91,8 @@ const LoginPage: React.FC = () => {
   const [redirectPath, setRedirectPath] = React.useState<string | null>(null);
   const [is2FARequired, setIs2FARequired] = React.useState(false);
   const [userIdFor2FA, setUserIdFor2FA] = React.useState<string | null>(null);
+  const [failedAttempts, setFailedAttempts] = React.useState(0);
+  const [isRecoveryMode, setIsRecoveryMode] = React.useState(false);
 
   // Prevent duplicate submissions using ref
   const isSubmittingRef = React.useRef(false);
@@ -314,9 +316,11 @@ const LoginPage: React.FC = () => {
       if (result.success) {
         await handleLoginSuccess(redirectPath, selectedPlan);
       } else {
+        setFailedAttempts((prev) => prev + 1);
         setError(result.message || "Invalid authentication code");
       }
     } catch (err: any) {
+      setFailedAttempts((prev) => prev + 1);
       setError(err.message || "Verification failed");
     } finally {
       setIsLoading(false);
@@ -363,7 +367,9 @@ const LoginPage: React.FC = () => {
             </motion.div>
           </div>
           <p className="text-sm text-gray-500 text-center max-w-xs">
-            Your account is protected with 2FA. Please enter the verification code from your authenticator app.
+            {isRecoveryMode
+              ? "Please enter one of your 8-character recovery codes."
+              : "Your account is protected with 2FA. Please enter the verification code from your authenticator app."}
           </p>
         </div>
 
@@ -378,45 +384,90 @@ const LoginPage: React.FC = () => {
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 block text-center">Authentication Code</label>
+            <label className="text-sm font-medium text-gray-700 block text-center">
+              {isRecoveryMode ? "Recovery Code" : "Authentication Code"}
+            </label>
             <div className="relative">
               <input
                 type="text"
-                maxLength={6}
-                placeholder="000000"
+                maxLength={isRecoveryMode ? 10 : 6}
+                placeholder={isRecoveryMode ? "xxxxxxxx" : "000000"}
                 autoFocus
-                className="w-full h-14 text-center text-3xl tracking-[0.5em] font-bold text-gray-800 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-gray-200"
+                className={`w-full h-14 text-center ${isRecoveryMode ? "text-xl tracking-widest" : "text-3xl tracking-[0.5em]"} font-bold text-gray-800 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-gray-200`}
                 onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  const val = e.target.value.replace(
+                    isRecoveryMode ? /[^a-zA-Z0-9]/g : /[^0-9]/g,
+                    ""
+                  );
                   e.target.value = val;
-                  if (val.length === 6) handle2FASubmit(val);
+                  if (
+                    (!isRecoveryMode && val.length === 6) ||
+                    (isRecoveryMode && val.length === 8)
+                  ) {
+                    handle2FASubmit(val);
+                  }
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     const val = (e.currentTarget as HTMLInputElement).value;
-                    if (val.length === 6) handle2FASubmit(val);
+                    if (val.length >= 6) handle2FASubmit(val);
                   }
                 }}
               />
             </div>
+            {!isRecoveryMode && failedAttempts >= 3 && (
+              <div className="text-center mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRecoveryMode(true);
+                    setError(null);
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                >
+                  Use a recovery code
+                </button>
+              </div>
+            )}
+            {isRecoveryMode && (
+              <div className="text-center mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsRecoveryMode(false);
+                    setError(null);
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                >
+                  Use authenticator app
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-2">
             <Button
               onClick={() => setIs2FARequired(false)} // Cancel/Back
-              className="w-full h-11 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium shadow-sm transition-colors">
+              className="w-full h-11 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium shadow-sm transition-colors"
+            >
               Cancel
             </Button>
             <Button
               disabled={isLoading}
               onClick={() => {
-                const input = document.querySelector('input[type="text"]') as HTMLInputElement;
-                if (input && input.value.length === 6) handle2FASubmit(input.value);
+                const input = document.querySelector(
+                  'input[type="text"]'
+                ) as HTMLInputElement;
+                if (input && input.value.length >= 6)
+                  handle2FASubmit(input.value);
               }}
-              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium">
+              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+            >
               {isLoading ? (
                 <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : "Verify"}
+              ) : (
+                "Verify"
+              )}
             </Button>
           </div>
         </div>

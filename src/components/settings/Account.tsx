@@ -724,12 +724,11 @@ const AccountSettingsPage: React.FC = () => {
           <TwoFactorSetup
             isEnabled={user?.two_factor_enabled || false}
             onStatusChange={() => {
-              // Refresh user data
-              setLoading(true);
+              // Refresh user data silently to prevent unmounting TwoFactorSetup
+              // and losing the backup codes display state
               AccountService.getUserAccount()
                 .then(u => setUser(u))
-                .catch(console.error)
-                .finally(() => setLoading(false));
+                .catch(console.error);
             }}
           />
         </div>
