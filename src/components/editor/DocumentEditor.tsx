@@ -536,7 +536,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         // Don't check strictly empty or very short blocks
         if (!textToCheck || textToCheck.length < 5) return;
 
-        console.log("ðŸ“ Background Grammar Check (Block Scoped)...");
+        console.log("ðŸ“  Background Grammar Check (Block Scoped)...");
         const { GrammarCheckService } = await import("../../services/grammarCheckService");
 
         // Silent check
@@ -549,7 +549,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         // If the user typed while we were checking, abort to prevent applying marks to wrong offsets.
         const currentText = editor.state.doc.textBetween(start, end, " ", " ");
         if (currentText !== textToCheck) {
-          console.log("âš ï¸ Text changed during check, aborting grammar highlight.");
+          console.log("âš ï¸  Text changed during check, aborting grammar highlight.");
           return;
         }
 
@@ -593,7 +593,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               }
             });
           } catch (e) {
-            console.warn("âš ï¸ Grammar highlight error:", e);
+            console.warn("âš ï¸  Grammar highlight error:", e);
           }
         });
 
@@ -602,7 +602,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           console.log(`âœ… Applied ${matchCount} grammar highlights to block.`);
         }
       } catch (error) {
-        console.error("âŒ Background grammar check failed:", error);
+        console.error("â Œ Background grammar check failed:", error);
       }
     };
 
@@ -834,7 +834,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     break;
     case "likely_ai":
     color = "yellow";
-    message = `âš ï¸ Possible AI content (${Math.round(sentence.score * 100)}%)`;
+    message = `âš ï¸  Possible AI content (${Math.round(sentence.score * 100)}%)`;
     break;
     default:
     return;
@@ -1287,7 +1287,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 }
               }}
               className="bg-white/90 backdrop-blur border border-indigo-100 shadow-sm px-3 py-1.5 rounded-full text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center gap-1.5">
-              <span>ðŸ›¡ï¸ Reality Check</span>
+              <span>ðŸ›¡ï¸  Reality Check</span>
             </button>
           </div>
         )}
@@ -1335,4 +1335,3 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     </EditorProvider >
   );
 };
-
