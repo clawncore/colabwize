@@ -1,5 +1,5 @@
 import { Node, mergeAttributes } from "@tiptap/core";
-import { CitationRegistryService } from "../services/CitationRegistryService";
+
 
 export interface CitationNodeOptions {
     HTMLAttributes: Record<string, any>;

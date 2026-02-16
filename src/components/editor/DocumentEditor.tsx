@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
-import { TextSelection } from "prosemirror-state";
+
 import { EditorProvider } from "./EditorContext";
 import StarterKit from "@tiptap/starter-kit";
 import { CharacterCount } from "@tiptap/extension-character-count";
@@ -65,7 +65,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import FontFamily from "@tiptap/extension-font-family";
 import { formatContentForTiptap } from "../../utils/editorUtils";
 import { GrammarExtension } from "../../extensions/GrammarExtension";
-import { CitationScannerExtension } from "../../extensions/CitationScannerExtension";
+
 import { GrammarBubbleMenu } from "./GrammarBubbleMenu";
 import { AuditReportModal } from "../audit/AuditReportModal";
 
@@ -80,24 +80,8 @@ import {
   ShieldAlert,
   Bot,
   ShieldCheck,
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  List,
-  ListOrdered,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  Table as TableIcon,
-  Type,
-  ChevronDown,
   Maximize2,
   Minimize2,
-  Check,
-  X,
   Eye,
   PenTool
 } from "lucide-react";
@@ -236,6 +220,19 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       });
     }
   };
+
+  useEffect(() => {
+    // This useEffect is likely intended to check for external project updates
+    // and would require `lastSaved` to be uncommented and managed.
+    // For now, it's added as per instruction, assuming `lastSaved` will be handled elsewhere.
+    // if (project.updated_at && lastSaved && new Date(project.updated_at).getTime() > lastSaved.getTime()) {
+    //   toast({
+    //     title: "Project Updated",
+    //     description: "The project has been updated externally.",
+    //   });
+    //   // onProjectUpdate?.(project); // Infinite loop risk if not careful
+    // }
+  }, [project.updated_at, project, onProjectUpdate, toast]);
 
   const scrollToReferenceByText = (citationText: string) => {
     // Search for reference by the citation text (e.g., "[3]")
@@ -451,6 +448,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
+
+
   useEffect(() => {
     if (editor && !editor.isDestroyed) {
       editor.setEditable(!isPreviewMode);
@@ -484,7 +483,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }, debounceTime);
 
     return () => clearTimeout(timeoutId);
-  }, [editCount, editor, project.citations, project.id]); // Added project.id and potential style dependency if we had it in props
+  }, [editCount, editor, project.citations, project.id, project.citation_style]); // Added project.citation_style to trigger style updates
 
   // --- Background Grammar Check (Debounced) ---
   useEffect(() => {

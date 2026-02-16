@@ -154,7 +154,7 @@ export class CitationOrderManager {
                     }
                     // Fallback to existing text, but strip existing parentheses to prevent recursion (((...)))
                     let text = entry?.raw_reference_text || nodes[0].node.attrs.text || "Citation";
-                    return text.replace(/^[\s\(\[]+|[\s\)\]]+$/g, '');
+                    return text.replace(/^[\s(\[]+|[\s)\]]+$/g, '');
                 });
 
                 // (A, Y; B, Y)

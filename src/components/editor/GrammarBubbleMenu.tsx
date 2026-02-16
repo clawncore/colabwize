@@ -1,6 +1,6 @@
 import { Editor } from "@tiptap/react";
 import { useEffect, useState, useRef } from "react";
-import { Check, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "../ui/button";
 
 interface GrammarBubbleMenuProps {

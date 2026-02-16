@@ -1,5 +1,5 @@
 
-import { Project } from "./documentService";
+
 
 export interface RegistryEntry {
     ref_key: string;
@@ -56,16 +56,13 @@ export class CitationRegistryService {
 
         if (existing) {
             // MERGE METADATA: If new one has DOI/URL and existing doesn't, update existing.
-            let updated = false;
             if (metadata?.doi && !existing.doi) {
                 existing.doi = metadata.doi;
                 if (existing.csl_data) existing.csl_data.DOI = metadata.doi;
-                updated = true;
             }
             if (metadata?.url && !existing.url) {
                 existing.url = metadata.url;
                 if (existing.csl_data) existing.csl_data.URL = metadata.url;
-                updated = true;
             }
             // console.log(`[Registry] Hit: ${projectId} | ${text} -> ${existing.ref_key}`);
             return existing.ref_key;

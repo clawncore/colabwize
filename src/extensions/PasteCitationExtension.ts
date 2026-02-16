@@ -1,6 +1,6 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from 'prosemirror-state';
-import { Slice, Fragment, Schema } from 'prosemirror-model';
+import { Slice, Fragment } from 'prosemirror-model';
 import { CitationRegistryService } from '../services/CitationRegistryService';
 
 // Regex patterns for citation detection (simplified from patterns.ts for immediate use)

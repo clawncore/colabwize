@@ -116,7 +116,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
         } finally {
             setIsAuditing(false);
         }
-    }, [auditResult, editor, project.citations, project.citation_style, currentContent]);
+    }, [auditResult, editor, project.citations, project.citation_style, currentContent, project.id]);
 
     // Trigger audit when entering audit step
     useEffect(() => {
