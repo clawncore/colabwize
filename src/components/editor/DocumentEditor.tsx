@@ -443,7 +443,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         }, 500);
       }
     }
-  }, [project.id, project.content, editor, onEditorReady, project.citations]);
+  }, [project, editor, onEditorReady, onProjectUpdate, toast]);
 
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
