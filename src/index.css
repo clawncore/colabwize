@@ -798,6 +798,40 @@ li.ProseMirror-selectednode:after {
   }
 
   .columns-wrapper[data-columns="2"] .columns-column {
+
+    /* Citation Scanner Styles */
+    .citation-scan-linked {
+      border-bottom: 2px solid green;
+      background-color: rgba(0, 128, 0, 0.1);
+      cursor: help;
+      position: relative;
+    }
+
+    .citation-scan-orphan {
+      border-bottom: 2px dotted red;
+      background-color: rgba(255, 0, 0, 0.1);
+      cursor: help;
+      position: relative;
+    }
+
+    /* Tooltip on hover (simple CSS only) */
+    .citation-scan-linked:hover::after,
+    .citation-scan-orphan:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: black;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 50;
+      pointer-events: none;
+    }
+
     border-radius: 0.25rem;
     background-color: rgba(214, 226, 255, 0.1);
   }
@@ -905,13 +939,11 @@ li.ProseMirror-selectednode:after {
   /* Prevent selection of the suggestion */
 }
 
-/* Grammar Error Styles */
+/* Grammar Checker Styles */
 .grammar-error {
-  position: relative;
-  border-bottom: 2px dotted #e53e3e;
-  /* Red dotted underline by default */
-  background-color: rgba(229, 62, 62, 0.1);
-  /* Light red background */
+  border-bottom: 2px solid red;
+  /* Fallback */
+  cursor: pointer;
 }
 
 .grammar-error-spelling {
@@ -933,49 +965,19 @@ li.ProseMirror-selectednode:after {
 }
 
 .grammar-error-clarity {
-  border-bottom-color: #3182ce;
-  /* Blue for clarity issues */
-  background-color: rgba(49, 130, 206, 0.1);
+  text-decoration-color: #3b82f6;
+  /* Blue */
 }
 
-.grammar-error-tone {
-  border-bottom-color: #805ad5;
-  /* Purple for tone issues */
-  background-color: rgba(128, 90, 213, 0.1);
-}
-
-.grammar-error-low {
-  border-bottom: 1px dotted;
-}
-
-.grammar-error-medium {
-  border-bottom: 2px dotted;
-}
-
-.grammar-error-high {
-  border-bottom: 2px solid;
+.grammar-error-style {
+  text-decoration-color: #eab308;
+  /* Yellow */
 }
 
 /* Tooltip for grammar errors */
 .grammar-error::after {
   content: attr(data-error-message);
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  background-color: #2d3748;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-}
-
-.grammar-error:hover::after {
-  opacity: 1;
+  /* Old grammar error styles removed */
 }
 
 .primary {

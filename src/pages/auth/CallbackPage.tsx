@@ -54,8 +54,15 @@ const CallbackPage: React.FC = () => {
               const syncResult = await syncUser();
 
               if (syncResult.success) {
+                console.log("[CallbackPage] Sync Result:", {
+                  userId: syncResult.userId || syncResult.user?.id,
+                  requires_2fa: syncResult.requires_2fa,
+                  hasUser: !!syncResult.user
+                });
+
                 // Check for 2FA requirement FIRST (Backend might return requires_2fa: true without a full user object)
                 if (syncResult.requires_2fa && (syncResult.userId || syncResult.user?.id)) {
+                  console.log("2FA required for Google user, redirecting to verification");
                   const uid = syncResult.userId || syncResult.user?.id;
                   navigate(`/login?requires_2fa=true&userId=${uid}&provider=google`, { replace: true });
                   return;

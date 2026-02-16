@@ -99,7 +99,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             // SILENT NORMALIZATION (User Request)
             // Ensure editor nodes are converted to Citation Nodes properly before auditing
             if (editor) {
-                await detectAndNormalizeCitations(editor, project.citations || []);
+                await detectAndNormalizeCitations(editor, project.id, project.citations || []);
             }
 
             // Get fresh content if editor is available (since normalization changed it)
@@ -190,53 +190,57 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                 : (project.citations || []);
 
 
-            const userId = localStorage.getItem("user_id") || "";
-            const response = await apiClient.download("/api/files", {
-                fileData: {
-                    id: project.id,
-                    title: project.title,
-                    content: currentContent,
-                    citations: citationsToSend,
-                    includeAuthorshipCertificate,
-                    metadata: {
-                        author,
-                        institution: affiliation,
-                        course,
-                        instructor,
-                        runningHead
+            const { CitationOrchestrator } = await import("../../services/CitationOrchestrator");
+
+            await CitationOrchestrator.runExport(project.id, async () => {
+                const userId = localStorage.getItem("user_id") || "";
+                const response = await apiClient.download("/api/files", {
+                    fileData: {
+                        id: project.id,
+                        title: project.title,
+                        content: currentContent,
+                        citations: citationsToSend,
+                        includeAuthorshipCertificate,
+                        metadata: {
+                            author,
+                            institution: affiliation,
+                            course,
+                            instructor,
+                            runningHead
+                        },
+                        citationPolicy: {
+                            ...citationPolicy,
+                            violations: auditResult?.violations || [] // Pass violations for backend annotation
+                        }
                     },
-                    citationPolicy: {
-                        ...citationPolicy,
-                        violations: auditResult?.violations || [] // Pass violations for backend annotation
-                    }
-                },
-                fileType: `export-${selectedFormat}`,
-                userId: userId,
-                format: selectedFormat,
+                    fileType: `export-${selectedFormat}`,
+                    userId: userId,
+                    format: selectedFormat,
+                });
+
+                const data = await response.json();
+
+                if (!data.success || !data.result?.downloadUrl) {
+                    throw new Error(data.message || "Failed to generate download URL");
+                }
+
+                // Direct download using the signed URL (which now has Content-Disposition set)
+                const a = document.createElement("a");
+                a.href = data.result.downloadUrl;
+                // No need to set download attribute as the URL itself enforces it, 
+                // but setting it doesn't hurt for fallback
+                a.download = `${project.title}.${selectedFormat}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                toast({
+                    title: "Download Started",
+                    description: `Your ${selectedFormat.toUpperCase()} file is ready.`,
+                });
+
+                onClose();
             });
-
-            const data = await response.json();
-
-            if (!data.success || !data.result?.downloadUrl) {
-                throw new Error(data.message || "Failed to generate download URL");
-            }
-
-            // Direct download using the signed URL (which now has Content-Disposition set)
-            const a = document.createElement("a");
-            a.href = data.result.downloadUrl;
-            // No need to set download attribute as the URL itself enforces it, 
-            // but setting it doesn't hurt for fallback
-            a.download = `${project.title}.${selectedFormat}`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            toast({
-                title: "Download Started",
-                description: `Your ${selectedFormat.toUpperCase()} file is ready.`,
-            });
-
-            onClose();
         } catch (error) {
             console.error("Download failed", error);
             toast({

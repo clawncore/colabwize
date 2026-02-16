@@ -7,96 +7,104 @@ import { CitationService } from "../../../services/citationService";
  * Scans the document for plain text citations and replaces them with Citation Nodes.
  * This enables the "Blue & Clickable" UI and allows the audit engine to target them.
  */
-export async function detectAndNormalizeCitations(editor: Editor, availableCitations: any[] = []) {
+/**
+ * Scans the document for plain text citations and replaces them with Citation Nodes.
+ * This enables the "Blue & Clickable" UI and allows the audit engine to target them.
+ */
+export async function detectAndNormalizeCitations(editor: Editor, projectId: string, availableCitations: any[] = []) {
     if (!editor || !editor.isEditable) return;
 
-    // Use a custom command to ensure atomicity.
-    // The command callback receives the *current* state and dispatch function.
-    // This prevents "mismatched transaction" errors caused by state drift between analysis and dispatch.
-    editor.commands.command(({ tr, state, dispatch }) => {
-        const replacements: { from: number; to: number; id: string }[] = [];
+    // Initialize Registry with correct Project ID
+    const { CitationRegistryService } = await import("../../../services/CitationRegistryService");
 
-        // Traverse the document specifically for paragraphs and headings (block containers for text)
+    // Load available citations into registry for this project
+    CitationRegistryService.loadRegistry(projectId, availableCitations);
+
+    let ieeeCount = 0;
+    let apaCount = 0;
+
+    editor.commands.command(({ tr, state, dispatch }) => {
+        const replacements: { from: number; to: number; refKey: string; text: string }[] = [];
+
+        // Traverse the document specifically for paragraphs and headings
+        let stopScanning = false;
+
         state.doc.descendants((node, pos) => {
+            if (stopScanning) return false;
+
+            if (node.type.name === 'heading') {
+                const text = node.textContent.toLowerCase();
+                if (text.includes('reference') || text.includes('refrence') || text.includes('bibliography') || text.includes('works cited')) {
+                    stopScanning = true;
+                    return false;
+                }
+            }
+
             if (!node.isBlock || node.type.name === 'doc') return true;
 
-            // Get full text of the block (joins all text nodes, including formatted ones)
             const blockText = node.textContent;
             if (!blockText) return false;
 
-            // Find all citation patterns in this block's text
             const matches = extractPatterns(blockText, 0, "inline");
 
             matches.forEach(match => {
-                // We need to map the relative offsets (match.start, match.end) 
-                // from the textContent string back to absolute ProseMirror positions.
-                // Note: pos + 1 is the start of the block's content.
+                // Style Detection Logic
+                if (match.text.match(/^\[\d+(?:-\d+)?\]/)) {
+                    ieeeCount++;
+                } else if (match.text.match(/^\(.*\d{4}.*\)/)) {
+                    apaCount++;
+                }
+
                 const absoluteFrom = pos + 1 + match.start;
                 const absoluteTo = pos + 1 + match.end;
 
-                const matchedId = `auto-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-                // Fuzzy resolution logic
-                let resolvedId = matchedId;
-                if (availableCitations.length > 0) {
-                    const found = availableCitations.find(c => {
-                        return match.text.includes(c.author_last_name || "")
-                            || (c.id && match.text.includes(c.id));
-                    });
-                    if (found) resolvedId = found.id;
-                }
+                // Check if this range already overlaps with an existing Citation Node
+                let alreadyCited = false;
+                state.doc.nodesBetween(absoluteFrom, absoluteTo, (n) => {
+                    if (n.type.name === 'citation') alreadyCited = true;
+                });
+
+                if (alreadyCited) return;
+
+                // Register and get Key
+                // We use the matched text as the raw reference for registry
+                const refKey = CitationRegistryService.registerCitation(projectId, match.text);
 
                 replacements.push({
                     from: absoluteFrom,
                     to: absoluteTo,
-                    id: resolvedId
+                    refKey: refKey,
+                    text: match.text
                 });
             });
 
-            return false; // Don't descend into block content children individually for this pass
+            return false;
         });
 
         if (replacements.length === 0) return true;
 
-        // Filter overlaps: prioritizing longest matches
-        replacements.sort((a, b) => (b.to - b.from) - (a.to - a.from));
-
-        const finalReplacements: typeof replacements = [];
-        const claimedRanges: { from: number; to: number }[] = [];
-
-        for (const r of replacements) {
-            const isOverlapping = claimedRanges.some(claimed =>
-                (r.from >= claimed.from && r.from < claimed.to) ||
-                (r.to > claimed.from && r.to <= claimed.to) ||
-                (r.from <= claimed.from && r.to >= claimed.to)
-            );
-
-            if (!isOverlapping) {
-                finalReplacements.push(r);
-                claimedRanges.push({ from: r.from, to: r.to });
-            }
-        }
-
-        // Apply Marks
-        finalReplacements.sort((a, b) => b.from - a.from);
+        replacements.sort((a, b) => b.from - a.from); // Apply from bottom up
 
         let modified = false;
-        finalReplacements.forEach(({ from, to, id }) => {
-            if (to > tr.doc.content.size) return;
-
-            tr.addMark(from, to, state.schema.marks.citation.create({
-                citationId: id
+        replacements.forEach(({ from, to, refKey, text }) => {
+            // Replace text with Citation Node Atom
+            tr.replaceWith(from, to, state.schema.nodes.citation.create({
+                citationId: refKey,
+                text: text
             }));
             modified = true;
         });
 
         if (modified) {
-            console.log(`✅ Normalized ${replacements.length} citations.`);
+            console.log(`✅ Normalized ${replacements.length} citations to Registry Keys.`);
             if (dispatch) dispatch(tr);
             return true;
         }
 
         return false;
     });
+
+    return { stats: { ieee: ieeeCount, apa: apaCount } };
 }
 
 /**
@@ -173,4 +181,61 @@ export async function scanAndIngestReferences(
     });
 
     return newCitations;
+}
+
+/**
+ * Recovers registry entries from existing citation nodes in the document.
+ * This is crucial when reloading a document where the registry might be empty but nodes persist.
+ */
+export async function synchronizeRegistryWithDocument(editor: Editor, projectId: string) {
+    if (!editor || !editor.state) return;
+
+    const { CitationRegistryService } = await import("../../../services/CitationRegistryService");
+    let recoveredCount = 0;
+
+    editor.state.doc.descendants((node) => {
+        if (node.type.name === 'citation' && node.attrs.citationId && node.attrs.text) {
+            const entry = CitationRegistryService.getEntry(projectId, node.attrs.citationId);
+
+            if (!entry) {
+                // RECOVERY: Register the existing node text as the source of truth
+                // We assume the stored text (e.g. "(Smith, 2020)") is the correct raw reference
+                CitationRegistryService.registerCitation(projectId, node.attrs.text, {
+                    // We don't have metadata, but at least we have the text
+                });
+
+                // Force-update the entry to match the specific ID if registerCitation generated a new one?
+                // registerCitation logic: if generic new, it makes new ID.
+                // We want to force the ID to match the node.
+                // We need a way to "force register" with specific ID.
+
+                // Since CitationRegistryService.registerCitation doesn't accept a custom ID (it generates or finds),
+                // we might need to manually inject it or update the service.
+                // Hack: We manually call register, then ensure the map helps us? 
+                // Actually, let's just use the Service's internal array manipulation or add a method.
+                // For now, let's just add a temporary backdoor or assume we can just 'register' and if ID differs, we update the node?
+                // Better: Update Registry Service to allow setEntry or similar.
+                // Or just:
+
+                const entries = CitationRegistryService.getRegistry(projectId) || [];
+                // Check if we really need to force ID. 
+                // If we don't force ID, OrderManager will see mismatch? 
+                // Yes, OrderManager looks up by node.attrs.citationId.
+
+                // Let's manually push to registry cache for this session
+                const newEntry = {
+                    ref_key: node.attrs.citationId,
+                    raw_reference_text: node.attrs.text,
+                    contentHash: "recovered"
+                };
+                entries.push(newEntry);
+                CitationRegistryService.loadRegistry(projectId, entries); // Re-load to set map
+                recoveredCount++;
+            }
+        }
+    });
+
+    if (recoveredCount > 0) {
+        console.log(`[RegistryRecovery] Recovered ${recoveredCount} citations from document nodes.`);
+    }
 }

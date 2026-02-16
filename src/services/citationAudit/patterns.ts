@@ -12,7 +12,8 @@ const PATTERNS: Record<Exclude<PatternType, "NORMALIZED">, RegExp> = {
 
     // (Smith, 2023) or (Smith et al., 2023) or (Agency & Dept, 2023)
     // Anchored by a 4-digit year at the end.
-    "AUTHOR_YEAR": /\((?:[^)]+,?\s+)*(?:19|20)\d{2}[a-z]?\)/g,
+    // MODIFIED: Requires at least one character before the year to avoid matching (2020)
+    "AUTHOR_YEAR": /\((?:[^)]+,?\s+)+(?:19|20)\d{2}[a-z]?\)/g,
 
     // (Smith 24) or (Smith et al. 24) or (Smith, 24)
     "AUTHOR_PAGE": /\((?:[A-Z][a-zA-Z\s.'-']+(?:,\s+)?)\d+(?:-\d+)?\)/g,

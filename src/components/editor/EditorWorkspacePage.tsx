@@ -38,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { EditorHelpDialog } from "./EditorHelpDialog";
+import { UpgradeModal } from "../../components/subscription/UpgradeModal";
 
 // Define panel types
 export type RightPanelType =
@@ -112,10 +113,10 @@ const EditorWorkspacePage: React.FC = () => {
   const [showEditorTour, setShowEditorTour] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
 
-  // Resize state
   const [isResizingLeft, setIsResizingLeft] = useState(false);
   const [isResizingRight, setIsResizingRight] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleProjectSelect = async (project: Project) => {
     // 1. Set loading state to true immediately to clear content
@@ -885,6 +886,7 @@ const EditorWorkspacePage: React.FC = () => {
                     initialResults={leftPanelData}
                     citationStyle={selectedProject?.citation_style}
                     citationLibrary={selectedProject?.citations}
+                    onUpgrade={() => setShowUpgradeModal(true)}
                   />
                 )}
 
@@ -1264,6 +1266,11 @@ const EditorWorkspacePage: React.FC = () => {
         run={showEditorTour}
         onFinish={handleEditorTourComplete}
         onSkip={handleEditorTourSkip}
+      />
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        feature="citations"
       />
     </div>
   );

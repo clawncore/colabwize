@@ -10,7 +10,7 @@ export interface VideoTutorial {
 export const videoTutorials: VideoTutorial[] = [
     {
         id: "1",
-        title: "Introduction to CollaborateWise",
+        title: "Introduction to ColabWize",
         duration: "3:45",
         thumbnail: "🎥",
         videoId: "Zsid3NSL188",

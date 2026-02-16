@@ -9,6 +9,7 @@ interface CitationAuditModalProps {
     onClose: () => void;
     editor: any;
     onAddSource?: (source: any) => Promise<void>;
+    onUpgrade?: () => void;
 }
 
 // UARS: Universal Color & Label Logic
@@ -23,7 +24,7 @@ const getRuleInfo = (ruleId: string) => {
     return { label: "Notice", colorClass: "text-[#6b7280]", bgClass: "bg-slate-50", code: "INFO" };
 };
 
-export const CitationAuditModal: React.FC<CitationAuditModalProps> = ({ isOpen, onClose, editor, onAddSource }) => {
+export const CitationAuditModal: React.FC<CitationAuditModalProps> = ({ isOpen, onClose, editor, onAddSource, onUpgrade }) => {
     const { auditResult } = useCitationAuditStore();
     const [activeTab, setActiveTab] = useState<"ALL" | "VER" | "REF" | "STY">("ALL");
 
@@ -46,7 +47,7 @@ export const CitationAuditModal: React.FC<CitationAuditModalProps> = ({ isOpen, 
                         <div className="space-y-3">
                             {auditResult.state === "FAILED_QUOTA_EXCEEDED" ? (
                                 <button className="w-full py-2.5 bg-[#111827] text-white rounded-xl font-bold text-sm hover:bg-[#1f2937] transition-colors"
-                                    onClick={() => window.location.href = "/pricing"}>
+                                    onClick={() => onUpgrade?.()}>
                                     Upgrade Plan
                                 </button>
                             ) : (

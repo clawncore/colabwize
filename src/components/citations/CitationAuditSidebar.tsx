@@ -18,6 +18,7 @@ interface CitationAuditSidebarProps {
     initialResults?: any;
     citationStyle?: string | null;
     citationLibrary?: any[];
+    onUpgrade?: () => void;
 }
 
 export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
@@ -26,7 +27,8 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     onClose,
     initialResults,
     citationStyle,
-    citationLibrary
+    citationLibrary,
+    onUpgrade
 }) => {
 
     const [localLoading, setLocalLoading] = useState(false);
@@ -291,24 +293,6 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                     </div>
                 ) : auditResult ? (
                     <>
-                        {/* ERROR STATE: Quota Exceeded */}
-                        {auditResult.state === "FAILED_QUOTA_EXCEEDED" && (
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                                <h3 className="text-red-800 font-semibold mb-2 flex items-center gap-2">
-                                    <span>🚫</span> Limit Reached
-                                </h3>
-                                <p className="text-sm text-red-600 mb-3">
-                                    {auditResult.errorMessage || "You have reached your citation audit limit for this plan."}
-                                </p>
-                                <button
-                                    onClick={() => window.location.href = "/settings/billing"}
-                                    className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium transition-colors"
-                                >
-                                    Upgrade Plan
-                                </button>
-                            </div>
-                        )}
-
                         {/* ERROR STATE: Subscription Error */}
                         {auditResult.state === "FAILED_SUBSCRIPTION_ERROR" && (
                             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
@@ -319,7 +303,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                                     {auditResult.errorMessage || "This feature is not available on your current plan."}
                                 </p>
                                 <button
-                                    onClick={() => window.location.href = "/settings/billing"}
+                                    onClick={() => onUpgrade?.()}
                                     className="w-full py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-medium transition-colors"
                                 >
                                     View Upgrade Options
@@ -328,7 +312,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                         )}
 
                         {/* NORMAL RESULTS (Only show if NOT in critical error state) */}
-                        {!["FAILED_QUOTA_EXCEEDED", "FAILED_SUBSCRIPTION_ERROR"].includes(auditResult.state) && (
+                        {!["FAILED_SUBSCRIPTION_ERROR"].includes(auditResult.state) && (
                             <>
                                 {/* Sidebar = Counts Only (No Graphs, No Explanations) */}
                                 {/* Improved Tier-Aware Findings Overview */}
@@ -485,6 +469,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                     onClose={() => setShowModal(false)}
                     editor={editor}
                     onAddSource={handleAddSource}
+                    onUpgrade={onUpgrade}
                 />
             </div>
         </div>

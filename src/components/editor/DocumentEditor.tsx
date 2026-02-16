@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
+import { TextSelection } from "prosemirror-state";
 import { EditorProvider } from "./EditorContext";
 import StarterKit from "@tiptap/starter-kit";
 import { CharacterCount } from "@tiptap/extension-character-count";
@@ -43,6 +44,7 @@ import {
 
 } from "./adapters";
 import { CitationNode } from "../../extensions/CitationNode";
+import { PasteCitationExtension } from "../../extensions/PasteCitationExtension";
 import { CitationAuditAdapter } from "./adapters/CitationAuditAdapter";
 import { UpgradeModal } from "../subscription/UpgradeModal";
 import { CitationStyleDialog } from "../citations/CitationStyleDialog";
@@ -62,10 +64,14 @@ import TaskItem from "@tiptap/extension-task-item";
 import { TextStyle } from "@tiptap/extension-text-style";
 import FontFamily from "@tiptap/extension-font-family";
 import { formatContentForTiptap } from "../../utils/editorUtils";
+import { GrammarExtension } from "../../extensions/GrammarExtension";
+import { CitationScannerExtension } from "../../extensions/CitationScannerExtension";
+import { GrammarBubbleMenu } from "./GrammarBubbleMenu";
+import { AuditReportModal } from "../audit/AuditReportModal";
 
 import { EditorToolbar } from "./editor-toolbar";
 import { ExportWorkflowModal } from "../export/ExportWorkflowModal";
-import { detectAndNormalizeCitations } from "./utils/normalization";
+import { detectAndNormalizeCitations, synchronizeRegistryWithDocument } from "./utils/normalization";
 import {
   Download,
   GitCompare,
@@ -74,8 +80,26 @@ import {
   ShieldAlert,
   Bot,
   ShieldCheck,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  List,
+  ListOrdered,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Table as TableIcon,
+  Type,
+  ChevronDown,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Check,
+  X,
+  Eye,
+  PenTool
 } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -136,6 +160,136 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     setDescription(project.description || "");
   }, [project.id, project.title, project.description]);
 
+  // Handle Citation Clicks (Scroll to Reference)
+  const scrollToReference = (citationId: string) => {
+    // 1. Get Citation Data from Registry
+    // We need to look up the citation text/metadata to find it in the bibliography
+    // accessing the registry directly or via project citations
+    const citation = project.citations?.find(c => c.id === citationId);
+    if (!citation) return;
+
+    // Construct search strings (Author Last Name or Title or Number)
+    // Heuristic: "Smith" or "The Art of Testing"
+    const authorLast = citation.authors?.[0]?.lastName || (typeof citation.authors?.[0] === 'string' ? citation.authors[0] : "");
+    const searchTerms = [
+      citation.id, // If we have IDs in bibliography
+      authorLast,
+      citation.title
+    ].filter(Boolean) as string[];
+
+    if (searchTerms.length === 0) return;
+
+    // 2. Find "References" or "Bibliography" Heading
+    // We scan paragraphs in the editor DOM to find the section
+    const editorDom = document.querySelector('.ProseMirror');
+    if (!editorDom) return;
+
+    const children = Array.from(editorDom.children) as HTMLElement[];
+    let refSectionFound = false;
+    let targetElement: HTMLElement | null = null;
+
+    for (const child of children) {
+      const text = child.innerText?.toLowerCase() || "";
+
+      // Detect Section Header
+      if (['h1', 'h2', 'h3'].includes(child.tagName.toLowerCase())) {
+        if (text.includes('references') || text.includes('bibliography')) {
+          refSectionFound = true;
+          continue;
+        }
+      }
+
+      // If we are in references section, search for the citation
+      if (refSectionFound) {
+        // Check if paragraph contains author AND year? Or just author?
+        // Using simple includes for now.
+        const matches = searchTerms.some(term =>
+          child.innerText?.includes(term)
+        );
+
+        if (matches) {
+          targetElement = child;
+          break;
+        }
+      }
+    }
+
+    // 3. Scroll and Highlight
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Add highlight class
+      targetElement.classList.add('highlight-reference-flash');
+      setTimeout(() => {
+        targetElement?.classList.remove('highlight-reference-flash');
+      }, 2000);
+
+      toast({
+        title: "Reference Found",
+        description: `Jumped to citation by ${authorLast || "Unknown"}.`,
+      });
+    } else {
+      toast({
+        title: "Reference Not Found",
+        description: "Could not locate the bibliography entry.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const scrollToReferenceByText = (citationText: string) => {
+    // Search for reference by the citation text (e.g., "[3]")
+    const editorDom = document.querySelector('.ProseMirror');
+    if (!editorDom) return;
+
+    const children = Array.from(editorDom.children) as HTMLElement[];
+    let refSectionFound = false;
+    let targetElement: HTMLElement | null = null;
+
+    for (const child of children) {
+      const text = child.innerText?.toLowerCase() || "";
+
+      // Detect Section Header
+      if (['h1', 'h2', 'h3'].includes(child.tagName.toLowerCase())) {
+        if (text.includes('references') || text.includes('bibliography')) {
+          refSectionFound = true;
+          continue;
+        }
+      }
+
+      // If we are in references section, search for the citation text
+      if (refSectionFound) {
+        // For IEEE style like "[3]", look for entries starting with that
+        if (child.innerText?.trim().startsWith(citationText)) {
+          targetElement = child;
+          break;
+        }
+      }
+    }
+
+    // Scroll and Highlight
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetElement.classList.add('highlight-reference-flash');
+      setTimeout(() => {
+        targetElement?.classList.remove('highlight-reference-flash');
+      }, 2000);
+
+      toast({
+        title: "Reference Found",
+        description: `Jumped to citation ${citationText}.`,
+      });
+    } else {
+      console.warn('[ScrollToRef] Reference not found for:', citationText);
+      console.warn('[ScrollToRef] refSectionFound:', refSectionFound);
+      toast({
+        title: "Reference Not Found",
+        description: `Could not locate bibliography entry for ${citationText}.`,
+        variant: "destructive"
+      });
+    }
+  };
+
   // Initialize editor with project content or create empty content
   const editor = useEditor({
     extensions: [
@@ -178,7 +332,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       Superscript,
       Subscript,
       CitationNode,
+      PasteCitationExtension.configure({
+        projectId: project.id
+      }),
       AutoNumbering, // Enable automatic figure and table numbering
+      GrammarExtension, // AI Grammar Checker
     ],
     content: formatContentForTiptap(project.content),
     onUpdate: () => {
@@ -190,8 +348,36 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         class: `focus:outline-none min-h-full prose-table:w-full prose-img:rounded-md prose-img:shadow-md`,
         spellcheck: "false",
       },
+      handleClick: (view, pos, event) => {
+        const target = event.target as HTMLElement;
+        console.log('[CitationClick] Click detected, target:', target);
+
+        // Find citation element by class since citationId might be null
+        const citationElement = target.closest('.citation-pill');
+        console.log('[CitationClick] Citation element:', citationElement);
+
+        if (citationElement) {
+          // Try to get citation ID, fall back to text
+          const citationId = citationElement.getAttribute('data-cite');
+          const citationText = citationElement.getAttribute('data-text') || citationElement.textContent;
+
+          console.log('[CitationClick] Citation ID:', citationId);
+          console.log('[CitationClick] Citation text:', citationText);
+
+          if (citationId) {
+            scrollToReference(citationId);
+          } else if (citationText) {
+            // Use text to find reference (e.g., "[3]" → search for entry starting with "[3]")
+            scrollToReferenceByText(citationText.trim());
+          }
+          return true; // Stop propagation
+        }
+        return false;
+      }
     },
   });
+
+
 
   // Load project content only once per document
   useEffect(() => {
@@ -221,31 +407,209 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         // --- Silent Normalization on Load ---
         // Convert plain text citations to blue interactive nodes
         // Use timeout to ensure editor is stable and we don't conflict with initial render transactions
-        setTimeout(() => {
+        setTimeout(async () => {
           if (editor && !editor.isDestroyed) {
-            detectAndNormalizeCitations(editor, project.citations || []);
+            const result = await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+
+            // Recover any existing nodes that were lost from registry
+            await synchronizeRegistryWithDocument(editor, project.id);
+
+            // AUTO-DETECT STYLE Logic (70% Threshold)
+            if (result && result.stats) {
+              const { ieee, apa } = result.stats;
+              const total = ieee + apa;
+
+              if (total > 0) {
+                const currentStyle = project.citation_style || 'apa';
+                let detectedStyle = null;
+
+                if (ieee / total >= 0.7) detectedStyle = 'ieee';
+                else if (apa / total >= 0.7) detectedStyle = 'apa'; // or 'mla' depending on default
+
+                if (detectedStyle && detectedStyle !== currentStyle) {
+                  console.log(`[AutoStyle] Switching from ${currentStyle} to ${detectedStyle} (Confidence: ${Math.round((detectedStyle === 'ieee' ? ieee : apa) / total * 100)}%)`);
+
+                  // Update Project
+                  const updatedProject = { ...project, citation_style: detectedStyle };
+                  if (onProjectUpdate) onProjectUpdate(updatedProject);
+
+                  // Notify User
+                  toast({
+                    title: "Citation Style Optimized",
+                    description: `Switched to ${detectedStyle.toUpperCase()} based on your content.`,
+                    duration: 3000
+                  });
+                }
+              }
+            }
           }
         }, 500);
       }
     }
   }, [project.id, project.content, editor, onEditorReady, project.citations]);
 
-  // --- Periodic Normalization (Debounced) ---
+  // --- Preview Mode (Read-Only) ---
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  useEffect(() => {
+    if (editor && !editor.isDestroyed) {
+      editor.setEditable(!isPreviewMode);
+    }
+  }, [editor, isPreviewMode]);
+
+  // --- Periodic Normalization & Ordering (Debounced) ---
   useEffect(() => {
     if (!editor || !project.citations) return;
 
-    const timeoutId = setTimeout(() => {
-      // Run normalization 2 seconds after last edit
-      // This ensures new citations turn blue without reload
-      detectAndNormalizeCitations(editor, project.citations || []);
+    // Stress Guard: Increase debounce for large documents
+    const citationCount = project.citations.length;
+    const debounceTime = citationCount > 80 ? 5000 : 2000;
 
-      // Auto-Ingest: Scan References section and add to library
-      // User requested removal of this feature (Step 675)
-      // void scanAndIngestReferences(editor, project.id, project.citations || []);
-    }, 2000);
+    if (citationCount > 80 && editCount % 5 === 0) {
+      console.warn(`[StressGuard] Large document detected (${citationCount} refs). Debounce set to ${debounceTime}ms.`);
+    }
+
+    const timeoutId = setTimeout(() => {
+      // 1. Run normalization (text -> blue pills)
+      detectAndNormalizeCitations(editor, project.id, project.citations || []);
+
+      // 2. Orchestrated Update (Ordering + Integrity)
+      // This manages locks to prevent race conditions with Exports
+      import("../../services/CitationOrchestrator").then(({ CitationOrchestrator }) => {
+        // @ts-ignore - Project interface might be strict
+        const style = project.citation_style || "apa";
+        CitationOrchestrator.scheduleUpdate(editor, project.id, style);
+      });
+
+    }, debounceTime);
 
     return () => clearTimeout(timeoutId);
-  }, [editCount, editor, project.citations]);
+  }, [editCount, editor, project.citations, project.id]); // Added project.id and potential style dependency if we had it in props
+
+  // --- Background Grammar Check (Debounced) ---
+  useEffect(() => {
+    if (!editor) return;
+
+    // Don't check strictly empty or very short docs
+    const text = editor.getText();
+    if (text.length < 10) return;
+
+    const checkGrammar = async () => {
+      try {
+        if (!editor || editor.isDestroyed) return;
+
+        // --- Feature Gate: Check if user has access (Paid Feature) ---
+        const hasAccess = await SubscriptionService.hasFeatureAccess("grammar_check");
+        if (!hasAccess) {
+          // Optional: console.log("Grammar check skipped (Free plan)");
+          return;
+        }
+
+        // --- Optimization: Check only current paragraph ---
+        const { state } = editor;
+        const { selection } = state;
+        const { $from } = selection;
+
+        // CRITICAL FIX: Only run grammar check on text blocks (headings, paragraphs)
+        // This prevents crash when selection is inside a table structure or other non-text node
+        if (!$from.parent.isTextblock) return;
+
+        // Ancestor Check: Verify we are not inside a table or figure caption
+        // The user explicitly requested to disable checks in tables/pictures to prevent crashes
+        let invalidContext = false;
+        for (let d = $from.depth; d > 0; d--) {
+          const node = $from.node(d);
+          if (['table', 'table_row', 'table_cell', 'image', 'figure', 'figcaption'].includes(node.type.name)) {
+            invalidContext = true;
+            break;
+          }
+        }
+        if (invalidContext) return;
+
+        // Get the current block (paragraph) range
+        const start = $from.start();
+        const end = $from.end();
+
+        // Get text of the current block
+        // We use textBetween to ensure we get clean text for the node
+        const textToCheck = state.doc.textBetween(start, end, " ", " ");
+
+        // Don't check strictly empty or very short blocks
+        if (!textToCheck || textToCheck.length < 5) return;
+
+        console.log("ðŸ“ Background Grammar Check (Block Scoped)...");
+        const { GrammarCheckService } = await import("../../services/grammarCheckService");
+
+        // Silent check
+        const errors = await GrammarCheckService.checkText(textToCheck);
+
+        if (!editor || editor.isDestroyed) return;
+
+        // --- STALENESS CHECK ---
+        // Verify if the text at this range is still the same.
+        // If the user typed while we were checking, abort to prevent applying marks to wrong offsets.
+        const currentText = editor.state.doc.textBetween(start, end, " ", " ");
+        if (currentText !== textToCheck) {
+          console.log("âš ï¸ Text changed during check, aborting grammar highlight.");
+          return;
+        }
+
+        if (!editor || editor.isDestroyed) return;
+
+        // Transaction to update marks
+        const tr = editor.state.tr;
+        const schema = editor.state.schema;
+        const markType = schema.marks['grammar-error'];
+
+        if (!markType) return;
+
+        // 1. Clear existing grammar errors ONLY in this block
+        tr.removeMark(start, end, markType);
+
+        if (errors.length === 0) {
+          editor.view.dispatch(tr); // Dispatch clear
+          console.log("âœ… No grammar issues in block.");
+          return;
+        }
+
+        // 2. Apply new errors mapped to this block's offset
+        let matchCount = 0;
+        errors.forEach(err => {
+          try {
+            const escaped = err.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(escaped, 'g');
+            const matches = Array.from(textToCheck.matchAll(regex));
+
+            matches.forEach(match => {
+              if (match.index !== undefined) {
+                // Calculate absolute position in doc
+                const matchStart = start + match.index;
+                const matchEnd = matchStart + match[0].length;
+
+                tr.addMark(matchStart, matchEnd, markType.create({
+                  ...err,
+                  original: err.original
+                }));
+                matchCount++;
+              }
+            });
+          } catch (e) {
+            console.warn("âš ï¸ Grammar highlight error:", e);
+          }
+        });
+
+        if (matchCount > 0 || errors.length === 0) {
+          editor.view.dispatch(tr);
+          console.log(`âœ… Applied ${matchCount} grammar highlights to block.`);
+        }
+      } catch (error) {
+        console.error("âŒ Background grammar check failed:", error);
+      }
+    };
+
+    const timeoutId = setTimeout(checkGrammar, 2000); // 2s debounce
+    return () => clearTimeout(timeoutId);
+  }, [editCount, editor]); // Re-run on editCount change
 
   // --- Citation Click Navigation ---
   // Global click listener to handle clicks on citation pills
@@ -418,10 +782,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   }, [project.id]); // Only re-run if project ID changes
 
   // Function to clear all highlights
+  // Function to clear all highlights
   const clearHighlights = () => {
     if (editor) {
-      // Remove all highlight marks from the entire document using custom command
-      editor.commands.clearAllHighlights();
+      // Remove all highlight marks (Citation/Originality) AND Grammar errors
+      editor.chain()
+        .focus()
+        .clearAllHighlights()
+        .clearAllGrammarErrors()
+        .run();
     }
   };
 
@@ -429,49 +798,49 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   /*
   const highlightAIResults = (results: AIScanResult) => {
     if (!editor || !results || !results.sentences) return;
-
+  
     // Clear existing highlights
     clearHighlights();
-
+  
     const doc = editor.state.doc;
     let searchPos = 0;
-
+  
     // Sort sentences by position
     const sortedSentences = [...results.sentences].sort(
       (a, b) => a.positionStart - b.positionStart
     );
-
+  
     sortedSentences.forEach((sentence: AISentenceResult) => {
       // Only highlight if AI or Likely AI
       if (sentence.classification === "human" || sentence.classification === "likely_human") return;
-
+  
     if (!sentence.text) return;
-
+  
     const range = findTextRange(doc, sentence.text, searchPos);
-
+  
     if (!range) {
       console.warn("Could not find sentence text in document", sentence.text);
     return;
       }
-
+  
     searchPos = range.to;
-
+  
     let color = "purple"; // Default for AI
     let message = "";
-
+  
     switch (sentence.classification) {
         case "ai":
     color = "purple";
-    message = `🤖 High AI probability detected (${Math.round(sentence.score * 100)}%)`;
+    message = `ðŸ¤– High AI probability detected (${Math.round(sentence.score * 100)}%)`;
     break;
     case "likely_ai":
     color = "yellow";
-    message = `⚠️ Possible AI content (${Math.round(sentence.score * 100)}%)`;
+    message = `âš ï¸ Possible AI content (${Math.round(sentence.score * 100)}%)`;
     break;
     default:
     return;
       }
-
+  
     try {
       editor.chain().highlightRange(range.from, range.to, {
         color,
@@ -534,7 +903,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           // Use semantic citation node
           editor.commands.insertCitation({
             citationId,
-            fallback: text,
+            text, // fallback property was renamed to text in command definition
           });
         } else {
           // Fallback to text insertion if no ID (should not happen with new logic)
@@ -641,8 +1010,16 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }
   };
 
+  const [auditReport, setAuditReport] = useState<any>(null);
+
   return (
     <EditorProvider editor={editor}>
+      {editor && <GrammarBubbleMenu editor={editor} />}
+      <AuditReportModal
+        isOpen={!!auditReport}
+        onClose={() => setAuditReport(null)}
+        report={auditReport}
+      />
       <div className={`flex flex-col h-full bg-white transition-all duration-500 ${isFocusMode ? "fixed inset-0 z-[100] p-0" : ""}`}>
         <UpgradeModal
           isOpen={showUpgradeModal}
@@ -654,19 +1031,19 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         {/* Editor Header - Hidden in Focus Mode */}
         {!isFocusMode && (
           <div className="border-b border-gray-200 p-4 bg-white z-10 flex-shrink-0">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex-1">
+            <div className="flex flex-col md:flex-row md:items-center gap-6">
+              <div>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="text-2xl font-bold w-full border-none focus:outline-none focus:ring-0 pl-8 text-gray-900"
+                  className="text-2xl font-bold border-none focus:outline-none focus:ring-0 pl-0 text-gray-900 min-w-[200px] max-w-[400px]"
                   placeholder="Untitled Document"
                 />
               </div>
               <div className="flex items-center space-x-2 flex-wrap">
                 <button
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
+                  className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
                   onClick={() => setIsExportWorkflowOpen(true)}
                 >
                   <Download className="w-4 h-4" />
@@ -677,7 +1054,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={() => setIsStyleDialogOpen(true)}
-                  className="gap-2 h-9 border-blue-400 text-blue-800 bg-white hover:bg-blue-50 hover:text-blue-900 transition-colors shadow-sm"
+                  className="gap-2 h-9 border-blue-400 text-blue-800 bg-white hover:bg-blue-50 hover:text-blue-900 transition-colors shadow-sm px-3"
                   title={`Current Style: ${project.citation_style || 'APA'} - Click to change`}
                 >
                   <div className="flex items-center gap-1.5">
@@ -689,20 +1066,34 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 </Button>
 
                 <button
+                  onClick={() => setIsPreviewMode(!isPreviewMode)}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
+                    ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+                  title={isPreviewMode ? "Switch to Edit Mode" : "Switch to Preview Mode"}
+                >
+                  {isPreviewMode ? <PenTool className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {isPreviewMode ? "Edit" : "Preview"}
+                </button>
+
+                <button
                   onClick={onToggleFocusMode}
-                  className={`px-4 py-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
                     ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
                     : "border-gray-300 text-gray-700 hover:bg-gray-50"
                     }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
                 >
                   {isFocusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                  {isFocusMode ? "Exit Focus" : "Focus Mode"}
+                  <span className="hidden sm:inline">{isFocusMode ? "Exit" : "Focus"}</span>
                 </button>
 
+                {/* Grammar Check Button Removed for Background Check */}
+                {/* Originality Scan Pipeline (Plagiarism Detection) */}
                 <button
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
                   title="Clear Highlights"
+                  className="p-2 border border-gray-200 text-gray-500 rounded-md hover:bg-gray-50 hover:text-red-500 transition-colors"
                   onClick={() => {
                     clearHighlights();
                     toast({
@@ -712,7 +1103,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                     });
                   }}>
                   <Eraser className="w-4 h-4" />
-                  Clear Highlights
                 </button>
 
                 {/* Originality Scan Pipeline (Plagiarism Detection) */}
@@ -726,26 +1116,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   }}
                 />
 
-                {/* AI Detection Adapter (Disabled per request) */}
-                {/* <AIDetectionAdapter
-                  projectId={project.id}
-                  editor={editor}
-                  onScanComplete={(results) => {
-                    setLastAIScanResult(results);
-                    highlightAIResults(results);
-                    if (onOpenPanel) {
-                      onOpenPanel("ai-results", results);
-                    }
-                  }}
-                /> */}
-
-
                 <button
                   onClick={handleCompareClick}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                  className="p-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
                   title="Compare with Previous">
                   <GitCompare className="w-4 h-4" />
-                  Compare
                 </button>
 
                 {lastScanResult?.realityCheck && (
@@ -913,7 +1288,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 }
               }}
               className="bg-white/90 backdrop-blur border border-indigo-100 shadow-sm px-3 py-1.5 rounded-full text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center gap-1.5">
-              <span>🛡️ Reality Check</span>
+              <span>ðŸ›¡ï¸ Reality Check</span>
             </button>
           </div>
         )}
@@ -961,3 +1336,4 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     </EditorProvider >
   );
 };
+
