@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+// BOM_FIX_FORCE
+import React, { useState, useEffect, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 
 import { EditorProvider } from "./EditorContext";
