@@ -1,5 +1,5 @@
 import { Node, mergeAttributes, nodeInputRule } from '@tiptap/core';
-import katex from 'katex';
+import * as katex from 'katex';
 import 'katex/dist/katex.min.css';
 
 export const MathExtension = Node.create({

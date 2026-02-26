@@ -1,7 +1,8 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { NodeViewWrapper } from "@tiptap/react";
-import React, { useState, useRef, useEffect } from "react";
+import * as React from "react";
+import { useState, useRef, useEffect } from "react";
 import { RotateCw, AlignLeft, AlignCenter, AlignRight, Trash2, Type } from "lucide-react";
 
 declare module "@tiptap/core" {

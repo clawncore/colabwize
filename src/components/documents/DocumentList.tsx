@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { documentService, Project } from "../../services/documentService";
+import { useUser } from "../../services/useUser";
 import { ArrowLeftIcon } from "lucide-react";
 import { RenameProjectModal } from "../dashboard/RenameProjectModal";
 import { extractTextFromContent } from "../../utils/documentUtils";
@@ -14,6 +15,7 @@ interface DocumentListProps {
   displayMode?: DisplayMode;
   showActions?: boolean;
   hideHeader?: boolean;
+  workspaceId?: string;
 }
 
 export const DocumentList: React.FC<DocumentListProps> = ({
@@ -23,6 +25,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   displayMode = "grid",
   showActions = true,
   hideHeader = false,
+  workspaceId,
 }) => {
   const navigate = useNavigate();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "failed">("idle");
@@ -32,34 +35,37 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   const [renameModalOpen, setRenameModalOpen] = useState(false);
   const [projectToRename, setProjectToRename] = useState<Project | null>(null);
 
+  const { user } = useUser();
+
   useEffect(() => {
     // Basic fetch on mount, no auto-retries if failed
-    if (status === "idle") {
+    if (status === "idle" && user) {
       fetchProjects();
     }
-  }, [status]);
+  }, [status, user]);
 
   const fetchProjects = async () => {
+    if (!user) return;
     try {
       setStatus("loading");
       setError(null);
 
-      const result = await documentService.getProjects();
-
-      // Check for backend "Unavailable" signal
-      if ((result as any).status === "unavailable") {
-        console.warn("Backend reported service unavailable");
-        setStatus("failed");
-        setError("Service temporarily unavailable. Please try again later.");
-        return;
+      let result;
+      if (workspaceId) {
+        // Fetch projects for the specific workspace
+        result = await documentService.getUserProjectsInWorkspace(user.id, workspaceId);
+      } else {
+        // Only fetch personal projects (not in any workspace)
+        result = await documentService.getUserPersonalProjects(user.id);
       }
 
-      if (result.success && result.data) {
-        setProjects(result.data);
+      // getUserPersonalProjects returns the projects array directly
+      if (Array.isArray(result)) {
+        setProjects(result);
         setStatus("success");
       } else {
         setStatus("failed");
-        setError(result.error || "Failed to fetch projects");
+        setError("Failed to fetch projects");
       }
     } catch (err) {
       setStatus("failed");

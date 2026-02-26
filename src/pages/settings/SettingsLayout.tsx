@@ -144,11 +144,10 @@ const SettingsLayout: React.FC = () => {
                 <Link
                   key={item.id}
                   to={item.path}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
-                    isActive
-                      ? "bg-blue-50  text-blue-700  border-l-4 border-blue-500 accent-border tab-active"
-                      : "text-gray-700  hover:bg-gray-50 "
-                  } ${transitionClasses}`}
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg ${isActive
+                    ? "bg-blue-50  text-blue-700  border-l-4 border-blue-500 accent-border tab-active"
+                    : "text-gray-700  hover:bg-gray-50 "
+                    } ${transitionClasses}`}
                   onClick={() => setMobileMenuOpen(false)}>
                   <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
                   <span className="truncate">{item.label}</span>

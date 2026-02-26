@@ -287,6 +287,7 @@ const EditorWorkspacePage: React.FC = () => {
   useEffect(() => {
     const loadProjectById = async () => {
       if (id) {
+        setIsEditorLoading(true);
         try {
           const result = await documentService.getProjectById(id);
           if (result.success && result.data) {
@@ -296,6 +297,8 @@ const EditorWorkspacePage: React.FC = () => {
           }
         } catch (error) {
           console.error("Failed to load project by ID:", error);
+        } finally {
+          setIsEditorLoading(false);
         }
       }
     };
@@ -574,7 +577,7 @@ const EditorWorkspacePage: React.FC = () => {
                   <>
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={() => navigate("/dashboard")}
+                        onClick={() => navigate(-1)}
                         className="p-1 hover:bg-gray-200 rounded-md transition-colors"
                         title="Back to Dashboard"
                       >
@@ -592,7 +595,7 @@ const EditorWorkspacePage: React.FC = () => {
                             <HelpCircle className="w-4 h-4 text-gray-400 group-hover:text-indigo-600" />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
+                        <DropdownMenuContent align="start" className="bg-white">
                           <DropdownMenuItem onClick={() => setShowEditorTour(true)}>
                             <HelpCircle className="mr-2 h-4 w-4" />
                             <span>Show Tour</span>
@@ -711,6 +714,22 @@ const EditorWorkspacePage: React.FC = () => {
                 </button>
 
                 <button
+                  data-tour="add-citation"
+                  onClick={() => {
+                    setActivePanelType("add-citation");
+                    setIsRightSidebarOpen(true);
+                  }}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activePanelType === "add-citation"
+                    ? "bg-blue-100 text-blue-600 border border-blue-200"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                    }`}
+                  title={!isNavRailOpen ? "Add Citation" : ""}
+                >
+                  <PlusSquare className={`w-4 h-4 ${activePanelType === "add-citation" ? "text-blue-600" : "text-gray-400"}`} />
+                  {isNavRailOpen && "Add Citation"}
+                </button>
+
+                <button
                   data-tour="visual-map"
                   onClick={() => {
                     if (userPlan !== "Researcher") return;
@@ -811,22 +830,6 @@ const EditorWorkspacePage: React.FC = () => {
                       {userPlan !== "Researcher" && <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">PRO</span>}
                     </div>
                   )}
-                </button>
-
-                <button
-                  data-tour="add-citation"
-                  onClick={() => {
-                    setActivePanelType("add-citation");
-                    setIsRightSidebarOpen(true);
-                  }}
-                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activePanelType === "add-citation"
-                    ? "bg-blue-100 text-blue-600 border border-blue-200"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    }`}
-                  title={!isNavRailOpen ? "Add Citation" : ""}
-                >
-                  <PlusSquare className={`w-4 h-4 ${activePanelType === "add-citation" ? "text-blue-600" : "text-gray-400"}`} />
-                  {isNavRailOpen && "Add Citation"}
                 </button>
               </div>
 
@@ -1081,6 +1084,7 @@ const EditorWorkspacePage: React.FC = () => {
           </div>
         ) : selectedProject ? (
           <DocumentEditor
+            key={selectedProject.id}
             project={selectedProject}
             onProjectUpdate={handleProjectUpdate}
             onOpenPanel={openPanel}
@@ -1092,6 +1096,7 @@ const EditorWorkspacePage: React.FC = () => {
             onEditorReady={setEditorInstance}
             isFocusMode={isFocusMode}
             onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
+            isCollaborative={!!selectedProject.workspace_id}
           />
         ) : (
           <div className="h-full flex flex-col items-center justify-center bg-gray-50">

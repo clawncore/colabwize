@@ -32,11 +32,14 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
       <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 overflow-hidden animate-in fade-in zoom-in duration-200 z-[101]">
 
         <button
+          type="button"
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onClose();
           }}
-          className="absolute top-4 right-4 p-2 text-gray-300 hover:text-gray-500 rounded-full hover:bg-gray-50 transition-colors"
+          className="absolute top-4 right-4 p-2 text-gray-300 hover:text-gray-500 rounded-full hover:bg-gray-50 transition-colors z-[120]"
+          aria-label="Close modal"
         >
           <X className="w-5 h-5" />
         </button>

@@ -354,7 +354,7 @@ class ApiClient {
   }
 
   async get(url: string, options: RequestInit = {}) {
-    // IMPORTANT: Dynamic routes like /api/projects and /api/billing/subscription must NOT retry
+    // IMPORTANT: Dynamic routes like /api/projects and /api/subscription/current must NOT retry
     // Only static resources can retry on network errors
     // Check if this is a dynamic API endpoint
     const isDynamicRoute = url.startsWith("/api/") || url.includes("?");
@@ -363,7 +363,7 @@ class ApiClient {
   }
 
   async post(url: string, data: any, options: RequestInit = {}) {
-    // IMPORTANT: Dynamic routes like /api/projects and /api/billing/subscription must NOT retry
+    // IMPORTANT: Dynamic routes like /api/projects and /api/subscription/current must NOT retry
     // Mutations should never retry to prevent duplicate operations
     const isFormData = data instanceof FormData;
     return this.request(
@@ -378,7 +378,7 @@ class ApiClient {
   }
 
   async put(url: string, data: any, options: RequestInit = {}) {
-    // IMPORTANT: Dynamic routes like /api/projects and /api/billing/subscription must NOT retry
+    // IMPORTANT: Dynamic routes like /api/projects and /api/subscription/current must NOT retry
     // Mutations should never retry to prevent duplicate operations
     const isFormData = data instanceof FormData;
     return this.request(
@@ -393,7 +393,7 @@ class ApiClient {
   }
 
   async patch(url: string, data: any, options: RequestInit = {}) {
-    // IMPORTANT: Dynamic routes like /api/projects and /api/billing/subscription must NOT retry
+    // IMPORTANT: Dynamic routes like /api/projects and /api/subscription/current must NOT retry
     // Mutations should never retry to prevent duplicate operations
     const isFormData = data instanceof FormData;
     return this.request(
@@ -408,7 +408,7 @@ class ApiClient {
   }
 
   async delete(url: string, data: any = {}, options: RequestInit = {}) {
-    // IMPORTANT: Dynamic routes like /api/projects and /api/billing/subscription must NOT retry
+    // IMPORTANT: Dynamic routes like /api/projects and /api/subscription/current must NOT retry
     // Mutations should never retry to prevent duplicate operations
     return this.request(
       url,

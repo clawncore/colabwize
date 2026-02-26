@@ -5,6 +5,7 @@ import JSZip from "jszip";
 interface DocumentUploadProps {
   onUploadSuccess?: (project: any) => void;
   projectId?: string;
+  workspaceId?: string;
 }
 
 // Helper function outside component
@@ -43,6 +44,7 @@ const extractTextFromDocx = async (file: File): Promise<string> => {
 export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   onUploadSuccess,
   projectId,
+  workspaceId,
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
@@ -111,7 +113,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       const result = await documentService.uploadDocument(
         file,
         title,
-        description
+        description,
+        workspaceId
       );
 
       if (result.success && result.data) {

@@ -1,4 +1,5 @@
 import { apiClient } from "./apiClient";
+import { supabase } from "../lib/supabase/client";
 
 export interface Plan {
   id: string;
@@ -49,6 +50,17 @@ export interface Invoice {
  * Subscription Service for frontend API calls
  */
 export class SubscriptionService {
+  // Current user's subscription plan
+  userPlan: Subscription | null = null;
+
+  // Get authentication token
+  async getAuthToken() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.access_token;
+  }
+
   /**
    * Get all available pricing plans
    */
@@ -58,10 +70,48 @@ export class SubscriptionService {
   }
 
   /**
+   * Get current user subscription plan
+   */
+  async getUserPlan(): Promise<Subscription | null> {
+    try {
+      const token = await this.getAuthToken();
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/subscription/current`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch subscription info");
+      }
+
+      this.userPlan = data.subscription;
+      return data.subscription;
+    } catch (error) {
+      console.error("Error fetching user subscription:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Update Auto-Use Credits Preference
    */
   static async updateAutoUseCredits(enabled: boolean): Promise<boolean> {
-    const response = await apiClient.post("/api/subscription/credits/auto-use", { enabled });
+    const response = await apiClient.post(
+      "/api/subscription/credits/auto-use",
+      { enabled }
+    );
     return response.success;
   }
 

@@ -1,7 +1,7 @@
 // BOM_FIX_FORCE
-import React, { useState, useEffect, useRef } from "react";
+import * as React from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
-
 import { EditorProvider } from "./EditorContext";
 import StarterKit from "@tiptap/starter-kit";
 import { CharacterCount } from "@tiptap/extension-character-count";
@@ -11,7 +11,6 @@ import { AuthorExtension } from "../../extensions/AuthorExtension";
 import { CalloutBlockExtension } from "../../extensions/CalloutBlockExtension";
 import { CoverPageExtension } from "../../extensions/CoverPageExtension";
 import { CustomCodeBlockExtension } from "../../extensions/CustomCodeBlockExtension";
-
 import { EnhancedFigureNode } from "../../extensions/EnhancedFigureNode";
 import { AutoNumbering } from "../../extensions/AutoNumbering";
 import { KeywordsExtension } from "../../extensions/KeywordsExtension";
@@ -29,7 +28,6 @@ import { documentService, Project } from "../../services/documentService";
 import {
   OriginalityScan,
 } from "../../services/originalityService";
-
 import { AuthorshipService } from "../../services/authorshipService";
 import "../../styles/highlight-styles.css";
 import "../../styles/image-styles.css";
@@ -42,7 +40,6 @@ import {
   // CitationConfidenceAdapter, // Removed/Replaced
   AuthorshipCertificateAdapter,
   RephraseAdapter,
-
 } from "./adapters";
 import { CitationNode } from "../../extensions/CitationNode";
 import { PasteCitationExtension } from "../../extensions/PasteCitationExtension";
@@ -52,7 +49,6 @@ import { CitationStyleDialog } from "../citations/CitationStyleDialog";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { DraftComparisonSelector } from "../originality/DraftComparisonSelector";
 import { RightPanelType } from "./EditorWorkspacePage";
-
 import BehavioralTracker from "./BehavioralTracker";
 // import Image from "@tiptap/extension-image"; // Replaced
 import { Table } from "@tiptap/extension-table";
@@ -66,13 +62,17 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import FontFamily from "@tiptap/extension-font-family";
 import { formatContentForTiptap } from "../../utils/editorUtils";
 import { GrammarExtension } from "../../extensions/GrammarExtension";
-
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
+import { HocuspocusProvider } from "@hocuspocus/provider";
+import * as Y from "yjs";
+import { useAuth } from "../../hooks/useAuth";
 import { GrammarBubbleMenu } from "./GrammarBubbleMenu";
 import { AuditReportModal } from "../audit/AuditReportModal";
-
 import { EditorToolbar } from "./editor-toolbar";
 import { ExportWorkflowModal } from "../export/ExportWorkflowModal";
 import { detectAndNormalizeCitations, synchronizeRegistryWithDocument } from "./utils/normalization";
+import { VersionHistoryModal } from "./VersionHistoryModal";
 import {
   Download,
   GitCompare,
@@ -84,10 +84,13 @@ import {
   Maximize2,
   Minimize2,
   Eye,
-  PenTool
+  Save,
+  Clock,
+  PenTool,
+  Loader2,
+  History,
 } from "lucide-react";
 import { Button } from "../ui/button";
-
 
 
 interface DocumentEditorProps {
@@ -98,6 +101,7 @@ interface DocumentEditorProps {
   onEditorReady?: (editor: any) => void;
   isFocusMode?: boolean;
   onToggleFocusMode?: () => void;
+  isCollaborative?: boolean;
 }
 
 export const DocumentEditor: React.FC<DocumentEditorProps> = ({
@@ -108,9 +112,74 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   onEditorReady,
   isFocusMode = false,
   onToggleFocusMode,
+  isCollaborative = false,
 }) => {
   const { toast } = useToast();
-  // const [editorState, setEditorState] = useState(project.content);
+  const { user } = useAuth();
+
+  // --- FIX: Stable Provider and Y.Doc initialization ---
+  // A fresh instance of DocumentEditor is mounted per project (via key={project.id}).
+  // We lazily initialize Y.Doc and Provider once per mount. This ensures the 
+  // collaboration extensions have a valid Y.Doc instantly upon first render.
+  const [ydoc] = useState(() => new Y.Doc());
+  const [collabStatus, setCollabStatus] = useState<string>("disconnected");
+  const [isSynced, setIsSynced] = useState(false);
+
+  const [provider] = useState<HocuspocusProvider | null>(() => {
+    if (!isCollaborative || !project.id) return null;
+
+    console.log(`Initializing Hocuspocus provider for project: ${project.id}`);
+
+    // Start locally with establishing state
+    setCollabStatus("connecting");
+
+    const newProvider = new HocuspocusProvider({
+      url: process.env.REACT_APP_HOCUSPOCUS_URL || "ws://localhost:9081",
+      name: `project-${project.id}`,
+      document: ydoc, // Bind the explicitly created Y.Doc
+      token: localStorage.getItem("auth_token") || "",
+      onStatus: (item) => {
+        setCollabStatus(item.status);
+        console.log("Hocuspocus status:", item.status);
+      },
+      onSynced: () => {
+        console.log("Hocuspocus synced — document ready");
+        setIsSynced(true);
+      },
+      onDisconnect: () => {
+        console.log("Hocuspocus disconnected");
+        setCollabStatus("disconnected");
+      },
+      onConnect: () => {
+        console.log("Hocuspocus connected");
+      },
+      onAuthenticationFailed: ({ reason }) => {
+        console.error("Hocuspocus auth failed:", reason);
+        setCollabStatus("disconnected");
+      },
+    });
+
+    // COMPATIBILITY FIX: CollaborationCursor v2 reads provider.doc
+    // @ts-ignore
+    if (!newProvider.doc) {
+      Object.defineProperty(newProvider, "doc", {
+        get: () => newProvider.document,
+      });
+    }
+
+    return newProvider;
+  });
+
+  // Destroy provider ONLY on component unmount
+  useEffect(() => {
+    return () => {
+      if (provider) {
+        console.log("Destroying Hocuspocus provider");
+        provider.destroy();
+      }
+    };
+  }, [provider]);
+
   const [title, setTitle] = useState(project.title);
   const [description, setDescription] = useState(project.description || "");
   // const [isSaving, setIsSaving] = useState(false);
@@ -122,6 +191,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [isExportWorkflowOpen, setIsExportWorkflowOpen] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isStyleDialogOpen, setIsStyleDialogOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   const [lastScanResult] = useState<OriginalityScan | null>(
     null
@@ -135,6 +205,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasInitializedContentRef = useRef(false);
   const currentProjectIdRef = useRef<string | null>(null);
+
+  // --- FIX 3: Stable cursor color - generated once per component mount ---
+  const cursorColor = useMemo(
+    () => "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0"),
+    [] // Empty deps: only runs once on mount
+  );
 
 
   // Layout State
@@ -164,8 +240,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     if (searchTerms.length === 0) return;
 
-    // 2. Find "References" or "Bibliography" Heading
-    // We scan paragraphs in the editor DOM to find the section
+    // Search for reference by the citation text (e.g., "[3]")
     const editorDom = document.querySelector('.ProseMirror');
     if (!editorDom) return;
 
@@ -222,19 +297,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }
   };
 
-  useEffect(() => {
-    // This useEffect is likely intended to check for external project updates
-    // and would require `lastSaved` to be uncommented and managed.
-    // For now, it's added as per instruction, assuming `lastSaved` will be handled elsewhere.
-    // if (project.updated_at && lastSaved && new Date(project.updated_at).getTime() > lastSaved.getTime()) {
-    //   toast({
-    //     title: "Project Updated",
-    //     description: "The project has been updated externally.",
-    //   });
-    //   // onProjectUpdate?.(project); // Infinite loop risk if not careful
-    // }
-  }, [project.updated_at, project, onProjectUpdate, toast]);
 
+  // Handle Citation Clicks (Scroll to Reference)
   const scrollToReferenceByText = (citationText: string) => {
     // Search for reference by the citation text (e.g., "[3]")
     const editorDom = document.querySelector('.ProseMirror');
@@ -289,16 +353,32 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   };
 
   // Initialize editor with project content or create empty content
+  // Since we created 'ydoc' and 'provider' synchronously on initial render via useState,
+  // we can safely add the Collaboration extensions immediately without crashing.
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        history: !isCollaborative, // Disable history in collab mode (handled by Yjs)
+      } as any),
+      ...(isCollaborative && provider
+        ? [
+          Collaboration.configure({
+            document: ydoc, // Bind directly to the stable Y.Doc
+          }),
+          CollaborationCursor.configure({
+            provider: provider, // Bind directly to the Hocuspocus provider
+            user: {
+              name: user?.user_metadata?.full_name || user?.email || "Anonymous",
+              color: cursorColor,
+            },
+          }),
+        ]
+        : []),
       HighlightExtension,
       CharacterCount,
-      // Image.configure({ ... }), // Replaced by ImageExtension
       MathExtension,
       Table.configure({
         resizable: true,
-        // resizable: true, // Duplicate property removed
       }),
       TableRow,
       TableHeader,
@@ -336,7 +416,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       AutoNumbering, // Enable automatic figure and table numbering
       GrammarExtension, // AI Grammar Checker
     ],
-    content: formatContentForTiptap(project.content),
+    // Only load initial content if NOT collaborative (Collab loads from Yjs)
+    content: isCollaborative ? undefined : formatContentForTiptap(project.content),
+    // NOTE: In collab mode, content is loaded from Yjs (Hocuspocus server) not here.
     onUpdate: () => {
       // Increment edit count when content changes
       setEditCount((prev) => prev + 1);
@@ -373,8 +455,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         return false;
       }
     },
-  });
-
+    // Dependencies check: since `ydoc` and `provider` are stable state objects initialized
+    // exactly once per component lifecycle, using them here is safe and effectively
+    // binds the editor to them persistently until the component unmounts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCollaborative, project.id]);
 
 
   // Load project content only once per document
@@ -388,7 +473,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     if (
       editor &&
       project.content &&
-      currentProjectIdRef.current !== project.id
+      currentProjectIdRef.current !== project.id &&
+      !isCollaborative // Skip manual setContent in collaborative mode
     ) {
       if (
         currentProjectIdRef.current &&
@@ -782,7 +868,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   }, [project.id]); // Only re-run if project ID changes
 
   // Function to clear all highlights
-  // Function to clear all highlights
   const clearHighlights = () => {
     if (editor) {
       // Remove all highlight marks (Citation/Originality) AND Grammar errors
@@ -798,36 +883,36 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   /*
   const highlightAIResults = (results: AIScanResult) => {
     if (!editor || !results || !results.sentences) return;
-  
+   
     // Clear existing highlights
     clearHighlights();
-  
+   
     const doc = editor.state.doc;
     let searchPos = 0;
-  
+   
     // Sort sentences by position
     const sortedSentences = [...results.sentences].sort(
       (a, b) => a.positionStart - b.positionStart
     );
-  
+   
     sortedSentences.forEach((sentence: AISentenceResult) => {
       // Only highlight if AI or Likely AI
       if (sentence.classification === "human" || sentence.classification === "likely_human") return;
-  
+   
     if (!sentence.text) return;
-  
+   
     const range = findTextRange(doc, sentence.text, searchPos);
-  
+   
     if (!range) {
       console.warn("Could not find sentence text in document", sentence.text);
     return;
       }
-  
+   
     searchPos = range.to;
-  
+   
     let color = "purple"; // Default for AI
     let message = "";
-  
+   
     switch (sentence.classification) {
         case "ai":
     color = "purple";
@@ -840,7 +925,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     default:
     return;
       }
-  
+   
     try {
       editor.chain().highlightRange(range.from, range.to, {
         color,
@@ -856,30 +941,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     */
 
 
-
-
-  // Track time spent writing
-  useEffect(() => {
-    startTimeRef.current = new Date();
-
-    // Start interval to track time
-    intervalRef.current = setInterval(() => {
-      if (startTimeRef.current) {
-        const currentTime = new Date();
-        const timeDiff = Math.floor(
-          (currentTime.getTime() - startTimeRef.current.getTime()) / 1000
-        );
-        setTimeSpent(timeDiff);
-      }
-    }, 1000);
-
-    // Cleanup interval on unmount
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
+  // FIX 5: Remove duplicate timer effect — the timer above (line ~747) already handles this.
 
   // Add Escape key listener for Focus Mode
   useEffect(() => {
@@ -930,15 +992,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       // Get the current content from the editor
       const content = editor.getJSON();
 
-      // Update the project in the database
-      // const updatedProject = {
-      //   ...project,
-      //   title,
-      //   description,
-      //   content,
-      //   word_count: editor.storage.characterCount.words(),
-      // };
-
       // Update the project via API
       const result = await documentService.updateProject(
         project.id,
@@ -967,17 +1020,48 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }
   }, [editor, project.id, title, description, onProjectUpdate]);
 
-  // Auto-save every 30 seconds if there are changes
+  // Auto-save every 30 seconds if there are changes (non-collaborative mode)
   useEffect(() => {
     const autoSaveInterval = setInterval(() => {
-      if (editCount > 0) {
-        // Only save if there have been edits
+      // In non-collab mode: save everything (content + title + description)
+      // Hocuspocus onStoreDocument handles content persistence in collab mode
+      if (editCount > 0 && !isCollaborative) {
         handleSave();
       }
     }, 30000); // Auto-save every 30 seconds
 
     return () => clearInterval(autoSaveInterval);
-  }, [editCount, handleSave]);
+  }, [editCount, handleSave, isCollaborative]);
+
+  // --- FIX 4: In collab mode, save title/description changes on a debounce ---
+  // Content is handled by Hocuspocus, but title & description are NOT synced via Yjs.
+  const prevTitleRef = useRef(title);
+  const prevDescriptionRef = useRef(description);
+  useEffect(() => {
+    if (!isCollaborative) return; // Non-collab mode handled by handleSave above
+    if (title === prevTitleRef.current && description === prevDescriptionRef.current) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        // Save only title/description — pass the existing project.content to avoid overwriting
+        await documentService.updateProject(
+          project.id,
+          title,
+          description,
+          project.content, // keep current DB content unchanged
+          project.word_count,
+          project.citation_style
+        );
+        prevTitleRef.current = title;
+        prevDescriptionRef.current = description;
+        console.log("[CollabMode] Title/description saved:", title);
+      } catch (err) {
+        console.error("[CollabMode] Failed to save title/description:", err);
+      }
+    }, 2000); // 2s debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [title, description, isCollaborative, project.id, project.content, project.word_count, project.citation_style]);
 
   // Format time spent into human-readable format
   const formatTimeSpent = (seconds: number): string => {
@@ -1012,6 +1096,23 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   const [auditReport, setAuditReport] = useState<any>(null);
 
+  // --- FIX 2: Show loading until provider is synced (not just connected) ---
+  // isSynced becomes true only after onSynced fires, meaning the Yjs doc has
+  // arrived from the server. This prevents a blank editor flash.
+  if (isCollaborative && (!isSynced || collabStatus === "connecting")) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-white">
+        <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+        <h3 className="text-lg font-semibold text-gray-900">Connecting to Workspace...</h3>
+        <p className="text-sm text-gray-500 mt-2">
+          {collabStatus === "connecting"
+            ? "Establishing secure connection for real-time collaboration..."
+            : "Syncing document content..."}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <EditorProvider editor={editor}>
       {editor && <GrammarBubbleMenu editor={editor} />}
@@ -1031,7 +1132,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         {/* Editor Header - Hidden in Focus Mode */}
         {!isFocusMode && (
           <div className="border-b border-gray-200 p-4 bg-white z-10 flex-shrink-0">
-            <div className="flex flex-col md:flex-row md:items-center gap-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <input
                   type="text"
@@ -1042,6 +1143,49 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 />
               </div>
               <div className="flex items-center space-x-2 flex-wrap">
+                {isCollaborative && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      if (!editor || !project.id) return;
+                      try {
+                        try {
+                          toast({ title: "Saving new version...", description: "Please wait." });
+                          await documentService.createDocumentVersion(
+                            project.id,
+                            editor.getJSON(),
+                            editor.storage.characterCount.words()
+                          );
+                          toast({ title: "Version saved successfully!", variant: "default" });
+                        } catch (error) {
+                          console.error("Failed to save version:", error);
+                          toast({ title: "Failed to save version", variant: "destructive" });
+                        }
+                      } catch (error) {
+                        console.error("Failed to save version:", error);
+                      }
+                    }}
+                    className="gap-2 h-9 border-green-400 text-green-800 bg-white hover:bg-green-50 hover:text-green-900 transition-colors shadow-sm px-3"
+                    title="Create a named version checkpoint"
+                  >
+                    <Save className="w-4 h-4 text-green-600" />
+                    <span className="font-bold text-xs">Save Version</span>
+                  </Button>
+                )}
+
+                {isCollaborative && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsHistoryModalOpen(true)}
+                    className="gap-2 h-9 border-indigo-400 text-indigo-800 bg-white hover:bg-indigo-50 hover:text-indigo-900 transition-colors shadow-sm px-3"
+                    title="View version history"
+                  >
+                    <History className="w-4 h-4 text-indigo-600" />
+                    <span className="font-bold text-xs">History</span>
+                  </Button>
+                )}
                 <button
                   className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
                   onClick={() => setIsExportWorkflowOpen(true)}
@@ -1089,7 +1233,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   <span className="hidden sm:inline">{isFocusMode ? "Exit" : "Focus"}</span>
                 </button>
 
-                {/* Grammar Check Button Removed for Background Check */}
                 {/* Originality Scan Pipeline (Plagiarism Detection) */}
                 <button
                   title="Clear Highlights"
@@ -1314,6 +1457,17 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           currentHtmlContent={editor?.getHTML()}
           editor={editor} // Pass editor instance for live normalization
           onProjectUpdate={onProjectUpdate}
+        />
+
+        <VersionHistoryModal
+          isOpen={isHistoryModalOpen}
+          onClose={() => setIsHistoryModalOpen(false)}
+          projectId={project.id}
+          onRestore={(content) => {
+            if (editor) {
+              editor.commands.setContent(content);
+            }
+          }}
         />
       </div>
       <CitationStyleDialog

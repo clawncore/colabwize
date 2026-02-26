@@ -15,6 +15,7 @@ export interface Project {
   updated_at: string;
   originality_scans: any[];
   citations: any[];
+  workspace_id?: string;
 }
 
 interface UploadResponse {
@@ -33,12 +34,16 @@ export const documentService = {
   async uploadDocument(
     file: File,
     title: string,
-    description: string = ""
+    description: string = "",
+    workspaceId?: string
   ): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append("document", file);
     formData.append("title", title);
     formData.append("description", description);
+    if (workspaceId) {
+      formData.append("workspaceId", workspaceId);
+    }
 
     try {
       const response = await apiClient.post("/api/documents", formData);
@@ -112,7 +117,8 @@ export const documentService = {
     title: string,
     description: string = "",
     content: any = null,
-    projectId: string = ""
+    projectId: string = "",
+    workspaceId?: string
   ): Promise<{ success: boolean; data?: Project; error?: string }> {
     try {
       const response = await apiClient.post("/api/documents/create", {
@@ -120,6 +126,7 @@ export const documentService = {
         description,
         content,
         projectId,
+        workspace_id: workspaceId || null,
       });
       return response;
     } catch (error: any) {
@@ -135,10 +142,11 @@ export const documentService = {
     projectId: string,
     title: string,
     description: string,
-    content: any
+    content: any,
+    workspaceId?: string
   ): Promise<{ success: boolean; data?: Project; error?: string }> {
     try {
-      return this.createProject(title, description, content, projectId);
+      return this.createProject(title, description, content, projectId, workspaceId);
     } catch (error: any) {
       console.error("Duplicate project error:", error);
       return {
@@ -160,6 +168,222 @@ export const documentService = {
         success: false,
         error: error.message || "Failed to delete project",
       };
+    }
+  },
+
+  // Get all projects for a user
+  async getUserProjects(userId: string, archived: boolean = false) {
+    try {
+      const queryParams = new URLSearchParams({ userId });
+      if (archived) {
+        queryParams.append("archived", "true");
+      }
+
+      const response = await apiClient.get(
+        `/api/projects?${queryParams.toString()}`
+      );
+      return response.projects || response;
+    } catch (error) {
+      console.error("Error fetching user projects:", error);
+      throw error;
+    }
+  },
+
+  // Get all projects for a user in a specific workspace
+  async getUserProjectsInWorkspace(
+    userId: string,
+    workspaceId: string,
+    archived: boolean = false
+  ) {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append("workspaceId", workspaceId);
+      if (archived) {
+        queryParams.append("archived", "true");
+      }
+
+      const response = await apiClient.get(
+        `/api/projects?${queryParams.toString()}`
+      );
+      return response.data || response.projects || response;
+    } catch (error) {
+      console.error("Error fetching user projects in workspace:", error);
+      throw error;
+    }
+  },
+
+  // Get all projects for a user that are not in any workspace (personal projects)
+  async getUserPersonalProjects(userId: string, archived: boolean = false) {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append("workspaceId", "null"); // null indicates personal projects
+      if (archived) {
+        queryParams.append("archived", "true");
+      }
+
+      const response = await apiClient.get(
+        `/api/projects?${queryParams.toString()}`
+      );
+      return response.data || response.projects || response;
+    } catch (error) {
+      console.error("Error fetching user personal projects:", error);
+      throw error;
+    }
+  },
+
+  // Get document versions for a project
+  async getDocumentVersions(projectId: string) {
+    try {
+      const response = await apiClient.get(
+        `/api/editor/versions?projectId=${projectId}`
+      );
+      return response.versions || response;
+    } catch (error) {
+      console.error("Error fetching document versions:", error);
+      throw error;
+    }
+  },
+
+  // Create a document version
+  async createDocumentVersion(
+    projectId: string,
+    content: any,
+    wordCount: number
+  ) {
+    try {
+      const response = await apiClient.post(
+        `/api/editor/versions`,
+        {
+          projectId,
+          content,
+          wordCount,
+          force: true,
+        }
+      );
+      return response.version || response;
+    } catch (error) {
+      console.error("Error creating document version:", error);
+      throw error;
+    }
+  },
+
+  // Restore a document version
+  async restoreDocumentVersion(
+    projectId: string,
+    versionId: string
+  ) {
+    try {
+      const response = await apiClient.post(
+        `/api/editor/restore-version`,
+        {
+          projectId,
+          versionId,
+        }
+      );
+      return response.project || response;
+    } catch (error) {
+      console.error("Error restoring document version:", error);
+      throw error;
+    }
+  },
+
+  // Get a specific document version - currently not supported by backend
+  async getDocumentVersion(projectId: string, versionId: string) {
+    try {
+      // Get all versions and find the specific one
+      const allVersions = await this.getDocumentVersions(projectId);
+      const specificVersion = allVersions.find((v: any) => v.id === versionId);
+
+      if (!specificVersion) {
+        throw new Error(`Version with ID ${versionId} not found`);
+      }
+
+      return specificVersion;
+    } catch (error) {
+      console.error("Error fetching document version:", error);
+      throw error;
+    }
+  },
+
+  // Get version schedules for a project
+  async getVersionSchedules(projectId: string) {
+    try {
+      const response = await apiClient.get(
+        `/api/projects/${projectId}/version-schedules`
+      );
+      return response.schedules || response;
+    } catch (error) {
+      console.error("Error fetching version schedules:", error);
+      throw error;
+    }
+  },
+
+  // Create a version schedule
+  async createVersionSchedule(
+    projectId: string,
+    scheduleData: { frequency: string }
+  ) {
+    try {
+      const response = await apiClient.post(
+        `/api/projects/${projectId}/version-schedules`,
+        scheduleData
+      );
+      return response.schedule || response;
+    } catch (error) {
+      console.error("Error creating version schedule:", error);
+      throw error;
+    }
+  },
+
+  // Update a version schedule
+  async updateVersionSchedule(
+    projectId: string,
+    scheduleId: string,
+    updateData: { enabled?: boolean; frequency?: string }
+  ) {
+    try {
+      const response = await apiClient.put(
+        `/api/projects/${projectId}/version-schedules/${scheduleId}`,
+        updateData
+      );
+      return response.schedule || response;
+    } catch (error) {
+      console.error("Error updating version schedule:", error);
+      throw error;
+    }
+  },
+
+  // Delete a version schedule
+  async deleteVersionSchedule(projectId: string, scheduleId: string) {
+    try {
+      const response = await apiClient.delete(
+        `/api/projects/${projectId}/version-schedules/${scheduleId}`,
+        {}
+      );
+      return response;
+    } catch (error) {
+      console.error("Error deleting version schedule:", error);
+      throw error;
+    }
+  },
+
+  // Get all projects for a user that are in a workspace (workspace projects)
+  async getUserWorkspaceProjects(userId: string, archived: boolean = false) {
+    try {
+      const queryParams = new URLSearchParams({ userId });
+      queryParams.append("workspaceId", "not-null"); // indicates projects that have a workspace
+
+      if (archived) {
+        queryParams.append("archived", "true");
+      }
+
+      const response = await apiClient.get(
+        `/api/projects?${queryParams.toString()}`
+      );
+      return response.projects || response;
+    } catch (error) {
+      console.error("Error fetching user workspace projects:", error);
+      throw error;
     }
   },
 };

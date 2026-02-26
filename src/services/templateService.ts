@@ -2,11 +2,18 @@
 // @ts-ignore
 import TemplateServiceJS from "./templateService.js";
 
-interface Template {
+export interface Template {
     id: string;
+    name: string;
+    description?: string;
     type: string;
-    citation_style?: string;
     content?: any;
+    is_public?: boolean;
+    citation_style?: string;
+    updated_at: string;
+    created_at?: string;
+    author_name?: string;
+    workspace_id?: string;
     [key: string]: any;
 }
 
@@ -21,13 +28,33 @@ class TemplateService {
         }
     }
 
-    async getAllTemplates(): Promise<Template[]> {
+    async getTemplates(filters: any = {}): Promise<Template[]> {
         try {
             // @ts-ignore
-            return await TemplateServiceJS.getAllTemplates();
+            return await TemplateServiceJS.getTemplates(filters);
         } catch (error) {
             console.error("Error fetching templates:", error);
             return [];
+        }
+    }
+
+    async getAllTemplates(): Promise<Template[]> {
+        try {
+            // @ts-ignore
+            return await TemplateServiceJS.getTemplates({});
+        } catch (error) {
+            console.error("Error fetching templates:", error);
+            return [];
+        }
+    }
+
+    async deleteTemplate(id: string): Promise<boolean> {
+        try {
+            // @ts-ignore
+            return await TemplateServiceJS.deleteTemplate(id);
+        } catch (error) {
+            console.error("Error deleting template:", error);
+            return false;
         }
     }
 }

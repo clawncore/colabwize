@@ -1,12 +1,22 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { DocumentUpload, DocumentList } from ".";
-import CreateProjectTemplates from "../editor/CreateProjectemplates";
+import CreateProjectTemplates from "../editor/CreateProjectTemplates";
 
 const DocumentManagementPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { id: workspaceId } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<"list" | "upload" | "create">("list");
   const [selectedProject, setSelectedProject] = useState<any>(null);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get("tab");
+    if (tab === "upload" || tab === "create" || tab === "list") {
+      setActiveTab(tab as any);
+    }
+  }, [location.search]);
 
   const handleUploadSuccess = (project: any) => {
     setSelectedProject(project);
@@ -29,16 +39,18 @@ const DocumentManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="px-8 py-8">
-        <div className="mb-8 text-left">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Document Management
-          </h1>
-          <p className="text-gray-600">
-            Upload your documents for originality scanning and analysis
-          </p>
-        </div>
+    <div className={`min-h-screen ${workspaceId ? "bg-transparent" : "bg-white"}`}>
+      <div className={`${workspaceId ? "px-0 py-0" : "px-8 py-8"}`}>
+        {!workspaceId && (
+          <div className="mb-8 text-left">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Document Management
+            </h1>
+            <p className="text-gray-600">
+              Upload your documents for originality scanning and analysis
+            </p>
+          </div>
+        )}
 
         <div className="bg-white overflow-hidden">
           {/* Tab Navigation */}
@@ -46,24 +58,24 @@ const DocumentManagementPage: React.FC = () => {
             <nav className="flex">
               <button
                 className={`px-6 py-4 font-medium text-sm ${activeTab === "list"
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
                   }`}
                 onClick={() => setActiveTab("list")}>
-                My Documents
+                {workspaceId ? "Workspace Documents" : "My Documents"}
               </button>
               <button
                 className={`px-6 py-4 font-medium text-sm ${activeTab === "upload"
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
                   }`}
                 onClick={() => setActiveTab("upload")}>
                 Upload Document
               </button>
               <button
                 className={`px-6 py-4 font-medium text-sm ${activeTab === "create"
-                    ? "text-blue-600 border-b-2 border-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
                   }`}
                 onClick={() => setActiveTab("create")}>
                 Create New Document
@@ -78,6 +90,7 @@ const DocumentManagementPage: React.FC = () => {
                 <DocumentList
                   onProjectSelect={handleProjectSelect}
                   displayMode="grid"
+                  workspaceId={workspaceId}
                 />
                 {selectedProject && (
                   <div className="mt-6 p-4 bg-gray-50 rounded-md">
@@ -102,12 +115,14 @@ const DocumentManagementPage: React.FC = () => {
 
             {activeTab === "upload" && (
               <div>
-                <DocumentUpload onUploadSuccess={handleUploadSuccess} />
+                <DocumentUpload
+                  onUploadSuccess={handleUploadSuccess}
+                  workspaceId={workspaceId}
+                />
                 {selectedProject && (
                   <div className="mt-6 p-4 bg-blue-50 rounded-md">
                     <p className="text-blue-800">
-                      Document uploaded successfully! You can now view it in "My
-                      Documents" or switch to the analysis features.
+                      Document uploaded successfully! You can now view it in "{workspaceId ? "Workspace Documents" : "My Documents"}" or switch to the analysis features.
                     </p>
                   </div>
                 )}
@@ -119,6 +134,7 @@ const DocumentManagementPage: React.FC = () => {
                 isOpen={true}
                 onClose={() => setActiveTab("list")}
                 onProjectCreate={handleCreateProject}
+                initialWorkspaceId={workspaceId}
               />
             )}
           </div>

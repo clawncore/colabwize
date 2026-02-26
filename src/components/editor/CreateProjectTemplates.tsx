@@ -18,7 +18,7 @@ import {
   ScrollText,
 } from "lucide-react";
 
-interface CreateProjectTemplatesProps {
+export interface CreateProjectTemplatesProps {
   isOpen: boolean;
   onClose: () => void;
   onProjectCreate: (project: any) => void;
@@ -27,12 +27,14 @@ interface CreateProjectTemplatesProps {
   isResearcherUser?: boolean;
   maxProjects?: number;
   currentProjectCount?: number;
+  initialWorkspaceId?: string;
 }
 
 export default function CreateProjectTemplates({
   isOpen,
   onClose,
   onProjectCreate,
+  initialWorkspaceId,
 }: CreateProjectTemplatesProps) {
   const { user } = useUser();
   const navigate = useNavigate();
@@ -147,7 +149,9 @@ export default function CreateProjectTemplates({
       const result = await documentService.createProject(
         data.name,
         data.description || "",
-        initialContent
+        initialContent,
+        "", // projectId placeholder
+        initialWorkspaceId
       );
 
       if (result.success && result.data) {
