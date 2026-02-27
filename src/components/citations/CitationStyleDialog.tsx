@@ -47,9 +47,12 @@ export const CitationStyleDialog: React.FC<CitationStyleDialogProps> = ({
                     {STYLES.map((style) => (
                         <div
                             key={style.id}
-                            onClick={() => setSelectedStyle(style.id)}
+                            onClick={() => {
+                                onSave(style.id);
+                                onOpenChange(false);
+                            }}
                             className={`
-                                cursor-pointer rounded-lg border p-4 transition-all hover:bg-gray-50 flex flex-col items-center justify-center text-center relative
+                                cursor-pointer rounded-lg border p-4 transition-all hover:bg-gray-50 hover:border-blue-300 flex flex-col items-center justify-center text-center relative
                                 ${selectedStyle === style.id
                                     ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
                                     : "border-gray-200"
@@ -75,11 +78,8 @@ export const CitationStyleDialog: React.FC<CitationStyleDialogProps> = ({
                     You can change this later in settings, but it may require re-checking all citations.
                 </div>
 
-                <DialogFooter>
-                    <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={handleConfirm} className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto">
-                        Confirm & Continue
-                    </Button>
+                <DialogFooter className="sm:justify-start">
+                    <Button variant="ghost" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">Cancel</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

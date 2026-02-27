@@ -147,14 +147,20 @@ export class CitationOrderManager {
                         console.warn(`[OrderManager] MISSING REGISTRY ENTRY: ${projectId} | ${n.id}`);
                     }
 
-                    if (entry && entry.csl_data && entry.csl_data.author) {
-                        const author = entry.csl_data.author[0].family || entry.csl_data.author[0].literal || "Unknown";
+                    if (entry && entry.csl_data && entry.csl_data.author && entry.csl_data.author.length > 0) {
+                        const firstAuthor = entry.csl_data.author[0];
+                        const author = firstAuthor.family || firstAuthor.literal || firstAuthor.given || "Unknown";
                         const year = entry.csl_data.issued?.['date-parts']?.[0]?.[0] || "????";
-                        return `${author}, ${year}`;
+
+                        if (author !== "Unknown") {
+                            return `${author}, ${year}`;
+                        }
                     }
-                    // Fallback to existing text, but strip existing parentheses to prevent recursion (((...)))
-                    let text = entry?.raw_reference_text || nodes[0].node.attrs.text || "Citation";
-                    return text.replace(/^[\s([]+|[\s)\]]+$/g, '');
+
+                    // Fallback: If we couldn't get a good author string, keep the original text
+                    // but strip existing outer parentheses if they exist to prevent recursion.
+                    const originalText = entry?.raw_reference_text || n.node.attrs.text || "Citation";
+                    return originalText.replace(/^[\s([]+|[\s)\]]+$/g, '');
                 });
 
                 // (A, Y; B, Y)
@@ -164,9 +170,7 @@ export class CitationOrderManager {
             // Assign Text to Nodes
             // First node gets the text. Others get empty.
             nodes.forEach((n, index) => {
-                const targetText = index === 0 ? clusterText : " "; // Space is better than empty for cursor selection?
-                // Actually empty might delete the node in some editors, but atoms persist.
-                // Let's use a zero-width space or similar if needed, but " " is safe.
+                const targetText = index === 0 ? clusterText : " ";
 
                 if (n.node.attrs.text !== targetText) {
                     replacements.push({
@@ -182,6 +186,7 @@ export class CitationOrderManager {
         // 4. Dispatch Updates
         if (replacements.length > 0) {
             const tr = editor.state.tr;
+            tr.setMeta('normalization', true); // Prevent infinite loops
             let modified = false;
 
             replacements.forEach(({ pos, newText, id, clusterId }) => {
@@ -189,9 +194,11 @@ export class CitationOrderManager {
                 const $pos = tr.doc.resolve(pos);
                 const node = $pos.nodeAfter;
 
+                if (!node) return;
+
                 // Update Text while preserving all existing attributes
                 tr.setNodeMarkup(pos, null, {
-                    ...node?.attrs, // Preserve existing attributes
+                    ...node.attrs, // Preserve existing attributes
                     citationId: id,
                     text: newText
                 });

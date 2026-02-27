@@ -183,14 +183,14 @@ export const CitationStyleFloatingPanel: React.FC<CitationStyleFloatingPanelProp
             </p>
 
             {/* Style Options */}
-            <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="grid grid-cols-2 gap-2 mb-4">
                 {(["APA", "MLA", "Chicago", "IEEE"] as CitationStyle[]).map((style) => (
                     <button
                         key={style}
-                        onClick={() => setSelectedStyle(style)}
-                        className={`relative py-2 px-3 rounded-md border-2 transition-all text-xs font-medium ${selectedStyle === style
-                                ? "border-blue-500 bg-blue-100 text-blue-700 shadow-sm"
-                                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                        onClick={() => onConfirm(style)}
+                        className={`relative py-3 px-3 rounded-md border-2 transition-all text-xs font-bold ${selectedStyle === style
+                            ? "border-blue-500 bg-blue-100 text-blue-700 shadow-sm"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
                             }`}
                     >
                         {style}
@@ -204,27 +204,15 @@ export const CitationStyleFloatingPanel: React.FC<CitationStyleFloatingPanelProp
             {/* Custom Citation Button */}
             <button
                 onClick={() => setShowCustomEditor(true)}
-                className="w-full py-2 px-3 rounded-md border-2 border-dashed border-gray-300 text-gray-600 hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50 transition-all text-xs font-medium mb-3"
+                className="w-full py-2 px-3 rounded-md border-2 border-dashed border-gray-300 text-gray-500 hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50 transition-all text-[10px] font-medium mb-3"
             >
                 + Custom Citation
             </button>
 
             {/* Info */}
-            <div className="p-2 bg-blue-100 text-blue-800 text-[10px] rounded mb-3">
-                You can change this later in settings, but it may require re-checking citations.
+            <div className="p-2 bg-blue-50 text-blue-700 text-[10px] rounded border border-blue-100 italic">
+                You can change this anytime from the toolbar.
             </div>
-
-            {/* Confirm Button */}
-            <button
-                onClick={() => selectedStyle && onConfirm(selectedStyle)}
-                disabled={!selectedStyle || isSaving}
-                className={`w-full py-2 rounded-lg text-xs font-bold text-white transition-all ${!selectedStyle || isSaving
-                        ? "bg-gray-300 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700"
-                    }`}
-            >
-                {isSaving ? "Setting..." : "Confirm & Continue"}
-            </button>
         </div>
     );
 };

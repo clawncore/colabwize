@@ -20,11 +20,15 @@ export async function detectAndNormalizeCitations(editor: Editor, projectId: str
     // Load available citations into registry for this project
     CitationRegistryService.loadRegistry(projectId, availableCitations);
 
+    // --- NEW: Ingest from Bibliography Section FIRST ---
+    // This handles references typed into the document but not yet in the official library
+    await scanAndIngestReferences(editor, projectId, availableCitations, true); // true = syncOnly
+
     let ieeeCount = 0;
     let apaCount = 0;
 
     editor.commands.command(({ tr, state, dispatch }) => {
-        const replacements: { from: number; to: number; refKey: string; text: string }[] = [];
+        const replacements: { from: number; to: number; refKey: string; text: string; url?: string | null; sourceTitle?: string | null }[] = [];
 
         // Traverse the document specifically for paragraphs and headings
         let stopScanning = false;
@@ -68,13 +72,15 @@ export async function detectAndNormalizeCitations(editor: Editor, projectId: str
 
                 // Register and get Key
                 // We use the matched text as the raw reference for registry
-                const refKey = CitationRegistryService.registerCitation(projectId, match.text);
+                const entry = CitationRegistryService.registerCitation(projectId, match.text);
 
                 replacements.push({
                     from: absoluteFrom,
                     to: absoluteTo,
-                    refKey: refKey,
-                    text: match.text
+                    refKey: entry.ref_key,
+                    text: match.text,
+                    url: entry.url,
+                    sourceTitle: entry.sourceTitle || entry.raw_reference_text || (entry.csl_data?.title)
                 });
             });
 
@@ -86,16 +92,19 @@ export async function detectAndNormalizeCitations(editor: Editor, projectId: str
         replacements.sort((a, b) => b.from - a.from); // Apply from bottom up
 
         let modified = false;
-        replacements.forEach(({ from, to, refKey, text }) => {
+        replacements.forEach(({ from, to, refKey, text, url, sourceTitle }) => {
             // Replace text with Citation Node Atom
             tr.replaceWith(from, to, state.schema.nodes.citation.create({
                 citationId: refKey,
-                text: text
+                text: text,
+                url: url,
+                sourceTitle: sourceTitle
             }));
             modified = true;
         });
 
         if (modified) {
+            tr.setMeta('normalization', true); // Prevent infinite loop
             console.log(`✅ Normalized ${replacements.length} citations to Registry Keys.`);
             if (dispatch) dispatch(tr);
             return true;
@@ -114,7 +123,8 @@ export async function detectAndNormalizeCitations(editor: Editor, projectId: str
 export async function scanAndIngestReferences(
     editor: Editor,
     projectId: string,
-    existingCitations: any[]
+    existingCitations: any[],
+    syncOnly: boolean = false
 ): Promise<any[]> {
     if (!editor) return [];
 
@@ -123,13 +133,15 @@ export async function scanAndIngestReferences(
     // Also track rough titles to avoid duplicates with different IDs
     const existingTitles = new Set(existingCitations.map(c => c.title?.toLowerCase().slice(0, 30)));
 
+    const { CitationRegistryService } = await import("../../../services/CitationRegistryService");
+
     let inRefSection = false;
 
     // We scan the doc node structure to find the "References" header
     editor.state.doc.descendants((node) => {
         if (node.type.name === 'heading') {
-            const text = node.textContent.toLowerCase().trim();
-            if (text === 'references' || text === 'works cited' || text === 'bibliography') {
+            const text = node.textContent.toLowerCase().trim().replace(/[:.]$/, '');
+            if (text === 'references' || text === 'works cited' || text === 'bibliography' || text === 'reference list') {
                 inRefSection = true;
                 return;
             } else {
@@ -144,36 +156,40 @@ export async function scanAndIngestReferences(
                 const record = CitationNormalizer.parseReference(text);
 
                 if (record) {
-                    // Check if exists in library
-                    // 1. Check if ID exists (weak check, IDs might differ)
-                    // 2. Check title similarity or author+year uniqueness
-                    const roughTitle = record.title?.toLowerCase().slice(0, 30);
+                    // Always ensure it's in the REGISTRY for this session
+                    // This is CRITICAL for matching nodes in the document
+                    CitationRegistryService.registerCitation(projectId, text);
 
-                    if (!existingIds.has(record.id) && (!roughTitle || !existingTitles.has(roughTitle))) {
-                        // FOUND NEW CITATION!
-                        console.log("Found new reference to ingest:", record);
+                    if (!syncOnly) {
+                        // Check if exists in library
+                        const roughTitle = record.title?.toLowerCase().slice(0, 30);
 
-                        // Prepare payload for CitationService
-                        const newCitation = {
-                            title: record.title || "Unknown Title",
-                            authors: record.authors,
-                            year: record.year,
-                            type: "journal-article", // Default assumption
-                            source: "manual-ingest",
-                            tags: ["auto-imported"]
-                        };
+                        if (!existingIds.has(record.id) && (!roughTitle || !existingTitles.has(roughTitle))) {
+                            // FOUND NEW CITATION!
+                            console.log("Found new reference to ingest:", record);
 
-                        newCitations.push(newCitation);
+                            // Prepare payload for CitationService
+                            const newCitation = {
+                                title: record.title || "Unknown Title",
+                                authors: record.authors,
+                                year: record.year,
+                                type: "journal-article", // Default assumption
+                                source: "manual-ingest",
+                                tags: ["auto-imported"]
+                            };
 
-                        // Add to Sets to prevent duplicates within this loop
-                        existingIds.add(record.id);
-                        if (roughTitle) existingTitles.add(roughTitle);
+                            newCitations.push(newCitation);
 
-                        // Async Add to DB (Fire and Forget or await?)
-                        // We await to prevent race conditions if called frequently
-                        CitationService.createCitation(projectId, newCitation)
-                            .then(res => console.log("Auto-ingested citation:", res))
-                            .catch(err => console.error("Failed to ingest citation:", err));
+                            // Add to Sets to prevent duplicates within this loop
+                            existingIds.add(record.id);
+                            if (roughTitle) existingTitles.add(roughTitle);
+
+                            // Async Add to DB (Fire and Forget or await?)
+                            // We await to prevent race conditions if called frequently
+                            CitationService.createCitation(projectId, newCitation)
+                                .then(res => console.log("Auto-ingested citation:", res))
+                                .catch(err => console.error("Failed to ingest citation:", err));
+                        }
                     }
                 }
             }
@@ -193,43 +209,77 @@ export async function synchronizeRegistryWithDocument(editor: Editor, projectId:
     const { CitationRegistryService } = await import("../../../services/CitationRegistryService");
     let recoveredCount = 0;
 
-    editor.state.doc.descendants((node) => {
-        if (node.type.name === 'citation' && node.attrs.citationId && node.attrs.text) {
-            const entry = CitationRegistryService.getEntry(projectId, node.attrs.citationId);
+    editor.state.doc.descendants((node, pos) => {
+        if (node.type.name === 'citation') {
+            const { citationId, text } = node.attrs;
 
-            if (!entry) {
-                // RECOVERY: Register the existing node text as the source of truth
-                // We assume the stored text (e.g. "(Smith, 2020)") is the correct raw reference
-                CitationRegistryService.registerCitation(projectId, node.attrs.text, {
-                    // We don't have metadata, but at least we have the text
+            if (citationId && text) {
+                const entry = CitationRegistryService.getEntry(projectId, citationId);
+
+                if (!entry) {
+                    // RECOVERY: Register the existing node text as the source of truth
+                    // Use the existing ID as the preferred key to keep IDs stable!
+                    console.log(`[RegistryRecovery] Re-registering existing node ID: ${citationId} for "${text.substring(0, 20)}..."`);
+                    CitationRegistryService.registerCitation(projectId, text, {
+                        preferredKey: citationId,
+                        url: node.attrs.url,
+                        sourceTitle: node.attrs.sourceTitle
+                    });
+
+                    // Proactively clear 'invalid' status since we just restored it to registry
+                    if (node.attrs.status === 'invalid' || node.attrs.status === 'unresolved') {
+                        editor.commands.command(({ tr }) => {
+                            tr.setMeta('normalization', true);
+                            tr.setNodeMarkup(pos, undefined, {
+                                ...node.attrs,
+                                status: 'resolved'
+                            });
+                            return true;
+                        });
+                    }
+                } else {
+                    // Logic to clear 'red' (invalid) status if now in registry
+                    if (node.attrs.status === 'invalid' || node.attrs.status === 'unresolved') {
+                        editor.commands.command(({ tr }) => {
+                            tr.setMeta('normalization', true);
+                            tr.setNodeMarkup(pos, undefined, {
+                                ...node.attrs,
+                                status: 'resolved',
+                                url: node.attrs.url || entry.url,
+                                sourceTitle: node.attrs.sourceTitle || entry.sourceTitle || entry.raw_reference_text
+                            });
+                            return true;
+                        });
+                    }
+                    // Update metadata if missing on node but present in registry
+                    else if (!node.attrs.url && entry.url) {
+                        editor.commands.command(({ tr }) => {
+                            tr.setMeta('normalization', true);
+                            tr.setNodeMarkup(pos, undefined, {
+                                ...node.attrs,
+                                url: entry.url,
+                                sourceTitle: node.attrs.sourceTitle || entry.sourceTitle || entry.raw_reference_text
+                            });
+                            return true;
+                        });
+                    }
+                }
+            } else if (!citationId && text) {
+                // HEALING: Node exists but ID is lost. Re-resolve it.
+                console.log(`[RegistryHealing] Healing citation node with missing ID: "${text}"`);
+                const healedEntry = CitationRegistryService.registerCitation(projectId, text);
+
+                editor.commands.command(({ tr }) => {
+                    tr.setMeta('normalization', true);
+                    tr.setNodeMarkup(pos, undefined, {
+                        ...node.attrs,
+                        citationId: healedEntry.ref_key,
+                        url: healedEntry.url,
+                        sourceTitle: healedEntry.sourceTitle || healedEntry.raw_reference_text,
+                        status: 'resolved'
+                    });
+                    return true;
                 });
-
-                // Force-update the entry to match the specific ID if registerCitation generated a new one?
-                // registerCitation logic: if generic new, it makes new ID.
-                // We want to force the ID to match the node.
-                // We need a way to "force register" with specific ID.
-
-                // Since CitationRegistryService.registerCitation doesn't accept a custom ID (it generates or finds),
-                // we might need to manually inject it or update the service.
-                // Hack: We manually call register, then ensure the map helps us? 
-                // Actually, let's just use the Service's internal array manipulation or add a method.
-                // For now, let's just add a temporary backdoor or assume we can just 'register' and if ID differs, we update the node?
-                // Better: Update Registry Service to allow setEntry or similar.
-                // Or just:
-
-                const entries = CitationRegistryService.getRegistry(projectId) || [];
-                // Check if we really need to force ID. 
-                // If we don't force ID, OrderManager will see mismatch? 
-                // Yes, OrderManager looks up by node.attrs.citationId.
-
-                // Let's manually push to registry cache for this session
-                const newEntry = {
-                    ref_key: node.attrs.citationId,
-                    raw_reference_text: node.attrs.text,
-                    contentHash: "recovered"
-                };
-                entries.push(newEntry);
-                CitationRegistryService.loadRegistry(projectId, entries); // Re-load to set map
                 recoveredCount++;
             }
         }

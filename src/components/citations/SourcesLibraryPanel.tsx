@@ -60,6 +60,8 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
     const [viewerSource, setViewerSource] = useState<StoredCitation | null>(null);
     const [viewerAnnotations, setViewerAnnotations] = useState<any[]>([]);
 
+    const [pendingCiteSource, setPendingCiteSource] = useState<StoredCitation | null>(null);
+
     // Sync local citations when prop changes
     React.useEffect(() => {
         setLocalCitations(citations);
@@ -74,9 +76,6 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
         const authorPart = (typeof c.author === 'string' ? c.author : c.authors?.[0] || "").toLowerCase().trim();
         return `${titlePart}-${yearPart}-${authorPart}`;
     };
-
-    // Track which source triggered the style selection (to auto-cite after selection - optional)
-    // For now we just set the style.
 
     // Deduplicate and process citations
     const processedCitations = useMemo(() => {
@@ -140,12 +139,21 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
         if (!projectId) return;
         setIsSavingStyle(true);
         try {
-            // Persist style to backend via parent callback if provided
+            // Persist style to backend via parent callback
             if (onStyleSet) {
                 onStyleSet(style);
                 setShowStylePanel(false);
-            } else {
-                console.warn("No handler for style set");
+
+                // If we were waiting to cite a specific source, do it now
+                if (pendingCiteSource && onInsertCitation) {
+                    onInsertCitation(pendingCiteSource.raw_reference_text || pendingCiteSource.title || "Citation", {
+                        eventId: "citation_inserted",
+                        sourceId: pendingCiteSource.id || pendingCiteSource.doi || pendingCiteSource.title,
+                        style: style,
+                        timestamp: new Date().toISOString(),
+                    });
+                    setPendingCiteSource(null);
+                }
             }
         } catch (error) {
             console.error("Failed to set style", error);
@@ -329,6 +337,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
+                                                        setPendingCiteSource(source);
                                                         setShowStylePanel(true);
                                                     }}
                                                     className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"

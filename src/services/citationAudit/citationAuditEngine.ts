@@ -434,8 +434,8 @@ function findCitationMarksInBlock(node: EditorContent, baseOffset: number): Arra
 // Helpers
 
 function isReferenceHeader(text: string): boolean {
-    const t = text.toLowerCase().trim();
-    return t === "references" || t === "works cited" || t === "bibliography";
+    const t = text.toLowerCase().trim().replace(/[:.]$/, "");
+    return t === "references" || t === "works cited" || t === "bibliography" || t === "reference list";
 }
 
 function calculateNodeSize(node: EditorContent): number {

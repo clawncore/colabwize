@@ -148,40 +148,33 @@ export class CitationNormalizer {
      * Parse a single reference string into a record
      */
     public static parseReference(text: string): ReferenceRecord | null {
-        // Simple extraction logic (can be enhanced with an external parser)
-        // Goal: Extract Author(s) and Year
-
         // Pattern: Start of string -> Authors -> (Year) or Year.
-        // Example: "Greenberg, S. A. (2009). Title..."
-
         const yearMatch = text.match(/\((\d{4})\)/) || text.match(/\b(\d{4})\./);
         if (!yearMatch) return null;
 
         const year = parseInt(yearMatch[1]);
         const preYearText = text.substring(0, yearMatch.index).trim();
+        const postYearText = text.substring(yearMatch.index! + yearMatch[0].length).trim();
 
-        // Extract first author surname
-        // "Greenberg, S. A." -> "Greenberg"
-        // "Higgins, J. P., & Green, S." -> "Higgins"
-        // "American Psychological Association" -> entire string
+        // Extract DOI/URL
+        const doiMatch = text.match(/10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/);
+        const urlMatch = text.match(/https?:\/\/[^\s]+|www\.[^\s]+/);
 
-        let primaryAuthor = "";
-        const authorMatch = preYearText.split(/,|\.|&/)[0].trim();
-        if (authorMatch) {
-            primaryAuthor = authorMatch;
-        } else {
-            return null; // Can't identify
-        }
+        // Extract primary author for ID generation
+        // "Ioannidis, J. P. A." -> "Ioannidis"
+        let primaryAuthor = preYearText.split(/,|\.|&/)[0].trim();
+        // Clean author name for ID (take only alpha part of first word)
+        const authorIdPart = primaryAuthor.split(/\s/)[0].replace(/[^a-zA-Z]/g, '').toLowerCase();
 
         // Generate ID
-        const id = `${primaryAuthor.toLowerCase().replace(/\s/g, '')}${year}`;
+        const id = `${authorIdPart}${year}`;
 
         return {
             id,
-            authors: [primaryAuthor], // Simplify for now
+            authors: [primaryAuthor],
             year,
             rawText: text,
-            title: text.substring(yearMatch.index! + yearMatch[0].length).trim() // Rough title extraction
+            title: postYearText.split(/\.|\?|!/)[0].trim() || "Untitled"
         };
     }
 

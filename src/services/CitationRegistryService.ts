@@ -4,6 +4,8 @@
 export interface RegistryEntry {
     ref_key: string;
     raw_reference_text: string;
+    all_texts?: string[]; // To track multiple ways this is cited
+    sourceTitle?: string;
     doi?: string;
     url?: string;
     csl_data?: any; // Placeholder for future CSL JSON
@@ -17,19 +19,23 @@ export class CitationRegistryService {
      * Initialize registry from project data
      */
     static loadRegistry(projectId: string, existingCitations: any[]) {
-        // Convert existing citations to RegistryEntry format if needed
-        // For now, we assume existingCitations might match the structure or be empty
         const entries: RegistryEntry[] = existingCitations.map((c, index) => {
             const entry: RegistryEntry = {
-                ref_key: c.ref_key || `ref_${String(index + 1).padStart(3, '0')}`,
+                ref_key: c.ref_key || c.id || `ref_${String(index + 1).padStart(3, '0')}`,
                 raw_reference_text: c.raw_reference_text || c.title || "Unknown Reference",
                 doi: c.doi,
                 url: c.url,
                 csl_data: c.csl_data
             };
-            // Generate hash for existing entries to enable dedupe against new ones
+
+            // ALWAYS generate hash for deduplication, even if csl_data is missing
             if (c.csl_data) {
                 entry.contentHash = this.generateContentHash(c.csl_data);
+            } else {
+                // Generate a temporary CSL to get a hash for the existing entry
+                const tempCsl = this.normalizeToCSL(entry.ref_key, entry.raw_reference_text, { doi: entry.doi, url: entry.url });
+                entry.contentHash = this.generateContentHash(tempCsl);
+                entry.csl_data = tempCsl; // Cache it
             }
             return entry;
         });
@@ -40,16 +46,21 @@ export class CitationRegistryService {
      * Get or create a reference key for a given citation text.
      * Keeps keys stable for the same text.
      */
-    static registerCitation(projectId: string, text: string, metadata?: { doi?: string, url?: string }): string {
+    static registerCitation(projectId: string, text: string, metadata?: { doi?: string, url?: string, preferredKey?: string, sourceTitle?: string }): RegistryEntry {
+        if (!projectId || projectId === 'current-project') {
+            console.warn(`[Registry] Potential ID Mismatch: registerCitation called with projectId="${projectId}"`);
+        }
+
         let entries = this.registry.get(projectId) || [];
 
         // 1. Generate CSL first to get normalized data for hashing
-        // We use a temporary ID for normalization
         const tempCsl = this.normalizeToCSL("temp", text, metadata);
         const hash = this.generateContentHash(tempCsl);
 
-        // 2. Check for existing match (Exact text OR Content Hash)
+        // 2. Check for existing match (Exact text OR Content Hash OR Preferred Key)
         const existing = entries.find(e =>
+            (metadata?.preferredKey && e.ref_key === metadata.preferredKey) ||
+            e.all_texts?.includes(text) || // Multi-text match support
             e.raw_reference_text === text || // Exact text match
             (e.contentHash && e.contentHash === hash) // Semantic match
         );
@@ -64,13 +75,18 @@ export class CitationRegistryService {
                 existing.url = metadata.url;
                 if (existing.csl_data) existing.csl_data.URL = metadata.url;
             }
-            // console.log(`[Registry] Hit: ${projectId} | ${text} -> ${existing.ref_key}`);
-            return existing.ref_key;
+            if (metadata?.sourceTitle && !existing.sourceTitle) {
+                existing.sourceTitle = metadata.sourceTitle;
+            }
+            return existing;
         }
 
-        // 3. Generate new key
-        const nextIndex = entries.length + 1;
-        const refKey = `ref_${String(nextIndex).padStart(3, '0')}`;
+        // 3. Generate new key OR use preferred key
+        let refKey = metadata?.preferredKey;
+        if (!refKey) {
+            const nextIndex = entries.length + 1;
+            refKey = `ref_${String(nextIndex).padStart(3, '0')}`;
+        }
 
         // Update ID in CSL
         tempCsl.id = refKey;
@@ -80,6 +96,7 @@ export class CitationRegistryService {
             raw_reference_text: text,
             doi: tempCsl.DOI,
             url: tempCsl.URL,
+            sourceTitle: metadata?.sourceTitle,
             csl_data: tempCsl,
             contentHash: hash
         };
@@ -87,8 +104,8 @@ export class CitationRegistryService {
         entries.push(newEntry);
         this.registry.set(projectId, entries);
 
-        console.log(`[Registry] New Entry: ${projectId} | ${refKey} | "${text.substring(0, 30)}..."`);
-        return refKey;
+        console.log(`[Registry] New Entry Created: ${projectId} | ${refKey} | "${text.substring(0, 30)}..."`);
+        return newEntry;
     }
 
     /**

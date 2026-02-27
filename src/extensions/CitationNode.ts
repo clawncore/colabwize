@@ -8,7 +8,7 @@ export interface CitationNodeOptions {
 declare module "@tiptap/core" {
     interface Commands<ReturnType> {
         citation: {
-            insertCitation: (attributes: { citationId: string; text?: string }) => ReturnType;
+            insertCitation: (attributes: { citationId: string; text?: string; url?: string; sourceTitle?: string }) => ReturnType;
         };
     }
 }
@@ -55,6 +55,20 @@ export const CitationNode = Node.create<CitationNodeOptions>({
                 renderHTML: (attributes) => ({
                     "data-text": attributes.text
                 }),
+            },
+            url: {
+                default: null,
+                parseHTML: (element) => element.getAttribute("data-url"),
+                renderHTML: (attributes) => ({
+                    "data-url": attributes.url
+                }),
+            },
+            sourceTitle: {
+                default: null,
+                parseHTML: (element) => element.getAttribute("data-source-title"),
+                renderHTML: (attributes) => ({
+                    "data-source-title": attributes.sourceTitle
+                }),
             }
         };
     },
@@ -69,7 +83,9 @@ export const CitationNode = Node.create<CitationNodeOptions>({
                     return {
                         citationId: element.getAttribute("data-cite"),
                         status: element.getAttribute("data-status"),
-                        text: element.textContent || element.getAttribute("data-text")
+                        text: element.textContent || element.getAttribute("data-text"),
+                        url: element.getAttribute("data-url"),
+                        sourceTitle: element.getAttribute("data-source-title"),
                     };
                 }
             },
@@ -90,12 +106,16 @@ export const CitationNode = Node.create<CitationNodeOptions>({
             case 'verified':
                 statusClass = "border-green-400 bg-green-50 text-green-700";
                 break;
+            case 'resolved':
+                statusClass = "border-blue-300 bg-blue-50 text-blue-800";
+                break;
             case 'warning':
                 statusClass = "border-yellow-400 bg-yellow-50 text-yellow-700";
                 break;
             case 'invalid':
                 statusClass = "border-red-400 bg-red-50 text-red-700";
                 break;
+            case 'unresolved':
             default:
                 statusClass = "border-blue-200 bg-blue-50/50 text-blue-700";
         }
@@ -126,7 +146,9 @@ export const CitationNode = Node.create<CitationNodeOptions>({
                             type: this.name,
                             attrs: {
                                 citationId: attributes.citationId,
-                                text: attributes.text
+                                text: attributes.text,
+                                url: attributes.url,
+                                sourceTitle: attributes.sourceTitle
                             },
                         });
                     },

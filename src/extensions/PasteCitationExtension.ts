@@ -70,12 +70,14 @@ export const PasteCitationExtension = Extension.create({
                             // If it's a known citation, we get the ID.
                             // If it's new, we register it with `unresolved` (implied by default or logic)
                             // We use Registry to get a stable ID for this text.
-                            const refKey = CitationRegistryService.registerCitation(projectId, matchText);
+                            const entry = CitationRegistryService.registerCitation(projectId, matchText);
 
                             // Create Citation Node
                             const citationNode = schema.nodes.citation.create({
-                                id: refKey,
+                                citationId: entry.ref_key,
                                 text: matchText,
+                                url: entry.url,
+                                sourceTitle: entry.sourceTitle || entry.raw_reference_text,
                                 status: 'unresolved' // Force new paste to be audited
                             });
                             nodes.push(citationNode);

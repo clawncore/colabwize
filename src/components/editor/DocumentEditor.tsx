@@ -274,129 +274,148 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   }, [project.id, project.title, project.description]);
 
   // Handle Citation Clicks (Scroll to Reference)
-  const scrollToReference = (citationId: string) => {
+  const scrollToReference = async (citationId: string) => {
+    console.log("[ScrollToRef] Searching for ID:", citationId);
+
+    // 1. Get metadata from registry for the most up-to-date search terms
+    const { CitationRegistryService } = await import("../../services/CitationRegistryService");
+    const entry = CitationRegistryService.getEntry(project.id, citationId);
     const citation = project.citations?.find((c) => c.id === citationId);
-    if (!citation) return;
 
-    // Construct search strings (Author Last Name or Title or Number)
-    // Heuristic: "Smith" or "The Art of Testing"
-    const authorLast =
-      citation.authors?.[0]?.lastName ||
-      (typeof citation.authors?.[0] === "string" ? citation.authors[0] : "");
+    // Construct search strings
+    let authorLast = "";
+    let titleMatch = "";
+
+    if (entry?.csl_data?.author?.[0]) {
+      const auth = entry.csl_data.author[0];
+      authorLast = auth.family || auth.literal || "";
+    } else if (citation?.authors?.[0]) {
+      authorLast = citation.authors[0].lastName || (typeof citation.authors[0] === "string" ? citation.authors[0] : "");
+    }
+
+    titleMatch = entry?.sourceTitle || entry?.csl_data?.title || citation?.title || "";
+
     const searchTerms = [
-      citation.id, // If we have IDs in bibliography
+      citationId,
       authorLast,
-      citation.title,
-    ].filter(Boolean) as string[];
+      titleMatch
+    ].filter(term => term && term.length > 2) as string[];
 
-    if (searchTerms.length === 0) return;
+    if (searchTerms.length === 0) {
+      console.warn("[ScrollToRef] No search terms found for:", citationId);
+      return;
+    }
 
-    // Search for reference by the citation text (e.g., "[3]")
     const editorDom = document.querySelector(".ProseMirror");
     if (!editorDom) return;
 
     const children = Array.from(editorDom.children) as HTMLElement[];
-    let refSectionFound = false;
     let targetElement: HTMLElement | null = null;
 
-    for (const child of children) {
-      const text = child.innerText?.toLowerCase() || "";
+    // 2. Identify References section header index
+    const refHeaderIndex = children.findIndex(child => {
+      const text = child.textContent?.toLowerCase() || "";
+      const isHeading = ["h1", "h2", "h3"].includes(child.tagName.toLowerCase());
+      const isBold = child.querySelector("strong") || child.classList.contains("font-bold");
 
-      // Detect Section Header
-      if (["h1", "h2", "h3"].includes(child.tagName.toLowerCase())) {
-        if (text.includes("references") || text.includes("bibliography")) {
-          refSectionFound = true;
-          continue;
-        }
-      }
+      return (isHeading || isBold) && (
+        text.includes("references") ||
+        text.includes("bibliography") ||
+        text.includes("works cited")
+      );
+    });
 
-      // If we are in references section, search for the citation
-      if (refSectionFound) {
-        // Check if paragraph contains author AND year? Or just author?
-        // Using simple includes for now.
-        const matches = searchTerms.some((term) =>
-          child.innerText?.includes(term),
-        );
+    // 3. Search document, prioritizing matches after the header
+    // We iterate backwards to find the LATEST occurrence (usually the bibliography entry)
+    for (let i = children.length - 1; i >= 0; i--) {
+      const child = children[i];
+      const text = child.textContent?.toLowerCase() || "";
+      if (text.length < 5) continue;
 
-        if (matches) {
-          targetElement = child;
+      // Skip citation pills themselves
+      if (child.querySelector(".citation-pill") && i < children.length - 3) continue;
+
+      const matches = searchTerms.some(term => text.includes(term.toLowerCase()));
+
+      if (matches) {
+        targetElement = child;
+        // If we found a match and it's after the References header, we're definitely good
+        if (refHeaderIndex !== -1 && i > refHeaderIndex) {
           break;
         }
+        // If no header found, or match is before header, we keep it as fallback but continue searching
       }
     }
 
-    // 3. Scroll and Highlight
     if (targetElement) {
+      console.log("[ScrollToRef] Found target:", targetElement.textContent?.substring(0, 50));
       targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
-
-      // Add highlight class
       targetElement.classList.add("highlight-reference-flash");
-      setTimeout(() => {
-        targetElement?.classList.remove("highlight-reference-flash");
-      }, 2000);
+      setTimeout(() => targetElement?.classList.remove("highlight-reference-flash"), 3000);
 
       toast({
         title: "Reference Found",
-        description: `Jumped to citation by ${authorLast || "Unknown"}.`,
+        description: `Jumped to bibliography entry.`,
       });
     } else {
+      console.warn("[ScrollToRef] No match found for:", searchTerms);
       toast({
         title: "Reference Not Found",
-        description: "Could not locate the bibliography entry.",
+        description: "Could not locate this entry in the bibliography.",
         variant: "destructive",
       });
     }
   };
 
-  // Handle Citation Clicks (Scroll to Reference)
-  const scrollToReferenceByText = (citationText: string) => {
-    // Search for reference by the citation text (e.g., "[3]")
+  const scrollToReferenceByText = async (citationText: string) => {
+    console.log("[ScrollToRefByText] Searching for:", citationText);
     const editorDom = document.querySelector(".ProseMirror");
     if (!editorDom) return;
 
+    // Try to resolve context from registry first
+    const { CitationRegistryService } = await import("../../services/CitationRegistryService");
+    const entries = CitationRegistryService.getRegistry(project.id);
+    const entry = entries.find(e => e.raw_reference_text.includes(citationText) || citationText.includes(e.ref_key));
+
+    if (entry && entry.ref_key) {
+      return scrollToReference(entry.ref_key);
+    }
+
+    const cleanCitation = citationText.replace(/[()]/g, "").trim().toLowerCase();
     const children = Array.from(editorDom.children) as HTMLElement[];
-    let refSectionFound = false;
     let targetElement: HTMLElement | null = null;
 
-    for (const child of children) {
-      const text = child.innerText?.toLowerCase() || "";
+    // Search from the bottom up
+    for (let i = children.length - 1; i >= 0; i--) {
+      const child = children[i];
+      const text = child.textContent || "";
+      if (text.length < 5) continue;
 
-      // Detect Section Header
-      if (["h1", "h2", "h3"].includes(child.tagName.toLowerCase())) {
-        if (text.includes("references") || text.includes("bibliography")) {
-          refSectionFound = true;
-          continue;
-        }
+      // Skip the source citation itself
+      if (child.innerText.includes(citationText) && i < children.length - 5) continue;
+
+      if (text.toLowerCase().includes(cleanCitation)) {
+        targetElement = child;
+        break;
       }
 
-      // If we are in references section, search for the citation text
-      if (refSectionFound) {
-        // For IEEE style like "[3]", look for entries starting with that
-        if (child.innerText?.trim().startsWith(citationText)) {
-          targetElement = child;
-          break;
-        }
+      // Fuzzy parts match
+      const parts = cleanCitation.split(/[,\s&]+/).filter(p => p.length > 2);
+      if (parts.length > 0 && parts.every(p => text.toLowerCase().includes(p))) {
+        targetElement = child;
+        break;
       }
     }
 
-    // Scroll and Highlight
     if (targetElement) {
       targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
       targetElement.classList.add("highlight-reference-flash");
-      setTimeout(() => {
-        targetElement?.classList.remove("highlight-reference-flash");
-      }, 2000);
-
-      toast({
-        title: "Reference Found",
-        description: `Jumped to citation ${citationText}.`,
-      });
+      setTimeout(() => targetElement?.classList.remove("highlight-reference-flash"), 3000);
     } else {
-      console.warn("[ScrollToRef] Reference not found for:", citationText);
-      console.warn("[ScrollToRef] refSectionFound:", refSectionFound);
+      console.warn("[ScrollToRefByText] Failed to locate entry for:", citationText);
       toast({
         title: "Reference Not Found",
-        description: `Could not locate bibliography entry for ${citationText}.`,
+        description: "Could not find this reference in the bibliography section.",
         variant: "destructive",
       });
     }
@@ -413,20 +432,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         } as any),
         ...(isCollaborative && provider && ydoc
           ? [
-              Collaboration.configure({
-                document: ydoc, // Bind directly to the stable Y.Doc
-              }),
-              CollaborationCursor.configure({
-                provider: provider, // Bind directly to the Hocuspocus provider
-                user: {
-                  name:
-                    user?.user_metadata?.full_name ||
-                    user?.email ||
-                    "Anonymous",
-                  color: cursorColor,
-                },
-              }),
-            ]
+            Collaboration.configure({
+              document: ydoc, // Bind directly to the stable Y.Doc
+            }),
+            CollaborationCursor.configure({
+              provider: provider, // Bind directly to the Hocuspocus provider
+              user: {
+                name:
+                  user?.user_metadata?.full_name ||
+                  user?.email ||
+                  "Anonymous",
+                color: cursorColor,
+              },
+            }),
+          ]
           : []),
         HighlightExtension,
         CharacterCount,
@@ -475,7 +494,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         ? undefined
         : formatContentForTiptap(project.content),
       // NOTE: In collab mode, content is loaded from Yjs (Hocuspocus server) not here.
-      onUpdate: () => {
+      onUpdate: ({ transaction }) => {
+        // Prevent infinite loops from internal normalization/audit updates
+        if (transaction.getMeta('normalization') || transaction.getMeta('integrity-check')) {
+          return;
+        }
         // Increment edit count when content changes
         setEditCount((prev) => prev + 1);
       },
@@ -486,26 +509,34 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         },
         handleClick: (view, pos, event) => {
           const target = event.target as HTMLElement;
-          console.log("[CitationClick] Click detected, target:", target);
-
           // Find citation element by class since citationId might be null
           const citationElement = target.closest(".citation-pill");
-          console.log("[CitationClick] Citation element:", citationElement);
 
           if (citationElement) {
-            // Try to get citation ID, fall back to text
+            // Try to get citation attributes
             const citationId = citationElement.getAttribute("data-cite");
             const citationText =
               citationElement.getAttribute("data-text") ||
-              citationElement.textContent;
+              citationElement.textContent || "";
+            const url = citationElement.getAttribute("data-url");
+            const sourceTitle = citationElement.getAttribute("data-source-title") || "Source Paper";
 
-            console.log("[CitationClick] Citation ID:", citationId);
-            console.log("[CitationClick] Citation text:", citationText);
+            console.log("[CitationClick] Attributes:", { citationId, citationText, url, sourceTitle });
+
+            // HYPERLINK BEHAVIOR: If a URL exists, open it directly
+            if (url && url !== "null") {
+              window.open(url, "_blank");
+              toast({
+                title: sourceTitle,
+                description: "Opening verified source in new tab...",
+              });
+              return true; // Stop propagation
+            }
 
             if (citationId) {
               scrollToReference(citationId);
             } else if (citationText) {
-              // Use text to find reference (e.g., "[3]" → search for entry starting with "[3]")
+              // Use fuzzy text matching for resolved but legacy/null ID nodes
               scrollToReferenceByText(citationText.trim());
             }
             return true; // Stop propagation
@@ -623,9 +654,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       );
     }
 
-    const timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(async () => {
       // 1. Run normalization (text -> blue pills)
-      detectAndNormalizeCitations(editor, project.id, project.citations || []);
+      await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+
+      // 2. Synchronize existing nodes with registry
+      await synchronizeRegistryWithDocument(editor, project.id);
 
       import("../../services/CitationOrchestrator").then(
         ({ CitationOrchestrator }) => {
@@ -1339,11 +1373,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isPreviewMode
-                      ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
+                    ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1359,11 +1392,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isFocusMode
-                      ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
+                    ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />

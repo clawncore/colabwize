@@ -63,6 +63,7 @@ export interface StoredCitation {
   citationCount?: number;
   impactFactor?: string | number; // Added based on usage
   openAccess?: boolean; // Added based on usage
+  raw_reference_text?: string; // Added to fix property missing error
   formatted_citations?: Record<string, string>;
   added_at?: string;
   themes?: string[];

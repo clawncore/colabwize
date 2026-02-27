@@ -1,7 +1,7 @@
 import { Editor } from "@tiptap/react";
 import { CitationRegistryService } from "./CitationRegistryService";
 
-export type CitationStatus = 'verified' | 'warning' | 'invalid' | 'unresolved';
+export type CitationStatus = 'verified' | 'resolved' | 'warning' | 'invalid' | 'unresolved';
 
 export class CitationIntegrityWatcher {
     private static statusMap: Map<string, CitationStatus> = new Map();
@@ -9,7 +9,7 @@ export class CitationIntegrityWatcher {
     private static debounceTimer: NodeJS.Timeout | null = null;
 
     /**
-     * Set explicit status for keys (e.g. from initial load or backend response)
+     * Set explicit status for keys
      */
     static setStatus(statusUpdates: Record<string, CitationStatus>) {
         Object.entries(statusUpdates).forEach(([key, status]) => {
@@ -26,13 +26,13 @@ export class CitationIntegrityWatcher {
 
     /**
      * Scan editor for citations and trigger checks for new/unknown ones.
-     * Also updates visual attributes of citation nodes.
+     * Also updates visual attributes and metadata of citation nodes.
      */
-    static async processUpdates(editor: Editor, projectId: string) {
+    static async processUpdates(editor: Editor, projectId: string, explicitUpdates?: Record<string, any>) {
         if (!editor || !editor.state) return;
 
         const currentIds = new Set<string>();
-        const nodesToUpdate: { pos: number, id: string, currentStatus: string }[] = [];
+        const nodesToUpdate: { pos: number, id: string, attrs: any }[] = [];
 
         // 1. Scan doc
         editor.state.doc.descendants((node, pos) => {
@@ -40,10 +40,19 @@ export class CitationIntegrityWatcher {
                 const id = node.attrs.citationId;
                 if (id) {
                     currentIds.add(id);
-                    const status = this.getStatus(id);
-                    // Check if node needs visual update
-                    if (node.attrs.status !== status) {
-                        nodesToUpdate.push({ pos, id, currentStatus: status });
+
+                    const update = explicitUpdates?.[id];
+                    const targetStatus = update?.status || this.getStatus(id);
+                    const targetUrl = update?.url || node.attrs.url;
+                    const targetTitle = update?.sourceTitle || node.attrs.sourceTitle;
+
+                    // Check if node needs visual or metadata update
+                    if (node.attrs.status !== targetStatus || node.attrs.url !== targetUrl || node.attrs.sourceTitle !== targetTitle) {
+                        nodesToUpdate.push({
+                            pos,
+                            id,
+                            attrs: { ...node.attrs, status: targetStatus, url: targetUrl, sourceTitle: targetTitle }
+                        });
                     }
                 }
             }
@@ -65,16 +74,12 @@ export class CitationIntegrityWatcher {
             this.scheduleAudit(toCheck, projectId, editor);
         }
 
-        // 4. Update Visuals immediately for known statuses
+        // 4. Update Visuals & Metadata immediately
         if (nodesToUpdate.length > 0) {
             const tr = editor.state.tr;
-            nodesToUpdate.forEach(({ pos, id, currentStatus }) => {
-                // Ensure we are still looking at a citation node (though pos should be stable in this sync tick)
-                // Using setNodeMarkup to update attributes
-                tr.setNodeMarkup(pos, null, {
-                    ...editor.state.doc.nodeAt(pos)?.attrs,
-                    status: currentStatus
-                });
+            tr.setMeta('integrity-check', true); // Prevent infinite loops
+            nodesToUpdate.forEach(({ pos, attrs }) => {
+                tr.setNodeMarkup(pos, null, attrs);
             });
             if (tr.docChanged) {
                 editor.view.dispatch(tr);
@@ -94,34 +99,43 @@ export class CitationIntegrityWatcher {
     private static async performAudit(keys: string[], projectId: string, editor: Editor) {
         console.log("🔍 Auditing citations:", keys);
 
-        // Simulate Backend Call or use CitationAuditAdapter
-        // For now, we simulate basic validation logic based on Registry data
-
-        const updates: Record<string, CitationStatus> = {};
+        const updates: Record<string, { status: CitationStatus, url?: string, sourceTitle?: string }> = {};
 
         keys.forEach(key => {
             const entry = CitationRegistryService.getEntry(projectId, key);
             if (!entry) {
-                updates[key] = 'invalid'; // Not in registry?
+                updates[key] = { status: 'invalid' };
             } else {
-                // Rudimentary check: has title and (author or year)?
-                // Or check if DOI/URL exists for "verified"
-                if (entry.doi || entry.url) {
-                    updates[key] = 'verified';
-                } else if (entry.csl_data?.title && entry.csl_data?.author) {
-                    updates[key] = 'verified'; // Good enough structure
-                } else {
-                    updates[key] = 'warning'; // Missing critical metadata
+                let status: CitationStatus = 'resolved'; // Found in bibliography = blue (resolved)
+                let url = entry.url;
+
+                // If no URL but has DOI, construct link
+                if (!url && entry.doi) {
+                    url = entry.doi.startsWith('http') ? entry.doi : `https://doi.org/${entry.doi}`;
                 }
+
+                if (url) {
+                    status = 'verified'; // Has link = green (verified)
+                } else if (!entry.csl_data?.title && !entry.raw_reference_text) {
+                    status = 'warning'; // Found but seems empty or weird
+                }
+
+                updates[key] = {
+                    status,
+                    url: url,
+                    sourceTitle: entry.sourceTitle || entry.csl_data?.title || entry.raw_reference_text
+                };
             }
         });
 
-        this.setStatus(updates);
+        // Store status for next check loop
+        Object.entries(updates).forEach(([key, val]) => {
+            this.statusMap.set(key, val.status);
+        });
 
-        // Re-run processUpdates to apply new statuses visually
-        // (We can pass editor from closure)
+        // Re-run processUpdates to apply new statuses and metadata visually
         if (editor && !editor.isDestroyed) {
-            this.processUpdates(editor, projectId);
+            this.processUpdates(editor, projectId, updates);
         }
     }
 }
