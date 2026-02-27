@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import NotificationBell from "./NotificationBell";
 import { useAuth } from "../../hooks/useAuth";
 import { useUser } from "../../services/useUser";
@@ -90,7 +90,6 @@ export default function DashboardLayout({
     );
   };
   const { user, loading } = useUser();
-  const [projectsCount, setProjectsCount] = useState(0);
   const [subscriptionData, setSubscriptionData] = useState<any>(null);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -114,7 +113,7 @@ export default function DashboardLayout({
   } = useSubscriptionStore();
 
   // Fetch workspaces
-  const fetchWorkspaces = async () => {
+  const fetchWorkspaces = useCallback(async () => {
     // Wait for both user AND token to be ready
     if (!user) return;
 
@@ -127,11 +126,11 @@ export default function DashboardLayout({
     } finally {
       setLoadingWorkspaces(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchWorkspaces();
-  }, [user]);
+  }, [fetchWorkspaces]);
 
   // Fetch projects and subscription data
   useEffect(() => {
@@ -140,14 +139,6 @@ export default function DashboardLayout({
 
       setLoadingProjects(true);
       try {
-        // Fetch projects count
-        const projects = await documentService.getUserProjects(user.id);
-        if (Array.isArray(projects)) {
-          setProjectsCount(projects.length);
-        } else if (projects && Array.isArray(projects.projects)) {
-          setProjectsCount(projects.projects.length);
-        }
-
         // Fetch subscription data
         const subService = new SubscriptionService();
         const subData = await subService.getUserPlan();
