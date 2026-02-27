@@ -3,7 +3,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Button } from "../../ui/button";
 import { ScrollArea } from "../../ui/scroll-area";
 import { MentionInput, MentionUser } from "../../ui/mention-input";
-import { Send, MessageSquare, X, Lock, Trash2, Reply } from "lucide-react";
+import {
+  Send,
+  MessageSquare,
+  X,
+  Lock,
+  Trash2,
+  Reply,
+  Loader2,
+} from "lucide-react";
 import TeamChatService, {
   TeamChatMessage,
 } from "../../../services/teamChatService";
@@ -182,36 +190,38 @@ export function TeamChat({
   return (
     <div
       className={`flex flex-col h-full bg-white border-l border-border overflow-hidden ${className}`}>
-      {/* Page Header - Clean White Style */}
-      <div className="p-6 pb-2 bg-white border-b border-border">
-        <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-          {workspaceName || (
-            <div className="h-6 w-32 bg-muted animate-pulse rounded" />
-          )}{" "}
-          Team Chat
-        </h1>
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <Lock className="w-3 h-3" /> End-to-end encrypted
-        </p>
+      {/* Page Header - Refined Minimalist Style */}
+      <div className="px-6 py-4 bg-white border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-gray-900 flex items-center gap-2">
+            {workspaceName || (
+              <div className="h-5 w-32 bg-gray-50 animate-pulse rounded" />
+            )}{" "}
+            Group Chat
+          </h1>
+          <p className="text-[10px] text-gray-400 flex items-center gap-1 font-medium tracking-wide uppercase">
+            <Lock className="w-2.5 h-2.5" /> End-to-end encrypted
+          </p>
+        </div>
       </div>
 
-      {/* Messages Area - Clean White Background */}
-      <ScrollArea className="flex-1 px-4 py-8 scroll-smooth" ref={scrollRef}>
-        <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+      {/* Messages Area - Ultra-clean White Background */}
+      <ScrollArea className="flex-1 px-6 py-10 scroll-smooth" ref={scrollRef}>
+        <div className="flex flex-col gap-8 max-w-4xl mx-auto">
           {loading ? (
             <div className="flex items-center justify-center py-10">
-              <div className="h-8 w-8 border-2 border-primary border-t-transparent animate-spin rounded-full"></div>
+              <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center opacity-30">
-              <div className="bg-slate-50 p-5 rounded-full mb-4 shadow-inner">
-                <MessageSquare className="w-10 h-10 text-slate-400" />
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="bg-gray-50 p-6 rounded-full mb-6 border border-gray-100">
+                <MessageSquare className="w-8 h-8 text-gray-300" />
               </div>
-              <p className="text-sm font-semibold text-slate-500">
-                No messages yet
+              <p className="text-sm font-semibold text-gray-400">
+                Secure Team Communication
               </p>
-              <p className="text-xs text-slate-400 mt-1">
-                Your messages are secured with E2EE.
+              <p className="text-xs text-gray-300 mt-1 max-w-[200px]">
+                Messages are protected with workspace-level encryption.
               </p>
             </div>
           ) : (
@@ -221,12 +231,12 @@ export function TeamChat({
               return (
                 <div
                   key={msg.id}
-                  className={`flex items-start gap-3 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+                  className={`flex items-start gap-4 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
                   <Avatar
-                    className={`h-9 w-9 shrink-0 shadow-sm border ${isMe ? "border-blue-100" : "border-slate-100"}`}>
-                    <AvatarImage src={msg.user.id ? undefined : undefined} />
+                    className={`h-8 w-8 shrink-0 border ${isMe ? "border-blue-200" : "border-gray-200"}`}>
+                    <AvatarImage src={undefined} />
                     <AvatarFallback
-                      className={`${isMe ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"} text-sm font-bold`}>
+                      className={`${isMe ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"} text-xs font-bold`}>
                       {msg.user.full_name?.charAt(0) ||
                         msg.user.email?.charAt(0) ||
                         "U"}
@@ -234,19 +244,19 @@ export function TeamChat({
                   </Avatar>
 
                   <div
-                    className={`group relative max-w-[75%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                    className={`group relative max-w-[70%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                     {!isMe && (
-                      <span className="text-[10px] font-bold text-slate-400 ml-1 mb-1">
+                      <span className="text-[10px] font-bold text-gray-400 ml-1 mb-1.5 uppercase tracking-wider">
                         {msg.user.full_name || "Team Member"}
                       </span>
                     )}
 
                     <div
-                      className={`text-sm py-2.5 px-4 rounded-2xl break-words relative transition-all shadow-sm
+                      className={`text-[13.5px] leading-relaxed py-2.5 px-4 rounded-xl break-words relative transition-all border
                         ${
                           isMe
-                            ? "bg-slate-50 dark:bg-blue-900/40 text-slate-900 dark:text-slate-100 rounded-tr-none border border-slate-200/50"
-                            : "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-tl-none border border-slate-200"
+                            ? "bg-blue-50/30 border-blue-100 text-gray-800 rounded-tr-none"
+                            : "bg-white border-gray-100 text-gray-800 rounded-tl-none"
                         }`}>
                       {msg.content}
                       <div
