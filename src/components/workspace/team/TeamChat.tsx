@@ -1,18 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
 import { ScrollArea } from "../../ui/scroll-area";
 import { MentionInput, MentionUser } from "../../ui/mention-input";
-import {
-  Send,
-  MessageSquare,
-  X,
-  CornerDownRight,
-  MoreHorizontal,
-  Trash2,
-  Reply,
-} from "lucide-react";
+import { Send, MessageSquare, X, Lock, Trash2, Reply } from "lucide-react";
 import TeamChatService, {
   TeamChatMessage,
 } from "../../../services/teamChatService";
@@ -60,7 +51,9 @@ export function TeamChat({
           const mapped = data.map(mapMemberToMentionUser);
           setMembers(mapped);
         })
-        .catch(err => console.error("Failed to fetch members for chat mentions:", err));
+        .catch((err) =>
+          console.error("Failed to fetch members for chat mentions:", err),
+        );
     }
   }, [effectiveWorkspaceId]);
 
@@ -95,7 +88,9 @@ export function TeamChat({
     // Fetch workspace name
     if (effectiveWorkspaceId) {
       WorkspaceService.getWorkspace(effectiveWorkspaceId)
-        .then((data) => { if (data) setWorkspaceName(data.name); })
+        .then((data) => {
+          if (data) setWorkspaceName(data.name);
+        })
         .catch((err) => console.error("Failed to fetch workspace name", err));
     }
   }, [effectiveWorkspaceId, projectId, user, userLoading]);
@@ -130,7 +125,7 @@ export function TeamChat({
           } catch (err) {
             console.error("Failed to refresh messages:", err);
           }
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -141,7 +136,7 @@ export function TeamChat({
         },
         (payload) => {
           setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
-        }
+        },
       )
       .subscribe();
 
@@ -188,134 +183,156 @@ export function TeamChat({
 
   return (
     <div
-      className={`flex flex-col h-full bg-card border-l border-border ${className}`}
-    >
-      {/* Page Header */}
-      <div className="p-8 pb-0">
-        <h1 className="text-3xl font-bold tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500 flex items-center gap-2">
-          {workspaceName ? workspaceName : <div className="h-8 w-32 bg-muted animate-pulse rounded" />}{" "}
+      className={`flex flex-col h-full bg-white border-l border-border overflow-hidden ${className}`}>
+      {/* Page Header - Clean White Style */}
+      <div className="p-6 pb-2 bg-white border-b border-border">
+        <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          {workspaceName || (
+            <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+          )}{" "}
           Team Chat
         </h1>
-        <p className="text-muted-foreground">
-          Collaborate with your team in real-time
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <Lock className="w-3 h-3" /> End-to-end encrypted
         </p>
       </div>
 
-      {/* Chat Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/50">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        </div>
-        {onClose && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        )}
-      </div>
-
-      {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
+      {/* Messages Area - Clean White Background */}
+      <ScrollArea className="flex-1 px-4 py-8 scroll-smooth" ref={scrollRef}>
+        <div className="flex flex-col gap-6 max-w-4xl mx-auto">
           {loading ? (
             <div className="flex items-center justify-center py-10">
-              <div className="h-5 w-5 border-2 border-primary border-t-transparent animate-spin rounded-full"></div>
+              <div className="h-8 w-8 border-2 border-primary border-t-transparent animate-spin rounded-full"></div>
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center opacity-50">
-              <MessageSquare className="w-10 h-10 mb-2" />
-              <p className="text-xs">
-                No messages yet.
-                <br />
-                Start the conversation!
+            <div className="flex flex-col items-center justify-center py-20 text-center opacity-30">
+              <div className="bg-slate-50 p-5 rounded-full mb-4 shadow-inner">
+                <MessageSquare className="w-10 h-10 text-slate-400" />
+              </div>
+              <p className="text-sm font-semibold text-slate-500">
+                No messages yet
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Your messages are secured with E2EE.
               </p>
             </div>
           ) : (
-            messages.map((msg) => (
-              <div key={msg.id} className="group relative flex gap-3">
-                <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                    {msg.user.full_name?.charAt(0) || msg.user.email?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
+            messages.map((msg) => {
+              const isMe = msg.user_id === user?.id;
 
-                <div className="flex-1 space-y-1 overflow-hidden">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-foreground truncate max-w-[120px]">
-                      {msg.user.full_name || "User"}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {formatDistanceToNow(new Date(msg.created_at), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                  </div>
+              return (
+                <div
+                  key={msg.id}
+                  className={`flex items-start gap-3 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+                  <Avatar
+                    className={`h-9 w-9 shrink-0 shadow-sm border ${isMe ? "border-blue-100" : "border-slate-100"}`}>
+                    <AvatarImage src={msg.user.id ? undefined : undefined} />
+                    <AvatarFallback
+                      className={`${isMe ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"} text-sm font-bold`}>
+                      {msg.user.full_name?.charAt(0) ||
+                        msg.user.email?.charAt(0) ||
+                        "U"}
+                    </AvatarFallback>
+                  </Avatar>
 
-                  <div className="text-sm text-foreground bg-muted rounded-r-lg rounded-bl-lg p-2 inline-block max-w-full break-words">
-                    {msg.content}
-                  </div>
-
-                  {/* Message Actions (Visible on hover) */}
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => setReplyTo(msg)}
-                      className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1"
-                    >
-                      <Reply className="w-3 h-3" /> Reply
-                    </button>
-                    {msg.user_id === user?.id && (
-                      <button
-                        onClick={() => handleDelete(msg.id)}
-                        className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-1"
-                      >
-                        <Trash2 className="w-3 h-3" /> Delete
-                      </button>
+                  <div
+                    className={`group relative max-w-[75%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                    {!isMe && (
+                      <span className="text-[10px] font-bold text-slate-400 ml-1 mb-1">
+                        {msg.user.full_name || "Team Member"}
+                      </span>
                     )}
+
+                    <div
+                      className={`text-sm py-2.5 px-4 rounded-2xl break-words relative transition-all shadow-sm
+                        ${
+                          isMe
+                            ? "bg-slate-50 dark:bg-blue-900/40 text-slate-900 dark:text-slate-100 rounded-tr-none border border-slate-200/50"
+                            : "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-tl-none border border-slate-200"
+                        }`}>
+                      {msg.content}
+                      <div
+                        className={`mt-1.5 flex items-center justify-end gap-1.5 ${isMe ? "text-blue-500" : "text-slate-400"}`}>
+                        <span className="text-[9px] font-medium">
+                          {new Date(msg.created_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        {isMe && (
+                          <div className="text-[10px] font-bold">✓✓</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Message Actions (Visible on hover) */}
+                    <div
+                      className={`flex items-center gap-3 mt-1 opacity-0 group-hover:opacity-100 transition-opacity px-1`}>
+                      <button
+                        onClick={() => setReplyTo(msg)}
+                        className="text-[10px] text-slate-400 hover:text-primary flex items-center gap-1 transition-colors">
+                        <Reply className="w-3 h-3" /> Reply
+                      </button>
+                      {isMe && (
+                        <button
+                          onClick={() => handleDelete(msg.id)}
+                          className="text-[10px] text-slate-400 hover:text-destructive flex items-center gap-1 transition-colors">
+                          <Trash2 className="w-3 h-3" /> Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-border bg-card">
+      <div className="p-4 bg-white border-t border-border shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
         {replyTo && (
-          <div className="flex items-center justify-between mb-2 p-2 bg-primary/10 rounded text-[10px] text-primary animate-in slide-in-from-bottom-2">
-            <div className="flex items-center gap-1 truncate">
-              <CornerDownRight className="w-3 h-3" />
-              Replying to{" "}
-              <span className="font-bold">
-                {replyTo.user.full_name || "User"}
-              </span>
+          <div className="flex items-center justify-between mb-3 p-2 bg-slate-50 border-l-4 border-primary rounded text-[10px] animate-in slide-in-from-bottom-2">
+            <div className="flex items-center gap-2 truncate">
+              <div className="bg-primary/10 p-1 rounded">
+                <Reply className="w-3 h-3 text-primary" />
+              </div>
+              <div>
+                <span className="font-bold text-primary">
+                  Replying to {replyTo.user.full_name || "User"}
+                </span>
+                <p className="text-slate-500 truncate max-w-[200px]">
+                  {replyTo.content}
+                </p>
+              </div>
             </div>
-            <button onClick={() => setReplyTo(null)}>
-              <X className="w-3 h-3" />
+            <button
+              onClick={() => setReplyTo(null)}
+              className="p-1 hover:bg-slate-200 rounded-full transition-colors">
+              <X className="w-3 h-3 text-slate-400" />
             </button>
           </div>
         )}
 
-        <form onSubmit={handleSend} className="flex gap-2 items-end">
-          <MentionInput
-            value={inputValue}
-            onChange={setInputValue}
-            users={members}
-            placeholder="Type a message... (Tip: Use @ to mention)"
-            className="flex-1 min-h-[40px] max-h-[120px]"
-            onEnter={() => handleSend()}
-          />
+        <form
+          onSubmit={handleSend}
+          className="flex gap-3 items-center max-w-4xl mx-auto">
+          <div className="flex-1 bg-slate-50 rounded-2xl border border-slate-200 focus-within:border-primary/50 transition-all px-3 py-1 flex items-center">
+            <MentionInput
+              value={inputValue}
+              onChange={setInputValue}
+              users={members}
+              placeholder="Type a message..."
+              className="flex-1 bg-transparent border-none focus-visible:ring-0 min-h-[36px] max-h-[120px] text-sm py-2"
+              onEnter={() => handleSend()}
+            />
+          </div>
           <Button
             type="submit"
             size="icon"
-            className="h-10 w-10 bg-primary hover:bg-primary/90 shrink-0 mb-[1px]"
-          >
-            <Send className="w-4 h-4" />
+            className="h-10 w-10 rounded-full bg-teal-600 hover:bg-teal-700 shadow-md transform hover:scale-105 transition-all shrink-0"
+            disabled={!inputValue.trim()}>
+            <Send className="w-5 h-5 text-white" />
           </Button>
         </form>
       </div>

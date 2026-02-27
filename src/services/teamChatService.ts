@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import encryptionService from "./encryptionService";
 
 export interface TeamChatMessage {
   id: string;
@@ -31,7 +32,18 @@ class TeamChatService {
     if (params.parentId) query.append("parentId", params.parentId);
 
     const response = await apiClient.get(`/api/team-chat?${query.toString()}`);
-    return response.messages as TeamChatMessage[];
+    const messages = response.messages as TeamChatMessage[];
+
+    // Decrypt messages
+    const contextId = params.workspaceId || params.projectId || "global";
+    const decryptedMessages = await Promise.all(
+      messages.map(async (msg) => ({
+        ...msg,
+        content: await encryptionService.decrypt(msg.content, contextId),
+      })),
+    );
+
+    return decryptedMessages;
   }
 
   async sendMessage(params: {
@@ -40,8 +52,25 @@ class TeamChatService {
     projectId?: string;
     parentId?: string;
   }) {
-    const response = await apiClient.post("/api/team-chat", params);
-    return response.message as TeamChatMessage;
+    // Encrypt message content before sending
+    const contextId = params.workspaceId || params.projectId || "global";
+    const encryptedContent = await encryptionService.encrypt(
+      params.content,
+      contextId,
+    );
+
+    const response = await apiClient.post("/api/team-chat", {
+      ...params,
+      content: encryptedContent,
+    });
+
+    const message = response.message as TeamChatMessage;
+
+    // Return decrypted version for UI
+    return {
+      ...message,
+      content: params.content,
+    };
   }
 
   async deleteMessage(messageId: string) {

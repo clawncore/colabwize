@@ -86,7 +86,7 @@ export default function DashboardLayout({
     setExpandedWorkspaces((prev) =>
       prev.includes(workspaceId)
         ? prev.filter((id) => id !== workspaceId)
-        : [...prev, workspaceId]
+        : [...prev, workspaceId],
     );
   };
   const { user, loading } = useUser();
@@ -263,7 +263,9 @@ export default function DashboardLayout({
     },
   ];
 
-  const isAdmin = workspaces.some(w => w.role === 'admin' || w.owner_id === user?.id);
+  const isAdmin = workspaces.some(
+    (w) => w.role === "admin" || w.owner_id === user?.id,
+  );
 
   const bottomItems = [
     {
@@ -289,8 +291,8 @@ export default function DashboardLayout({
       label: "Settings",
       icon: Settings,
       href: "/dashboard/settings/profile",
-    }
-  ].filter(item => item.id !== 'admin' || isAdmin);
+    },
+  ].filter((item) => item.id !== "admin" || isAdmin);
 
   // Helper to get plan display name from ID
   const getPlanDisplayName = (planData: any) => {
@@ -365,8 +367,7 @@ export default function DashboardLayout({
     const planColor = getPlanBadgeColor(userPlan);
     return (
       <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${planColor} shadow-sm`}
-      >
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${planColor} shadow-sm`}>
         <Crown className="mr-1 h-3 w-3" />
         {userPlan}
       </span>
@@ -399,7 +400,8 @@ export default function DashboardLayout({
           .filter(
             (doc) =>
               doc.title.toLowerCase().includes(query) ||
-              (doc.description && doc.description.toLowerCase().includes(query))
+              (doc.description &&
+                doc.description.toLowerCase().includes(query)),
           )
           .map((doc) => ({
             id: doc.id,
@@ -460,7 +462,7 @@ export default function DashboardLayout({
       sidebar:
         "fixed inset-y-0 left-0 z-40 w-64 bg-[#FFFAFA] border-r border-gray-200",
       sidebarTransform: sidebarOpen ? "translate-x-0" : "-translate-x-full",
-      mainContent: `flex-1 min-h-screen transition-all duration-300 ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"} pt-16 lg:pt-0`,
+      mainContent: `flex-1 h-full overflow-y-auto transition-all duration-300 ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"} pt-16 lg:pt-0`,
       topNav: `sticky top-0 z-50 bg-[#FFFAFA] border-b border-gray-200 shadow-sm ${sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"}`,
     };
   };
@@ -493,9 +495,9 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="h-screen flex flex-col overflow-hidden bg-white">
       {/* Top Navigation */}
-      <nav className={positionClasses.topNav}>
+      <nav className={`${positionClasses.topNav} flex-shrink-0`}>
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Left side */}
@@ -503,8 +505,7 @@ export default function DashboardLayout({
               {/* Mobile menu button */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className={`lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 ${transitionClasses}`}
-              >
+                className={`lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 ${transitionClasses}`}>
                 {sidebarOpen ? (
                   <X className="w-6 h-6" />
                 ) : (
@@ -515,16 +516,14 @@ export default function DashboardLayout({
               {/* Desktop collapse/expand button */}
               <button
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className={`hidden lg:block p-2 rounded-lg text-gray-600 hover:bg-gray-100 ${transitionClasses}`}
-              >
+                className={`hidden lg:block p-2 rounded-lg text-gray-600 hover:bg-gray-100 ${transitionClasses}`}>
                 <Menu className="w-6 h-6" />
               </button>
 
               {/* Logo */}
               <Link
                 to="/dashboard"
-                className="flex items-center space-x-3 group"
-              >
+                className="flex items-center space-x-3 group">
                 <div className="flex items-center">
                   <img
                     src="/images/Colabwize-logo.png"
@@ -541,14 +540,14 @@ export default function DashboardLayout({
                       <span
                         className={`
                       ml-0.5 px-2 py-1 text-xs font-bold rounded-full shadow-sm
-                      ${userPlan.includes("Student") || userPlan.includes("Pro")
-                            ? "bg-blue-600 text-white"
-                            : "bg-purple-600 text-white"
-                          }
-                    `}
-                      >
+                      ${
+                        userPlan.includes("Student") || userPlan.includes("Pro")
+                          ? "bg-blue-600 text-white"
+                          : "bg-purple-600 text-white"
+                      }
+                    `}>
                         {userPlan.includes("Student") ||
-                          userPlan.includes("Pro")
+                        userPlan.includes("Pro")
                           ? "PRO"
                           : "RESEARCHER"}
                       </span>
@@ -588,8 +587,7 @@ export default function DashboardLayout({
                           <button
                             key={result.id}
                             onClick={() => handleResultClick(result.url)}
-                            className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors duration-150"
-                          >
+                            className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors duration-150">
                             <div className="font-medium text-gray-900">
                               {result.title}
                             </div>
@@ -623,20 +621,19 @@ export default function DashboardLayout({
               <div className="relative profile-dropdown">
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className={`flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 ${transitionClasses}`}
-                >
+                  className={`flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 ${transitionClasses}`}>
                   <div
                     className={`
                     relative w-8 h-8 rounded-full flex items-center justify-center
-                    ${userPlan === "Free Plan" || !userPlan
+                    ${
+                      userPlan === "Free Plan" || !userPlan
                         ? "bg-gradient-to-br from-gray-400 to-gray-600"
                         : userPlan.includes("Student") ||
-                          userPlan.includes("Pro")
+                            userPlan.includes("Pro")
                           ? "bg-gradient-to-br from-blue-500 to-blue-700"
                           : "bg-gradient-to-br from-purple-500 to-purple-700"
-                      }
-                  `}
-                  >
+                    }
+                  `}>
                     {user?.user_metadata?.avatar_url ? (
                       <img
                         src={user.user_metadata.avatar_url}
@@ -656,13 +653,13 @@ export default function DashboardLayout({
                         <div
                           className={`
                         absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow-sm
-                        ${userPlan.includes("Student") ||
-                              userPlan.includes("Pro")
-                              ? "bg-blue-500 border-2 border-white"
-                              : "bg-purple-500 border-2 border-white"
-                            }
-                      `}
-                        >
+                        ${
+                          userPlan.includes("Student") ||
+                          userPlan.includes("Pro")
+                            ? "bg-blue-500 border-2 border-white"
+                            : "bg-purple-500 border-2 border-white"
+                        }
+                      `}>
                           <Crown className="w-2 h-2 text-white" />
                         </div>
                       )}
@@ -679,15 +676,15 @@ export default function DashboardLayout({
                         <div
                           className={`
                           relative w-10 h-10 rounded-full flex items-center justify-center
-                          ${userPlan === "Free Plan" || !userPlan
+                          ${
+                            userPlan === "Free Plan" || !userPlan
                               ? "bg-gradient-to-br from-gray-400 to-gray-600"
                               : userPlan.includes("Student") ||
-                                userPlan.includes("Pro")
+                                  userPlan.includes("Pro")
                                 ? "bg-gradient-to-br from-blue-500 to-blue-700"
                                 : "bg-gradient-to-br from-purple-500 to-purple-700"
-                            }
-                        `}
-                        >
+                          }
+                        `}>
                           {user?.user_metadata?.avatar_url ? (
                             <img
                               src={user.user_metadata.avatar_url}
@@ -698,8 +695,8 @@ export default function DashboardLayout({
                             <span className="text-white font-medium">
                               {user?.user_metadata?.full_name
                                 ? user.user_metadata.full_name
-                                  .charAt(0)
-                                  .toUpperCase()
+                                    .charAt(0)
+                                    .toUpperCase()
                                 : user?.email?.charAt(0).toUpperCase() || "U"}
                             </span>
                           )}
@@ -709,13 +706,13 @@ export default function DashboardLayout({
                               <div
                                 className={`
                               absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm
-                              ${userPlan.includes("Student") ||
-                                    userPlan.includes("Pro")
-                                    ? "bg-blue-500 border-2 border-white"
-                                    : "bg-purple-500 border-2 border-white"
-                                  }
-                            `}
-                              >
+                              ${
+                                userPlan.includes("Student") ||
+                                userPlan.includes("Pro")
+                                  ? "bg-blue-500 border-2 border-white"
+                                  : "bg-purple-500 border-2 border-white"
+                              }
+                            `}>
                                 <Crown className="w-2.5 h-2.5 text-white" />
                               </div>
                             )}
@@ -738,15 +735,13 @@ export default function DashboardLayout({
                     <div className="py-2">
                       <Link
                         to="/dashboard/settings/profile"
-                        className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${transitionClasses}`}
-                      >
+                        className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${transitionClasses}`}>
                         <svg
                           className="w-4 h-4 mr-3 text-gray-500"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
+                          xmlns="http://www.w3.org/2000/svg">
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -759,15 +754,13 @@ export default function DashboardLayout({
 
                       <Link
                         to="/dashboard/documents"
-                        className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${transitionClasses}`}
-                      >
+                        className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${transitionClasses}`}>
                         <svg
                           className="w-4 h-4 mr-3 text-gray-500"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
+                          xmlns="http://www.w3.org/2000/svg">
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -780,15 +773,13 @@ export default function DashboardLayout({
 
                       <Link
                         to="/dashboard/settings/help"
-                        className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${transitionClasses}`}
-                      >
+                        className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${transitionClasses}`}>
                         <svg
                           className="w-4 h-4 mr-3 text-gray-500"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
+                          xmlns="http://www.w3.org/2000/svg">
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -801,15 +792,13 @@ export default function DashboardLayout({
 
                       <Link
                         to="/dashboard/settings/account"
-                        className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${transitionClasses}`}
-                      >
+                        className={`flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ${transitionClasses}`}>
                         <svg
                           className="w-4 h-4 mr-3 text-gray-500"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
+                          xmlns="http://www.w3.org/2000/svg">
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -822,8 +811,7 @@ export default function DashboardLayout({
 
                       <button
                         onClick={handleSignOut}
-                        className={`flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 ${transitionClasses}`}
-                      >
+                        className={`flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 ${transitionClasses}`}>
                         <LogOut className="w-4 h-4 mr-3" />
                         Log Out
                       </button>
@@ -836,15 +824,14 @@ export default function DashboardLayout({
         </div>
       </nav>
 
-      <div className="flex">
+      <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <aside
           className={`
           ${positionClasses.sidebar} transform transition-all duration-300 ease-in-out lg:translate-x-0
           ${positionClasses.sidebarTransform}
           ${sidebarCollapsed ? "lg:w-20" : "lg:w-64"}
-        `}
-        >
+        `}>
           <div className="flex flex-col h-full pt-16 lg:pt-0">
             {/* Navigation Sections */}
             <nav className="flex-1 px-4 py-6 space-y-8 overflow-y-auto custom-scrollbar">
@@ -863,13 +850,13 @@ export default function DashboardLayout({
                     to={item.href}
                     className={`
                       flex items-center px-3 py-2 rounded-lg text-sm font-medium ${transitionClasses}
-                      ${currentActiveTab === item.id
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
-                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                      ${
+                        currentActiveTab === item.id
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
+                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                       }
                       ${sidebarCollapsed ? "justify-center" : ""}
-                    `}
-                  >
+                    `}>
                     <item.icon className="w-5 h-5 flex-shrink-0" />
                     {!sidebarCollapsed && (
                       <span className="ml-3 truncate">{item.label}</span>
@@ -887,8 +874,7 @@ export default function DashboardLayout({
                     </span>
                     <Link
                       to="/dashboard/admin"
-                      className="text-muted-foreground hover:text-emerald-500 transition-colors"
-                    >
+                      className="text-muted-foreground hover:text-emerald-500 transition-colors">
                       <Plus className="w-3.5 h-3.5" />
                     </Link>
                   </div>
@@ -908,16 +894,16 @@ export default function DashboardLayout({
                         <div
                           className={`
                             flex items-center px-3 py-2 rounded-lg text-sm font-medium ${transitionClasses} group
-                            ${isActive
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
+                            ${
+                              isActive
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
                             }
                             ${sidebarCollapsed ? "justify-center" : "justify-between"}
                           `}
                           onClick={() =>
                             !sidebarCollapsed && toggleWorkspace(ws.id)
-                          }
-                        >
+                          }>
                           <div className="flex items-center flex-1 min-w-0">
                             {ws.icon ? (
                               <span className={`text-base flex-shrink-0`}>
@@ -925,8 +911,11 @@ export default function DashboardLayout({
                               </span>
                             ) : (
                               <Hash
-                                className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-emerald-500" : "text-slate-300"
-                                  }`}
+                                className={`w-4 h-4 flex-shrink-0 ${
+                                  isActive
+                                    ? "text-emerald-500"
+                                    : "text-slate-300"
+                                }`}
                               />
                             )}
                             {!sidebarCollapsed && (
@@ -936,8 +925,9 @@ export default function DashboardLayout({
 
                           {!sidebarCollapsed && (
                             <ChevronRight
-                              className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""
-                                }`}
+                              className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                                isExpanded ? "rotate-90" : ""
+                              }`}
                             />
                           )}
                         </div>
@@ -949,12 +939,13 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/overview`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname === `/dashboard/workspace/${ws.id}/overview`
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname ===
+                                  `/dashboard/workspace/${ws.id}/overview`
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
-                              `}
-                            >
+                              `}>
                               <LayoutDashboard className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                               Overview
                             </Link>
@@ -962,12 +953,14 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/projects`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(`/workspace/${ws.id}/projects`)
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/projects`,
+                                  )
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
-                              `}
-                            >
+                              `}>
                               <Briefcase className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                               Projects
                             </Link>
@@ -975,12 +968,14 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/templates`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(`/workspace/${ws.id}/templates`)
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/templates`,
+                                  )
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
-                              `}
-                            >
+                              `}>
                               <Layout className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                               Templates
                             </Link>
@@ -988,12 +983,12 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/files`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(`/workspace/${ws.id}/files`)
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(`/workspace/${ws.id}/files`)
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
-                              `}
-                            >
+                              `}>
                               <FileText className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                               Files
                             </Link>
@@ -1001,12 +996,14 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/kanban`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(`/workspace/${ws.id}/kanban`) && !searchParams.get("view")
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/kanban`,
+                                  ) && !searchParams.get("view")
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
-                              `}
-                            >
+                              `}>
                               <Trello className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                               Kanban
                             </Link>
@@ -1014,12 +1011,14 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/kanban?view=calendar`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(`/workspace/${ws.id}/kanban`) && searchParams.get("view") === "calendar"
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/kanban`,
+                                  ) && searchParams.get("view") === "calendar"
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
-                              `}
-                            >
+                              `}>
                               <Calendar className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                               Calendar
                             </Link>
@@ -1027,14 +1026,14 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/analytics`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(
-                                `/workspace/${ws.id}/analytics`
-                              )
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/analytics`,
+                                  )
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
-                              `}
-                            >
+                              `}>
                               <BarChart2 className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                               Analytics
                             </Link>
@@ -1042,12 +1041,12 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/chat`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(`/workspace/${ws.id}/chat`)
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(`/workspace/${ws.id}/chat`)
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
-                              `}
-                            >
+                              `}>
                               <MessageSquare className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                               Chat
                             </Link>
@@ -1055,14 +1054,14 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/notifications`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(
-                                `/workspace/${ws.id}/notifications`
-                              )
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/notifications`,
+                                  )
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
-                              `}
-                            >
+                              `}>
                               <Bell className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                               Notifications
                             </Link>
@@ -1092,19 +1091,20 @@ export default function DashboardLayout({
                         <div
                           onClick={() =>
                             !sidebarCollapsed &&
-                            (workspaces.filter((ws: any) => ws.role === "admin").length === 0
+                            (workspaces.filter((ws: any) => ws.role === "admin")
+                              .length === 0
                               ? navigate("/dashboard/admin")
                               : toggleWorkspace("admin-section"))
                           }
                           className={`
                             flex items-center px-3 py-2 rounded-lg text-sm font-medium ${transitionClasses} cursor-pointer
-                            ${currentActiveTab === item.id
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
-                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                            ${
+                              currentActiveTab === item.id
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
+                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                             }
                             ${sidebarCollapsed ? "justify-center" : "justify-between"}
-                          `}
-                        >
+                          `}>
                           <div className="flex items-center">
                             <item.icon className="w-5 h-5 flex-shrink-0" />
                             {!sidebarCollapsed && (
@@ -1115,8 +1115,9 @@ export default function DashboardLayout({
                           </div>
                           {!sidebarCollapsed && (
                             <ChevronRight
-                              className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isAdminExpanded ? "rotate-90" : ""
-                                }`}
+                              className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                                isAdminExpanded ? "rotate-90" : ""
+                              }`}
                             />
                           )}
                         </div>
@@ -1124,48 +1125,54 @@ export default function DashboardLayout({
                         {/* Admin Sub-menu */}
                         {!sidebarCollapsed && isAdminExpanded && (
                           <div className="mt-1 ml-4 space-y-1 border-l border-slate-200 pl-2">
-                            {workspaces.filter((ws: any) => ws.role === "admin").map((ws: any) => (
-                              <div key={`admin-${ws.id}`}>
-                                <div
-                                  className="flex items-center justify-between px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-50 cursor-pointer"
-                                  onClick={() =>
-                                    toggleWorkspace(`admin-${ws.id}`)
-                                  }
-                                >
-                                  <div className="flex items-center flex-1 min-w-0">
-                                    {ws.icon ? (
-                                      <span className="text-sm flex-shrink-0">{ws.icon}</span>
-                                    ) : (
-                                      <Hash className="w-3 h-3 flex-shrink-0 text-slate-300" />
-                                    )}
-                                    <span className="ml-2 truncate">{ws.name}</span>
-                                  </div>
-                                  <ChevronRight
-                                    className={`w-3 h-3 transition-transform duration-200 ${expandedWorkspaces.includes(
-                                      `admin-${ws.id}`
-                                    )
-                                      ? "rotate-90"
-                                      : ""
+                            {workspaces
+                              .filter((ws: any) => ws.role === "admin")
+                              .map((ws: any) => (
+                                <div key={`admin-${ws.id}`}>
+                                  <div
+                                    className="flex items-center justify-between px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-50 cursor-pointer"
+                                    onClick={() =>
+                                      toggleWorkspace(`admin-${ws.id}`)
+                                    }>
+                                    <div className="flex items-center flex-1 min-w-0">
+                                      {ws.icon ? (
+                                        <span className="text-sm flex-shrink-0">
+                                          {ws.icon}
+                                        </span>
+                                      ) : (
+                                        <Hash className="w-3 h-3 flex-shrink-0 text-slate-300" />
+                                      )}
+                                      <span className="ml-2 truncate">
+                                        {ws.name}
+                                      </span>
+                                    </div>
+                                    <ChevronRight
+                                      className={`w-3 h-3 transition-transform duration-200 ${
+                                        expandedWorkspaces.includes(
+                                          `admin-${ws.id}`,
+                                        )
+                                          ? "rotate-90"
+                                          : ""
                                       }`}
-                                  />
-                                </div>
+                                    />
+                                  </div>
 
-                                {expandedWorkspaces.includes(
-                                  `admin-${ws.id}`
-                                ) && (
+                                  {expandedWorkspaces.includes(
+                                    `admin-${ws.id}`,
+                                  ) && (
                                     <div className="ml-2 pl-2 border-l border-slate-200 mt-1 space-y-1">
                                       <Link
                                         to={`/dashboard/admin/${ws.id}/members`}
                                         className={`
                                         flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                        ${pathname.includes(
-                                          `/admin/${ws.id}/members`
-                                        )
+                                        ${
+                                          pathname.includes(
+                                            `/admin/${ws.id}/members`,
+                                          )
                                             ? "text-emerald-600 bg-emerald-50/50"
                                             : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                                          }
-                                      `}
-                                      >
+                                        }
+                                      `}>
                                         <Users className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                                         Members
                                       </Link>
@@ -1173,14 +1180,14 @@ export default function DashboardLayout({
                                         to={`/dashboard/admin/${ws.id}/settings`}
                                         className={`
                                         flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                        ${pathname.includes(
-                                          `/admin/${ws.id}/settings`
-                                        )
+                                        ${
+                                          pathname.includes(
+                                            `/admin/${ws.id}/settings`,
+                                          )
                                             ? "text-emerald-600 bg-emerald-50/50"
                                             : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                                          }
-                                      `}
-                                      >
+                                        }
+                                      `}>
                                         <Settings className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                                         Settings
                                       </Link>
@@ -1188,14 +1195,14 @@ export default function DashboardLayout({
                                         to={`/dashboard/admin/${ws.id}/activity`}
                                         className={`
                                         flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                        ${pathname.includes(
-                                          `/admin/${ws.id}/activity`
-                                        )
+                                        ${
+                                          pathname.includes(
+                                            `/admin/${ws.id}/activity`,
+                                          )
                                             ? "text-emerald-600 bg-emerald-50/50"
                                             : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                                          }
-                                      `}
-                                      >
+                                        }
+                                      `}>
                                         <List className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                                         Activity Log
                                       </Link>
@@ -1203,24 +1210,23 @@ export default function DashboardLayout({
                                         to={`/dashboard/admin/${ws.id}/notifications`}
                                         className={`
                                         flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                        ${pathname.includes(
-                                          `/admin/${ws.id}/notifications`
-                                        )
+                                        ${
+                                          pathname.includes(
+                                            `/admin/${ws.id}/notifications`,
+                                          )
                                             ? "text-emerald-600 bg-emerald-50/50"
                                             : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                                          }
-                                      `}
-                                      >
+                                        }
+                                      `}>
                                         <Bell className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                                         Notifications
                                       </Link>
                                     </div>
                                   )}
-                              </div>
-                            ))}
+                                </div>
+                              ))}
                           </div>
-                        )
-                        }
+                        )}
                       </div>
                     );
                   }
@@ -1231,13 +1237,13 @@ export default function DashboardLayout({
                       to={item.href}
                       className={`
                         flex items-center px-3 py-2 rounded-lg text-sm font-medium ${transitionClasses}
-                        ${currentActiveTab === item.id
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
-                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                        ${
+                          currentActiveTab === item.id
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
+                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                         }
                         ${sidebarCollapsed ? "justify-center" : ""}
-                      `}
-                    >
+                      `}>
                       <item.icon className="w-5 h-5 flex-shrink-0" />
                       {!sidebarCollapsed && (
                         <span className="ml-3 truncate">{item.label}</span>
@@ -1261,8 +1267,7 @@ export default function DashboardLayout({
                     ) : (
                       <button
                         onClick={() => setIsUsageCollapsed(!isUsageCollapsed)}
-                        className="w-full flex items-center justify-between focus:outline-none"
-                      >
+                        className="w-full flex items-center justify-between focus:outline-none">
                         <span className="text-sm font-medium text-gray-700 flex items-center">
                           <Crown className="mr-2 h-4 w-4 text-purple-600" />
                           {userPlan}
@@ -1277,8 +1282,7 @@ export default function DashboardLayout({
                   </div>
 
                   <div
-                    className={`transition-all duration-300 ${isUsageCollapsed ? "max-h-0 opacity-0 overflow-hidden" : "max-h-[500px] opacity-100 mt-3 overflow-y-auto"}`}
-                  >
+                    className={`transition-all duration-300 ${isUsageCollapsed ? "max-h-0 opacity-0 overflow-hidden" : "max-h-[500px] opacity-100 mt-3 overflow-y-auto"}`}>
                     <div className="space-y-3 pr-1 custom-scrollbar">
                       {/* Credits Meter (Only for Free/PAYG) */}
                       {["Free Plan", "Pay As You Go"].includes(userPlan) &&
@@ -1352,15 +1356,15 @@ export default function DashboardLayout({
                     (() => {
                       const derivedCurrent =
                         ((planUsage?.originality_scan || 0) >=
-                          (planLimits?.originality_scan ?? 3)
+                        (planLimits?.originality_scan ?? 3)
                           ? 1
                           : 0) +
                         ((planUsage?.citation_check ||
                           planUsage?.citation_audit ||
                           0) >=
-                          (planLimits?.citation_audit ??
-                            planLimits?.citation_check ??
-                            0)
+                        (planLimits?.citation_audit ??
+                          planLimits?.citation_check ??
+                          0)
                           ? 1
                           : 0) +
                         ((planUsage?.rephrase ||
@@ -1418,8 +1422,7 @@ export default function DashboardLayout({
                         </p>
                         <button
                           onClick={() => fetchSubscription(true, true)}
-                          className="text-xs flex items-center justify-center gap-1 w-full py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
-                        >
+                          className="text-xs flex items-center justify-center gap-1 w-full py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors">
                           Retry Connection
                         </button>
                       </div>
@@ -1439,14 +1442,12 @@ export default function DashboardLayout({
         </aside>
 
         {/* Mobile sidebar overlay */}
-        {
-          sidebarOpen && (
-            <div
-              className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
-              onClick={() => setSidebarOpen(false)}
-            />
-          )
-        }
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
         {/* Main content */}
         <main className={positionClasses.mainContent}>
@@ -1466,7 +1467,7 @@ export default function DashboardLayout({
             <Outlet />
           )}
         </main>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }
