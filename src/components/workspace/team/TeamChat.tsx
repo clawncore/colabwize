@@ -104,6 +104,10 @@ export function TeamChat({
 
   // Real-time subscription
   useEffect(() => {
+    console.log(
+      `[Chat] Subscribing to channel: team-chat-${effectiveWorkspaceId || projectId}`,
+    );
+
     const channel = supabase
       .channel(`team-chat-${effectiveWorkspaceId || projectId}`)
       .on(
@@ -117,19 +121,19 @@ export function TeamChat({
             : `project_id=eq.${projectId}`,
         },
         async (payload) => {
-          // Fetch full message with user info instead of just the payload
-          // because the payload doesn't include the 'user' join data
+          console.log("[Chat] New message received via Realtime:", payload);
+          // Refresh the whole list to maintain order and threading
           try {
-            // We can't easily fetch just one with join via apiClient without a new route
-            // For now, let's refresh or push a partial (optimization later)
-            // Simpler for now: refresh the whole list to maintain order and threading
             const data = await TeamChatService.getMessages({
               workspaceId: effectiveWorkspaceId,
               projectId,
             });
             setMessages(data);
           } catch (err) {
-            console.error("Failed to refresh messages:", err);
+            console.error(
+              "[Chat] Failed to refresh messages on real-time event:",
+              err,
+            );
           }
         },
       )
@@ -141,12 +145,21 @@ export function TeamChat({
           table: "TeamChatMessage",
         },
         (payload) => {
+          console.log("[Chat] Message deleted via Realtime:", payload);
           setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(
+          `[Chat] Subscription status for ${effectiveWorkspaceId || projectId}:`,
+          status,
+        );
+      });
 
     return () => {
+      console.log(
+        `[Chat] Unsubscribing from channel: team-chat-${effectiveWorkspaceId || projectId}`,
+      );
       supabase.removeChannel(channel);
     };
   }, [effectiveWorkspaceId, projectId]);
@@ -158,6 +171,11 @@ export function TeamChat({
     }
   }, [messages]);
 
+  // Reactive logging for messages
+  useEffect(() => {
+    console.log(`[Chat] Messages state updated. Count: ${messages.length}`);
+  }, [messages]);
+
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!inputValue.trim() || !user) return;
@@ -166,6 +184,7 @@ export function TeamChat({
       const content = inputValue;
       setInputValue("");
 
+      console.log("[Chat] Sending message...");
       await TeamChatService.sendMessage({
         content,
         workspaceId: effectiveWorkspaceId,
@@ -174,8 +193,16 @@ export function TeamChat({
       });
 
       setReplyTo(null);
+
+      // Manual refresh as fallback for Realtime
+      console.log("[Chat] Manual refresh after send...");
+      const data = await TeamChatService.getMessages({
+        workspaceId: effectiveWorkspaceId,
+        projectId,
+      });
+      setMessages(data);
     } catch (err) {
-      console.error("Failed to send message:", err);
+      console.error("[Chat] Failed to send message:", err);
     }
   };
 
@@ -258,6 +285,17 @@ export function TeamChat({
                             ? "bg-blue-50/30 border-blue-100 text-gray-800 rounded-tr-none"
                             : "bg-white border-gray-100 text-gray-800 rounded-tl-none"
                         }`}>
+                      {msg.parent && (
+                        <div className="mb-2 p-2 bg-gray-50/80 border-l-2 border-gray-300 rounded text-[11px] text-gray-500 italic flex flex-col gap-0.5">
+                          <span className="font-bold text-[10px] text-gray-400 non-italic not-italic">
+                            Replying to{" "}
+                            {msg.parent.user.full_name || "Team Member"}
+                          </span>
+                          <span className="line-clamp-1">
+                            {msg.parent.content}
+                          </span>
+                        </div>
+                      )}
                       {msg.content}
                       <div
                         className={`mt-1.5 flex items-center justify-end gap-1.5 ${isMe ? "text-blue-500" : "text-slate-400"}`}>

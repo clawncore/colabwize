@@ -115,7 +115,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [ydoc] = useState(() => new Y.Doc());
+  const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
   const [collabStatus, setCollabStatus] = useState<string>("disconnected");
   const [isSynced, setIsSynced] = useState(false);
   const [collabError, setCollabError] = useState<string | null>(null);
@@ -150,10 +150,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     isSyncedRef.current = false;
     setCollabError(null);
 
+    // Create a fresh Y.Doc for THIS project instance
+    const freshYdoc = new Y.Doc();
+    setYdoc(freshYdoc);
+
     const newProvider = new HocuspocusProvider({
       url: process.env.REACT_APP_HOCUSPOCUS_URL || "ws://localhost:9081",
       name: `project-${project.id}`,
-      document: ydoc,
+      document: freshYdoc,
       token: localStorage.getItem("auth_token") || "",
       onStatus: (item) => {
         console.log(`[HP Status] Project ${project.id}:`, item.status);
@@ -199,11 +203,13 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     return () => {
       console.log(
-        `[HP Cleanup] Destroying provider for project: ${project.id}`,
+        `[HP Cleanup] Destroying provider and ydoc for project: ${project.id}`,
       );
       newProvider.destroy();
+      freshYdoc.destroy();
+      setYdoc(null);
     };
-  }, [project.id, isCollaborative, ydoc]);
+  }, [project.id, isCollaborative]);
 
   // Handle Connection Timeout
   useEffect(() => {
@@ -405,7 +411,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         StarterKit.configure({
           history: !isCollaborative, // Disable history in collab mode (handled by Yjs)
         } as any),
-        ...(isCollaborative && provider
+        ...(isCollaborative && provider && ydoc
           ? [
               Collaboration.configure({
                 document: ydoc, // Bind directly to the stable Y.Doc
@@ -512,7 +518,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       // binds the editor to them persistently until the component unmounts.
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [isCollaborative, project.id, provider],
+    [isCollaborative, project.id, provider, ydoc],
   );
 
   // Load project content only once per document
@@ -1127,7 +1133,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           project.id,
           title,
           description,
-          project.content, // keep current DB content unchanged
+          undefined, // IMPORTANT: Do not send content in collab mode to avoid overwriting real-time state
           project.word_count,
           project.citation_style,
         );
@@ -1606,9 +1612,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           isOpen={isHistoryModalOpen}
           onClose={() => setIsHistoryModalOpen(false)}
           projectId={project.id}
-          onRestore={(content) => {
+          onRestore={(restoredProject) => {
             if (editor) {
-              editor.commands.setContent(content);
+              editor.commands.setContent(restoredProject.content);
+            }
+            if (onProjectUpdate) {
+              onProjectUpdate(restoredProject);
             }
           }}
         />

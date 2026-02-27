@@ -15,6 +15,15 @@ export interface TeamChatMessage {
     full_name: string | null;
     email: string;
   };
+  parent?: {
+    id: string;
+    content: string;
+    user: {
+      id: string;
+      full_name: string | null;
+      email: string;
+    };
+  } | null;
   _count?: {
     replies: number;
   };
@@ -37,10 +46,31 @@ class TeamChatService {
     // Decrypt messages
     const contextId = params.workspaceId || params.projectId || "global";
     const decryptedMessages = await Promise.all(
-      messages.map(async (msg) => ({
-        ...msg,
-        content: await encryptionService.decrypt(msg.content, contextId),
-      })),
+      messages.map(async (msg) => {
+        const decryptedContent = await encryptionService.decrypt(
+          msg.content,
+          contextId,
+        );
+        let decryptedParentContent = undefined;
+
+        if (msg.parent) {
+          decryptedParentContent = await encryptionService.decrypt(
+            msg.parent.content,
+            contextId,
+          );
+        }
+
+        return {
+          ...msg,
+          content: decryptedContent,
+          parent: msg.parent
+            ? {
+                ...msg.parent,
+                content: decryptedParentContent || msg.parent.content,
+              }
+            : null,
+        };
+      }),
     );
 
     return decryptedMessages;

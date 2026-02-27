@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
+import { Avatar, AvatarFallback } from "../../ui/avatar";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { ScrollArea } from "../../ui/scroll-area";
@@ -10,7 +10,6 @@ import {
   MessageSquare,
   X,
   CornerDownRight,
-  MoreHorizontal,
   Trash2,
   Reply,
 } from "lucide-react";
@@ -102,7 +101,7 @@ export function TeamChat({
           } catch (err) {
             console.error("Failed to refresh messages:", err);
           }
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -113,7 +112,7 @@ export function TeamChat({
         },
         (payload) => {
           setMessages((prev) => prev.filter((m) => m.id !== payload.old.id));
-        }
+        },
       )
       .subscribe();
 
@@ -160,8 +159,7 @@ export function TeamChat({
 
   return (
     <div
-      className={`flex flex-col h-full bg-card border-l border-border p-8 ${className}`}
-    >
+      className={`flex flex-col h-full bg-card border-l border-border p-8 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border bg-muted/50">
         <div className="flex items-center gap-2">
@@ -173,8 +171,7 @@ export function TeamChat({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-8 w-8"
-          >
+            className="h-8 w-8">
             <X className="w-4 h-4" />
           </Button>
         )}
@@ -225,15 +222,13 @@ export function TeamChat({
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => setReplyTo(msg)}
-                      className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1"
-                    >
+                      className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1">
                       <Reply className="w-3 h-3" /> Reply
                     </button>
                     {msg.user_id === user?.id && (
                       <button
                         onClick={() => handleDelete(msg.id)}
-                        className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-1"
-                      >
+                        className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-1">
                         <Trash2 className="w-3 h-3" /> Delete
                       </button>
                     )}
@@ -272,8 +267,7 @@ export function TeamChat({
           <Button
             type="submit"
             size="icon"
-            className="h-9 w-9 bg-primary hover:bg-primary/90 shrink-0"
-          >
+            className="h-9 w-9 bg-primary hover:bg-primary/90 shrink-0">
             <Send className="w-4 h-4" />
           </Button>
         </form>
