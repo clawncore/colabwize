@@ -116,7 +116,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-
   // --- FIX: Stable Provider and Y.Doc initialization ---
   // A fresh instance of DocumentEditor is mounted per project (via key={project.id}).
   // We lazily initialize Y.Doc and Provider once per mount. This ensures the 
@@ -182,8 +181,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   const [title, setTitle] = useState(project.title);
   const [description, setDescription] = useState(project.description || "");
-  // const [isSaving, setIsSaving] = useState(false);
-  // const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Dialog States
   const [isComparisonSelectorOpen, setIsComparisonSelectorOpen] =
@@ -193,9 +190,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [isStyleDialogOpen, setIsStyleDialogOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
-  const [lastScanResult] = useState<OriginalityScan | null>(
-    null
-  );
+  const [lastScanResult] = useState<OriginalityScan | null>(null);
   // const [lastAIScanResult, setLastAIScanResult] = useState<AIScanResult | null>(null);
 
   const [citationSuggestions] = useState<any>(null);
@@ -211,8 +206,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     () => "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0"),
     [] // Empty deps: only runs once on mount
   );
-
-
   // Layout State
 
   // Sync state when project changes
@@ -223,9 +216,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   // Handle Citation Clicks (Scroll to Reference)
   const scrollToReference = (citationId: string) => {
-    // 1. Get Citation Data from Registry
-    // We need to look up the citation text/metadata to find it in the bibliography
-    // accessing the registry directly or via project citations
     const citation = project.citations?.find(c => c.id === citationId);
     if (!citation) return;
 
@@ -297,7 +287,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }
   };
 
-
   // Handle Citation Clicks (Scroll to Reference)
   const scrollToReferenceByText = (citationText: string) => {
     // Search for reference by the citation text (e.g., "[3]")
@@ -347,7 +336,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       toast({
         title: "Reference Not Found",
         description: `Could not locate bibliography entry for ${citationText}.`,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -385,6 +374,16 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       TableCell,
       TextAlign.configure({
         types: ["heading", "paragraph"],
+      }),
+      Collaboration.configure({
+        document: ydoc,
+      }),
+      CollaborationCursor.configure({
+        provider: provider as any,
+        user: {
+          name: user?.user_metadata?.full_name || user?.email || "Anonymous",
+          color: cursorColor,
+        },
       }),
       TaskList,
       TaskItem.configure({
@@ -461,7 +460,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCollaborative, project.id]);
 
-
   // Load project content only once per document
   useEffect(() => {
     if (editor) {
@@ -521,7 +519,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   toast({
                     title: "Citation Style Optimized",
                     description: `Switched to ${detectedStyle.toUpperCase()} based on your content.`,
+<<<<<<< HEAD
                     duration: 3000
+=======
+                    duration: 3000,
+>>>>>>> 7e88502 (craig update)
                   });
                 }
               }
@@ -535,8 +537,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 7e88502 (craig update)
   useEffect(() => {
     if (editor && !editor.isDestroyed) {
       editor.setEditable(!isPreviewMode);
@@ -552,13 +557,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     const debounceTime = citationCount > 80 ? 5000 : 2000;
 
     if (citationCount > 80 && editCount % 5 === 0) {
+<<<<<<< HEAD
       console.warn(`[StressGuard] Large document detected (${citationCount} refs). Debounce set to ${debounceTime}ms.`);
+=======
+      console.warn(
+        `[StressGuard] Large document detected (${citationCount} refs). Debounce set to ${debounceTime}ms.`,
+      );
+>>>>>>> 7e88502 (craig update)
     }
 
     const timeoutId = setTimeout(() => {
       // 1. Run normalization (text -> blue pills)
       detectAndNormalizeCitations(editor, project.id, project.citations || []);
 
+<<<<<<< HEAD
       // 2. Orchestrated Update (Ordering + Integrity)
       // This manages locks to prevent race conditions with Exports
       import("../../services/CitationOrchestrator").then(({ CitationOrchestrator }) => {
@@ -571,6 +583,25 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     return () => clearTimeout(timeoutId);
   }, [editCount, editor, project.citations, project.id, project.citation_style]); // Added project.citation_style to trigger style updates
+=======
+      import("../../services/CitationOrchestrator").then(
+        ({ CitationOrchestrator }) => {
+          // @ts-ignore - Project interface might be strict
+          const style = project.citation_style || "apa";
+          CitationOrchestrator.scheduleUpdate(editor, project.id, style);
+        },
+      );
+    }, debounceTime);
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    editCount,
+    editor,
+    project.citations,
+    project.id,
+    project.citation_style,
+  ]); // Added project.citation_style to trigger style updates
+>>>>>>> 7e88502 (craig update)
 
   // --- Background Grammar Check (Debounced) ---
   useEffect(() => {
@@ -585,7 +616,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (!editor || editor.isDestroyed) return;
 
         // --- Feature Gate: Check if user has access (Paid Feature) ---
+<<<<<<< HEAD
         const hasAccess = await SubscriptionService.hasFeatureAccess("grammar_check");
+=======
+        const hasAccess =
+          await SubscriptionService.hasFeatureAccess("grammar_check");
+>>>>>>> 7e88502 (craig update)
         if (!hasAccess) {
           // Optional: console.log("Grammar check skipped (Free plan)");
           return;
@@ -596,6 +632,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         const { selection } = state;
         const { $from } = selection;
 
+<<<<<<< HEAD
         // CRITICAL FIX: Only run grammar check on text blocks (headings, paragraphs)
         // This prevents crash when selection is inside a table structure or other non-text node
         if (!$from.parent.isTextblock) return;
@@ -606,6 +643,23 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         for (let d = $from.depth; d > 0; d--) {
           const node = $from.node(d);
           if (['table', 'table_row', 'table_cell', 'image', 'figure', 'figcaption'].includes(node.type.name)) {
+=======
+        if (!$from.parent.isTextblock) return;
+
+        let invalidContext = false;
+        for (let d = $from.depth; d > 0; d--) {
+          const node = $from.node(d);
+          if (
+            [
+              "table",
+              "table_row",
+              "table_cell",
+              "image",
+              "figure",
+              "figcaption",
+            ].includes(node.type.name)
+          ) {
+>>>>>>> 7e88502 (craig update)
             invalidContext = true;
             break;
           }
@@ -624,19 +678,32 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (!textToCheck || textToCheck.length < 5) return;
 
         console.log("ðŸ“  Background Grammar Check (Block Scoped)...");
+<<<<<<< HEAD
         const { GrammarCheckService } = await import("../../services/grammarCheckService");
+=======
+        const { GrammarCheckService } =
+          await import("../../services/grammarCheckService");
+>>>>>>> 7e88502 (craig update)
 
         // Silent check
         const errors = await GrammarCheckService.checkText(textToCheck);
 
         if (!editor || editor.isDestroyed) return;
 
+<<<<<<< HEAD
         // --- STALENESS CHECK ---
         // Verify if the text at this range is still the same.
         // If the user typed while we were checking, abort to prevent applying marks to wrong offsets.
         const currentText = editor.state.doc.textBetween(start, end, " ", " ");
         if (currentText !== textToCheck) {
           console.log("âš ï¸  Text changed during check, aborting grammar highlight.");
+=======
+        const currentText = editor.state.doc.textBetween(start, end, " ", " ");
+        if (currentText !== textToCheck) {
+          console.log(
+            "âš ï¸  Text changed during check, aborting grammar highlight.",
+          );
+>>>>>>> 7e88502 (craig update)
           return;
         }
 
@@ -645,7 +712,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         // Transaction to update marks
         const tr = editor.state.tr;
         const schema = editor.state.schema;
+<<<<<<< HEAD
         const markType = schema.marks['grammar-error'];
+=======
+        const markType = schema.marks["grammar-error"];
+>>>>>>> 7e88502 (craig update)
 
         if (!markType) return;
 
@@ -660,6 +731,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
         // 2. Apply new errors mapped to this block's offset
         let matchCount = 0;
+<<<<<<< HEAD
         errors.forEach(err => {
           try {
             const escaped = err.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -667,15 +739,35 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             const matches = Array.from(textToCheck.matchAll(regex));
 
             matches.forEach(match => {
+=======
+        errors.forEach((err) => {
+          try {
+            const escaped = err.original.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const regex = new RegExp(escaped, "g");
+            const matches = Array.from(textToCheck.matchAll(regex));
+
+            matches.forEach((match) => {
+>>>>>>> 7e88502 (craig update)
               if (match.index !== undefined) {
                 // Calculate absolute position in doc
                 const matchStart = start + match.index;
                 const matchEnd = matchStart + match[0].length;
 
+<<<<<<< HEAD
                 tr.addMark(matchStart, matchEnd, markType.create({
                   ...err,
                   original: err.original
                 }));
+=======
+                tr.addMark(
+                  matchStart,
+                  matchEnd,
+                  markType.create({
+                    ...err,
+                    original: err.original,
+                  }),
+                );
+>>>>>>> 7e88502 (craig update)
                 matchCount++;
               }
             });
@@ -697,8 +789,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     return () => clearTimeout(timeoutId);
   }, [editCount, editor]); // Re-run on editCount change
 
+<<<<<<< HEAD
   // --- Citation Click Navigation ---
   // Global click listener to handle clicks on citation pills
+=======
+>>>>>>> 7e88502 (craig update)
   useEffect(() => {
     const handleEditorClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -710,12 +805,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         // Extract probable author from "(Smith, 2020)" -> "Smith"
         // Regex looks for words before comma or year
         const match = text.match(/\(([^,0-9]+)/);
+<<<<<<< HEAD
         const author = match ? match[1].trim() : text.replace(/[()]/g, "").trim();
 
         if (author) {
           // Find References section in the DOM
           // We assume standard APA/MLA "References" or "Works Cited" heading
           // This is a DOM search, not Tiptap node search, for scrolling simplicity
+=======
+        const author = match
+          ? match[1].trim()
+          : text.replace(/[()]/g, "").trim();
+
+        if (author) {
+>>>>>>> 7e88502 (craig update)
           const headings = document.querySelectorAll("h1, h2, h3, h4");
           let referencesHeader: Element | null = null;
 
@@ -756,8 +859,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       }
     };
 
-    // Attach to the editor's container or document
-    // Document is safest to catch bubbles from shadow DOM or editor container
+
     document.addEventListener("click", handleEditorClick);
 
     return () => {
@@ -765,8 +867,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     };
   }, []);
 
-  // Track time spent and periodically save activity
-  // Refs to track current state without triggering re-renders in the interval
+
   const statsRef = useRef({
     timeSpent: 0,
     editCount: 0,
@@ -839,8 +940,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           });
         } catch (error) {
           console.error("Failed to record activity:", error);
-          // Note: If fail, we technically "lost" this delta unless we revert the ref.
-          // For simplicity/safety vs infinite loops, we accept minor loss on net error.
+
         }
       }
     }, 30000); // 30 seconds
@@ -978,11 +1078,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     return () => {
       window.removeEventListener("insert-citation", handleInsertCitation as EventListener);
     };
-  }, [editor]);
-
-
-
-
   const handleSave = React.useCallback(async () => {
     if (!editor) return;
 
@@ -1331,14 +1426,26 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
             {/* Main Editor Area */}
+<<<<<<< HEAD
             <div className={`flex-1 overflow-auto transition-all duration-500 ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}>
+=======
+            <div
+              className={`flex-1 overflow-auto transition-all duration-500 ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}>
+>>>>>>> 7e88502 (craig update)
               {editor && <TableBubbleMenu editor={editor} />}
               <EditorContent
                 editor={editor}
                 className={`${isFocusMode ? "max-w-[900px]" : "max-w-[816px]"} mx-auto prose prose-lg min-h-full focus:outline-none p-8 bg-white rounded-lg shadow-sm`}
               />
               {/* Behavioral Tracker */}
+<<<<<<< HEAD
               <BehavioralTracker projectId={project.id} userId={project.user_id} />
+=======
+              <BehavioralTracker
+                projectId={project.id}
+                userId={project.user_id}
+              />
+>>>>>>> 7e88502 (craig update)
             </div>
           </div>
         </div>
@@ -1348,8 +1455,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           <button
             onClick={onToggleFocusMode}
             className="fixed top-6 right-6 z-[110] px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-300 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-100 transition-all shadow-lg flex items-center gap-2 opacity-50 hover:opacity-100"
+<<<<<<< HEAD
             title="Exit Focus Mode (Esc)"
           >
+=======
+            title="Exit Focus Mode (Esc)">
+>>>>>>> 7e88502 (craig update)
             <Minimize2 className="w-4 h-4" />
             Exit Focus (Esc)
           </button>
@@ -1406,7 +1517,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               Find Papers
             </button>
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 7e88502 (craig update)
             <AuthorshipCertificateAdapter
               projectId={project.id}
               projectTitle={title}
@@ -1431,7 +1545,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 }
               }}
               className="bg-white/90 backdrop-blur border border-indigo-100 shadow-sm px-3 py-1.5 rounded-full text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center gap-1.5">
+<<<<<<< HEAD
               <span>ðŸ›¡ï¸  Reality Check</span>
+=======
+              <span>ðŸ›¡ï¸ Reality Check</span>
+>>>>>>> 7e88502 (craig update)
             </button>
           </div>
         )}
@@ -1478,7 +1596,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           if (onProjectUpdate) {
             onProjectUpdate({
               ...project,
-              citation_style: style
+              citation_style: style,
             });
             toast({
               title: "Citation Style Updated",
@@ -1487,6 +1605,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           }
         }}
       />
-    </EditorProvider >
+    </EditorProvider>
   );
 };
