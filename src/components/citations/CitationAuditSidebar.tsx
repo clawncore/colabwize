@@ -122,14 +122,23 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                 toast({ title: "Audit Complete", description: "No issues found.", variant: "default" });
             }
 
-            // Verified Citations - Green Tint
+            // Verified Citations - Green Tint (embed url for click handler)
             if (result.verificationResults) {
                 result.verificationResults.forEach((ver: any) => {
                     if (ver.existenceStatus === "CONFIRMED" && ver.inlineLocation) {
-                        editor.chain().highlightRange(ver.inlineLocation.start, ver.inlineLocation.end, {
-                            color: "rgba(22, 163, 74, 0.15)", // Success Green Tint
-                            message: `Verified: ${ver.title || 'Source confirmed'}`
-                        }).run();
+                        const docSize = editor.state.doc.content.size;
+                        const vStart = Math.max(0, Math.min(ver.inlineLocation.start, docSize));
+                        const vEnd = Math.max(vStart, Math.min(ver.inlineLocation.end, docSize));
+                        if (vStart < vEnd) {
+                            editor.chain().highlightRange(vStart, vEnd, {
+                                color: "rgba(22, 163, 74, 0.15)", // Success Green Tint
+                                message: ver.message || `Verified source`,
+                                ruleId: "VERIFIED",
+                                // Embed hyperlink data directly so click handler doesn't need fuzzy match
+                                url: ver.foundPaper?.url || null,
+                                sourceTitle: ver.foundPaper?.title || null,
+                            }).run();
+                        }
                     }
                 });
             }
@@ -187,15 +196,10 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
         if (!auditResult) return;
 
         const handleEditorClick = (e: any) => {
-            // Tiptap specific pos retrieval
-            // We use the editor instance to find the mark at the selection
             const { state, view } = editor;
             const pos = view.posAtCoords({ left: e.clientX, top: e.clientY });
 
             if (pos && pos.pos) {
-                // Check for marks at this position
-                // Note: nodeAt returns the node *after* the pos usually.
-                // We better check attributes at resolved pos.
                 const $pos = state.doc.resolve(pos.pos);
                 const marks = $pos.marks();
 
@@ -203,33 +207,34 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                 if (highlightMark) {
                     const attrs = highlightMark.attrs;
 
-                    // Show details toast or navigate
-                    // User Request: "linked to reference or external url"
+                    // PRIMARY: read url/sourceTitle embedded directly in the mark
+                    let sourceUrl: string | null = attrs.url || null;
+                    let sourceTitle: string | null = attrs.sourceTitle || null;
 
-                    // 1. If we have coordinates, we can try to find the matching Verification Result
-                    // BUT attrs has limited data (message, ruleId).
-
-                    // We can match by ruleId or message
-                    // OR we can perform a quick lookup in auditResult results.
-
-                    const verResult = auditResult.verificationResults?.find((v: any) => {
-                        // Fuzzy match message or check range if we had it in attributes
-                        return v.message === attrs.message || (v.inlineLocation && v.inlineLocation.text === attrs.text);
-                    });
-
-                    // Construct Actionable Toast
-                    let description = attrs.message;
-                    let action = undefined;
-
-                    if (verResult && verResult.foundPaper?.url) {
-                        description = `Source: ${verResult.foundPaper.title}`;
-                        action = <a href={verResult.foundPaper.url} target="_blank" rel="noopener noreferrer" className="font-bold underline ml-2">Open Link</a>;
+                    // FALLBACK: fuzzy match against verificationResults (legacy path)
+                    if (!sourceUrl && auditResult.verificationResults) {
+                        const verResult = auditResult.verificationResults.find((v: any) => {
+                            return v.message === attrs.message ||
+                                (v.inlineLocation && v.inlineLocation.text === attrs.sourceTitle);
+                        });
+                        if (verResult?.foundPaper?.url) {
+                            sourceUrl = verResult.foundPaper.url;
+                            sourceTitle = verResult.foundPaper.title || null;
+                        }
                     }
 
+                    const description = sourceTitle
+                        ? `Source: ${sourceTitle}`
+                        : (attrs.message || "Citation flagged");
+
+                    const action = sourceUrl
+                        ? <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline ml-2">Open Link</a>
+                        : undefined;
+
                     toast({
-                        title: attrs.ruleId || "Citation Info",
-                        description: <div className="flex flex-col">{description} {action}</div>,
-                        duration: 5000,
+                        title: attrs.ruleId === "VERIFIED" ? "✅ Verified Source" : (attrs.ruleId || "Citation Info"),
+                        description: <div className="flex flex-col gap-1">{description}{action}</div>,
+                        duration: 6000,
                     });
                 }
             }

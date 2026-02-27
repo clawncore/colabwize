@@ -697,73 +697,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     return () => clearTimeout(timeoutId);
   }, [editCount, editor]); // Re-run on editCount change
 
-  // --- Citation Click Navigation ---
-  // Global click listener to handle clicks on citation pills
-  useEffect(() => {
-    const handleEditorClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      // Check if clicked element is a citation pill
-      const citationPill = target.closest('[data-type="citation"]');
+  // NOTE: Citation pill click navigation is handled by editorProps.handleClick above.
+  // The former global document.addEventListener('click') handler has been removed because
+  // it used the wrong selector (data-type="citation" does not exist on rendered pills).
 
-      if (citationPill) {
-        const text = citationPill.textContent || "";
-        // Extract probable author from "(Smith, 2020)" -> "Smith"
-        // Regex looks for words before comma or year
-        const match = text.match(/\(([^,0-9]+)/);
-        const author = match ? match[1].trim() : text.replace(/[()]/g, "").trim();
-
-        if (author) {
-          // Find References section in the DOM
-          // We assume standard APA/MLA "References" or "Works Cited" heading
-          // This is a DOM search, not Tiptap node search, for scrolling simplicity
-          const headings = document.querySelectorAll("h1, h2, h3, h4");
-          let referencesHeader: Element | null = null;
-
-          for (const h of Array.from(headings)) {
-            if (/References|Works Cited|Bibliography/i.test(h.textContent || "")) {
-              referencesHeader = h;
-              break;
-            }
-          }
-
-          if (referencesHeader) {
-            // Search siblings after header for the author
-            let current = referencesHeader.nextElementSibling;
-            while (current) {
-              if (current.textContent?.includes(author)) {
-                // Found it! Scroll to it.
-                // Found it! Scroll to it.
-                const targetElement = current as HTMLElement;
-                targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
-                // Add temporary highlight effect
-                const originalBg = targetElement.style.backgroundColor;
-                targetElement.style.backgroundColor = "#FEF3C7"; // yellow-100
-                targetElement.style.transition = "background-color 0.5s";
-                setTimeout(() => {
-                  targetElement.style.backgroundColor = originalBg;
-                }, 2000);
-                return;
-              }
-              current = current.nextElementSibling;
-            }
-            // If specific author not found, at least scroll to References
-            referencesHeader.scrollIntoView({ behavior: "smooth", block: "start" });
-          } else {
-            // Fallback: Try to find text anywhere? No, too risky.
-            console.warn("References section not found");
-          }
-        }
-      }
-    };
-
-    // Attach to the editor's container or document
-    // Document is safest to catch bubbles from shadow DOM or editor container
-    document.addEventListener("click", handleEditorClick);
-
-    return () => {
-      document.removeEventListener("click", handleEditorClick);
-    };
-  }, []);
 
   // Track time spent and periodically save activity
   // Refs to track current state without triggering re-renders in the interval
