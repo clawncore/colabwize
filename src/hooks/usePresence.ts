@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
+import type { Awareness } from "y-protocols/awareness";
 import * as Y from "yjs";
 import useAuth from "../services/useAuth";
 

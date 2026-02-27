@@ -118,38 +118,72 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [ydoc] = useState(() => new Y.Doc());
   const [collabStatus, setCollabStatus] = useState<string>("disconnected");
   const [isSynced, setIsSynced] = useState(false);
+  const [collabError, setCollabError] = useState<string | null>(null);
+  const isSyncedRef = useRef(false);
+  const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
 
-  const [provider] = useState<HocuspocusProvider | null>(() => {
-    if (!isCollaborative || !project.id) return null;
+  // --- FIX 3: Stable cursor color - generated once per component mount ---
+  const cursorColor = useMemo(
+    () =>
+      "#" +
+      Math.floor(Math.random() * 16777215)
+        .toString(16)
+        .padStart(6, "0"),
+    [], // Empty deps: only runs once on mount
+  );
 
-    console.log(`Initializing Hocuspocus provider for project: ${project.id}`);
+  // Handle Hocuspocus Lifecycle
+  useEffect(() => {
+    if (!isCollaborative || !project.id) {
+      setProvider(null);
+      setIsSynced(false);
+      isSyncedRef.current = false;
+      return;
+    }
 
-    // Start locally with establishing state
+    console.log(
+      `[HP Lifecycle] Initializing provider for project: ${project.id}`,
+    );
     setCollabStatus("connecting");
+    setIsSynced(false);
+    isSyncedRef.current = false;
+    setCollabError(null);
 
     const newProvider = new HocuspocusProvider({
       url: process.env.REACT_APP_HOCUSPOCUS_URL || "ws://localhost:9081",
       name: `project-${project.id}`,
-      document: ydoc, // Bind the explicitly created Y.Doc
+      document: ydoc,
       token: localStorage.getItem("auth_token") || "",
       onStatus: (item) => {
+        console.log(`[HP Status] Project ${project.id}:`, item.status);
         setCollabStatus(item.status);
-        console.log("Hocuspocus status:", item.status);
+        if (item.status === "connected") {
+          setCollabError(null);
+        }
       },
       onSynced: () => {
-        console.log("Hocuspocus synced — document ready");
+        console.log(`[HP Sync] Project ${project.id} ready`);
         setIsSynced(true);
+        isSyncedRef.current = true;
+        setCollabError(null);
+        if (connectionTimeoutRef.current) {
+          clearTimeout(connectionTimeoutRef.current);
+          connectionTimeoutRef.current = null;
+        }
       },
       onDisconnect: () => {
-        console.log("Hocuspocus disconnected");
+        console.log(`[HP Disconnect] Project ${project.id}`);
         setCollabStatus("disconnected");
       },
       onConnect: () => {
-        console.log("Hocuspocus connected");
+        console.log(`[HP Connect] Project ${project.id} success`);
+        setCollabError(null);
       },
       onAuthenticationFailed: ({ reason }) => {
-        console.error("Hocuspocus auth failed:", reason);
+        console.error(`[HP Auth Failed] Project ${project.id}:`, reason);
         setCollabStatus("disconnected");
+        setCollabError("Authentication failed: " + reason);
       },
     });
 
@@ -161,18 +195,48 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       });
     }
 
-    return newProvider;
-  });
+    setProvider(newProvider);
 
-  // Destroy provider ONLY on component unmount
-  useEffect(() => {
     return () => {
-      if (provider) {
-        console.log("Destroying Hocuspocus provider");
-        provider.destroy();
+      console.log(
+        `[HP Cleanup] Destroying provider for project: ${project.id}`,
+      );
+      newProvider.destroy();
+    };
+  }, [project.id, isCollaborative, ydoc]);
+
+  // Handle Connection Timeout
+  useEffect(() => {
+    if (isCollaborative && !isSynced) {
+      console.log("[HP Timeout] Starting 30-second safety timer");
+      connectionTimeoutRef.current = setTimeout(() => {
+        if (!isSyncedRef.current) {
+          console.warn("[HP Timeout] Triggered after 30 seconds");
+          setCollabError(
+            "Connection timed out. The server might be unreachable or highly congested. Please check your internet or retry.",
+          );
+        }
+      }, 30000);
+    }
+
+    return () => {
+      if (connectionTimeoutRef.current) {
+        clearTimeout(connectionTimeoutRef.current);
+        connectionTimeoutRef.current = null;
       }
     };
-  }, [provider]);
+  }, [isCollaborative, isSynced, provider]);
+
+  // Sync user identity when user profile is loaded
+  useEffect(() => {
+    if (provider && user && isSynced) {
+      console.log("Syncing user identity to Hocuspocus awareness", user);
+      provider.setAwarenessField("user", {
+        name: user?.user_metadata?.full_name || user?.email || "Anonymous",
+        color: cursorColor,
+      });
+    }
+  }, [provider, user, isSynced, cursorColor]);
 
   const [title, setTitle] = useState(project.title);
   const [description, setDescription] = useState(project.description || "");
@@ -195,15 +259,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const hasInitializedContentRef = useRef(false);
   const currentProjectIdRef = useRef<string | null>(null);
 
-  // --- FIX 3: Stable cursor color - generated once per component mount ---
-  const cursorColor = useMemo(
-    () =>
-      "#" +
-      Math.floor(Math.random() * 16777215)
-        .toString(16)
-        .padStart(6, "0"),
-    [], // Empty deps: only runs once on mount
-  );
   // Layout State
 
   // Sync state when project changes
@@ -1133,16 +1188,43 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // arrived from the server. This prevents a blank editor flash.
   if (isCollaborative && (!isSynced || collabStatus === "connecting")) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-white">
-        <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900">
-          Connecting to Workspace...
-        </h3>
-        <p className="text-sm text-gray-500 mt-2">
-          {collabStatus === "connecting"
-            ? "Establishing secure connection for real-time collaboration..."
-            : "Syncing document content..."}
-        </p>
+      <div className="flex flex-col items-center justify-center h-full bg-white p-8 text-center">
+        {collabError ? (
+          <>
+            <ShieldAlert className="w-12 h-12 text-red-500 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900">
+              Connection Problem
+            </h3>
+            <p className="text-sm text-gray-500 mt-2 mb-6 max-w-xs">
+              {collabError}
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}>
+                Retry Connection
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setIsSynced(true)} // Fallback to local-only (dangerous but allows viewing)
+              >
+                Work Offline
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900">
+              Connecting to Workspace...
+            </h3>
+            <p className="text-sm text-gray-500 mt-2">
+              {collabStatus === "connecting"
+                ? "Establishing secure connection for real-time collaboration..."
+                : "Syncing document content..."}
+            </p>
+          </>
+        )}
       </div>
     );
   }
