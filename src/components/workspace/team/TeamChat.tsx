@@ -193,7 +193,7 @@ export function TeamChat({
       {/* Page Header - Refined Minimalist Style */}
       <div className="px-6 py-4 bg-white border-b border-gray-100 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-gray-900 flex items-center gap-2">
+          <h1 className="text-lg font-semibold tracking-tight text-slate-600 flex items-center gap-2">
             {workspaceName || (
               <div className="h-5 w-32 bg-gray-50 animate-pulse rounded" />
             )}{" "}

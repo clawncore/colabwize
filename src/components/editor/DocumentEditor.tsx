@@ -512,7 +512,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       // binds the editor to them persistently until the component unmounts.
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [isCollaborative, project.id],
+    [isCollaborative, project.id, provider],
   );
 
   // Load project content only once per document
