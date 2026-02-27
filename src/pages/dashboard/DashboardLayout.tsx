@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import NotificationBell from "./NotificationBell";
 import { useAuth } from "../../hooks/useAuth";
 import { useUser } from "../../services/useUser";
@@ -114,7 +114,7 @@ export default function DashboardLayout({
   } = useSubscriptionStore();
 
   // Fetch workspaces
-  const fetchWorkspaces = async () => {
+  const fetchWorkspaces = useCallback(async () => {
     // Wait for both user AND token to be ready
     if (!user) return;
 
@@ -127,11 +127,11 @@ export default function DashboardLayout({
     } finally {
       setLoadingWorkspaces(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchWorkspaces();
-  }, [user]);
+  }, [fetchWorkspaces]);
 
   // Fetch projects and subscription data
   useEffect(() => {

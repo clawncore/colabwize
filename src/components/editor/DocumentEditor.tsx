@@ -25,9 +25,7 @@ import { MathExtension } from "../../extensions/MathExtension";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
 import { documentService, Project } from "../../services/documentService";
-import {
-  OriginalityScan,
-} from "../../services/originalityService";
+import { OriginalityScan } from "../../services/originalityService";
 import { AuthorshipService } from "../../services/authorshipService";
 import "../../styles/highlight-styles.css";
 import "../../styles/image-styles.css";
@@ -71,7 +69,10 @@ import { GrammarBubbleMenu } from "./GrammarBubbleMenu";
 import { AuditReportModal } from "../audit/AuditReportModal";
 import { EditorToolbar } from "./editor-toolbar";
 import { ExportWorkflowModal } from "../export/ExportWorkflowModal";
-import { detectAndNormalizeCitations, synchronizeRegistryWithDocument } from "./utils/normalization";
+import {
+  detectAndNormalizeCitations,
+  synchronizeRegistryWithDocument,
+} from "./utils/normalization";
 import { VersionHistoryModal } from "./VersionHistoryModal";
 import {
   Download,
@@ -85,13 +86,11 @@ import {
   Minimize2,
   Eye,
   Save,
-  Clock,
   PenTool,
   Loader2,
   History,
 } from "lucide-react";
 import { Button } from "../ui/button";
-
 
 interface DocumentEditorProps {
   project: Project;
@@ -116,10 +115,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  // --- FIX: Stable Provider and Y.Doc initialization ---
-  // A fresh instance of DocumentEditor is mounted per project (via key={project.id}).
-  // We lazily initialize Y.Doc and Provider once per mount. This ensures the 
-  // collaboration extensions have a valid Y.Doc instantly upon first render.
   const [ydoc] = useState(() => new Y.Doc());
   const [collabStatus, setCollabStatus] = useState<string>("disconnected");
   const [isSynced, setIsSynced] = useState(false);
@@ -197,14 +192,17 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [editCount, setEditCount] = useState(0);
   const [timeSpent, setTimeSpent] = useState(0); // in seconds
   const startTimeRef = useRef<Date | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasInitializedContentRef = useRef(false);
   const currentProjectIdRef = useRef<string | null>(null);
 
   // --- FIX 3: Stable cursor color - generated once per component mount ---
   const cursorColor = useMemo(
-    () => "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0"),
-    [] // Empty deps: only runs once on mount
+    () =>
+      "#" +
+      Math.floor(Math.random() * 16777215)
+        .toString(16)
+        .padStart(6, "0"),
+    [], // Empty deps: only runs once on mount
   );
   // Layout State
 
@@ -216,22 +214,24 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   // Handle Citation Clicks (Scroll to Reference)
   const scrollToReference = (citationId: string) => {
-    const citation = project.citations?.find(c => c.id === citationId);
+    const citation = project.citations?.find((c) => c.id === citationId);
     if (!citation) return;
 
     // Construct search strings (Author Last Name or Title or Number)
     // Heuristic: "Smith" or "The Art of Testing"
-    const authorLast = citation.authors?.[0]?.lastName || (typeof citation.authors?.[0] === 'string' ? citation.authors[0] : "");
+    const authorLast =
+      citation.authors?.[0]?.lastName ||
+      (typeof citation.authors?.[0] === "string" ? citation.authors[0] : "");
     const searchTerms = [
       citation.id, // If we have IDs in bibliography
       authorLast,
-      citation.title
+      citation.title,
     ].filter(Boolean) as string[];
 
     if (searchTerms.length === 0) return;
 
     // Search for reference by the citation text (e.g., "[3]")
-    const editorDom = document.querySelector('.ProseMirror');
+    const editorDom = document.querySelector(".ProseMirror");
     if (!editorDom) return;
 
     const children = Array.from(editorDom.children) as HTMLElement[];
@@ -242,8 +242,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       const text = child.innerText?.toLowerCase() || "";
 
       // Detect Section Header
-      if (['h1', 'h2', 'h3'].includes(child.tagName.toLowerCase())) {
-        if (text.includes('references') || text.includes('bibliography')) {
+      if (["h1", "h2", "h3"].includes(child.tagName.toLowerCase())) {
+        if (text.includes("references") || text.includes("bibliography")) {
           refSectionFound = true;
           continue;
         }
@@ -253,8 +253,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       if (refSectionFound) {
         // Check if paragraph contains author AND year? Or just author?
         // Using simple includes for now.
-        const matches = searchTerms.some(term =>
-          child.innerText?.includes(term)
+        const matches = searchTerms.some((term) =>
+          child.innerText?.includes(term),
         );
 
         if (matches) {
@@ -266,12 +266,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     // 3. Scroll and Highlight
     if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
 
       // Add highlight class
-      targetElement.classList.add('highlight-reference-flash');
+      targetElement.classList.add("highlight-reference-flash");
       setTimeout(() => {
-        targetElement?.classList.remove('highlight-reference-flash');
+        targetElement?.classList.remove("highlight-reference-flash");
       }, 2000);
 
       toast({
@@ -282,7 +282,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       toast({
         title: "Reference Not Found",
         description: "Could not locate the bibliography entry.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -290,7 +290,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // Handle Citation Clicks (Scroll to Reference)
   const scrollToReferenceByText = (citationText: string) => {
     // Search for reference by the citation text (e.g., "[3]")
-    const editorDom = document.querySelector('.ProseMirror');
+    const editorDom = document.querySelector(".ProseMirror");
     if (!editorDom) return;
 
     const children = Array.from(editorDom.children) as HTMLElement[];
@@ -301,8 +301,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       const text = child.innerText?.toLowerCase() || "";
 
       // Detect Section Header
-      if (['h1', 'h2', 'h3'].includes(child.tagName.toLowerCase())) {
-        if (text.includes('references') || text.includes('bibliography')) {
+      if (["h1", "h2", "h3"].includes(child.tagName.toLowerCase())) {
+        if (text.includes("references") || text.includes("bibliography")) {
           refSectionFound = true;
           continue;
         }
@@ -320,10 +320,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     // Scroll and Highlight
     if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      targetElement.classList.add('highlight-reference-flash');
+      targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      targetElement.classList.add("highlight-reference-flash");
       setTimeout(() => {
-        targetElement?.classList.remove('highlight-reference-flash');
+        targetElement?.classList.remove("highlight-reference-flash");
       }, 2000);
 
       toast({
@@ -331,8 +331,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         description: `Jumped to citation ${citationText}.`,
       });
     } else {
-      console.warn('[ScrollToRef] Reference not found for:', citationText);
-      console.warn('[ScrollToRef] refSectionFound:', refSectionFound);
+      console.warn("[ScrollToRef] Reference not found for:", citationText);
+      console.warn("[ScrollToRef] refSectionFound:", refSectionFound);
       toast({
         title: "Reference Not Found",
         description: `Could not locate bibliography entry for ${citationText}.`,
@@ -344,121 +344,121 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // Initialize editor with project content or create empty content
   // Since we created 'ydoc' and 'provider' synchronously on initial render via useState,
   // we can safely add the Collaboration extensions immediately without crashing.
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        history: !isCollaborative, // Disable history in collab mode (handled by Yjs)
-      } as any),
-      ...(isCollaborative && provider
-        ? [
-          Collaboration.configure({
-            document: ydoc, // Bind directly to the stable Y.Doc
-          }),
-          CollaborationCursor.configure({
-            provider: provider, // Bind directly to the Hocuspocus provider
-            user: {
-              name: user?.user_metadata?.full_name || user?.email || "Anonymous",
-              color: cursorColor,
-            },
-          }),
-        ]
-        : []),
-      HighlightExtension,
-      CharacterCount,
-      MathExtension,
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      TextAlign.configure({
-        types: ["heading", "paragraph"],
-      }),
-      Collaboration.configure({
-        document: ydoc,
-      }),
-      CollaborationCursor.configure({
-        provider: provider as any,
-        user: {
-          name: user?.user_metadata?.full_name || user?.email || "Anonymous",
-          color: cursorColor,
-        },
-      }),
-      TaskList,
-      TaskItem.configure({
-        nested: true,
-      }),
-      TextStyle,
-      FontFamily,
-      // Custom Extensions
-      AuthorBlockExtension,
-      AuthorExtension,
-      CalloutBlockExtension,
-      CoverPageExtension,
-      CustomCodeBlockExtension,
-      EnhancedFigureNode, // Replaces FigureExtension with auto-numbering
-      KeywordsExtension,
-      AITrackingExtension, // Add Custom AI Tracking Extension
-      PricingTableExtension,
-      SectionExtension,
-      VisualElementExtension,
-      ImageExtension,
-      ColumnLayoutExtension,
-      PlaceholderMarkExtension,
-      Superscript,
-      Subscript,
-      CitationNode,
-      PasteCitationExtension.configure({
-        projectId: project.id
-      }),
-      AutoNumbering, // Enable automatic figure and table numbering
-      GrammarExtension, // AI Grammar Checker
-    ],
-    // Only load initial content if NOT collaborative (Collab loads from Yjs)
-    content: isCollaborative ? undefined : formatContentForTiptap(project.content),
-    // NOTE: In collab mode, content is loaded from Yjs (Hocuspocus server) not here.
-    onUpdate: () => {
-      // Increment edit count when content changes
-      setEditCount((prev) => prev + 1);
-    },
-    editorProps: {
-      attributes: {
-        class: `focus:outline-none min-h-full prose-table:w-full prose-img:rounded-md prose-img:shadow-md`,
-        spellcheck: "false",
+  const editor = useEditor(
+    {
+      extensions: [
+        StarterKit.configure({
+          history: !isCollaborative, // Disable history in collab mode (handled by Yjs)
+        } as any),
+        ...(isCollaborative && provider
+          ? [
+              Collaboration.configure({
+                document: ydoc, // Bind directly to the stable Y.Doc
+              }),
+              CollaborationCursor.configure({
+                provider: provider, // Bind directly to the Hocuspocus provider
+                user: {
+                  name:
+                    user?.user_metadata?.full_name ||
+                    user?.email ||
+                    "Anonymous",
+                  color: cursorColor,
+                },
+              }),
+            ]
+          : []),
+        HighlightExtension,
+        CharacterCount,
+        MathExtension,
+        Table.configure({
+          resizable: true,
+        }),
+        TableRow,
+        TableHeader,
+        TableCell,
+        TextAlign.configure({
+          types: ["heading", "paragraph"],
+        }),
+        TaskList,
+        TaskItem.configure({
+          nested: true,
+        }),
+        TextStyle,
+        FontFamily,
+        // Custom Extensions
+        AuthorBlockExtension,
+        AuthorExtension,
+        CalloutBlockExtension,
+        CoverPageExtension,
+        CustomCodeBlockExtension,
+        EnhancedFigureNode, // Replaces FigureExtension with auto-numbering
+        KeywordsExtension,
+        AITrackingExtension, // Add Custom AI Tracking Extension
+        PricingTableExtension,
+        SectionExtension,
+        VisualElementExtension,
+        ImageExtension,
+        ColumnLayoutExtension,
+        PlaceholderMarkExtension,
+        Superscript,
+        Subscript,
+        CitationNode,
+        PasteCitationExtension.configure({
+          projectId: project.id,
+        }),
+        AutoNumbering, // Enable automatic figure and table numbering
+        GrammarExtension, // AI Grammar Checker
+      ],
+      // Only load initial content if NOT collaborative (Collab loads from Yjs)
+      content: isCollaborative
+        ? undefined
+        : formatContentForTiptap(project.content),
+      // NOTE: In collab mode, content is loaded from Yjs (Hocuspocus server) not here.
+      onUpdate: () => {
+        // Increment edit count when content changes
+        setEditCount((prev) => prev + 1);
       },
-      handleClick: (view, pos, event) => {
-        const target = event.target as HTMLElement;
-        console.log('[CitationClick] Click detected, target:', target);
+      editorProps: {
+        attributes: {
+          class: `focus:outline-none min-h-full prose-table:w-full prose-img:rounded-md prose-img:shadow-md`,
+          spellcheck: "false",
+        },
+        handleClick: (view, pos, event) => {
+          const target = event.target as HTMLElement;
+          console.log("[CitationClick] Click detected, target:", target);
 
-        // Find citation element by class since citationId might be null
-        const citationElement = target.closest('.citation-pill');
-        console.log('[CitationClick] Citation element:', citationElement);
+          // Find citation element by class since citationId might be null
+          const citationElement = target.closest(".citation-pill");
+          console.log("[CitationClick] Citation element:", citationElement);
 
-        if (citationElement) {
-          // Try to get citation ID, fall back to text
-          const citationId = citationElement.getAttribute('data-cite');
-          const citationText = citationElement.getAttribute('data-text') || citationElement.textContent;
+          if (citationElement) {
+            // Try to get citation ID, fall back to text
+            const citationId = citationElement.getAttribute("data-cite");
+            const citationText =
+              citationElement.getAttribute("data-text") ||
+              citationElement.textContent;
 
-          console.log('[CitationClick] Citation ID:', citationId);
-          console.log('[CitationClick] Citation text:', citationText);
+            console.log("[CitationClick] Citation ID:", citationId);
+            console.log("[CitationClick] Citation text:", citationText);
 
-          if (citationId) {
-            scrollToReference(citationId);
-          } else if (citationText) {
-            // Use text to find reference (e.g., "[3]" → search for entry starting with "[3]")
-            scrollToReferenceByText(citationText.trim());
+            if (citationId) {
+              scrollToReference(citationId);
+            } else if (citationText) {
+              // Use text to find reference (e.g., "[3]" → search for entry starting with "[3]")
+              scrollToReferenceByText(citationText.trim());
+            }
+            return true; // Stop propagation
           }
-          return true; // Stop propagation
-        }
-        return false;
-      }
+          return false;
+        },
+      },
+      // Dependencies check: since `ydoc` and `provider` are stable state objects initialized
+      // exactly once per component lifecycle, using them here is safe and effectively
+      // binds the editor to them persistently until the component unmounts.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    // Dependencies check: since `ydoc` and `provider` are stable state objects initialized
-    // exactly once per component lifecycle, using them here is safe and effectively
-    // binds the editor to them persistently until the component unmounts.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCollaborative, project.id]);
+    [isCollaborative, project.id],
+  );
 
   // Load project content only once per document
   useEffect(() => {
@@ -491,7 +491,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         // Use timeout to ensure editor is stable and we don't conflict with initial render transactions
         setTimeout(async () => {
           if (editor && !editor.isDestroyed) {
-            const result = await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+            const result = await detectAndNormalizeCitations(
+              editor,
+              project.id,
+              project.citations || [],
+            );
 
             // Recover any existing nodes that were lost from registry
             await synchronizeRegistryWithDocument(editor, project.id);
@@ -502,28 +506,29 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               const total = ieee + apa;
 
               if (total > 0) {
-                const currentStyle = project.citation_style || 'apa';
+                const currentStyle = project.citation_style || "apa";
                 let detectedStyle = null;
 
-                if (ieee / total >= 0.7) detectedStyle = 'ieee';
-                else if (apa / total >= 0.7) detectedStyle = 'apa'; // or 'mla' depending on default
+                if (ieee / total >= 0.7) detectedStyle = "ieee";
+                else if (apa / total >= 0.7) detectedStyle = "apa"; // or 'mla' depending on default
 
                 if (detectedStyle && detectedStyle !== currentStyle) {
-                  console.log(`[AutoStyle] Switching from ${currentStyle} to ${detectedStyle} (Confidence: ${Math.round((detectedStyle === 'ieee' ? ieee : apa) / total * 100)}%)`);
+                  console.log(
+                    `[AutoStyle] Switching from ${currentStyle} to ${detectedStyle} (Confidence: ${Math.round(((detectedStyle === "ieee" ? ieee : apa) / total) * 100)}%)`,
+                  );
 
                   // Update Project
-                  const updatedProject = { ...project, citation_style: detectedStyle };
+                  const updatedProject = {
+                    ...project,
+                    citation_style: detectedStyle,
+                  };
                   if (onProjectUpdate) onProjectUpdate(updatedProject);
 
                   // Notify User
                   toast({
                     title: "Citation Style Optimized",
                     description: `Switched to ${detectedStyle.toUpperCase()} based on your content.`,
-<<<<<<< HEAD
-                    duration: 3000
-=======
                     duration: 3000,
->>>>>>> 7e88502 (craig update)
                   });
                 }
               }
@@ -532,16 +537,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         }, 500);
       }
     }
-  }, [project, editor, onEditorReady, onProjectUpdate, toast]);
+  }, [project, editor, onEditorReady, onProjectUpdate, toast, isCollaborative]);
 
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 7e88502 (craig update)
   useEffect(() => {
     if (editor && !editor.isDestroyed) {
       editor.setEditable(!isPreviewMode);
@@ -557,36 +557,17 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     const debounceTime = citationCount > 80 ? 5000 : 2000;
 
     if (citationCount > 80 && editCount % 5 === 0) {
-<<<<<<< HEAD
-      console.warn(`[StressGuard] Large document detected (${citationCount} refs). Debounce set to ${debounceTime}ms.`);
-=======
       console.warn(
         `[StressGuard] Large document detected (${citationCount} refs). Debounce set to ${debounceTime}ms.`,
       );
->>>>>>> 7e88502 (craig update)
     }
 
     const timeoutId = setTimeout(() => {
       // 1. Run normalization (text -> blue pills)
       detectAndNormalizeCitations(editor, project.id, project.citations || []);
-
-<<<<<<< HEAD
-      // 2. Orchestrated Update (Ordering + Integrity)
-      // This manages locks to prevent race conditions with Exports
-      import("../../services/CitationOrchestrator").then(({ CitationOrchestrator }) => {
-        // @ts-ignore - Project interface might be strict
-        const style = project.citation_style || "apa";
-        CitationOrchestrator.scheduleUpdate(editor, project.id, style);
-      });
-
-    }, debounceTime);
-
-    return () => clearTimeout(timeoutId);
-  }, [editCount, editor, project.citations, project.id, project.citation_style]); // Added project.citation_style to trigger style updates
-=======
+      // 2. Run citation ordering
       import("../../services/CitationOrchestrator").then(
         ({ CitationOrchestrator }) => {
-          // @ts-ignore - Project interface might be strict
           const style = project.citation_style || "apa";
           CitationOrchestrator.scheduleUpdate(editor, project.id, style);
         },
@@ -595,13 +576,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     return () => clearTimeout(timeoutId);
   }, [
-    editCount,
     editor,
-    project.citations,
     project.id,
+    project.citations,
+    editCount,
     project.citation_style,
-  ]); // Added project.citation_style to trigger style updates
->>>>>>> 7e88502 (craig update)
+  ]);
 
   // --- Background Grammar Check (Debounced) ---
   useEffect(() => {
@@ -616,12 +596,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (!editor || editor.isDestroyed) return;
 
         // --- Feature Gate: Check if user has access (Paid Feature) ---
-<<<<<<< HEAD
-        const hasAccess = await SubscriptionService.hasFeatureAccess("grammar_check");
-=======
         const hasAccess =
           await SubscriptionService.hasFeatureAccess("grammar_check");
->>>>>>> 7e88502 (craig update)
         if (!hasAccess) {
           // Optional: console.log("Grammar check skipped (Free plan)");
           return;
@@ -632,18 +608,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         const { selection } = state;
         const { $from } = selection;
 
-<<<<<<< HEAD
-        // CRITICAL FIX: Only run grammar check on text blocks (headings, paragraphs)
-        // This prevents crash when selection is inside a table structure or other non-text node
-        if (!$from.parent.isTextblock) return;
-
-        // Ancestor Check: Verify we are not inside a table or figure caption
-        // The user explicitly requested to disable checks in tables/pictures to prevent crashes
-        let invalidContext = false;
-        for (let d = $from.depth; d > 0; d--) {
-          const node = $from.node(d);
-          if (['table', 'table_row', 'table_cell', 'image', 'figure', 'figcaption'].includes(node.type.name)) {
-=======
         if (!$from.parent.isTextblock) return;
 
         let invalidContext = false;
@@ -659,7 +623,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               "figcaption",
             ].includes(node.type.name)
           ) {
->>>>>>> 7e88502 (craig update)
             invalidContext = true;
             break;
           }
@@ -678,32 +641,22 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (!textToCheck || textToCheck.length < 5) return;
 
         console.log("ðŸ“  Background Grammar Check (Block Scoped)...");
-<<<<<<< HEAD
-        const { GrammarCheckService } = await import("../../services/grammarCheckService");
-=======
         const { GrammarCheckService } =
           await import("../../services/grammarCheckService");
->>>>>>> 7e88502 (craig update)
 
         // Silent check
         const errors = await GrammarCheckService.checkText(textToCheck);
 
         if (!editor || editor.isDestroyed) return;
 
-<<<<<<< HEAD
         // --- STALENESS CHECK ---
         // Verify if the text at this range is still the same.
         // If the user typed while we were checking, abort to prevent applying marks to wrong offsets.
         const currentText = editor.state.doc.textBetween(start, end, " ", " ");
         if (currentText !== textToCheck) {
-          console.log("âš ï¸  Text changed during check, aborting grammar highlight.");
-=======
-        const currentText = editor.state.doc.textBetween(start, end, " ", " ");
-        if (currentText !== textToCheck) {
           console.log(
-            "âš ï¸  Text changed during check, aborting grammar highlight.",
+            "⚠️ Text changed during check, aborting grammar highlight.",
           );
->>>>>>> 7e88502 (craig update)
           return;
         }
 
@@ -712,11 +665,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         // Transaction to update marks
         const tr = editor.state.tr;
         const schema = editor.state.schema;
-<<<<<<< HEAD
-        const markType = schema.marks['grammar-error'];
-=======
         const markType = schema.marks["grammar-error"];
->>>>>>> 7e88502 (craig update)
 
         if (!markType) return;
 
@@ -731,15 +680,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
         // 2. Apply new errors mapped to this block's offset
         let matchCount = 0;
-<<<<<<< HEAD
-        errors.forEach(err => {
-          try {
-            const escaped = err.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(escaped, 'g');
-            const matches = Array.from(textToCheck.matchAll(regex));
 
-            matches.forEach(match => {
-=======
         errors.forEach((err) => {
           try {
             const escaped = err.original.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -747,18 +688,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             const matches = Array.from(textToCheck.matchAll(regex));
 
             matches.forEach((match) => {
->>>>>>> 7e88502 (craig update)
               if (match.index !== undefined) {
                 // Calculate absolute position in doc
                 const matchStart = start + match.index;
                 const matchEnd = matchStart + match[0].length;
-
-<<<<<<< HEAD
-                tr.addMark(matchStart, matchEnd, markType.create({
-                  ...err,
-                  original: err.original
-                }));
-=======
                 tr.addMark(
                   matchStart,
                   matchEnd,
@@ -767,7 +700,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                     original: err.original,
                   }),
                 );
->>>>>>> 7e88502 (craig update)
                 matchCount++;
               }
             });
@@ -789,11 +721,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     return () => clearTimeout(timeoutId);
   }, [editCount, editor]); // Re-run on editCount change
 
-<<<<<<< HEAD
-  // --- Citation Click Navigation ---
-  // Global click listener to handle clicks on citation pills
-=======
->>>>>>> 7e88502 (craig update)
   useEffect(() => {
     const handleEditorClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -805,25 +732,19 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         // Extract probable author from "(Smith, 2020)" -> "Smith"
         // Regex looks for words before comma or year
         const match = text.match(/\(([^,0-9]+)/);
-<<<<<<< HEAD
-        const author = match ? match[1].trim() : text.replace(/[()]/g, "").trim();
 
-        if (author) {
-          // Find References section in the DOM
-          // We assume standard APA/MLA "References" or "Works Cited" heading
-          // This is a DOM search, not Tiptap node search, for scrolling simplicity
-=======
         const author = match
           ? match[1].trim()
           : text.replace(/[()]/g, "").trim();
 
         if (author) {
->>>>>>> 7e88502 (craig update)
           const headings = document.querySelectorAll("h1, h2, h3, h4");
           let referencesHeader: Element | null = null;
 
           for (const h of Array.from(headings)) {
-            if (/References|Works Cited|Bibliography/i.test(h.textContent || "")) {
+            if (
+              /References|Works Cited|Bibliography/i.test(h.textContent || "")
+            ) {
               referencesHeader = h;
               break;
             }
@@ -837,7 +758,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 // Found it! Scroll to it.
                 // Found it! Scroll to it.
                 const targetElement = current as HTMLElement;
-                targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+                targetElement.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
                 // Add temporary highlight effect
                 const originalBg = targetElement.style.backgroundColor;
                 targetElement.style.backgroundColor = "#FEF3C7"; // yellow-100
@@ -850,7 +774,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               current = current.nextElementSibling;
             }
             // If specific author not found, at least scroll to References
-            referencesHeader.scrollIntoView({ behavior: "smooth", block: "start" });
+            referencesHeader.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
           } else {
             // Fallback: Try to find text anywhere? No, too risky.
             console.warn("References section not found");
@@ -859,14 +786,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       }
     };
 
-
     document.addEventListener("click", handleEditorClick);
 
     return () => {
       document.removeEventListener("click", handleEditorClick);
     };
   }, []);
-
 
   const statsRef = useRef({
     timeSpent: 0,
@@ -904,18 +829,19 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       const currentStats = statsRef.current; // Current cumulative
 
       // Get AI stats from extension storage if available
-      const currentAiEditCount = (editor?.storage as any).aiTracking?.aiEditCount || 0;
+      const currentAiEditCount =
+        (editor?.storage as any).aiTracking?.aiEditCount || 0;
 
       // Calculate Deltas
-      const timeDelta = currentStats.timeSpent - lastSyncStatsRef.current.timeSpent;
-      const editDelta = currentStats.editCount - lastSyncStatsRef.current.editCount;
-      const aiEditDelta = currentAiEditCount - lastSyncStatsRef.current.aiEditCount;
+      const timeDelta =
+        currentStats.timeSpent - lastSyncStatsRef.current.timeSpent;
+      const editDelta =
+        currentStats.editCount - lastSyncStatsRef.current.editCount;
+      const aiEditDelta =
+        currentAiEditCount - lastSyncStatsRef.current.aiEditCount;
 
       // Only save if there's been NEW activity
-      if (
-        project.id &&
-        (timeDelta > 0 || editDelta > 0 || aiEditDelta > 0)
-      ) {
+      if (project.id && (timeDelta > 0 || editDelta > 0 || aiEditDelta > 0)) {
         try {
           // Update sync ref immediately to avoid double sending
           lastSyncStatsRef.current = {
@@ -940,7 +866,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           });
         } catch (error) {
           console.error("Failed to record activity:", error);
-
         }
       }
     }, 30000); // 30 seconds
@@ -971,11 +896,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const clearHighlights = () => {
     if (editor) {
       // Remove all highlight marks (Citation/Originality) AND Grammar errors
-      editor.chain()
-        .focus()
-        .clearAllHighlights()
-        .clearAllGrammarErrors()
-        .run();
+      editor.chain().focus().clearAllHighlights().clearAllGrammarErrors().run();
     }
   };
 
@@ -1040,7 +961,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   };
     */
 
-
   // FIX 5: Remove duplicate timer effect — the timer above (line ~747) already handles this.
 
   // Add Escape key listener for Focus Mode
@@ -1074,10 +994,18 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       }
     };
 
-    window.addEventListener("insert-citation", handleInsertCitation as EventListener);
+    window.addEventListener(
+      "insert-citation",
+      handleInsertCitation as EventListener,
+    );
     return () => {
-      window.removeEventListener("insert-citation", handleInsertCitation as EventListener);
+      window.removeEventListener(
+        "insert-citation",
+        handleInsertCitation as EventListener,
+      );
     };
+  }, [editor]);
+
   const handleSave = React.useCallback(async () => {
     if (!editor) return;
 
@@ -1093,14 +1021,13 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         title,
         description,
         content,
-        editor.storage.characterCount.words()
+        editor.storage.characterCount.words(),
       );
 
       if (result.success && result.data) {
         if (onProjectUpdate) {
           onProjectUpdate(result.data);
         }
-
 
         // Auto-save happens silently - no need to notify user
       } else {
@@ -1134,7 +1061,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const prevDescriptionRef = useRef(description);
   useEffect(() => {
     if (!isCollaborative) return; // Non-collab mode handled by handleSave above
-    if (title === prevTitleRef.current && description === prevDescriptionRef.current) return;
+    if (
+      title === prevTitleRef.current &&
+      description === prevDescriptionRef.current
+    )
+      return;
 
     const timeoutId = setTimeout(async () => {
       try {
@@ -1145,7 +1076,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           description,
           project.content, // keep current DB content unchanged
           project.word_count,
-          project.citation_style
+          project.citation_style,
         );
         prevTitleRef.current = title;
         prevDescriptionRef.current = description;
@@ -1156,7 +1087,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }, 2000); // 2s debounce
 
     return () => clearTimeout(timeoutId);
-  }, [title, description, isCollaborative, project.id, project.content, project.word_count, project.citation_style]);
+  }, [
+    title,
+    description,
+    isCollaborative,
+    project.id,
+    project.content,
+    project.word_count,
+    project.citation_style,
+  ]);
 
   // Format time spent into human-readable format
   const formatTimeSpent = (seconds: number): string => {
@@ -1198,7 +1137,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     return (
       <div className="flex flex-col items-center justify-center h-full bg-white">
         <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900">Connecting to Workspace...</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          Connecting to Workspace...
+        </h3>
         <p className="text-sm text-gray-500 mt-2">
           {collabStatus === "connecting"
             ? "Establishing secure connection for real-time collaboration..."
@@ -1216,7 +1157,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         onClose={() => setAuditReport(null)}
         report={auditReport}
       />
-      <div className={`flex flex-col h-full bg-white transition-all duration-500 ${isFocusMode ? "fixed inset-0 z-[100] p-0" : ""}`}>
+      <div
+        className={`flex flex-col h-full bg-white transition-all duration-500 ${isFocusMode ? "fixed inset-0 z-[100] p-0" : ""}`}>
         <UpgradeModal
           isOpen={showUpgradeModal}
           onClose={() => setShowUpgradeModal(false)}
@@ -1246,24 +1188,32 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                       if (!editor || !project.id) return;
                       try {
                         try {
-                          toast({ title: "Saving new version...", description: "Please wait." });
+                          toast({
+                            title: "Saving new version...",
+                            description: "Please wait.",
+                          });
                           await documentService.createDocumentVersion(
                             project.id,
                             editor.getJSON(),
-                            editor.storage.characterCount.words()
+                            editor.storage.characterCount.words(),
                           );
-                          toast({ title: "Version saved successfully!", variant: "default" });
+                          toast({
+                            title: "Version saved successfully!",
+                            variant: "default",
+                          });
                         } catch (error) {
                           console.error("Failed to save version:", error);
-                          toast({ title: "Failed to save version", variant: "destructive" });
+                          toast({
+                            title: "Failed to save version",
+                            variant: "destructive",
+                          });
                         }
                       } catch (error) {
                         console.error("Failed to save version:", error);
                       }
                     }}
                     className="gap-2 h-9 border-green-400 text-green-800 bg-white hover:bg-green-50 hover:text-green-900 transition-colors shadow-sm px-3"
-                    title="Create a named version checkpoint"
-                  >
+                    title="Create a named version checkpoint">
                     <Save className="w-4 h-4 text-green-600" />
                     <span className="font-bold text-xs">Save Version</span>
                   </Button>
@@ -1275,16 +1225,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                     size="sm"
                     onClick={() => setIsHistoryModalOpen(true)}
                     className="gap-2 h-9 border-indigo-400 text-indigo-800 bg-white hover:bg-indigo-50 hover:text-indigo-900 transition-colors shadow-sm px-3"
-                    title="View version history"
-                  >
+                    title="View version history">
                     <History className="w-4 h-4 text-indigo-600" />
                     <span className="font-bold text-xs">History</span>
                   </Button>
                 )}
                 <button
                   className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
-                  onClick={() => setIsExportWorkflowOpen(true)}
-                >
+                  onClick={() => setIsExportWorkflowOpen(true)}>
                   <Download className="w-4 h-4" />
                   Export
                 </button>
@@ -1294,8 +1242,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   size="sm"
                   onClick={() => setIsStyleDialogOpen(true)}
                   className="gap-2 h-9 border-blue-400 text-blue-800 bg-white hover:bg-blue-50 hover:text-blue-900 transition-colors shadow-sm px-3"
-                  title={`Current Style: ${project.citation_style || 'APA'} - Click to change`}
-                >
+                  title={`Current Style: ${project.citation_style || "APA"} - Click to change`}>
                   <div className="flex items-center gap-1.5">
                     <BookOpen className="w-4 h-4 text-blue-600" />
                     <span className="font-bold text-xs">
@@ -1306,26 +1253,40 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
-                    ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  title={isPreviewMode ? "Switch to Edit Mode" : "Switch to Preview Mode"}
-                >
-                  {isPreviewMode ? <PenTool className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isPreviewMode
+                      ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                  title={
+                    isPreviewMode
+                      ? "Switch to Edit Mode"
+                      : "Switch to Preview Mode"
+                  }>
+                  {isPreviewMode ? (
+                    <PenTool className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                   {isPreviewMode ? "Edit" : "Preview"}
                 </button>
 
                 <button
                   onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
-                    ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
-                >
-                  {isFocusMode ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                  <span className="hidden sm:inline">{isFocusMode ? "Exit" : "Focus"}</span>
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isFocusMode
+                      ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                  title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
+                  {isFocusMode ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {isFocusMode ? "Exit" : "Focus"}
+                  </span>
                 </button>
 
                 {/* Originality Scan Pipeline (Plagiarism Detection) */}
@@ -1364,7 +1325,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 {lastScanResult?.realityCheck && (
                   <button
                     onClick={() =>
-                      onOpenPanel?.("reality-check", lastScanResult.realityCheck)
+                      onOpenPanel?.(
+                        "reality-check",
+                        lastScanResult.realityCheck,
+                      )
                     }
                     className="px-4 py-2 border border-indigo-200 bg-indigo-50 text-indigo-700 rounded-md text-sm font-medium hover:bg-indigo-100 transition-colors flex items-center gap-2"
                     title="View Reality Check">
@@ -1377,7 +1341,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 {lastScanResult?.realityCheck && (
                   <div className="px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 rounded-md text-sm font-medium flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Score: {Math.round(lastScanResult.overallScore)}%</span>
+                    <span>
+                      Score: {Math.round(lastScanResult.overallScore)}%
+                    </span>
                     <span className="text-xs bg-white px-2 py-1 rounded">
                       {lastScanResult.realityCheck.trustScore > 70
                         ? "Good"
@@ -1426,26 +1392,18 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
             {/* Main Editor Area */}
-<<<<<<< HEAD
-            <div className={`flex-1 overflow-auto transition-all duration-500 ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}>
-=======
             <div
               className={`flex-1 overflow-auto transition-all duration-500 ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}>
->>>>>>> 7e88502 (craig update)
               {editor && <TableBubbleMenu editor={editor} />}
               <EditorContent
                 editor={editor}
                 className={`${isFocusMode ? "max-w-[900px]" : "max-w-[816px]"} mx-auto prose prose-lg min-h-full focus:outline-none p-8 bg-white rounded-lg shadow-sm`}
               />
               {/* Behavioral Tracker */}
-<<<<<<< HEAD
-              <BehavioralTracker projectId={project.id} userId={project.user_id} />
-=======
               <BehavioralTracker
                 projectId={project.id}
                 userId={project.user_id}
               />
->>>>>>> 7e88502 (craig update)
             </div>
           </div>
         </div>
@@ -1455,12 +1413,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           <button
             onClick={onToggleFocusMode}
             className="fixed top-6 right-6 z-[110] px-4 py-2 bg-white/90 backdrop-blur-sm border border-gray-300 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-100 transition-all shadow-lg flex items-center gap-2 opacity-50 hover:opacity-100"
-<<<<<<< HEAD
-            title="Exit Focus Mode (Esc)"
-          >
-=======
             title="Exit Focus Mode (Esc)">
->>>>>>> 7e88502 (craig update)
             <Minimize2 className="w-4 h-4" />
             Exit Focus (Esc)
           </button>
@@ -1517,10 +1470,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               Find Papers
             </button>
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 7e88502 (craig update)
             <AuthorshipCertificateAdapter
               projectId={project.id}
               projectTitle={title}
@@ -1545,11 +1494,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 }
               }}
               className="bg-white/90 backdrop-blur border border-indigo-100 shadow-sm px-3 py-1.5 rounded-full text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center gap-1.5">
-<<<<<<< HEAD
-              <span>ðŸ›¡ï¸  Reality Check</span>
-=======
               <span>ðŸ›¡ï¸ Reality Check</span>
->>>>>>> 7e88502 (craig update)
             </button>
           </div>
         )}

@@ -78,4 +78,5 @@ class TeamChatService {
   }
 }
 
-export default new TeamChatService();
+const teamChatService = new TeamChatService();
+export default teamChatService;

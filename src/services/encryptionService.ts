@@ -95,4 +95,5 @@ class EncryptionService {
   }
 }
 
-export default new EncryptionService();
+const encryptionService = new EncryptionService();
+export default encryptionService;
