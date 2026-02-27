@@ -90,7 +90,6 @@ export default function DashboardLayout({
     );
   };
   const { user, loading } = useUser();
-  const [projectsCount, setProjectsCount] = useState(0);
   const [subscriptionData, setSubscriptionData] = useState<any>(null);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -140,14 +139,6 @@ export default function DashboardLayout({
 
       setLoadingProjects(true);
       try {
-        // Fetch projects count
-        const projects = await documentService.getUserProjects(user.id);
-        if (Array.isArray(projects)) {
-          setProjectsCount(projects.length);
-        } else if (projects && Array.isArray(projects.projects)) {
-          setProjectsCount(projects.projects.length);
-        }
-
         // Fetch subscription data
         const subService = new SubscriptionService();
         const subData = await subService.getUserPlan();

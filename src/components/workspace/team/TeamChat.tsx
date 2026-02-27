@@ -8,7 +8,6 @@ import TeamChatService, {
   TeamChatMessage,
 } from "../../../services/teamChatService";
 import { supabase } from "../../../lib/supabase/client";
-import { formatDistanceToNow } from "date-fns";
 import { useUser } from "../../../services/useUser";
 import { useParams } from "react-router-dom";
 import WorkspaceService from "../../../services/workspaceService";
@@ -112,7 +111,6 @@ export function TeamChat({
         async (payload) => {
           // Fetch full message with user info instead of just the payload
           // because the payload doesn't include the 'user' join data
-          const newMessageId = (payload.new as any).id;
           try {
             // We can't easily fetch just one with join via apiClient without a new route
             // For now, let's refresh or push a partial (optimization later)

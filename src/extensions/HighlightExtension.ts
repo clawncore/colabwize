@@ -13,6 +13,9 @@ export interface HighlightAttributes {
   ruleId?: string;
   expected?: string;
   badgeCode?: string;
+  // Citation hyperlink support
+  url?: string;
+  sourceTitle?: string;
 }
 
 declare module "@tiptap/core" {
@@ -158,6 +161,26 @@ export const HighlightExtension = Mark.create<HighlightOptions>({
           if (!attributes.badgeCode) return {};
           return {
             "data-badge-code": attributes.badgeCode,
+          };
+        },
+      },
+      url: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-url"),
+        renderHTML: (attributes) => {
+          if (!attributes.url) return {};
+          return {
+            "data-url": attributes.url,
+          };
+        },
+      },
+      sourceTitle: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-source-title"),
+        renderHTML: (attributes) => {
+          if (!attributes.sourceTitle) return {};
+          return {
+            "data-source-title": attributes.sourceTitle,
           };
         },
       },

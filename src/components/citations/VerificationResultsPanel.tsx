@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Editor } from "@tiptap/react";
 import { CitationService } from "../../services/citationService";
-import { Loader2, Check, RefreshCw, ArrowRight, ShieldCheck, ShieldAlert, BadgeCheck, FileQuestion } from "lucide-react";
+import { Loader2, Check, RefreshCw, ArrowRight, ShieldCheck, ShieldAlert, BadgeCheck, FileQuestion, ExternalLink } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
 
 // Updated Interface matching Backend
@@ -113,9 +113,21 @@ export const VerificationResultsPanel: React.FC<VerificationResultsPanelProps> =
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="flex-1 pr-4">
                                         <div className="text-xs font-bold text-[#16a34a] mb-1">VERIFIED SOURCE</div>
-                                        <div className="font-semibold text-sm text-[#111827] line-clamp-2 leading-relaxed">
-                                            {result.foundPaper?.title}
-                                        </div>
+                                        {result.foundPaper?.url ? (
+                                            <a
+                                                href={result.foundPaper.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="font-semibold text-sm text-[#111827] line-clamp-2 leading-relaxed hover:text-blue-600 hover:underline inline-flex items-start gap-1 transition-colors"
+                                            >
+                                                {result.foundPaper?.title}
+                                                <ExternalLink className="w-3 h-3 mt-0.5 shrink-0 text-blue-500" />
+                                            </a>
+                                        ) : (
+                                            <div className="font-semibold text-sm text-[#111827] line-clamp-2 leading-relaxed">
+                                                {result.foundPaper?.title}
+                                            </div>
+                                        )}
                                     </div>
                                     {result.similarity !== undefined && (
                                         <div className="bg-[#f0fdf4] text-[#15803d] text-xs font-bold px-2 py-1 rounded border border-[#bbf7d0]">

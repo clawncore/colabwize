@@ -565,7 +565,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     const timeoutId = setTimeout(() => {
       // 1. Run normalization (text -> blue pills)
       detectAndNormalizeCitations(editor, project.id, project.citations || []);
-      // 2. Run citation ordering
+
       import("../../services/CitationOrchestrator").then(
         ({ CitationOrchestrator }) => {
           const style = project.citation_style || "apa";
@@ -581,7 +581,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     project.citations,
     editCount,
     project.citation_style,
-  ]);
+  ]); // Added project.citation_style to trigger style updates
 
   // --- Background Grammar Check (Debounced) ---
   useEffect(() => {
@@ -680,7 +680,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
         // 2. Apply new errors mapped to this block's offset
         let matchCount = 0;
-
         errors.forEach((err) => {
           try {
             const escaped = err.original.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -692,6 +691,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 // Calculate absolute position in doc
                 const matchStart = start + match.index;
                 const matchEnd = matchStart + match[0].length;
+
                 tr.addMark(
                   matchStart,
                   matchEnd,
@@ -732,7 +732,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         // Extract probable author from "(Smith, 2020)" -> "Smith"
         // Regex looks for words before comma or year
         const match = text.match(/\(([^,0-9]+)/);
-
         const author = match
           ? match[1].trim()
           : text.replace(/[()]/g, "").trim();
@@ -755,7 +754,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             let current = referencesHeader.nextElementSibling;
             while (current) {
               if (current.textContent?.includes(author)) {
-                // Found it! Scroll to it.
                 // Found it! Scroll to it.
                 const targetElement = current as HTMLElement;
                 targetElement.scrollIntoView({
