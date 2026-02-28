@@ -112,25 +112,17 @@
 
 /* Flash Highlight for Reference jumping */
 .highlight-reference-flash {
-  animation: flash-highlight 2s ease-out;
-  border-radius: 4px;
+  animation: reference-highlight 2s ease-out;
 }
 
-@keyframes flash-highlight {
+@keyframes reference-highlight {
   0% {
-    background-color: rgba(99, 102, 241, 0.4); /* Indigo-ish glow */
-    outline: 2px solid rgba(99, 102, 241, 0.5);
-    transform: scale(1.01);
-  }
-
-  30% {
-    background-color: rgba(99, 102, 241, 0.2);
-    outline: 1px solid rgba(99, 102, 241, 0.2);
-    transform: scale(1);
+    background-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
   }
 
   100% {
     background-color: transparent;
-    outline: 0px solid transparent;
+    box-shadow: 0 0 0 0 transparent;
   }
 }

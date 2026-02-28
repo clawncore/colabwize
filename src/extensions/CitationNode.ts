@@ -98,7 +98,6 @@ export const CitationNode = Node.create<CitationNodeOptions>({
         console.log('[CitationNode] node.attrs:', node.attrs);
         console.log('[CitationNode] HTMLAttributes:', HTMLAttributes);
 
-        // Dynamic classes based on status
         const status = node.attrs.status || 'unresolved';
         let statusClass = "border-blue-200"; // Default
 
@@ -120,19 +119,11 @@ export const CitationNode = Node.create<CitationNodeOptions>({
                 statusClass = "border-blue-200 bg-blue-50/50 text-blue-700";
         }
 
-        const merged = mergeAttributes(
-            this.options.HTMLAttributes,
-            HTMLAttributes, // This contains data-cite, data-status, data-text from addAttributes
-            {
-                class: `citation-pill px-[2px] py-[1px] rounded-[2px] border-b cursor-pointer hover:opacity-80 transition-colors ${statusClass}`,
-            }
-        );
-
-        console.log('[CitationNode] Merged attributes:', merged);
-
         return [
             "span",
-            merged,
+            mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+                class: `citation-pill px-[2px] py-[1px] rounded-[2px] border-b cursor-pointer hover:opacity-80 transition-colors ${statusClass}`,
+            }),
             node.attrs.text || "Citation"
         ];
     },

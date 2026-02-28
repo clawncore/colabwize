@@ -37,8 +37,9 @@ export async function detectAndNormalizeCitations(editor: Editor, projectId: str
             if (stopScanning) return false;
 
             if (node.type.name === 'heading') {
-                const text = node.textContent.toLowerCase();
-                if (text.includes('reference') || text.includes('refrence') || text.includes('bibliography') || text.includes('works cited')) {
+                const text = node.textContent.toLowerCase().trim();
+                // Match "References", "Bibliography", "Works Cited" cases
+                if (text === 'references' || text === 'refrences' || text === 'bibliography' || text === 'works cited' || text.endsWith(' reference list')) {
                     stopScanning = true;
                     return false;
                 }
@@ -46,10 +47,15 @@ export async function detectAndNormalizeCitations(editor: Editor, projectId: str
 
             if (!node.isBlock || node.type.name === 'doc') return true;
 
+            // Stop recursion into block's children if we should stop scanning
+            if (stopScanning) return false;
+
             const blockText = node.textContent;
             if (!blockText) return false;
 
-            const matches = extractPatterns(blockText, 0, "inline");
+            // ONLY extract Structural Patterns (Numeric, Author-Year)
+            // This prevents "et al" and other fragments from becoming pills
+            const matches = extractPatterns(blockText, 0, "structural");
 
             matches.forEach(match => {
                 // Style Detection Logic

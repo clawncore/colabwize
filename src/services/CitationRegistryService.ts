@@ -81,6 +81,22 @@ export class CitationRegistryService {
             return existing;
         }
 
+        // 3. Fallback: Author-Year Fuzzy Match (Special for inline citations)
+        if (tempCsl.author?.[0]?.family && tempCsl.author[0].family !== "Unknown" && tempCsl.issued?.['date-parts']?.[0]?.[0]) {
+            const author = tempCsl.author[0].family.toLowerCase();
+            const year = tempCsl.issued['date-parts'][0][0];
+
+            const fuzzyMatch = entries.find(e => {
+                const entryAuthor = (e.csl_data?.author?.[0]?.family || "").toLowerCase();
+                const entryYear = e.csl_data?.issued?.['date-parts']?.[0]?.[0];
+                return entryAuthor === author && entryYear === year;
+            });
+
+            if (fuzzyMatch) {
+                return fuzzyMatch;
+            }
+        }
+
         // 3. Generate new key OR use preferred key
         let refKey = metadata?.preferredKey;
         if (!refKey) {
@@ -104,7 +120,6 @@ export class CitationRegistryService {
         entries.push(newEntry);
         this.registry.set(projectId, entries);
 
-        console.log(`[Registry] New Entry Created: ${projectId} | ${refKey} | "${text.substring(0, 30)}..."`);
         return newEntry;
     }
 
@@ -133,9 +148,15 @@ export class CitationRegistryService {
      * Deterministic CSL-JSON Normalization
      */
     private static normalizeToCSL(id: string, text: string, metadata?: { doi?: string, url?: string }): any {
-        // 1. Basic Extraction (Regex-based fallbacks)
         const doiMatch = text.match(/10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/);
         const urlMatch = text.match(/https?:\/\/[^\s]+|www\.[^\s]+/);
+
+        // CLEAN TEXT for author extraction (Strip parens, "et al", and digits)
+        const cleanText = text.replace(/[()]/g, '')
+            .replace(/et al\.?/gi, '')
+            .replace(/\d{4}/g, '')
+            .replace(/[,.]/g, ' ')
+            .trim();
 
         const doi = metadata?.doi || (doiMatch ? doiMatch[0] : undefined);
         const url = metadata?.url || (urlMatch ? urlMatch[0] : undefined);
@@ -168,22 +189,24 @@ export class CitationRegistryService {
                 // Or just use the whole post-year string for safe keeping
                 title = postYear;
 
-                // Parse Authors (Smith, J. & Doe, B.)
-                // Split by '&', 'and', or semicolon if multiple
-                // This is very rudimentary but sufficient for "Step 2" requirements covering basic structure
-                const rawAuthors = preYear.split(/&|\band\b|;/);
+                // Parse Authors
+                // If it's an inline citation like (Smith et al, 2023), cleanText is just "Smith"
+                // If it's a full reference, cleanText is the whole preamble.
+                const rawAuthors = cleanText.split(/&|\band\b|;/);
 
                 authors = rawAuthors.map(a => {
-                    const cleanName = a.trim().replace(/,$/, '').replace(/\.$/, '');
-                    // Heuristic: "Smith, John" vs "John Smith"
-                    if (cleanName.includes(',')) {
-                        const parts = cleanName.split(',');
-                        return { family: parts[0].trim(), given: parts[1]?.trim() };
-                    } else {
-                        const parts = cleanName.split(' ');
-                        return { family: parts[parts.length - 1], given: parts.slice(0, -1).join(' ') };
+                    const parts = a.trim().split(/\s+/);
+                    if (parts.length === 0 || parts[0] === "") return null;
+
+                    // Heuristic: If it has a comma, it's "Family, Given"
+                    if (a.includes(',')) {
+                        const [family, given] = a.split(',');
+                        return { family: family.trim(), given: given?.trim() };
                     }
-                }).filter(a => a.family); // Filter empty
+
+                    // Otherwise, assume the last segment is the family name
+                    return { family: parts[parts.length - 1], given: parts.slice(0, -1).join(' ') };
+                }).filter(Boolean);
             }
         } catch (e) {
             console.warn("CSL parsing failed, falling back to basic CSL", e);

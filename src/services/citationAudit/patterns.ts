@@ -6,38 +6,62 @@ import { EditorContent } from "./types";
  * These are style-agnostic detectors.
  * Note: NORMALIZED citations don't use regex (they're extracted from Tiptap nodes)
  */
-const PATTERNS: Record<Exclude<PatternType, "NORMALIZED">, RegExp> = {
+/**
+ * Strict Regex Patterns for Citation Signals
+ */
+export const CITATION_PATTERNS = {
     // [1], [12], [1, 2], [1-3]
-    "NUMERIC_BRACKET": /\[\s*\d+(?:[\s,-]+\d+)*\s*\]/g,
+    "NUMERIC_BRACKET": {
+        regex: /\[\s*\d+(?:[\s,-]+\d+)*\s*\]/g,
+        isStructural: true
+    },
 
-    // (Smith, 2023) or (Smith et al., 2023) or (Agency & Dept, 2023)
-    // Anchored by a 4-digit year at the end.
-    // MODIFIED: Requires at least one character before the year to avoid matching (2020)
-    "AUTHOR_YEAR": /\((?:[^)]+,?\s+)+(?:19|20)\d{2}[a-z]?\)/g,
+    // (Smith, 2023) or (Smith et al., 2023)
+    "AUTHOR_YEAR": {
+        regex: /\((?:[^)]+,?\s+)+(?:19|20)\d{2}[a-z]?\)/g,
+        isStructural: true
+    },
 
-    // (Smith 24) or (Smith et al. 24) or (Smith, 24)
-    "AUTHOR_PAGE": /\((?:[A-Z][a-zA-Z\s.'-']+(?:,\s+)?)\d+(?:-\d+)?\)/g,
+    // (Smith 24) or (Smith et al. 24)
+    "AUTHOR_PAGE": {
+        regex: /\((?:[A-Z][a-zA-Z\s.'-']+(?:,\s+)?)\d+(?:-\d+)?\)/g,
+        isStructural: true
+    },
 
-    // et al NOT followed by period
-    "et_al_no_period": /\bet\s+al(?!\.)/g,
-
-    // et al. (correct)
-    "et_al_with_period": /\bet\s+al\./g,
-
-    // (Smith & Jones) - Ampersand inside parens
-    "AMPERSAND_IN_PAREN": /\([^)]*[A-Z][a-z]+\s+&\s+[A-Z][a-z]+[^)]*\)/g,
-
-    // (Smith and Jones) - "and" inside parens
-    "AND_IN_PAREN": /\([^)]*[A-Z][a-z]+\s+and\s+[A-Z][a-z]+[^)]*\)/g
+    // Signal fragments (Used for audit, NOT for standalone normalization)
+    "ET_AL_NO_PERIOD": {
+        regex: /\bet\s+al(?!\.)/g,
+        isStructural: false
+    },
+    "ET_AL_WITH_PERIOD": {
+        regex: /\bet\s+al\./g,
+        isStructural: false
+    },
+    "AMPERSAND_IN_PAREN": {
+        regex: /\([^)]*[A-Z][a-z]+\s+&\s+[A-Z][a-z]+[^)]*\)/g,
+        isStructural: false
+    },
+    "AND_IN_PAREN": {
+        regex: /\([^)]*[A-Z][a-z]+\s+and\s+[A-Z][a-z]+[^)]*\)/g,
+        isStructural: false
+    }
 };
 
 /**
  * Extract all citation patterns from a given text block
  */
-export function extractPatterns(text: string, offset: number, context: "inline" | "ref_list_entry" = "inline"): RawExtractedPattern[] {
+export function extractPatterns(
+    text: string,
+    offset: number,
+    filter: "all" | "structural" = "all"
+): RawExtractedPattern[] {
     const findings: RawExtractedPattern[] = [];
 
-    Object.entries(PATTERNS).forEach(([type, regex]) => {
+    Object.entries(CITATION_PATTERNS).forEach(([type, config]) => {
+        // Skip non-structural if requested
+        if (filter === "structural" && !config.isStructural) return;
+
+        const regex = config.regex;
         // Reset regex state
         regex.lastIndex = 0;
 
@@ -63,14 +87,14 @@ export function extractPatterns(text: string, offset: number, context: "inline" 
                 sentenceEnd = matchIndex + matchText.length + sentenceEndMatch.index! + 1;
             }
 
-            const context = text.substring(sentenceStart, sentenceEnd).trim();
+            const contextText = text.substring(sentenceStart, sentenceEnd).trim();
 
             findings.push({
                 patternType: type as PatternType,
                 text: matchText,
                 start: offset + matchIndex,
                 end: offset + matchIndex + matchText.length,
-                context: context
+                context: contextText
             });
         }
     });

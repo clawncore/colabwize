@@ -273,149 +273,74 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     setDescription(project.description || "");
   }, [project.id, project.title, project.description]);
 
-  // Handle Citation Clicks (Scroll to Reference)
-  const scrollToReference = async (citationId: string) => {
-    console.log("[ScrollToRef] Searching for ID:", citationId);
+  // Scored matching function for bibliography navigation
+  const scrollToReference = (citationId: string) => {
+    // Note: Using project.citations to match component data structure
+    const citation = project.citations?.find(c => c.id === citationId);
+    if (!citation) return;
 
-    // 1. Get metadata from registry for the most up-to-date search terms
-    const { CitationRegistryService } = await import("../../services/CitationRegistryService");
-    const entry = CitationRegistryService.getEntry(project.id, citationId);
-    const citation = project.citations?.find((c) => c.id === citationId);
+    // Extract search terms
+    const author = (citation.authors?.[0] as any)?.lastName || citation.authors?.[0] || citation.author || '';
+    const authorLastName = author.includes(',') ? author.split(',')[0].trim() : author;
+    const year = citation.year?.toString() || '';
 
-    // Construct search strings
-    let authorLast = "";
-    let titleMatch = "";
+    // Get editor element
+    const editorElement = document.querySelector('.ProseMirror') as HTMLElement;
+    if (!editorElement) return;
 
-    if (entry?.csl_data?.author?.[0]) {
-      const auth = entry.csl_data.author[0];
-      authorLast = auth.family || auth.literal || "";
-    } else if (citation?.authors?.[0]) {
-      authorLast = citation.authors[0].lastName || (typeof citation.authors[0] === "string" ? citation.authors[0] : "");
-    }
-
-    titleMatch = entry?.sourceTitle || entry?.csl_data?.title || citation?.title || "";
-
-    const searchTerms = [
-      citationId,
-      authorLast,
-      titleMatch
-    ].filter(term => term && term.length > 2) as string[];
-
-    if (searchTerms.length === 0) {
-      console.warn("[ScrollToRef] No search terms found for:", citationId);
-      return;
-    }
-
-    const editorDom = document.querySelector(".ProseMirror");
-    if (!editorDom) return;
-
-    const children = Array.from(editorDom.children) as HTMLElement[];
-    let targetElement: HTMLElement | null = null;
-
-    // 2. Identify References section header index
-    const refHeaderIndex = children.findIndex(child => {
-      const text = child.textContent?.toLowerCase() || "";
-      const isHeading = ["h1", "h2", "h3"].includes(child.tagName.toLowerCase());
-      const isBold = child.querySelector("strong") || child.classList.contains("font-bold");
-
-      return (isHeading || isBold) && (
-        text.includes("references") ||
-        text.includes("bibliography") ||
-        text.includes("works cited")
-      );
-    });
-
-    // 3. Search document, prioritizing matches after the header
-    // We iterate backwards to find the LATEST occurrence (usually the bibliography entry)
-    for (let i = children.length - 1; i >= 0; i--) {
-      const child = children[i];
-      const text = child.textContent?.toLowerCase() || "";
-      if (text.length < 5) continue;
-
-      // Skip citation pills themselves
-      if (child.querySelector(".citation-pill") && i < children.length - 3) continue;
-
-      const matches = searchTerms.some(term => text.includes(term.toLowerCase()));
-
-      if (matches) {
-        targetElement = child;
-        // If we found a match and it's after the References header, we're definitely good
-        if (refHeaderIndex !== -1 && i > refHeaderIndex) {
-          break;
-        }
-        // If no header found, or match is before header, we keep it as fallback but continue searching
+    // Find references section
+    const headings = editorElement.querySelectorAll('h1, h2, h3, h4');
+    let refSectionTop = Infinity;
+    for (const heading of Array.from(headings)) {
+      const text = heading.textContent?.toLowerCase() || '';
+      if (text.includes('reference') || text.includes('bibliography') || text.includes('works cited')) {
+        refSectionTop = heading.getBoundingClientRect().top;
+        break;
       }
     }
 
-    if (targetElement) {
-      console.log("[ScrollToRef] Found target:", targetElement.textContent?.substring(0, 50));
-      targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      targetElement.classList.add("highlight-reference-flash");
-      setTimeout(() => targetElement?.classList.remove("highlight-reference-flash"), 3000);
+    // Score each paragraph
+    const paragraphs = editorElement.querySelectorAll('p, div[data-type="paragraph"]');
+    let bestMatch: HTMLElement | null = null;
+    let bestScore = 0;
+
+    for (const para of Array.from(paragraphs)) {
+      const element = para as HTMLElement;
+      const text = element.textContent || '';
+      const trimmedText = text.trim();
+
+      if (trimmedText.length < 5) continue;
+
+      let score = 0;
+
+      // SCORING RULES
+      if (authorLastName && trimmedText.toLowerCase().startsWith(authorLastName.toLowerCase())) score += 0.6;
+      if (authorLastName && text.toLowerCase().includes(authorLastName.toLowerCase())) score += 0.3;
+      if (year && text.includes(year)) score += 0.2;
+      if (element.getBoundingClientRect().top > refSectionTop) score += 0.1;
+
+      if (score > bestScore && score >= 0.4) {
+        bestScore = score;
+        bestMatch = element;
+      }
+    }
+
+    // Scroll to best match
+    if (bestMatch) {
+      console.log(`[ScrollToRef] Found match with score ${bestScore.toFixed(2)}`);
+      bestMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      bestMatch.classList.add('highlight-reference-flash');
+      setTimeout(() => bestMatch?.classList.remove('highlight-reference-flash'), 2000);
 
       toast({
         title: "Reference Found",
-        description: `Jumped to bibliography entry.`,
+        description: "Jumped to bibliography entry.",
       });
     } else {
-      console.warn("[ScrollToRef] No match found for:", searchTerms);
+      console.warn(`[ScrollToRef] No match found for: ${authorLastName} (${year}). Score: ${bestScore}`);
       toast({
         title: "Reference Not Found",
-        description: "Could not locate this entry in the bibliography.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const scrollToReferenceByText = async (citationText: string) => {
-    console.log("[ScrollToRefByText] Searching for:", citationText);
-    const editorDom = document.querySelector(".ProseMirror");
-    if (!editorDom) return;
-
-    // Try to resolve context from registry first
-    const { CitationRegistryService } = await import("../../services/CitationRegistryService");
-    const entries = CitationRegistryService.getRegistry(project.id);
-    const entry = entries.find(e => e.raw_reference_text.includes(citationText) || citationText.includes(e.ref_key));
-
-    if (entry && entry.ref_key) {
-      return scrollToReference(entry.ref_key);
-    }
-
-    const cleanCitation = citationText.replace(/[()]/g, "").trim().toLowerCase();
-    const children = Array.from(editorDom.children) as HTMLElement[];
-    let targetElement: HTMLElement | null = null;
-
-    // Search from the bottom up
-    for (let i = children.length - 1; i >= 0; i--) {
-      const child = children[i];
-      const text = child.textContent || "";
-      if (text.length < 5) continue;
-
-      // Skip the source citation itself
-      if (child.innerText.includes(citationText) && i < children.length - 5) continue;
-
-      if (text.toLowerCase().includes(cleanCitation)) {
-        targetElement = child;
-        break;
-      }
-
-      // Fuzzy parts match
-      const parts = cleanCitation.split(/[,\s&]+/).filter(p => p.length > 2);
-      if (parts.length > 0 && parts.every(p => text.toLowerCase().includes(p))) {
-        targetElement = child;
-        break;
-      }
-    }
-
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      targetElement.classList.add("highlight-reference-flash");
-      setTimeout(() => targetElement?.classList.remove("highlight-reference-flash"), 3000);
-    } else {
-      console.warn("[ScrollToRefByText] Failed to locate entry for:", citationText);
-      toast({
-        title: "Reference Not Found",
-        description: "Could not find this reference in the bibliography section.",
+        description: "Could not locate the bibliography entry.",
         variant: "destructive",
       });
     }
@@ -509,38 +434,32 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         },
         handleClick: (view, pos, event) => {
           const target = event.target as HTMLElement;
-          // Find citation element by class since citationId might be null
           const citationElement = target.closest(".citation-pill");
 
           if (citationElement) {
-            // Try to get citation attributes
             const citationId = citationElement.getAttribute("data-cite");
-            const citationText =
-              citationElement.getAttribute("data-text") ||
-              citationElement.textContent || "";
             const url = citationElement.getAttribute("data-url");
-            const sourceTitle = citationElement.getAttribute("data-source-title") || "Source Paper";
 
-            console.log("[CitationClick] Attributes:", { citationId, citationText, url, sourceTitle });
+            // Check for Ctrl/Cmd key
+            const isExternalClick = (event as MouseEvent).ctrlKey || (event as MouseEvent).metaKey;
 
-            // HYPERLINK BEHAVIOR: If a URL exists, open it directly
-            if (url && url !== "null") {
-              window.open(url, "_blank");
+            // Ctrl+Click: Open external URL
+            if (isExternalClick && url && url !== "null" && url !== "") {
+              window.open(url, "_blank", "noopener,noreferrer");
               toast({
-                title: sourceTitle,
-                description: "Opening verified source in new tab...",
+                title: "Opening Source",
+                description: "Redirecting to external reference...",
               });
-              return true; // Stop propagation
+              return true;
             }
 
+            // Regular click: Scroll to reference
             if (citationId) {
               scrollToReference(citationId);
-            } else if (citationText) {
-              // Use fuzzy text matching for resolved but legacy/null ID nodes
-              scrollToReferenceByText(citationText.trim());
+              return true;
             }
-            return true; // Stop propagation
           }
+
           return false;
         },
       },
@@ -816,75 +735,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     return () => clearTimeout(timeoutId);
   }, [editCount, editor]); // Re-run on editCount change
 
-  useEffect(() => {
-    const handleEditorClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      // Check if clicked element is a citation pill
-      const citationPill = target.closest('[data-type="citation"]');
-
-      if (citationPill) {
-        const text = citationPill.textContent || "";
-        // Extract probable author from "(Smith, 2020)" -> "Smith"
-        // Regex looks for words before comma or year
-        const match = text.match(/\(([^,0-9]+)/);
-        const author = match
-          ? match[1].trim()
-          : text.replace(/[()]/g, "").trim();
-
-        if (author) {
-          const headings = document.querySelectorAll("h1, h2, h3, h4");
-          let referencesHeader: Element | null = null;
-
-          for (const h of Array.from(headings)) {
-            if (
-              /References|Works Cited|Bibliography/i.test(h.textContent || "")
-            ) {
-              referencesHeader = h;
-              break;
-            }
-          }
-
-          if (referencesHeader) {
-            // Search siblings after header for the author
-            let current = referencesHeader.nextElementSibling;
-            while (current) {
-              if (current.textContent?.includes(author)) {
-                // Found it! Scroll to it.
-                const targetElement = current as HTMLElement;
-                targetElement.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                });
-                // Add temporary highlight effect
-                const originalBg = targetElement.style.backgroundColor;
-                targetElement.style.backgroundColor = "#FEF3C7"; // yellow-100
-                targetElement.style.transition = "background-color 0.5s";
-                setTimeout(() => {
-                  targetElement.style.backgroundColor = originalBg;
-                }, 2000);
-                return;
-              }
-              current = current.nextElementSibling;
-            }
-            // If specific author not found, at least scroll to References
-            referencesHeader.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          } else {
-            // Fallback: Try to find text anywhere? No, too risky.
-            console.warn("References section not found");
-          }
-        }
-      }
-    };
-
-    document.addEventListener("click", handleEditorClick);
-
-    return () => {
-      document.removeEventListener("click", handleEditorClick);
-    };
-  }, []);
 
   const statsRef = useRef({
     timeSpent: 0,
