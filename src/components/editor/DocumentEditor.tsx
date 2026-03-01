@@ -415,20 +415,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         } as any),
         ...(isCollaborative && provider && ydoc
           ? [
-              Collaboration.configure({
-                document: ydoc, // Bind directly to the stable Y.Doc
-              }),
-              CollaborationCursor.configure({
-                provider: provider, // Bind directly to the Hocuspocus provider
-                user: {
-                  name:
-                    user?.user_metadata?.full_name ||
-                    user?.email ||
-                    "Anonymous",
-                  color: cursorColor,
-                },
-              }),
-            ]
+            Collaboration.configure({
+              document: ydoc, // Bind directly to the stable Y.Doc
+            }),
+            CollaborationCursor.configure({
+              provider: provider, // Bind directly to the Hocuspocus provider
+              user: {
+                name:
+                  user?.user_metadata?.full_name ||
+                  user?.email ||
+                  "Anonymous",
+                color: cursorColor,
+              },
+            }),
+          ]
           : []),
         HighlightExtension,
         CharacterCount,
@@ -480,14 +480,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       // NOTE: In collab mode, content is loaded from Yjs (Hocuspocus server) not here.
       onUpdate: ({ editor, transaction }) => {
         // Prevent infinite loops from internal normalization/audit updates
-<<<<<<< Updated upstream
-        if (
-          transaction.getMeta("normalization") ||
-          transaction.getMeta("integrity-check")
-        ) {
-=======
-        if (transaction.getMeta('normalization') || transaction.getMeta('integrity-check') || transaction.getMeta('bibliography-sync')) {
->>>>>>> Stashed changes
+        if (transaction.getMeta('normalization') || transaction.getMeta('integrity-check')) {
           return;
         }
 
@@ -1376,11 +1369,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isPreviewMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
                       ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                    }`}
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1396,11 +1388,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isFocusMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
                       ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                    }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />
