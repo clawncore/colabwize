@@ -68,6 +68,7 @@ export interface StoredCitation {
   added_at?: string;
   themes?: string[];
   matrix_notes?: string;
+  verified?: boolean;
 }
 
 export class CitationService {

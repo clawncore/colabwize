@@ -1,241 +1,183 @@
-
-
+import { apiClient } from "./apiClient";
+import { CitationService, StoredCitation } from "./citationService";
 
 export interface RegistryEntry {
     ref_key: string;
     raw_reference_text: string;
-    all_texts?: string[]; // To track multiple ways this is cited
-    sourceTitle?: string;
-    doi?: string;
     url?: string;
-    csl_data?: any; // Placeholder for future CSL JSON
-    contentHash?: string;
+    sourceTitle?: string;
+    authors?: string[];
+    year?: number | string;
+    doi?: string;
+    csl_data?: any;
+    metadata?: Partial<StoredCitation>;
 }
 
 export class CitationRegistryService {
-    private static registry: Map<string, RegistryEntry[]> = new Map();
+    private static cache: Map<string, RegistryEntry> = new Map();
+    private static currentProjectId: string | null = null;
+    private static initPromise: Promise<void> | null = null;
 
-    /**
-     * Initialize registry from project data
-     */
-    static loadRegistry(projectId: string, existingCitations: any[]) {
-        const entries: RegistryEntry[] = existingCitations.map((c, index) => {
-            const entry: RegistryEntry = {
-                ref_key: c.ref_key || c.id || `ref_${String(index + 1).padStart(3, '0')}`,
-                raw_reference_text: c.raw_reference_text || c.title || "Unknown Reference",
-                doi: c.doi,
-                url: c.url,
-                csl_data: c.csl_data
-            };
-
-            // ALWAYS generate hash for deduplication, even if csl_data is missing
-            if (c.csl_data) {
-                entry.contentHash = this.generateContentHash(c.csl_data);
-            } else {
-                // Generate a temporary CSL to get a hash for the existing entry
-                const tempCsl = this.normalizeToCSL(entry.ref_key, entry.raw_reference_text, { doi: entry.doi, url: entry.url });
-                entry.contentHash = this.generateContentHash(tempCsl);
-                entry.csl_data = tempCsl; // Cache it
-            }
-            return entry;
-        });
-        this.registry.set(projectId, entries);
-    }
-
-    /**
-     * Get or create a reference key for a given citation text.
-     * Keeps keys stable for the same text.
-     */
-    static registerCitation(projectId: string, text: string, metadata?: { doi?: string, url?: string, preferredKey?: string, sourceTitle?: string }): RegistryEntry {
-        if (!projectId || projectId === 'current-project') {
-            console.warn(`[Registry] Potential ID Mismatch: registerCitation called with projectId="${projectId}"`);
+    static async initializeFromBackend(projectId: string): Promise<void> {
+        if (this.currentProjectId === projectId && this.cache.size > 0) {
+            return;
         }
 
-        let entries = this.registry.get(projectId) || [];
+        if (this.initPromise) {
+            return this.initPromise;
+        }
 
-        // 1. Generate CSL first to get normalized data for hashing
-        const tempCsl = this.normalizeToCSL("temp", text, metadata);
-        const hash = this.generateContentHash(tempCsl);
+        this.initPromise = (async () => {
+            if (this.currentProjectId !== projectId) {
+                this.cache.clear();
+                this.currentProjectId = projectId;
+            }
 
-        // 2. Check for existing match (Exact text OR Content Hash OR Preferred Key)
-        const existing = entries.find(e =>
-            (metadata?.preferredKey && e.ref_key === metadata.preferredKey) ||
-            e.all_texts?.includes(text) || // Multi-text match support
-            e.raw_reference_text === text || // Exact text match
-            (e.contentHash && e.contentHash === hash) // Semantic match
+            try {
+                const citations = await CitationService.getProjectCitations(projectId);
+
+                citations.forEach(citation => {
+                    if (!citation.id) return;
+
+                    this.cache.set(citation.id, {
+                        ref_key: citation.id,
+                        raw_reference_text: citation.raw_reference_text || citation.title,
+                        url: citation.url || (citation.doi ? `https://doi.org/${citation.doi}` : undefined),
+                        sourceTitle: citation.title,
+                        authors: citation.authors,
+                        year: typeof citation.year === 'number' ? citation.year : parseInt(String(citation.year) || '0'),
+                        doi: citation.doi,
+                        metadata: citation
+                    });
+                });
+
+                console.log(`✅ Loaded ${citations.length} citations from backend for project ${projectId}`);
+            } catch (error) {
+                console.error('❌ Failed to load citations:', error);
+                throw error;
+            } finally {
+                this.initPromise = null;
+            }
+        })();
+
+        return this.initPromise;
+    }
+
+    // Backwards compatibility for loadRegistry locally if citations passed directly 
+    static loadRegistry(projectId: string, existingCitations: any[]) {
+        if (this.currentProjectId !== projectId) {
+            this.cache.clear();
+            this.currentProjectId = projectId;
+        }
+        existingCitations.forEach(citation => {
+            if (!citation.id) return;
+            this.cache.set(citation.id, {
+                ref_key: citation.id,
+                raw_reference_text: citation.raw_reference_text || citation.title,
+                url: citation.url || (citation.doi ? `https://doi.org/${citation.doi}` : undefined),
+                sourceTitle: citation.title,
+                authors: citation.authors,
+                year: typeof citation.year === 'number' ? citation.year : parseInt(String(citation.year) || '0'),
+                doi: citation.doi,
+                metadata: citation
+            });
+        });
+    }
+
+    static async registerCitation(
+        projectId: string,
+        citationText: string,
+        metadata?: Partial<StoredCitation>
+    ): Promise<RegistryEntry> {
+
+        // Check cache first
+        const existing = Array.from(this.cache.values()).find(
+            entry => entry.raw_reference_text === citationText
         );
 
         if (existing) {
-            // MERGE METADATA: If new one has DOI/URL and existing doesn't, update existing.
-            if (metadata?.doi && !existing.doi) {
-                existing.doi = metadata.doi;
-                if (existing.csl_data) existing.csl_data.DOI = metadata.doi;
-            }
-            if (metadata?.url && !existing.url) {
-                existing.url = metadata.url;
-                if (existing.csl_data) existing.csl_data.URL = metadata.url;
-            }
-            if (metadata?.sourceTitle && !existing.sourceTitle) {
-                existing.sourceTitle = metadata.sourceTitle;
-            }
             return existing;
         }
 
-        // 3. Fallback: Author-Year Fuzzy Match (Special for inline citations)
-        if (tempCsl.author?.[0]?.family && tempCsl.author[0].family !== "Unknown" && tempCsl.issued?.['date-parts']?.[0]?.[0]) {
-            const author = tempCsl.author[0].family.toLowerCase();
-            const year = tempCsl.issued['date-parts'][0][0];
-
-            const fuzzyMatch = entries.find(e => {
-                const entryAuthor = (e.csl_data?.author?.[0]?.family || "").toLowerCase();
-                const entryYear = e.csl_data?.issued?.['date-parts']?.[0]?.[0];
-                return entryAuthor === author && entryYear === year;
+        try {
+            const response = await CitationService.addCitation(projectId, {
+                title: metadata?.title || citationText.substring(0, 30) + '...',
+                authors: metadata?.authors || [],
+                year: typeof metadata?.year === 'number' ? metadata?.year : parseInt(String(metadata?.year) || '0'),
+                url: metadata?.url,
+                doi: metadata?.doi,
+                source: (metadata as any)?.source || "manual-ingest",
+                tags: ["auto-imported"]
             });
 
-            if (fuzzyMatch) {
-                return fuzzyMatch;
+            // API client returns data property, or object directly depending on interceptor
+            const savedData = response?.data || response;
+
+            if (!savedData || !savedData.id) {
+                throw new Error('Backend did not return citation ID');
             }
+
+            const entry: RegistryEntry = {
+                ref_key: savedData.id,
+                raw_reference_text: citationText,
+                url: savedData.url || (savedData.doi ? `https://doi.org/${savedData.doi}` : undefined),
+                sourceTitle: savedData.title,
+                authors: savedData.authors,
+                year: typeof savedData.year === 'number' ? savedData.year : parseInt(String(savedData.year) || '0'),
+                doi: savedData.doi,
+                metadata: savedData
+            };
+
+            this.cache.set(savedData.id, entry);
+            console.log('✅ Registered citation:', savedData.id);
+            return entry;
+
+        } catch (error) {
+            console.error('❌ Failed to register citation, using fallback temp entry:', error);
+            return this.registerTempCitation(citationText, metadata);
+        }
+    }
+
+    // Synchronous method for paste handler
+    static registerTempCitation(
+        citationText: string,
+        metadata?: Partial<StoredCitation>
+    ): RegistryEntry {
+        const existing = Array.from(this.cache.values()).find(
+            entry => entry.raw_reference_text === citationText
+        );
+
+        if (existing) {
+            return existing;
         }
 
-        // 3. Generate new key OR use preferred key
-        let refKey = metadata?.preferredKey;
-        if (!refKey) {
-            const nextIndex = entries.length + 1;
-            refKey = `ref_${String(nextIndex).padStart(3, '0')}`;
-        }
-
-        // Update ID in CSL
-        tempCsl.id = refKey;
-
-        const newEntry: RegistryEntry = {
-            ref_key: refKey,
-            raw_reference_text: text,
-            doi: tempCsl.DOI,
-            url: tempCsl.URL,
-            sourceTitle: metadata?.sourceTitle,
-            csl_data: tempCsl,
-            contentHash: hash
+        const tempId = metadata?.id || `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const tempEntry: RegistryEntry = {
+            ref_key: tempId,
+            raw_reference_text: citationText,
+            url: metadata?.url,
+            sourceTitle: metadata?.title,
+            ...metadata
         };
 
-        entries.push(newEntry);
-        this.registry.set(projectId, entries);
-
-        return newEntry;
+        this.cache.set(tempEntry.ref_key, tempEntry);
+        return tempEntry;
     }
 
-    /**
-     * Generate a deterministic hash based on content.
-     * Format: author|year|title_slug
-     */
-    private static generateContentHash(csl: any): string {
-        try {
-            const author = csl.author?.[0]?.family?.toLowerCase().trim() ||
-                csl.author?.[0]?.literal?.toLowerCase().trim() ||
-                "unknown";
-
-            const year = csl.issued?.['date-parts']?.[0]?.[0] || "0000";
-
-            const title = csl.title || "";
-            const titleSlug = title.substring(0, 20).toLowerCase().replace(/[^a-z0-9]/g, '');
-
-            return `${author}|${year}|${titleSlug}`;
-        } catch (e) {
-            return `unknown|0000|${Math.random()}`; // Fallback (should not happen with valid CSL)
-        }
+    static getCitation(citationId: string): RegistryEntry | undefined {
+        return this.cache.get(citationId);
     }
 
-    /**
-     * Deterministic CSL-JSON Normalization
-     */
-    private static normalizeToCSL(id: string, text: string, metadata?: { doi?: string, url?: string }): any {
-        const doiMatch = text.match(/10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/);
-        const urlMatch = text.match(/https?:\/\/[^\s]+|www\.[^\s]+/);
-
-        // CLEAN TEXT for author extraction (Strip parens, "et al", and digits)
-        const cleanText = text.replace(/[()]/g, '')
-            .replace(/et al\.?/gi, '')
-            .replace(/\d{4}/g, '')
-            .replace(/[,.]/g, ' ')
-            .trim();
-
-        const doi = metadata?.doi || (doiMatch ? doiMatch[0] : undefined);
-        const url = metadata?.url || (urlMatch ? urlMatch[0] : undefined);
-
-        // 2. Author/Year Parsing (Simple Heuristic for basic formats)
-        // "(Smith, 2023)" or "Smith, J. (2023). Title..."
-
-        let authors: any[] = [];
-        let issued: any = { "date-parts": [[]] };
-        let title = text; // Default title is full text if parsing fails
-        let type = "article-journal"; // Default type
-
-        try {
-            // Try to find Year (YYYY)
-            // Look for (YYYY) or . YYYY .
-            const yearMatch = text.match(/\((\d{4})\)[.]?/) || text.match(/[.]\s+(\d{4})[.]/);
-
-            if (yearMatch) {
-                const year = parseInt(yearMatch[1]);
-                issued = { "date-parts": [[year]] };
-
-                // Content before year is likely authors
-                const preYear = text.substring(0, yearMatch.index).trim();
-
-                // Content after year is likely title + source
-                // Remove trailing dot from year match if present
-                const postYear = text.substring(yearMatch.index! + yearMatch[0].length).trim();
-
-                // Simple Title Extraction: Take everything up to the next period?
-                // Or just use the whole post-year string for safe keeping
-                title = postYear;
-
-                // Parse Authors
-                // If it's an inline citation like (Smith et al, 2023), cleanText is just "Smith"
-                // If it's a full reference, cleanText is the whole preamble.
-                const rawAuthors = cleanText.split(/&|\band\b|;/);
-
-                authors = rawAuthors.map(a => {
-                    const parts = a.trim().split(/\s+/);
-                    if (parts.length === 0 || parts[0] === "") return null;
-
-                    // Heuristic: If it has a comma, it's "Family, Given"
-                    if (a.includes(',')) {
-                        const [family, given] = a.split(',');
-                        return { family: family.trim(), given: given?.trim() };
-                    }
-
-                    // Otherwise, assume the last segment is the family name
-                    return { family: parts[parts.length - 1], given: parts.slice(0, -1).join(' ') };
-                }).filter(Boolean);
-            }
-        } catch (e) {
-            console.warn("CSL parsing failed, falling back to basic CSL", e);
-        }
-
-        // 3. Construct CSL Object
-        return {
-            id: id,
-            type: type,
-            title: title || text.substring(0, 50) + "...",
-            author: authors.length > 0 ? authors : [{ literal: "Unknown" }],
-            issued: issued,
-            DOI: doi,
-            URL: url,
-            _raw: text // Custom field for debugging
-        };
+    static getEntry(projectId: string, citationId: string): RegistryEntry | undefined {
+        return this.cache.get(citationId);
     }
 
-    /**
-     * Get all registry entries for saving
-     */
-    static getRegistry(projectId: string): RegistryEntry[] {
-        return this.registry.get(projectId) || [];
+    static getAllCitations(): RegistryEntry[] {
+        return Array.from(this.cache.values());
     }
 
-    /**
-     * Lookup entry by key
-     */
-    static getEntry(projectId: string, key: string): RegistryEntry | undefined {
-        return this.registry.get(projectId)?.find(e => e.ref_key === key);
+    static clear(): void {
+        this.cache.clear();
+        this.currentProjectId = null;
     }
 }

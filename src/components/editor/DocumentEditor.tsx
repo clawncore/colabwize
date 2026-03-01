@@ -24,6 +24,7 @@ import { PlaceholderMarkExtension } from "../../extensions/PlaceholderMarkExtens
 import { MathExtension } from "../../extensions/MathExtension";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
+import { BibliographyEntry } from "../../extensions/BibliographyNode";
 import { documentService, Project } from "../../services/documentService";
 import { OriginalityScan } from "../../services/originalityService";
 import { AuthorshipService } from "../../services/authorshipService";
@@ -72,6 +73,7 @@ import { ExportWorkflowModal } from "../export/ExportWorkflowModal";
 import {
   detectAndNormalizeCitations,
   synchronizeRegistryWithDocument,
+  detectAndNormalizeBibliography,
 } from "./utils/normalization";
 import { VersionHistoryModal } from "./VersionHistoryModal";
 import {
@@ -408,6 +410,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         Superscript,
         Subscript,
         CitationNode,
+        BibliographyEntry,
         PasteCitationExtension.configure({
           projectId: project.id,
         }),
@@ -432,36 +435,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           class: `focus:outline-none min-h-full prose-table:w-full prose-img:rounded-md prose-img:shadow-md`,
           spellcheck: "false",
         },
-        handleClick: (view, pos, event) => {
-          const target = event.target as HTMLElement;
-          const citationElement = target.closest(".citation-pill");
-
-          if (citationElement) {
-            const citationId = citationElement.getAttribute("data-cite");
-            const url = citationElement.getAttribute("data-url");
-
-            // Check for Ctrl/Cmd key
-            const isExternalClick = (event as MouseEvent).ctrlKey || (event as MouseEvent).metaKey;
-
-            // Ctrl+Click: Open external URL
-            if (isExternalClick && url && url !== "null" && url !== "") {
-              window.open(url, "_blank", "noopener,noreferrer");
-              toast({
-                title: "Opening Source",
-                description: "Redirecting to external reference...",
-              });
-              return true;
-            }
-
-            // Regular click: Scroll to reference
-            if (citationId) {
-              scrollToReference(citationId);
-              return true;
-            }
-          }
-
-          return false;
-        },
+        // CitationNode.addNodeView() handles clicks via native DOM listeners
+        // (atoms intercept ProseMirror's handleClick before it fires).
+        // We listen to the custom 'citation:click' event in a useEffect below instead.
+        handleClick: () => false,
       },
       // Dependencies check: since `ydoc` and `provider` are stable state objects initialized
       // exactly once per component lifecycle, using them here is safe and effectively
@@ -493,59 +470,78 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       }
 
       if (!hasInitializedContentRef.current) {
-        editor.commands.setContent(formatContentForTiptap(project.content));
-        hasInitializedContentRef.current = true;
-        currentProjectIdRef.current = project.id;
+        const initDocumentWithRegistry = async () => {
+          try {
+            const { CitationRegistryService } = await import("../../services/CitationRegistryService");
+            await CitationRegistryService.initializeFromBackend(project.id);
+            // Expose current project ID globally so CitationNode can trigger async registry lookups
+            (window as any).__currentProjectId__ = project.id;
+            console.log("✅ Citation registry initialized from backend successfully");
 
-        // --- Silent Normalization on Load ---
-        // Convert plain text citations to blue interactive nodes
-        // Use timeout to ensure editor is stable and we don't conflict with initial render transactions
-        setTimeout(async () => {
-          if (editor && !editor.isDestroyed) {
-            const result = await detectAndNormalizeCitations(
-              editor,
-              project.id,
-              project.citations || [],
-            );
+            editor.commands.setContent(formatContentForTiptap(project.content));
+            hasInitializedContentRef.current = true;
+            currentProjectIdRef.current = project.id;
 
-            // Recover any existing nodes that were lost from registry
-            await synchronizeRegistryWithDocument(editor, project.id);
+            // --- Silent Normalization on Load ---
+            // Convert plain text citations to blue interactive nodes
+            // Use timeout to ensure editor is stable and we don't conflict with initial render transactions
+            setTimeout(async () => {
+              if (editor && !editor.isDestroyed) {
+                const result = await detectAndNormalizeCitations(
+                  editor,
+                  project.id,
+                  project.citations || [],
+                );
 
-            // AUTO-DETECT STYLE Logic (70% Threshold)
-            if (result && result.stats) {
-              const { ieee, apa } = result.stats;
-              const total = ieee + apa;
+                // Recover any existing nodes that were lost from registry
+                await synchronizeRegistryWithDocument(editor, project.id);
 
-              if (total > 0) {
-                const currentStyle = project.citation_style || "apa";
-                let detectedStyle = null;
+                // Normalize bibliography block to interactive nodes
+                await detectAndNormalizeBibliography(editor, project.id);
 
-                if (ieee / total >= 0.7) detectedStyle = "ieee";
-                else if (apa / total >= 0.7) detectedStyle = "apa"; // or 'mla' depending on default
+                // AUTO-DETECT STYLE Logic (70% Threshold)
+                if (result && result.stats) {
+                  const { ieee, apa } = result.stats;
+                  const total = ieee + apa;
 
-                if (detectedStyle && detectedStyle !== currentStyle) {
-                  console.log(
-                    `[AutoStyle] Switching from ${currentStyle} to ${detectedStyle} (Confidence: ${Math.round(((detectedStyle === "ieee" ? ieee : apa) / total) * 100)}%)`,
-                  );
+                  if (total > 0) {
+                    const currentStyle = project.citation_style || "apa";
+                    let detectedStyle = null;
 
-                  // Update Project
-                  const updatedProject = {
-                    ...project,
-                    citation_style: detectedStyle,
-                  };
-                  if (onProjectUpdate) onProjectUpdate(updatedProject);
+                    if (ieee / total >= 0.7) detectedStyle = "ieee";
+                    else if (apa / total >= 0.7) detectedStyle = "apa"; // or 'mla' depending on default
 
-                  // Notify User
-                  toast({
-                    title: "Citation Style Optimized",
-                    description: `Switched to ${detectedStyle.toUpperCase()} based on your content.`,
-                    duration: 3000,
-                  });
+                    if (detectedStyle && detectedStyle !== currentStyle) {
+                      console.log(
+                        `[AutoStyle] Switching from ${currentStyle} to ${detectedStyle} (Confidence: ${Math.round(((detectedStyle === "ieee" ? ieee : apa) / total) * 100)}%)`,
+                      );
+
+                      // Update Project
+                      const updatedProject = {
+                        ...project,
+                        citation_style: detectedStyle,
+                      };
+                      if (onProjectUpdate) onProjectUpdate(updatedProject);
+
+                      // Notify User
+                      toast({
+                        title: "Citation Style Optimized",
+                        description: `Switched to ${detectedStyle.toUpperCase()} based on your content.`,
+                        duration: 3000,
+                      });
+                    }
+                  }
                 }
               }
-            }
+            }, 500);
+
+          } catch (error) {
+            console.error("Failed to initialize document with registry:", error);
           }
-        }, 500);
+        };
+
+        // Fire initialization sequence
+        initDocumentWithRegistry();
       }
     }
   }, [project, editor, onEditorReady, onProjectUpdate, toast, isCollaborative]);
@@ -928,7 +924,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           // Use semantic citation node
           editor.commands.insertCitation({
             citationId,
-            text, // fallback property was renamed to text in command definition
           });
         } else {
           // Fallback to text insertion if no ID (should not happen with new logic)

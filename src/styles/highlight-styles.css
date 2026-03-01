@@ -126,3 +126,50 @@
     box-shadow: 0 0 0 0 transparent;
   }
 }
+
+/* Bibliography entries (Transparent Wrapper) */
+.bibliography-entry {
+  transition: background-color 0.2s;
+}
+
+/* Specific styling for links inside the bibliography entry */
+.bibliography-entry a,
+.bibliography-url-link {
+  color: #2563eb;
+  text-decoration: underline;
+  text-decoration-color: #2563eb;
+  font-style: italic;
+  cursor: pointer;
+}
+
+/* When scrolled to (highlighted from citation click) */
+.bibliography-entry.highlighted {
+  background-color: #fef3c7 !important;
+  animation: fade-highlight 2s ease-out;
+}
+
+@keyframes fade-highlight {
+  0% {
+    background-color: #fef3c7;
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* In-text citations */
+.citation-node {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  background-color: rgba(37, 99, 235, 0.05);
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.citation-node:hover {
+  background-color: rgba(37, 99, 235, 0.15);
+}

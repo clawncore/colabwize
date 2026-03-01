@@ -6,6 +6,7 @@ export interface ReferenceRecord {
     authors: string[];
     year: number;
     title?: string;
+    url?: string;
     rawText: string;
     organization?: string;
 }
@@ -44,32 +45,53 @@ export class CitationNormalizer {
     /**
      * Main entry point
      */
-    public normalize(editor: Editor): NormalizationResult {
-        // 1. Build Index
-        this.buildReferenceIndex(editor);
+    public async normalize(editor: Editor, projectId: string): Promise<NormalizationResult> {
+        // 1. We extract reference section linearly first for the index to be useful
+        // But wait, the standard way in AuditEngine is decomposeAndExtract.
+        // We will just do a quick scan to get a mocked ReferenceListExtraction format
+        const entries: any[] = [];
+        let inRefSection = false;
+
+        editor.state.doc.descendants((node, pos) => {
+            if (node.type.name === 'heading') {
+                const text = node.textContent.toLowerCase().trim();
+                if (text === 'references' || text === 'works cited' || text === 'bibliography') {
+                    inRefSection = true;
+                    return;
+                } else {
+                    if (inRefSection) inRefSection = false;
+                }
+            }
+            if (inRefSection && (node.type.name === 'paragraph' || node.type.name === 'listItem')) {
+                const text = node.textContent.trim();
+                if (text.length > 20) {
+                    entries.push({ rawText: text, start: pos, end: pos + node.nodeSize });
+                }
+            }
+        });
+
+        // Build Index asynchronously
+        await this.buildReferenceIndex({ sectionTitle: "References", entries } as any, projectId);
 
         // 2. Scan & Match
-        const replacements: { start: number; end: number; id: string; text: string }[] = [];
+        const replacements: { start: number; end: number; id: string; text: string; url?: string; title?: string }[] = [];
 
-        // We traverse the document to find text nodes and scan them
         editor.state.doc.descendants((node, pos) => {
             if (node.isText) {
                 const text = node.text!;
                 const candidates = this.detectCandidates(text, pos);
 
                 for (const candidate of candidates) {
-                    const matchResult = this.matchCandidate(candidate); // Returns object with score
+                    const matchResult = this.matchCandidate(candidate);
 
                     if (matchResult && matchResult.score >= 0.8) {
-                        // Overlap check?
-                        // Ideally we check if this range overlaps with existing replacements.
-                        // For now, assume extractPatterns returns non-overlapping.
-
                         replacements.push({
                             start: candidate.start,
                             end: candidate.end,
                             id: matchResult.id,
-                            text: candidate.text
+                            text: candidate.text,
+                            url: matchResult.record.url,
+                            title: matchResult.record.title
                         });
                     } else {
                         // Candidate found but score too low -> Ambiguous/Issue
@@ -84,24 +106,19 @@ export class CitationNormalizer {
             }
         });
 
-        // 3. Apply Transformations (Reverse order to preserve offsets)
-        // We need to execute a transaction
+        // 3. Apply Transformations
         if (replacements.length > 0) {
             let tr = editor.state.tr;
-            // Sort replacements descending by start position
             replacements.sort((a, b) => b.start - a.start);
 
             for (const rep of replacements) {
-                // Double check we aren't splitting logic
                 tr = tr.replaceWith(rep.start, rep.end,
                     editor.schema.nodes.citation.create({
-                        citationId: rep.id,
-                        fallback: rep.text
+                        citationId: rep.id
                     })
                 );
             }
 
-            // Dispatch transaction
             editor.view.dispatch(tr);
         }
 
@@ -114,34 +131,41 @@ export class CitationNormalizer {
     /**
      * Step 1: Reference Index Construction
      */
-    private buildReferenceIndex(editor: Editor) {
-        // Identify References section
-        // Simple heuristic: Look for heading "References" and parse subsequent paragraphs
-        // For robustness, we'll scan the whole doc looking for the header pattern first
+    private async buildReferenceIndex(referenceList: any, projectId: string): Promise<void> {
+        this.referenceIndex.clear();
+        const { CitationRegistryService } = await import("../CitationRegistryService");
 
-        let inRefSection = false;
+        for (const ref of referenceList.entries) {
+            const parsed = CitationNormalizer.parseReference(ref.rawText);
+            if (!parsed) continue;
 
-        editor.state.doc.descendants((node, pos) => {
-            if (node.type.name === 'heading') {
-                const text = node.textContent.toLowerCase().trim();
-                if (text === 'references' || text === 'works cited' || text === 'bibliography') {
-                    inRefSection = true;
-                    return; // Skip the header itself
-                } else {
-                    if (inRefSection) inRefSection = false; // End of section
-                }
-            }
-
-            if (inRefSection && (node.type.name === 'paragraph' || node.type.name === 'listItem')) {
-                const text = node.textContent.trim();
-                if (text.length > 20) { // simple noise filter
-                    const record = CitationNormalizer.parseReference(text);
-                    if (record) {
-                        this.referenceIndex.set(record.id, record);
+            try {
+                // Register with backend to get real ID
+                const entry = await CitationRegistryService.registerCitation(
+                    projectId,
+                    ref.rawText,
+                    {
+                        authors: parsed.authors,
+                        year: parsed.year,
+                        title: parsed.title
                     }
-                }
+                );
+
+                const record: ReferenceRecord = {
+                    id: entry.ref_key,  // Use backend ID
+                    authors: parsed.authors,
+                    year: parsed.year,
+                    title: parsed.title,
+                    url: entry.url,
+                    rawText: ref.rawText
+                };
+
+                this.referenceIndex.set(entry.ref_key, record);
+
+            } catch (error) {
+                console.error('Failed to index reference:', ref.rawText, error);
             }
-        });
+        }
     }
 
     /**

@@ -346,29 +346,24 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                                                     Cite
                                                 </button>
                                             ) : (
-                                                <CitationStylePopover
-                                                    source={source}
-                                                    fixedStyle={citationStyle as CitationStyle}
-                                                    onInsert={(inText, fullRef, style) => {
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
                                                         if (onInsertCitation) {
-                                                            onInsertCitation(inText, {
+                                                            onInsertCitation(source.raw_reference_text || source.title || "Citation", {
                                                                 eventId: "citation_inserted",
                                                                 sourceId: source.id || source.doi || source.title,
-                                                                style: style,
+                                                                style: citationStyle,
                                                                 timestamp: new Date().toISOString(),
-                                                                fullReferenceEntry: fullRef
+                                                                fullReferenceEntry: source
                                                             });
                                                         }
                                                     }}
+                                                    className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"
                                                 >
-                                                    <button
-                                                        onClick={(e) => e.stopPropagation()} // Prevent card click
-                                                        className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"
-                                                    >
-                                                        <Quote className="w-3.5 h-3.5 fill-current" />
-                                                        Cite
-                                                    </button>
-                                                </CitationStylePopover>
+                                                    <Quote className="w-3.5 h-3.5 fill-current" />
+                                                    Cite
+                                                </button>
                                             )}
 
                                             <button
