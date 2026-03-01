@@ -30,7 +30,7 @@ export function ShareProjectDialog({
   onUpdate,
 }: ShareProjectDialogProps) {
   const [isSharingEnabled, setIsSharingEnabled] = useState(
-    project?.share_settings?.link_sharing_enabled || false
+    project?.share_settings?.link_sharing_enabled || false,
   );
   const [isLoading, setIsLoading] = useState(false);
   const [hasCopied, setHasCopied] = useState(false);
@@ -57,7 +57,7 @@ export function ShareProjectDialog({
         },
         project.word_count || 0,
         project.citation_style || null,
-        project.outline || null
+        { outline: project.outline || null },
       );
 
       setIsSharingEnabled(enabled);
@@ -119,8 +119,7 @@ export function ShareProjectDialog({
             size="sm"
             className="px-3"
             onClick={copyToClipboard}
-            disabled={!isSharingEnabled}
-          >
+            disabled={!isSharingEnabled}>
             <span className="sr-only">Copy</span>
             {hasCopied ? (
               <Check className="h-4 w-4" />

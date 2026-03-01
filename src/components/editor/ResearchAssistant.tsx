@@ -87,13 +87,15 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
   const [insights, setInsights] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [,] = useState<string | null>(null);
-  const [hasAccess,] = useState<boolean>(true);
+  const [hasAccess] = useState<boolean>(true);
   const [recentSearches, setRecentSearches] = useState<ResearchTopic[]>([]);
   // Add state for trending research data
   const [trendingResearch, setTrendingResearch] = useState<any[]>([]);
   const [isLoadingTrending, setIsLoadingTrending] = useState(false);
   const [addedSources, setAddedSources] = useState<Set<string>>(new Set());
-  const [isAddingReference, setIsAddingReference] = useState<string | null>(null);
+  const [isAddingReference, setIsAddingReference] = useState<string | null>(
+    null,
+  );
 
   // Effect to generate insights when switching to insights tab and sources exist but insights don't
   useEffect(() => {
@@ -237,7 +239,7 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
     // Check if user has access
     if (!hasAccess) {
       setError(
-        "AI Research Assistant is only available for Student Pro and Researcher plans. Please upgrade to access this feature.",
+        "Research Assistant is only available for Student Pro and Researcher plans. Please upgrade to access this feature.",
       );
       return;
     }
@@ -411,17 +413,21 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
     let author = "Anon";
     if (source.author) {
       // Robust author name resolution
-      const parts = source.author.split(' ');
+      const parts = source.author.split(" ");
       author = parts[parts.length - 1];
-    } else if (source.authors && Array.isArray(source.authors) && source.authors.length > 0) {
+    } else if (
+      source.authors &&
+      Array.isArray(source.authors) &&
+      source.authors.length > 0
+    ) {
       const firstAuthor = source.authors[0];
-      if (typeof firstAuthor === 'string') {
-        const parts = firstAuthor.split(' ');
+      if (typeof firstAuthor === "string") {
+        const parts = firstAuthor.split(" ");
         author = parts[parts.length - 1];
       } else if (firstAuthor.lastName) {
         author = firstAuthor.lastName;
       } else if (firstAuthor.name) {
-        const parts = firstAuthor.name.split(' ');
+        const parts = firstAuthor.name.split(" ");
         author = parts[parts.length - 1];
       }
     }
@@ -455,7 +461,7 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
         await CitationService.createCitation(projectId, citationData);
 
         // Track as added
-        setAddedSources(prev => new Set(prev).add(source.id));
+        setAddedSources((prev) => new Set(prev).add(source.id));
 
         // Notify parent component that a citation was added
         if (onCitationAdded) {
@@ -485,7 +491,7 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
           </div>
           <h3
             className={`${isPanel ? "text-base" : "text-lg"} font-semibold text-black`}>
-            AI Research Assistant
+            Research Assistant
           </h3>
         </div>
         <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100">
@@ -536,37 +542,43 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
         <div className="flex p-1 bg-gray-200/50 rounded-full w-full max-w-[320px]">
           <button
             onClick={() => setActiveTab("explore")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-full text-xs font-bold transition-all ${activeTab === "explore"
-              ? "bg-white text-purple-600 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
-              }`}
-            disabled={!hasAccess}
-          >
-            <Search className={`w-3.5 h-3.5 ${activeTab === "explore" ? "text-purple-600" : "text-gray-400"}`} />
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-full text-xs font-bold transition-all ${
+              activeTab === "explore"
+                ? "bg-white text-purple-600 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            disabled={!hasAccess}>
+            <Search
+              className={`w-3.5 h-3.5 ${activeTab === "explore" ? "text-purple-600" : "text-gray-400"}`}
+            />
             <span className={isPanel ? "hidden sm:inline" : ""}>Explore</span>
           </button>
 
           <button
             onClick={() => setActiveTab("sources")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-full text-xs font-bold transition-all ${activeTab === "sources"
-              ? "bg-white text-purple-600 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
-              }`}
-            disabled={!hasAccess}
-          >
-            <BookOpen className={`w-3.5 h-3.5 ${activeTab === "sources" ? "text-purple-600" : "text-gray-400"}`} />
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-full text-xs font-bold transition-all ${
+              activeTab === "sources"
+                ? "bg-white text-purple-600 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            disabled={!hasAccess}>
+            <BookOpen
+              className={`w-3.5 h-3.5 ${activeTab === "sources" ? "text-purple-600" : "text-gray-400"}`}
+            />
             Sources
           </button>
 
           <button
             onClick={() => setActiveTab("insights")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-full text-xs font-bold transition-all ${activeTab === "insights"
-              ? "bg-white text-purple-600 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
-              }`}
-            disabled={!hasAccess}
-          >
-            <Lightbulb className={`w-3.5 h-3.5 ${activeTab === "insights" ? "text-purple-600" : "text-gray-400"}`} />
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-full text-xs font-bold transition-all ${
+              activeTab === "insights"
+                ? "bg-white text-purple-600 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            disabled={!hasAccess}>
+            <Lightbulb
+              className={`w-3.5 h-3.5 ${activeTab === "insights" ? "text-purple-600" : "text-gray-400"}`}
+            />
             Insights
           </button>
         </div>
@@ -693,11 +705,15 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
                         {projectId && (
                           <button
                             onClick={() => handleAddToReferences(source)}
-                            disabled={addedSources.has(source.id) || isAddingReference === source.id}
-                            className={`px-3 py-1 rounded-lg text-sm transition-colors ${addedSources.has(source.id)
-                              ? "bg-green-100 text-green-700 cursor-default"
-                              : "bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                              }`}>
+                            disabled={
+                              addedSources.has(source.id) ||
+                              isAddingReference === source.id
+                            }
+                            className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                              addedSources.has(source.id)
+                                ? "bg-green-100 text-green-700 cursor-default"
+                                : "bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                            }`}>
                             {isAddingReference === source.id ? (
                               <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mx-auto"></div>
                             ) : addedSources.has(source.id) ? (
@@ -751,17 +767,22 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
             <div className="mt-8">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp className="h-5 w-5 text-purple-600" />
-                <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Trending Research</h4>
+                <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                  Trending Research
+                </h4>
               </div>
 
-              <div className={`grid gap-4 ${isPanel ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"}`}>
+              <div
+                className={`grid gap-4 ${isPanel ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"}`}>
                 {isLoadingTrending ? (
                   <div className="col-span-3 flex justify-center py-10">
                     <div className="animate-spin h-8 w-8 border-3 border-purple-600 border-t-transparent rounded-full"></div>
                   </div>
                 ) : trendingResearch.length > 0 ? (
                   trendingResearch.slice(0, 3).map((item, idx) => (
-                    <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all hover:border-purple-100 group">
+                    <div
+                      key={idx}
+                      className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all hover:border-purple-100 group">
                       <div className="flex justify-between items-start mb-2">
                         <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">
                           {item.journal?.substring(0, 20) || "Academic Journal"}
@@ -779,15 +800,16 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
                       <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-auto">
                         <div className="flex items-center gap-1.5">
                           <Users className="w-3.5 h-3.5 text-purple-400" />
-                          <span className="text-[10px] font-bold text-gray-600">{item.citationCount} Citations</span>
+                          <span className="text-[10px] font-bold text-gray-600">
+                            {item.citationCount} Citations
+                          </span>
                         </div>
                         <button
                           onClick={() => {
                             setSearchQuery(item.title);
                             handleSearch();
                           }}
-                          className="text-[10px] font-bold text-purple-600 hover:text-purple-800 transition-colors"
-                        >
+                          className="text-[10px] font-bold text-purple-600 hover:text-purple-800 transition-colors">
                           Details →
                         </button>
                       </div>
@@ -796,7 +818,9 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
                 ) : (
                   <div className="col-span-full border border-dashed border-gray-200 rounded-2xl py-12 flex flex-col items-center justify-center text-gray-400">
                     <Globe className="w-8 h-8 mb-2 opacity-20" />
-                    <p className="text-sm font-medium">No trending research data available</p>
+                    <p className="text-sm font-medium">
+                      No trending research data available
+                    </p>
                   </div>
                 )}
               </div>

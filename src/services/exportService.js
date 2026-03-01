@@ -1,9 +1,9 @@
 import { supabase } from "../lib/supabase/client";
 
 // API base URL - adjust this to match your backend URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
-console.log("API_BASE_URL from env:", process.env.NEXT_PUBLIC_API_URL);
+console.log("API_BASE_URL from env:", process.env.REACT_APP_API_URL);
 console.log("API_BASE_URL final value:", API_BASE_URL);
 
 console.log("API_BASE_URL:", API_BASE_URL); // Debug logging
@@ -62,11 +62,11 @@ class ExportService {
       params.append("format", options.format || "pdf");
       params.append(
         "includeCitations",
-        options.includeCitations ? "true" : "false"
+        options.includeCitations ? "true" : "false",
       );
       params.append(
         "includeComments",
-        options.includeComments ? "true" : "false"
+        options.includeComments ? "true" : "false",
       );
       params.append("citationStyle", options.citationStyle || "apa");
       params.append("template", options.template || "academic");
@@ -125,11 +125,11 @@ class ExportService {
       params.append("format", options.format || "pdf");
       params.append(
         "includeCitations",
-        options.includeCitations ? "true" : "false"
+        options.includeCitations ? "true" : "false",
       );
       params.append(
         "includeComments",
-        options.includeComments ? "true" : "false"
+        options.includeComments ? "true" : "false",
       );
       params.append("citationStyle", options.citationStyle || "apa");
       params.append("template", options.template || "academic");
@@ -221,11 +221,11 @@ class ExportService {
 
       params.append(
         "includeCitations",
-        options.includeCitations ? "true" : "false"
+        options.includeCitations ? "true" : "false",
       );
       params.append(
         "includeComments",
-        options.includeComments ? "true" : "false"
+        options.includeComments ? "true" : "false",
       );
       params.append("citationStyle", options.citationStyle || "apa");
       params.append("template", options.template || "academic");
@@ -245,7 +245,7 @@ class ExportService {
 
       if (!hasFormat) {
         console.log(
-          "WARNING: Format parameter is missing from URLSearchParams!"
+          "WARNING: Format parameter is missing from URLSearchParams!",
         );
       }
 
@@ -317,7 +317,7 @@ class ExportService {
               "Extracted filename using pattern:",
               pattern,
               "filename:",
-              filename
+              filename,
             );
             break;
           }
@@ -329,7 +329,7 @@ class ExportService {
           `${options.documentTitle || "export"}.${options.format || "pdf"}`
         ) {
           const simpleMatch = contentDisposition.match(
-            /filename[^;]*=["']?([^"';]+)["']?/
+            /filename[^;]*=["']?([^"';]+)["']?/,
           );
           if (simpleMatch && simpleMatch[1]) {
             filename = simpleMatch[1];
@@ -377,7 +377,7 @@ class ExportService {
 
           // Show instructions to user
           alert(
-            "Your LaTeX file has been downloaded. Please go to Overleaf.com and upload this file to create a new project."
+            "Your LaTeX file has been downloaded. Please go to Overleaf.com and upload this file to create a new project.",
           );
 
           return { success: true, filename };
@@ -422,11 +422,11 @@ class ExportService {
       params.append("format", options.format || "pdf");
       params.append(
         "includeCitations",
-        options.includeCitations ? "true" : "false"
+        options.includeCitations ? "true" : "false",
       );
       params.append(
         "includeComments",
-        options.includeComments ? "true" : "false"
+        options.includeComments ? "true" : "false",
       );
       params.append("citationStyle", options.citationStyle || "apa");
       params.append("template", options.template || "academic");

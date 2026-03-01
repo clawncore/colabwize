@@ -197,7 +197,7 @@ export default function Navigation() {
               </div>
               {solutionsOpen && (
                 <div
-                  className="absolute top-16 left-0 right-0 w-screen bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
+                  className="fixed top-[64px] left-0 right-0 w-full bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
                   onMouseEnter={() =>
                     handleMouseEnter(setSolutionsOpen, solutionsTimeoutRef)
                   }
@@ -267,7 +267,7 @@ export default function Navigation() {
                           <img
                             src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80"
                             alt="Team Workspaces"
-                            className="w-full h-full object-cover opacity-40 group-hover/promo:scale-105 transition-transform duration-700"
+                            className="w-full h-full object-cover opacity-40 group-hover/promo:scale-105 transition-transform duration-700 block"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-[#050B14] via-[#050B14]/80 to-transparent"></div>
                         </div>
@@ -316,7 +316,7 @@ export default function Navigation() {
               </div>
               {productOpen && (
                 <div
-                  className="absolute top-16 left-0 right-0 w-screen bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
+                  className="fixed top-[64px] left-0 right-0 w-full bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
                   onMouseEnter={() =>
                     handleMouseEnter(setProductOpen, productTimeoutRef)
                   }
@@ -386,7 +386,7 @@ export default function Navigation() {
                           <img
                             src="https://images.unsplash.com/photo-1621360841013-c76831f13886?w=600&q=80"
                             alt="New Version"
-                            className="w-full h-full object-cover opacity-30 group-hover/promo:scale-105 transition-transform duration-700"
+                            className="w-full h-full object-cover opacity-30 group-hover/promo:scale-105 transition-transform duration-700 block"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-[#050B14] via-[#050B14]/80 to-transparent"></div>
                         </div>
@@ -440,7 +440,7 @@ export default function Navigation() {
               </div>
               {resourcesOpen && (
                 <div
-                  className="absolute top-16 left-0 right-0 w-screen bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
+                  className="fixed top-[64px] left-0 right-0 w-full bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
                   onMouseEnter={() =>
                     handleMouseEnter(setResourcesOpen, resourcesTimeoutRef)
                   }

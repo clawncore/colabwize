@@ -152,6 +152,34 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     isSyncedRef.current = false;
     setCollabError(null);
 
+    // Fetch the token directly from local storage or supabase session
+    const getSupabaseToken = () => {
+      // First try standard auth token
+      const auth_token = localStorage.getItem("auth_token");
+      if (auth_token) return auth_token;
+
+      // Try to extract from Supabase session if auth_token is missing
+      const supabaseKey = Object.keys(localStorage).find(
+        (k) => k.startsWith("sb-") && k.endsWith("-auth-token"),
+      );
+      if (supabaseKey) {
+        try {
+          const sessionData = JSON.parse(
+            localStorage.getItem(supabaseKey) || "{}",
+          );
+          return sessionData?.access_token || "";
+        } catch (e) {
+          console.error("Failed to parse Supabase session", e);
+        }
+      }
+      return "";
+    };
+
+    const authToken = getSupabaseToken();
+    console.log(
+      `[HP Auth] Initializing with token length: ${authToken.length}`,
+    );
+
     // Create a fresh Y.Doc for THIS project instance
     const freshYdoc = new Y.Doc();
     setYdoc(freshYdoc);
@@ -160,7 +188,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       url: process.env.REACT_APP_HOCUSPOCUS_URL || "ws://localhost:9081",
       name: `project-${project.id}`,
       document: freshYdoc,
-      token: localStorage.getItem("auth_token") || "",
+      token: authToken,
       onStatus: (item) => {
         console.log(`[HP Status] Project ${project.id}:`, item.status);
         setCollabStatus(item.status);
@@ -278,37 +306,49 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // Scored matching function for bibliography navigation
   const scrollToReference = (citationId: string) => {
     // Note: Using project.citations to match component data structure
-    const citation = project.citations?.find(c => c.id === citationId);
+    const citation = project.citations?.find((c) => c.id === citationId);
     if (!citation) return;
 
     // Extract search terms
-    const author = (citation.authors?.[0] as any)?.lastName || citation.authors?.[0] || citation.author || '';
-    const authorLastName = author.includes(',') ? author.split(',')[0].trim() : author;
-    const year = citation.year?.toString() || '';
+    const author =
+      (citation.authors?.[0] as any)?.lastName ||
+      citation.authors?.[0] ||
+      citation.author ||
+      "";
+    const authorLastName = author.includes(",")
+      ? author.split(",")[0].trim()
+      : author;
+    const year = citation.year?.toString() || "";
 
     // Get editor element
-    const editorElement = document.querySelector('.ProseMirror') as HTMLElement;
+    const editorElement = document.querySelector(".ProseMirror") as HTMLElement;
     if (!editorElement) return;
 
     // Find references section
-    const headings = editorElement.querySelectorAll('h1, h2, h3, h4');
+    const headings = editorElement.querySelectorAll("h1, h2, h3, h4");
     let refSectionTop = Infinity;
     for (const heading of Array.from(headings)) {
-      const text = heading.textContent?.toLowerCase() || '';
-      if (text.includes('reference') || text.includes('bibliography') || text.includes('works cited')) {
+      const text = heading.textContent?.toLowerCase() || "";
+      if (
+        text.includes("reference") ||
+        text.includes("bibliography") ||
+        text.includes("works cited")
+      ) {
         refSectionTop = heading.getBoundingClientRect().top;
         break;
       }
     }
 
     // Score each paragraph
-    const paragraphs = editorElement.querySelectorAll('p, div[data-type="paragraph"]');
+    const paragraphs = editorElement.querySelectorAll(
+      'p, div[data-type="paragraph"]',
+    );
     let bestMatch: HTMLElement | null = null;
     let bestScore = 0;
 
     for (const para of Array.from(paragraphs)) {
       const element = para as HTMLElement;
-      const text = element.textContent || '';
+      const text = element.textContent || "";
       const trimmedText = text.trim();
 
       if (trimmedText.length < 5) continue;
@@ -316,8 +356,16 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       let score = 0;
 
       // SCORING RULES
-      if (authorLastName && trimmedText.toLowerCase().startsWith(authorLastName.toLowerCase())) score += 0.6;
-      if (authorLastName && text.toLowerCase().includes(authorLastName.toLowerCase())) score += 0.3;
+      if (
+        authorLastName &&
+        trimmedText.toLowerCase().startsWith(authorLastName.toLowerCase())
+      )
+        score += 0.6;
+      if (
+        authorLastName &&
+        text.toLowerCase().includes(authorLastName.toLowerCase())
+      )
+        score += 0.3;
       if (year && text.includes(year)) score += 0.2;
       if (element.getBoundingClientRect().top > refSectionTop) score += 0.1;
 
@@ -329,17 +377,24 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     // Scroll to best match
     if (bestMatch) {
-      console.log(`[ScrollToRef] Found match with score ${bestScore.toFixed(2)}`);
-      bestMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      bestMatch.classList.add('highlight-reference-flash');
-      setTimeout(() => bestMatch?.classList.remove('highlight-reference-flash'), 2000);
+      console.log(
+        `[ScrollToRef] Found match with score ${bestScore.toFixed(2)}`,
+      );
+      bestMatch.scrollIntoView({ behavior: "smooth", block: "center" });
+      bestMatch.classList.add("highlight-reference-flash");
+      setTimeout(
+        () => bestMatch?.classList.remove("highlight-reference-flash"),
+        2000,
+      );
 
       toast({
         title: "Reference Found",
         description: "Jumped to bibliography entry.",
       });
     } else {
-      console.warn(`[ScrollToRef] No match found for: ${authorLastName} (${year}). Score: ${bestScore}`);
+      console.warn(
+        `[ScrollToRef] No match found for: ${authorLastName} (${year}). Score: ${bestScore}`,
+      );
       toast({
         title: "Reference Not Found",
         description: "Could not locate the bibliography entry.",
@@ -359,20 +414,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         } as any),
         ...(isCollaborative && provider && ydoc
           ? [
-            Collaboration.configure({
-              document: ydoc, // Bind directly to the stable Y.Doc
-            }),
-            CollaborationCursor.configure({
-              provider: provider, // Bind directly to the Hocuspocus provider
-              user: {
-                name:
-                  user?.user_metadata?.full_name ||
-                  user?.email ||
-                  "Anonymous",
-                color: cursorColor,
-              },
-            }),
-          ]
+              Collaboration.configure({
+                document: ydoc, // Bind directly to the stable Y.Doc
+              }),
+              CollaborationCursor.configure({
+                provider: provider, // Bind directly to the Hocuspocus provider
+                user: {
+                  name:
+                    user?.user_metadata?.full_name ||
+                    user?.email ||
+                    "Anonymous",
+                  color: cursorColor,
+                },
+              }),
+            ]
           : []),
         HighlightExtension,
         CharacterCount,
@@ -424,7 +479,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       // NOTE: In collab mode, content is loaded from Yjs (Hocuspocus server) not here.
       onUpdate: ({ transaction }) => {
         // Prevent infinite loops from internal normalization/audit updates
-        if (transaction.getMeta('normalization') || transaction.getMeta('integrity-check')) {
+        if (
+          transaction.getMeta("normalization") ||
+          transaction.getMeta("integrity-check")
+        ) {
           return;
         }
         // Increment edit count when content changes
@@ -472,11 +530,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       if (!hasInitializedContentRef.current) {
         const initDocumentWithRegistry = async () => {
           try {
-            const { CitationRegistryService } = await import("../../services/CitationRegistryService");
+            const { CitationRegistryService } =
+              await import("../../services/CitationRegistryService");
             await CitationRegistryService.initializeFromBackend(project.id);
             // Expose current project ID globally so CitationNode can trigger async registry lookups
             (window as any).__currentProjectId__ = project.id;
-            console.log("✅ Citation registry initialized from backend successfully");
+            console.log(
+              "✅ Citation registry initialized from backend successfully",
+            );
 
             editor.commands.setContent(formatContentForTiptap(project.content));
             hasInitializedContentRef.current = true;
@@ -534,9 +595,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 }
               }
             }, 500);
-
           } catch (error) {
-            console.error("Failed to initialize document with registry:", error);
+            console.error(
+              "Failed to initialize document with registry:",
+              error,
+            );
           }
         };
 
@@ -571,7 +634,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     const timeoutId = setTimeout(async () => {
       // 1. Run normalization (text -> blue pills)
-      await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+      await detectAndNormalizeCitations(
+        editor,
+        project.id,
+        project.citations || [],
+      );
 
       // 2. Synchronize existing nodes with registry
       await synchronizeRegistryWithDocument(editor, project.id);
@@ -730,7 +797,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     const timeoutId = setTimeout(checkGrammar, 2000); // 2s debounce
     return () => clearTimeout(timeoutId);
   }, [editCount, editor]); // Re-run on editCount change
-
 
   const statsRef = useRef({
     timeSpent: 0,
@@ -1218,10 +1284,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
-                    ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isPreviewMode
+                      ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1237,10 +1304,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
-                    ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isFocusMode
+                      ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />

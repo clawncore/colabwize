@@ -80,14 +80,14 @@ export class SubscriptionService {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/subscription/current`,
+        `${process.env.REACT_APP_API_URL || "http://localhost:3001"}/api/subscription/current`,
         {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       const data = await response.json();
@@ -110,7 +110,7 @@ export class SubscriptionService {
   static async updateAutoUseCredits(enabled: boolean): Promise<boolean> {
     const response = await apiClient.post(
       "/api/subscription/credits/auto-use",
-      { enabled }
+      { enabled },
     );
     return response.success;
   }
@@ -143,7 +143,7 @@ export class SubscriptionService {
   static async createCheckout(
     plan: string,
     billingPeriod: string = "monthly",
-    policyAccepted?: boolean
+    policyAccepted?: boolean,
   ): Promise<string> {
     const response = await apiClient.post("/api/subscription/checkout", {
       plan,
@@ -176,7 +176,7 @@ export class SubscriptionService {
    * Cancel subscription
    */
   static async cancelSubscription(
-    reason: string
+    reason: string,
   ): Promise<{ success: boolean; message?: string }> {
     const response = await apiClient.post("/api/subscription/cancel", {
       reason,
@@ -196,7 +196,7 @@ export class SubscriptionService {
    */
   static async getUsageHistory(months: number = 3): Promise<any[]> {
     const response = await apiClient.get(
-      `/api/subscription/usage?months=${months}`
+      `/api/subscription/usage?months=${months}`,
     );
     return response.usage;
   }
@@ -228,7 +228,7 @@ export class SubscriptionService {
   }): Promise<PaymentMethod> {
     const response = await apiClient.post(
       "/api/subscription/payment-methods",
-      paymentMethod
+      paymentMethod,
     );
     return response.paymentMethod;
   }
@@ -239,7 +239,7 @@ export class SubscriptionService {
   static async setDefaultPaymentMethod(id: string): Promise<PaymentMethod> {
     const response = await apiClient.post(
       `/api/subscription/payment-methods/${id}/default`,
-      {}
+      {},
     );
     return response.paymentMethod;
   }
@@ -260,7 +260,7 @@ export class SubscriptionService {
   }> {
     const response = await apiClient.post(
       "/api/subscription/payment-methods/update",
-      {}
+      {},
     );
     return response;
   }
@@ -343,7 +343,7 @@ export class SubscriptionService {
    */
   static async hasFeatureAccess(feature: string): Promise<boolean> {
     const response = await apiClient.get(
-      `/api/subscription/features/${feature}`
+      `/api/subscription/features/${feature}`,
     );
     return response.hasAccess || false;
   }

@@ -35,7 +35,7 @@ export const documentService = {
     file: File,
     title: string,
     description: string = "",
-    workspaceId?: string
+    workspaceId?: string,
   ): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append("document", file);
@@ -77,7 +77,7 @@ export const documentService = {
     content: any,
     wordCount: number,
     citationStyle?: string | null,
-    outline?: any
+    updates?: any,
   ): Promise<{ success: boolean; data?: Project; error?: string }> {
     try {
       const response = await apiClient.put(`/api/documents/${projectId}`, {
@@ -86,7 +86,7 @@ export const documentService = {
         content,
         word_count: wordCount,
         citation_style: citationStyle,
-        outline,
+        ...updates,
       });
       return response;
     } catch (error: any) {
@@ -99,7 +99,7 @@ export const documentService = {
   },
 
   async getProjectById(
-    projectId: string
+    projectId: string,
   ): Promise<{ success: boolean; data?: Project; error?: string }> {
     try {
       const response = await apiClient.get(`/api/documents/${projectId}`);
@@ -118,7 +118,7 @@ export const documentService = {
     description: string = "",
     content: any = null,
     projectId: string = "",
-    workspaceId?: string
+    workspaceId?: string,
   ): Promise<{ success: boolean; data?: Project; error?: string }> {
     try {
       const response = await apiClient.post("/api/documents/create", {
@@ -143,10 +143,16 @@ export const documentService = {
     title: string,
     description: string,
     content: any,
-    workspaceId?: string
+    workspaceId?: string,
   ): Promise<{ success: boolean; data?: Project; error?: string }> {
     try {
-      return this.createProject(title, description, content, projectId, workspaceId);
+      return this.createProject(
+        title,
+        description,
+        content,
+        projectId,
+        workspaceId,
+      );
     } catch (error: any) {
       console.error("Duplicate project error:", error);
       return {
@@ -157,7 +163,7 @@ export const documentService = {
   },
 
   async deleteProject(
-    projectId: string
+    projectId: string,
   ): Promise<{ success: boolean; data?: Project; error?: string }> {
     try {
       const response = await apiClient.delete(`/api/projects/${projectId}`);
@@ -180,7 +186,7 @@ export const documentService = {
       }
 
       const response = await apiClient.get(
-        `/api/projects?${queryParams.toString()}`
+        `/api/projects?${queryParams.toString()}`,
       );
       return response.projects || response;
     } catch (error) {
@@ -193,7 +199,7 @@ export const documentService = {
   async getUserProjectsInWorkspace(
     userId: string,
     workspaceId: string,
-    archived: boolean = false
+    archived: boolean = false,
   ) {
     try {
       const queryParams = new URLSearchParams();
@@ -203,7 +209,7 @@ export const documentService = {
       }
 
       const response = await apiClient.get(
-        `/api/projects?${queryParams.toString()}`
+        `/api/projects?${queryParams.toString()}`,
       );
       return response.data || response.projects || response;
     } catch (error) {
@@ -222,7 +228,7 @@ export const documentService = {
       }
 
       const response = await apiClient.get(
-        `/api/projects?${queryParams.toString()}`
+        `/api/projects?${queryParams.toString()}`,
       );
       return response.data || response.projects || response;
     } catch (error) {
@@ -235,7 +241,7 @@ export const documentService = {
   async getDocumentVersions(projectId: string) {
     try {
       const response = await apiClient.get(
-        `/api/editor/versions?projectId=${projectId}`
+        `/api/editor/versions?projectId=${projectId}`,
       );
       return response.versions || response;
     } catch (error) {
@@ -248,18 +254,15 @@ export const documentService = {
   async createDocumentVersion(
     projectId: string,
     content: any,
-    wordCount: number
+    wordCount: number,
   ) {
     try {
-      const response = await apiClient.post(
-        `/api/editor/versions`,
-        {
-          projectId,
-          content,
-          wordCount,
-          force: true,
-        }
-      );
+      const response = await apiClient.post(`/api/editor/versions`, {
+        projectId,
+        content,
+        wordCount,
+        force: true,
+      });
       return response.version || response;
     } catch (error) {
       console.error("Error creating document version:", error);
@@ -268,18 +271,12 @@ export const documentService = {
   },
 
   // Restore a document version
-  async restoreDocumentVersion(
-    projectId: string,
-    versionId: string
-  ) {
+  async restoreDocumentVersion(projectId: string, versionId: string) {
     try {
-      const response = await apiClient.post(
-        `/api/editor/restore-version`,
-        {
-          projectId,
-          versionId,
-        }
-      );
+      const response = await apiClient.post(`/api/editor/restore-version`, {
+        projectId,
+        versionId,
+      });
       return response.project || response;
     } catch (error) {
       console.error("Error restoring document version:", error);
@@ -309,7 +306,7 @@ export const documentService = {
   async getVersionSchedules(projectId: string) {
     try {
       const response = await apiClient.get(
-        `/api/projects/${projectId}/version-schedules`
+        `/api/projects/${projectId}/version-schedules`,
       );
       return response.schedules || response;
     } catch (error) {
@@ -321,12 +318,12 @@ export const documentService = {
   // Create a version schedule
   async createVersionSchedule(
     projectId: string,
-    scheduleData: { frequency: string }
+    scheduleData: { frequency: string },
   ) {
     try {
       const response = await apiClient.post(
         `/api/projects/${projectId}/version-schedules`,
-        scheduleData
+        scheduleData,
       );
       return response.schedule || response;
     } catch (error) {
@@ -339,12 +336,12 @@ export const documentService = {
   async updateVersionSchedule(
     projectId: string,
     scheduleId: string,
-    updateData: { enabled?: boolean; frequency?: string }
+    updateData: { enabled?: boolean; frequency?: string },
   ) {
     try {
       const response = await apiClient.put(
         `/api/projects/${projectId}/version-schedules/${scheduleId}`,
-        updateData
+        updateData,
       );
       return response.schedule || response;
     } catch (error) {
@@ -358,7 +355,7 @@ export const documentService = {
     try {
       const response = await apiClient.delete(
         `/api/projects/${projectId}/version-schedules/${scheduleId}`,
-        {}
+        {},
       );
       return response;
     } catch (error) {
@@ -378,7 +375,7 @@ export const documentService = {
       }
 
       const response = await apiClient.get(
-        `/api/projects?${queryParams.toString()}`
+        `/api/projects?${queryParams.toString()}`,
       );
       return response.projects || response;
     } catch (error) {

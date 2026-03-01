@@ -88,7 +88,7 @@ export default function ProjectCards({
   const navigate = useNavigate();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [sortBy] = useState<"lastUpdated" | "name" | "dueDate" | "progress">(
-    "lastUpdated"
+    "lastUpdated",
   );
   const [searchQuery] = useState("");
   const [error] = useState<string | null>(null);
@@ -158,8 +158,7 @@ export default function ProjectCards({
     };
     return (
       <span
-        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.classes}`}
-      >
+        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.classes}`}>
         {config.label}
       </span>
     );
@@ -179,7 +178,7 @@ export default function ProjectCards({
     const due = new Date(dueDate);
     const now = new Date();
     const diffDays = Math.ceil(
-      (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     if (diffDays < 0) {
@@ -209,6 +208,28 @@ export default function ProjectCards({
     }
   };
 
+  const getProgressPercentage = (project: Project): number => {
+    if (project.progress != null && !isNaN(project.progress)) {
+      return project.progress;
+    }
+
+    // Fallback based on status if progress is not provided by backend
+    switch (project.status) {
+      case "completed":
+        return 100;
+      case "in-progress":
+        return 40;
+      case "planning":
+        return 20;
+      case "draft":
+        return 10;
+      case "active":
+        return 30;
+      default:
+        return 0;
+    }
+  };
+
   const getProgressColor = (progress: number): string => {
     // Handle case where progress might be undefined or null
     if (progress == null || isNaN(progress)) return "bg-gray-500";
@@ -233,7 +254,7 @@ export default function ProjectCards({
 
     const now = new Date();
     const diffHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
     );
 
     if (diffHours < 1) return "Just now";
@@ -248,14 +269,12 @@ export default function ProjectCards({
         <div
           className="mx-auto h-12 w-12 text-red-500"
           role="img"
-          aria-label="Error"
-        >
+          aria-label="Error">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+            stroke="currentColor">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -272,14 +291,12 @@ export default function ProjectCards({
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <svg
               className="-ml-1 mr-2 h-5 w-5"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
-              fill="currentColor"
-            >
+              fill="currentColor">
               <path
                 fillRule="evenodd"
                 d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
@@ -308,8 +325,7 @@ export default function ProjectCards({
           <button
             type="button"
             onClick={() => onCreateProject && onCreateProject()}
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <Plus className="mr-2 -ml-1 h-5 w-5" aria-hidden="true" />
             New Project
           </button>
@@ -325,8 +341,7 @@ export default function ProjectCards({
       <div className="bg-white">
         <button
           onClick={() => navigate(`/dashboard/editor/${project.id}`)}
-          className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted"
-        >
+          className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted">
           <Edit className="mr-3 h-4 w-4" />
           Open Editor
         </button>
@@ -336,8 +351,7 @@ export default function ProjectCards({
             onClick={() =>
               onProjectAction && onProjectAction("rename", project)
             }
-            className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted"
-          >
+            className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted">
             <Edit className="mr-3 h-4 w-4" />
             Rename
           </button>
@@ -347,18 +361,14 @@ export default function ProjectCards({
           onClick={() =>
             onProjectAction && onProjectAction("duplicate", project)
           }
-          className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted"
-        >
+          className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted">
           <Copy className="mr-3 h-4 w-4" />
           Duplicate
         </button>
 
         <button
-          onClick={() =>
-            onProjectAction && onProjectAction("export", project)
-          }
-          className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted"
-        >
+          onClick={() => onProjectAction && onProjectAction("export", project)}
+          className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted">
           <Download className="mr-3 h-4 w-4" />
           Export
         </button>
@@ -371,22 +381,18 @@ export default function ProjectCards({
                 onProjectAction &&
                 onProjectAction(
                   project.status === "archived" ? "restore" : "archive",
-                  project
+                  project,
                 )
               }
-              className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted"
-            >
+              className="flex items-center w-full px-4 py-2 text-sm text-foreground hover:bg-muted">
               <Archive className="mr-3 h-4 w-4" />
-              {project.status === "archived"
-                ? "Restore Archived"
-                : "Archive"}
+              {project.status === "archived" ? "Restore Archived" : "Archive"}
             </button>
             <button
               onClick={() =>
                 onProjectAction && onProjectAction("delete", project)
               }
-              className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-muted"
-            >
+              className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-muted">
               <Trash2 className="mr-3 h-4 w-4" />
               Delete
             </button>
@@ -404,32 +410,27 @@ export default function ProjectCards({
             <tr>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
-              >
+                className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Project
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-700 uppercase tracking-wider"
-              >
+                className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-700 uppercase tracking-wider">
                 Status
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-700 uppercase tracking-wider"
-              >
+                className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-700 uppercase tracking-wider">
                 Stats
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-700 uppercase tracking-wider"
-              >
+                className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-700 uppercase tracking-wider">
                 Progress
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-700 uppercase tracking-wider"
-              >
+                className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-700 uppercase tracking-wider">
                 Last Updated
               </th>
               <th scope="col" className="relative px-6 py-3">
@@ -445,8 +446,7 @@ export default function ProjectCards({
                 <tr
                   key={project.id}
                   className="hover:bg-muted/50 cursor-pointer relative"
-                  onClick={() => navigate(`/dashboard/editor/${project.id}`)}
-                >
+                  onClick={() => navigate(`/dashboard/editor/${project.id}`)}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {project.word_count > 0 ? (
@@ -470,10 +470,12 @@ export default function ProjectCards({
                         <div className="text-sm font-medium text-foreground">
                           {project.title}
                         </div>
-                        {project.user && (
+                        {project.user && typeof project.user === "object" && (
                           <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                             <User className="h-3 w-3" />
-                            {project.user.full_name || project.user.email}
+                            {project.user.full_name ||
+                              project.user.email ||
+                              "Unknown User"}
                           </div>
                         )}
                         {project.description ? (
@@ -501,13 +503,14 @@ export default function ProjectCards({
                       <div className="w-full bg-muted rounded-full h-2">
                         <div
                           className={`h-2 rounded-full ${getProgressColor(
-                            project.progress
+                            getProgressPercentage(project),
                           )}`}
-                          style={{ width: `${project.progress}%` }}
-                        ></div>
+                          style={{
+                            width: `${getProgressPercentage(project)}%`,
+                          }}></div>
                       </div>
                       <span className="ml-2 text-sm text-muted-foreground">
-                        {project.progress}%
+                        {getProgressPercentage(project)}%
                       </span>
                     </div>
                   </td>
@@ -520,19 +523,17 @@ export default function ProjectCards({
                         onClick={(e) => {
                           e.stopPropagation();
                           setActiveDropdown(
-                            activeDropdown === project.id ? null : project.id
+                            activeDropdown === project.id ? null : project.id,
                           );
                         }}
-                        className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted"
-                      >
+                        className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted">
                         <MoreVertical className="h-5 w-5" />
                       </button>
 
                       {activeDropdown === project.id && (
                         <div
                           className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-popover text-popover-foreground focus:outline-none z-50 border border-border"
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                          onClick={(e) => e.stopPropagation()}>
                           <div className="py-1">
                             {renderActionButtons(project)}
                           </div>
@@ -558,29 +559,24 @@ export default function ProjectCards({
         return (
           <div
             key={project.id}
-            className="bg-card rounded-xl border border-border hover:shadow-lg transition-shadow duration-200 relative"
-          >
+            className="bg-card rounded-xl border border-border hover:shadow-lg transition-shadow duration-200 relative">
             <div className="absolute top-3 right-3 z-20">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setActiveDropdown(
-                    activeDropdown === project.id ? null : project.id
+                    activeDropdown === project.id ? null : project.id,
                   );
                 }}
-                className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted"
-              >
+                className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted">
                 <MoreVertical className="h-5 w-5" />
               </button>
 
               {activeDropdown === project.id && (
                 <div
                   className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-popover text-popover-foreground focus:outline-none z-50 border border-border"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="py-1">
-                    {renderActionButtons(project)}
-                  </div>
+                  onClick={(e) => e.stopPropagation()}>
+                  <div className="py-1">{renderActionButtons(project)}</div>
                 </div>
               )}
             </div>
@@ -594,8 +590,7 @@ export default function ProjectCards({
                     onProjectSelect && onProjectSelect(project.id);
                   }}
                   className="flex items-center justify-center h-5 w-5 rounded border-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label={`Select project ${project.title}`}
-                >
+                  aria-label={`Select project ${project.title}`}>
                   {selectedProjects.includes(project.id) ? (
                     <CheckCircle className="h-5 w-5 text-blue-600" />
                   ) : (
@@ -607,8 +602,7 @@ export default function ProjectCards({
 
             <div
               className="p-5 cursor-pointer pt-12"
-              onClick={() => navigate(`/dashboard/editor/${project.id}`)}
-            >
+              onClick={() => navigate(`/dashboard/editor/${project.id}`)}>
               <div className="flex items-start justify-between">
                 {project.word_count > 0 ? (
                   <div className="flex-shrink-0 h-12 w-12">
@@ -632,14 +626,15 @@ export default function ProjectCards({
                     {project.title}
                   </h3>
                   {/* Display workspace information if project belongs to a workspace */}
-                  {project.workspace && (
-                    <div className="mt-1 flex items-center">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                        <Hash className="h-3 w-3 mr-1" />
-                        {project.workspace.name}
-                      </span>
-                    </div>
-                  )}
+                  {project.workspace &&
+                    typeof project.workspace === "object" && (
+                      <div className="mt-1 flex items-center">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                          <Hash className="h-3 w-3 mr-1" />
+                          {project.workspace.name || "Workspace"}
+                        </span>
+                      </div>
+                    )}
                   {project.description ? (
                     <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                       {project.description}
@@ -656,13 +651,13 @@ export default function ProjectCards({
                 {getStatusBadge(project.status)}
                 {project.due_date && (
                   <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${dueDateStatus.isOverdue
-                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                      : dueDateStatus.isSoon
-                        ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                        : "bg-muted text-muted-foreground"
-                      }`}
-                  >
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      dueDateStatus.isOverdue
+                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        : dueDateStatus.isSoon
+                          ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                          : "bg-muted text-muted-foreground"
+                    }`}>
                     <Calendar className="h-3 w-3 mr-1" />
                     {dueDateStatus.text}
                   </span>
@@ -670,11 +665,13 @@ export default function ProjectCards({
               </div>
 
               <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-                <span>{project.word_count} words</span>
-                {project.user ? (
+                <span>{project.word_count || 0} words</span>
+                {project.user && typeof project.user === "object" ? (
                   <span className="flex items-center gap-1 text-xs">
                     <User className="h-3 w-3" />
-                    {project.user.full_name || project.user.email}
+                    {project.user.full_name ||
+                      project.user.email ||
+                      "Unknown User"}
                   </span>
                 ) : (
                   <span>{formatLastUpdated(project.updated_at)}</span>
@@ -686,13 +683,14 @@ export default function ProjectCards({
                   <div className="w-full bg-muted rounded-full h-2">
                     <div
                       className={`h-2 rounded-full ${getProgressColor(
-                        project.progress
+                        getProgressPercentage(project),
                       )}`}
-                      style={{ width: `${project.progress}%` }}
-                    ></div>
+                      style={{
+                        width: `${getProgressPercentage(project)}%`,
+                      }}></div>
                   </div>
                   <span className="ml-2 text-sm text-muted-foreground">
-                    {project.progress}%
+                    {getProgressPercentage(project)}%
                   </span>
                 </div>
               </div>

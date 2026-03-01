@@ -81,14 +81,14 @@ export default function WorkspaceProjectsPage() {
         const projectsData = await documentService.getUserProjectsInWorkspace(
           user.id,
           workspaceId,
-          fetchArchived
+          fetchArchived,
         );
         setProjects(projectsData);
       } catch (error: any) {
         console.error("Failed to load workspace projects:", error);
         if (error.message && error.message.includes("fetch")) {
           setError(
-            "Unable to connect to the server. Please make sure the backend API is running."
+            "Unable to connect to the server. Please make sure the backend API is running.",
           );
         } else {
           setError("Failed to load projects. Please try again later.");
@@ -156,15 +156,15 @@ export default function WorkspaceProjectsPage() {
         renamingProject.content || null,
         renamingProject.word_count || 0,
         renamingProject.citation_style || null,
-        renamingProject.outline || null
+        { outline: renamingProject.outline || null },
       );
 
       setProjects((prev) =>
         prev.map((p) =>
           p.id === renamingProject.id
             ? { ...p, title: newProjectName.trim() }
-            : p
-        )
+            : p,
+        ),
       );
 
       setRenamingProject(null);
@@ -202,7 +202,7 @@ export default function WorkspaceProjectsPage() {
         duplicateData.description || "",
         duplicateData.content || null,
         "", // projectId
-        workspaceId // Pass the current workspace ID
+        workspaceId, // Pass the current workspace ID
       );
       setProjects((prev) => [duplicatedProject, ...prev]);
 
@@ -228,13 +228,13 @@ export default function WorkspaceProjectsPage() {
       });
 
       const blob = await ExportService.exportProjectBlob(project.id, {
-        format: "pdf",
+        format: "docx",
       });
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${project.title.replace(/\s+/g, "_")}.pdf`;
+      a.download = `${project.title.replace(/\s+/g, "_")}.docx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -258,7 +258,7 @@ export default function WorkspaceProjectsPage() {
     try {
       if (
         window.confirm(
-          `Are you sure you want to archive "${project.title}"? You can restore it later from the archived projects view.`
+          `Are you sure you want to archive "${project.title}"? You can restore it later from the archived projects view.`,
         )
       ) {
         await documentService.updateProject(
@@ -268,7 +268,7 @@ export default function WorkspaceProjectsPage() {
           project.content || null,
           project.word_count || 0,
           project.citation_style || null,
-          { status: "archived" }
+          { status: "archived" },
         );
 
         setProjects((prev) => prev.filter((p) => p.id !== project.id));
@@ -292,7 +292,7 @@ export default function WorkspaceProjectsPage() {
     try {
       if (
         window.confirm(
-          `Are you sure you want to restore "${project.title}"? It will be moved back to your active projects.`
+          `Are you sure you want to restore "${project.title}"? It will be moved back to your active projects.`,
         )
       ) {
         // Update project status to draft to restore from archived
@@ -303,7 +303,7 @@ export default function WorkspaceProjectsPage() {
           project.content || null,
           project.word_count || 0,
           project.citation_style || null,
-          { status: "draft" }
+          { status: "draft" },
         );
 
         // Remove from current list since it's now restored
@@ -328,7 +328,7 @@ export default function WorkspaceProjectsPage() {
     try {
       if (
         window.confirm(
-          "Are you sure you want to delete this project? This action cannot be undone."
+          "Are you sure you want to delete this project? This action cannot be undone.",
         )
       ) {
         await documentService.deleteProject(project.id);
@@ -424,13 +424,13 @@ export default function WorkspaceProjectsPage() {
         const project = projects.find((p) => p.id === projectId);
         if (project) {
           const blob = await ExportService.exportProjectBlob(projectId, {
-            format: "pdf",
+            format: "docx",
           });
 
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = `${project.title.replace(/\s+/g, "_")}.pdf`;
+          a.download = `${project.title.replace(/\s+/g, "_")}.docx`;
           document.body.appendChild(a);
           a.click();
           window.URL.revokeObjectURL(url);
@@ -508,11 +508,11 @@ export default function WorkspaceProjectsPage() {
             <button
               onClick={handleBatchExport}
               disabled={selectedProjects.length === 0}
-              className={`inline-flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl ${selectedProjects.length > 0
-                ? "bg-green-600 hover:bg-green-700 text-white"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
-                }`}
-            >
+              className={`inline-flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl ${
+                selectedProjects.length > 0
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-muted text-muted-foreground cursor-not-allowed"
+              }`}>
               <Plus className="w-5 h-5 mr-2" />
               Batch Export ({selectedProjects.length})
             </button>
@@ -520,8 +520,7 @@ export default function WorkspaceProjectsPage() {
 
           <button
             onClick={handleCreateProject}
-            className="inline-flex items-center px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
-          >
+            className="inline-flex items-center px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl">
             <Plus className="w-5 h-5 mr-2" />
             New Project
           </button>
@@ -531,7 +530,7 @@ export default function WorkspaceProjectsPage() {
       {/* Rename Modal */}
       {renamingProject && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-card rounded-lg p-6 w-full max-w-md border border-border shadow-lg">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md border border-border shadow-lg">
             <h3 className="text-lg font-medium text-foreground mb-4">
               Rename Project
             </h3>
@@ -550,14 +549,12 @@ export default function WorkspaceProjectsPage() {
             <div className="mt-4 flex justify-end space-x-3">
               <button
                 onClick={() => setRenamingProject(null)}
-                className="px-4 py-2 text-muted-foreground hover:bg-muted rounded-md"
-              >
+                className="bg-gray-500 px-4 py-2 text-muted-foreground hover:bg-muted rounded-md">
                 Cancel
               </button>
               <button
                 onClick={handleRenameConfirm}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-              >
+                className="bg-blue-500 px-4 py-2 text-primary-foreground rounded-md hover:bg-primary/90">
                 Rename
               </button>
             </div>
@@ -583,8 +580,7 @@ export default function WorkspaceProjectsPage() {
               />
               <label
                 htmlFor="select-all"
-                className="ml-2 text-sm text-foreground"
-              >
+                className="ml-2 text-sm text-foreground">
                 Select All
               </label>
             </div>
@@ -597,11 +593,11 @@ export default function WorkspaceProjectsPage() {
             <button
               key={filter.id}
               onClick={() => setActiveFilter(filter.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${activeFilter === filter.id
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-            >
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                activeFilter === filter.id
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              }`}>
               {filter.label}
             </button>
           ))}
@@ -610,20 +606,20 @@ export default function WorkspaceProjectsPage() {
           <div className="flex items-center bg-muted rounded-lg p-1 ml-auto">
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-md transition-colors duration-200 ${viewMode === "grid"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
+              className={`p-2 rounded-md transition-colors duration-200 ${
+                viewMode === "grid"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}>
               <Grid3X3 className="w-4 h-4" />
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 rounded-md transition-colors duration-200 ${viewMode === "list"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
+              className={`p-2 rounded-md transition-colors duration-200 ${
+                viewMode === "list"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}>
               <List className="w-4 h-4" />
             </button>
           </div>
@@ -639,8 +635,7 @@ export default function WorkspaceProjectsPage() {
                 className="h-5 w-5 text-destructive"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
-                fill="currentColor"
-              >
+                fill="currentColor">
                 <path
                   fillRule="evenodd"
                   d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -665,14 +660,12 @@ export default function WorkspaceProjectsPage() {
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-destructive bg-destructive/10 hover:bg-destructive/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive"
-                >
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-destructive bg-destructive/10 hover:bg-destructive/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive">
                   <svg
                     className="-ml-0.5 mr-2 h-4 w-4"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
+                    fill="currentColor">
                     <path
                       fillRule="evenodd"
                       d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
@@ -694,8 +687,7 @@ export default function WorkspaceProjectsPage() {
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="bg-card rounded-xl border border-border p-6 animate-pulse"
-              >
+                className="bg-card rounded-xl border border-border p-6 animate-pulse">
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 bg-muted rounded-lg"></div>
                   <div className="w-6 h-6 bg-muted rounded"></div>
@@ -721,7 +713,7 @@ export default function WorkspaceProjectsPage() {
             onProjectSelect={(projectId: string) => {
               if (selectedProjects.includes(projectId)) {
                 setSelectedProjects(
-                  selectedProjects.filter((id: string) => id !== projectId)
+                  selectedProjects.filter((id: string) => id !== projectId),
                 );
               } else {
                 setSelectedProjects([...selectedProjects, projectId]);

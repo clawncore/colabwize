@@ -64,7 +64,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
     try {
       const newAttachment = await workspaceTaskService.uploadAttachment(
         taskId,
-        file
+        file,
       );
       onAttachmentChange([...attachments, newAttachment]);
       toast({
@@ -118,8 +118,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
             size="sm"
             className="h-7 text-[10px] gap-1 text-slate-500 hover:text-indigo-600"
             onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-          >
+            disabled={isUploading}>
             {isUploading ? (
               <Loader2 className="w-3 h-3 animate-spin" />
             ) : (
@@ -140,8 +139,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
         {attachments.map((file) => (
           <div
             key={file.id}
-            className="group flex items-center gap-3 p-2 bg-white border border-slate-200 rounded-lg hover:border-indigo-200 hover:bg-slate-50/50 transition-all"
-          >
+            className="group flex items-center gap-3 p-2 bg-white border border-slate-200 rounded-lg hover:border-indigo-200 hover:bg-slate-50/50 transition-all">
             <div className="flex-shrink-0 w-8 h-8 bg-slate-100 rounded flex items-center justify-center text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
               {getFileIcon(file.file_type)}
             </div>
@@ -157,20 +155,18 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
 
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <a
-                href={`${process.env.NEXT_PUBLIC_API_URL || ""}/api/workspaces/tasks/attachments/${file.id}/download`}
+                href={`${process.env.REACT_APP_API_URL || ""}/api/workspaces/tasks/attachments/${file.id}/download`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1 hover:bg-white rounded text-slate-400 hover:text-indigo-600"
-                title="Download"
-              >
+                title="Download">
                 <Download className="w-3 h-3" />
               </a>
               {canEdit && (
                 <button
                   onClick={() => handleDelete(file.id)}
                   className="p-1 hover:bg-white rounded text-slate-400 hover:text-red-600"
-                  title="Delete"
-                >
+                  title="Delete">
                   <X className="w-3 h-3" />
                 </button>
               )}

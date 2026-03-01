@@ -396,7 +396,7 @@ function FeaturesGrid() {
       description:
         "Write together seamlessly. Edit continuously with peers and experience conflict-free live co-authoring.",
       image:
-        "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80",
+        "https://image2url.com/r2/default/images/1772350833155-2a078749-5ed1-4b43-9b87-12532fe0d025.png?w=800&q=80",
       iconColor: "text-indigo-600",
       iconBg: "bg-indigo-100",
       previewBg: "bg-indigo-50",
@@ -408,7 +408,7 @@ function FeaturesGrid() {
       description:
         "Centralize your team's research. Organize projects, delegate responsibilities, and monitor activities seamlessly.",
       image:
-        "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&q=80",
+        "https://image2url.com/r2/default/gifs/1772349529885-091865dd-d9dc-40c6-bbc4-92dff5ccc409.gif?w=800&q=80",
       iconColor: "text-rose-600",
       iconBg: "bg-rose-100",
       previewBg: "bg-rose-50",
@@ -555,7 +555,7 @@ function FeaturesGrid() {
                 <img
                   src={feature.image}
                   alt={feature.title}
-                  className={`w-full h-full object-cover transition-transform duration-700 ease-out flex-1 ${
+                  className={`w-full h-full object-cover object-left-top transition-transform duration-700 ease-out flex-1 ${
                     activeTab === index ? "scale-100" : "scale-105"
                   }`}
                 />

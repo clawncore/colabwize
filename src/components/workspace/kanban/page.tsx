@@ -87,13 +87,13 @@ const COLUMNS = [
   { id: "done", label: "Done", color: "bg-green-500" },
 ];
 
-
 export function KanbanBoard() {
   const { toast } = useToast();
   const { id: workspaceId } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [workspaceName, setWorkspaceName] = useState<string>("");
-  const { canEdit, loading: permissionsLoading } = useWorkspacePermissions(workspaceId);
+  const { canEdit, loading: permissionsLoading } =
+    useWorkspacePermissions(workspaceId);
   const [tasks, setTasks] = useState<WorkspaceTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState<WorkspaceTask | null>(null);
@@ -114,12 +114,13 @@ export function KanbanBoard() {
   const [workspaceProjects, setWorkspaceProjects] = useState<any[]>([]); // NEW: Workspace projects
 
   const viewParam = searchParams.get("view");
-  const initialView = (viewParam === "list" || viewParam === "calendar" || viewParam === "kanban")
-    ? viewParam
-    : "kanban";
+  const initialView =
+    viewParam === "list" || viewParam === "calendar" || viewParam === "kanban"
+      ? viewParam
+      : "kanban";
 
   const [boardView, setBoardView] = useState<"kanban" | "list" | "calendar">(
-    initialView
+    initialView,
   );
 
   // Sync boardView with URL
@@ -156,7 +157,7 @@ export function KanbanBoard() {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   useEffect(() => {
@@ -168,7 +169,9 @@ export function KanbanBoard() {
     // Fetch workspace name
     if (workspaceId) {
       WorkspaceService.getWorkspace(workspaceId)
-        .then((data) => { if (data) setWorkspaceName(data.name); })
+        .then((data) => {
+          if (data) setWorkspaceName(data.name);
+        })
         .catch((err) => console.error("Failed to fetch workspace name", err));
     }
 
@@ -189,7 +192,7 @@ export function KanbanBoard() {
         });
       } else if (type === "TASK_UPDATED") {
         setTasks((prev) =>
-          prev.map((t) => (t.id === task.id ? { ...t, ...task } : t))
+          prev.map((t) => (t.id === task.id ? { ...t, ...task } : t)),
         );
       } else if (type === "TASK_DELETED") {
         setTasks((prev) => prev.filter((t) => t.id !== deletedTaskId));
@@ -271,7 +274,7 @@ export function KanbanBoard() {
       const matchesLabels =
         labelFilter.length === 0 ||
         labelFilter.every((labelId) =>
-          task.labels?.some((l) => l.id === labelId)
+          task.labels?.some((l) => l.id === labelId),
         );
 
       const matchesDateStatus = () => {
@@ -318,7 +321,8 @@ export function KanbanBoard() {
     if (!canEdit) {
       toast({
         title: "Permission Denied",
-        description: "You do not have permission to move tasks in this workspace.",
+        description:
+          "You do not have permission to move tasks in this workspace.",
         variant: "destructive",
       });
       return;
@@ -368,7 +372,7 @@ export function KanbanBoard() {
     if (newStatus !== activeTaskData.status) {
       // Update status locally
       setTasks((prev) =>
-        prev.map((t) => (t.id === taskId ? { ...t, status: newStatus! } : t))
+        prev.map((t) => (t.id === taskId ? { ...t, status: newStatus! } : t)),
       );
 
       // Update backend
@@ -446,7 +450,7 @@ export function KanbanBoard() {
       const newView = await WorkspaceTaskService.createView(
         workspaceId,
         name,
-        filters
+        filters,
       );
       setSavedViews((prev) => [...prev, newView]);
       setActiveViewId(newView.id);
@@ -483,7 +487,7 @@ export function KanbanBoard() {
       ctrlKey: true,
       handler: () => {
         const searchInput = document.querySelector(
-          'input[placeholder*="Search"]'
+          'input[placeholder*="Search"]',
         ) as HTMLInputElement;
         searchInput?.focus();
       },
@@ -563,7 +567,7 @@ export function KanbanBoard() {
 
   const handleToggleSelection = (id: string, selected: boolean) => {
     setSelectedTaskIds((prev) =>
-      selected ? [...prev, id] : prev.filter((taskId) => taskId !== id)
+      selected ? [...prev, id] : prev.filter((taskId) => taskId !== id),
     );
   };
 
@@ -583,7 +587,7 @@ export function KanbanBoard() {
   const handleCreateFromTemplate = async (template: any) => {
     try {
       const newTask = await WorkspaceTaskService.createFromTemplate(
-        template.id
+        template.id,
       );
       setTasks((prev) => {
         if (prev.some((t) => t.id === newTask.id)) return prev;
@@ -600,7 +604,7 @@ export function KanbanBoard() {
 
     // Update locally for instant feedback
     setTasks((prev) =>
-      prev.map((t) => (selectedTaskIds.includes(t.id) ? { ...t, status } : t))
+      prev.map((t) => (selectedTaskIds.includes(t.id) ? { ...t, status } : t)),
     );
 
     try {
@@ -620,8 +624,10 @@ export function KanbanBoard() {
     // Update locally
     setTasks((prev) =>
       prev.map((t) =>
-        selectedTaskIds.includes(t.id) ? { ...t, priority: priority as any } : t
-      )
+        selectedTaskIds.includes(t.id)
+          ? { ...t, priority: priority as any }
+          : t,
+      ),
     );
 
     try {
@@ -640,7 +646,7 @@ export function KanbanBoard() {
     // eslint-disable-next-line no-restricted-globals
     if (
       !window.confirm(
-        `Are you sure you want to delete ${selectedTaskIds.length} tasks?`
+        `Are you sure you want to delete ${selectedTaskIds.length} tasks?`,
       )
     )
       return;
@@ -670,11 +676,17 @@ export function KanbanBoard() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500 flex items-center gap-2">
-          {workspaceName ? workspaceName : <div className="h-8 w-32 bg-muted animate-pulse rounded" />}{" "}
+          {workspaceName ? (
+            workspaceName
+          ) : (
+            <div className="h-8 w-32 bg-muted animate-pulse rounded" />
+          )}{" "}
           Kanban Board
         </h1>
         <p className="text-muted-foreground">
-          {loading ? "Loading tasks..." : `${tasks.length} tasks across ${COLUMNS.length} columns`}
+          {loading
+            ? "Loading tasks..."
+            : `${tasks.length} tasks across ${COLUMNS.length} columns`}
         </p>
       </div>
 
@@ -685,11 +697,11 @@ export function KanbanBoard() {
               variant={boardView === "kanban" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => handleSetBoardView("kanban")}
-              className={`h-8 px-3 rounded-lg transition-all font-outfit ${boardView === "kanban"
-                ? "bg-background text-teal-600 shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
+              className={`h-8 px-3 rounded-lg transition-all font-outfit ${
+                boardView === "kanban"
+                  ? "bg-background text-teal-600 shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}>
               <LayoutGrid className="w-4 h-4 mr-2" />
               Kanban
             </Button>
@@ -697,11 +709,11 @@ export function KanbanBoard() {
               variant={boardView === "list" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => handleSetBoardView("list")}
-              className={`h-8 px-3 rounded-lg transition-all font-outfit ${boardView === "list"
-                ? "bg-background text-teal-600 shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
+              className={`h-8 px-3 rounded-lg transition-all font-outfit ${
+                boardView === "list"
+                  ? "bg-background text-teal-600 shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}>
               <List className="w-4 h-4 mr-2" />
               List
             </Button>
@@ -709,11 +721,11 @@ export function KanbanBoard() {
               variant={boardView === "calendar" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => handleSetBoardView("calendar")}
-              className={`h-8 px-3 rounded-lg transition-all font-outfit ${boardView === "calendar"
-                ? "bg-background text-teal-600 shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
+              className={`h-8 px-3 rounded-lg transition-all font-outfit ${
+                boardView === "calendar"
+                  ? "bg-background text-teal-600 shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}>
               <CalendarIcon className="w-4 h-4 mr-2" />
               Calendar
             </Button>
@@ -732,8 +744,7 @@ export function KanbanBoard() {
             {canEdit && (
               <Button
                 onClick={handleCreateTask}
-                className="h-10 px-4 bg-teal-500 text-white hover:bg-teal-600 shadow-md transition-all font-outfit"
-              >
+                className="h-10 px-4 bg-teal-500 text-white hover:bg-teal-600 shadow-md transition-all font-outfit">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Task
               </Button>
@@ -742,8 +753,7 @@ export function KanbanBoard() {
               <Button
                 variant="outline"
                 onClick={() => setIsLibraryOpen(true)}
-                className="h-10 px-4 border-teal-500/20 text-teal-600 hover:bg-teal-50 shadow-sm transition-all font-outfit"
-              >
+                className="h-10 px-4 border-teal-500/20 text-teal-600 hover:bg-teal-50 shadow-sm transition-all font-outfit">
                 <Library className="w-4 h-4 mr-2" />
                 From Template
               </Button>
@@ -754,8 +764,7 @@ export function KanbanBoard() {
             size="sm"
             onClick={() => setShowShortcutsHelper(true)}
             className="h-10 px-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-            title="Keyboard Shortcuts (Shift + /)"
-          >
+            title="Keyboard Shortcuts (Shift + /)">
             <Keyboard className="w-4 h-4" />
           </Button>
         </div>
@@ -779,8 +788,7 @@ export function KanbanBoard() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-10 border-border bg-background shadow-sm flex items-center gap-2 font-outfit text-foreground hover:bg-muted"
-              >
+                className="h-10 border-border bg-background shadow-sm flex items-center gap-2 font-outfit text-foreground hover:bg-muted">
                 <Save className="w-3.5 h-3.5 text-muted-foreground" />
                 <span>Views</span>
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
@@ -788,8 +796,7 @@ export function KanbanBoard() {
             </PopoverTrigger>
             <PopoverContent
               className="w-[200px] p-0 bg-popover/50 backdrop-blur-sm shadow-sm border-border"
-              align="end"
-            >
+              align="end">
               <Command>
                 <CommandInput
                   placeholder="Search views..."
@@ -802,8 +809,7 @@ export function KanbanBoard() {
                       <CommandItem
                         key={view.id}
                         onSelect={() => handleApplyView(view)}
-                        className="flex items-center justify-between font-outfit"
-                      >
+                        className="flex items-center justify-between font-outfit">
                         <span className="truncate">{view.name}</span>
                         {activeViewId === view.id && (
                           <Check className="w-3.5 h-3.5 text-teal-600" />
@@ -816,8 +822,7 @@ export function KanbanBoard() {
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteView(view.id);
-                            }}
-                          >
+                            }}>
                             <TrashIcon className="w-3 h-3" />
                           </Button>
                         )}
@@ -828,8 +833,7 @@ export function KanbanBoard() {
                     {canEdit && (
                       <CommandItem
                         onSelect={handleSaveView}
-                        className="text-teal-600 font-medium font-outfit"
-                      >
+                        className="text-teal-600 font-medium font-outfit">
                         <Plus className="w-3.5 h-3.5 mr-2" />
                         Save Current View
                       </CommandItem>
@@ -848,7 +852,7 @@ export function KanbanBoard() {
                 <SelectValue placeholder="Priority" />
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-popover shadow-sm border-border font-outfit">
+            <SelectContent className="bg-white shadow-sm border-border font-outfit">
               <SelectItem value="all">All Priorities</SelectItem>
               <SelectItem value="low">Low Priority</SelectItem>
               <SelectItem value="medium">Medium Priority</SelectItem>
@@ -861,7 +865,7 @@ export function KanbanBoard() {
             <SelectTrigger className="w-[150px] h-10 border-border bg-background shadow-sm font-outfit">
               <SelectValue placeholder="Assignee" />
             </SelectTrigger>
-            <SelectContent className="bg-popover shadow-sm border-border font-outfit">
+            <SelectContent className="bg-white shadow-sm border-border font-outfit">
               <SelectItem value="all">All Assignees</SelectItem>
               {members.map((member) => (
                 <SelectItem key={member.id} value={member.id}>
@@ -879,7 +883,7 @@ export function KanbanBoard() {
                 <SelectValue placeholder="Project" />
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-popover shadow-sm border-border font-outfit max-h-[300px]">
+            <SelectContent className="bg-white shadow-sm border-border font-outfit max-h-[300px]">
               <SelectItem value="all">All Projects</SelectItem>
               {workspaceProjects.map((project) => (
                 <SelectItem key={project.id} value={project.id}>
@@ -895,12 +899,10 @@ export function KanbanBoard() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-10 border-border bg-background shadow-sm flex items-center gap-2 font-outfit text-foreground hover:bg-muted"
-              >
+                className="h-10 border-border bg-background shadow-sm flex items-center gap-2 font-outfit text-foreground hover:bg-muted">
                 <Badge
                   variant="secondary"
-                  className="h-4 w-4 p-0 rounded-full bg-muted"
-                >
+                  className="h-4 w-4 p-0 rounded-full bg-muted">
                   {labelFilter.length}
                 </Badge>
                 Labels
@@ -908,9 +910,8 @@ export function KanbanBoard() {
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-[200px] p-0 bg-popover/50 backdrop-blur-sm shadow-sm border-border"
-              align="start"
-            >
+              className="w-[200px] p-0 bg-white backdrop-blur-sm shadow-sm border-border"
+              align="start">
               <Command>
                 <CommandInput
                   placeholder="Search labels..."
@@ -926,11 +927,10 @@ export function KanbanBoard() {
                           setLabelFilter((prev) =>
                             prev.includes(label.id)
                               ? prev.filter((id) => id !== label.id)
-                              : [...prev, label.id]
+                              : [...prev, label.id],
                           );
                         }}
-                        className="flex items-center gap-2 font-outfit"
-                      >
+                        className="flex items-center gap-2 font-outfit">
                         <div
                           className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: label.color }}
@@ -955,7 +955,7 @@ export function KanbanBoard() {
                 <SelectValue placeholder="Due Date" />
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-popover shadow-sm border-border font-outfit">
+            <SelectContent className="bg-white shadow-sm border-border font-outfit">
               <SelectItem value="all">All dates</SelectItem>
               <SelectItem value="overdue">Overdue</SelectItem>
               <SelectItem value="today">Due Today</SelectItem>
@@ -969,24 +969,23 @@ export function KanbanBoard() {
             projectFilter !== "all" || // NEW: Include project filter
             labelFilter.length > 0 ||
             dateStatusFilter !== "all") && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchQuery("");
-                  setPriorityFilter("all");
-                  setAssigneeFilter("all");
-                  setProjectFilter("all"); // NEW: Reset project filter
-                  setLabelFilter([]);
-                  setDateStatusFilter("all");
-                  setActiveViewId(null);
-                }}
-                className="h-10 px-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all font-outfit"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Clear
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchQuery("");
+                setPriorityFilter("all");
+                setAssigneeFilter("all");
+                setProjectFilter("all"); // NEW: Reset project filter
+                setLabelFilter([]);
+                setDateStatusFilter("all");
+                setActiveViewId(null);
+              }}
+              className="h-10 px-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all font-outfit">
+              <X className="w-4 h-4 mr-2" />
+              Clear
+            </Button>
+          )}
         </div>
       </div>
 
@@ -995,26 +994,24 @@ export function KanbanBoard() {
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={canEdit ? onDragStart : undefined}
-          onDragEnd={canEdit ? onDragEnd : undefined}
-        >
+          onDragEnd={canEdit ? onDragEnd : undefined}>
           <div className="grid grid-cols-4 gap-4 min-h-[400px]">
             {COLUMNS.map((column) => (
               <div
                 key={column.id}
-                className="flex flex-col bg-muted/50 rounded-2xl border border-border/50 p-4 shadow-inner"
-              >
+                className="flex flex-col bg-muted/50 rounded-2xl border border-border/50 p-4 shadow-inner">
                 <div className="flex items-center justify-between mb-4 px-1">
                   <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                     <div
-                      className={`w-1.5 h-1.5 rounded-full ${column.id === "todo"
-                        ? "bg-slate-400"
-                        : column.id === "in-progress"
-                          ? "bg-blue-500"
-                          : column.id === "review"
-                            ? "bg-yellow-500"
-                            : "bg-green-500"
-                        }`}
-                    ></div>
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        column.id === "todo"
+                          ? "bg-slate-400"
+                          : column.id === "in-progress"
+                            ? "bg-blue-500"
+                            : column.id === "review"
+                              ? "bg-yellow-500"
+                              : "bg-green-500"
+                      }`}></div>
                     {column.label}
                   </h4>
                   <span className="text-[10px] font-bold bg-background text-muted-foreground px-2 py-0.5 rounded-full border border-border">
@@ -1027,8 +1024,7 @@ export function KanbanBoard() {
                     items={filteredTasks
                       .filter((t) => t.status === column.id)
                       .map((t) => t.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
+                    strategy={verticalListSortingStrategy}>
                     {filteredTasks
                       .filter((t) => t.status === column.id)
                       .map((task) => (
@@ -1097,7 +1093,7 @@ export function KanbanBoard() {
         }}
         onUpdate={(updatedTask) => {
           setTasks((prev) =>
-            prev.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+            prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)),
           );
           loadTasks();
         }}
