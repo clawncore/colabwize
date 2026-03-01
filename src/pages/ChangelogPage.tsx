@@ -18,6 +18,23 @@ interface ChangelogItem {
 const changelogData: ChangelogItem[] = [
   {
     id: "1",
+    version: "2.2.0",
+    date: "Mar 01, 2026",
+    title: "Collaboration & Team Workspaces",
+    description:
+      "Introducing powerful new tools for seamless teamwork: Real-Time Collaboration, Unified Team Workspaces, and Chat with PDF.",
+    changes: {
+      improvements: [
+        "Real-Time Collaboration for conflict-free live co-authoring",
+        "Unified Team Workspaces to centralize research and project management",
+        "Chat with PDF to extract insights interactively from academic materials",
+      ],
+      fixes: [],
+      patches: [],
+    },
+  },
+  {
+    id: "2",
     version: "2.1.0",
     date: "Jan 14, 2026",
     title: "Draft Comparison & Researcher Plan",
@@ -37,7 +54,7 @@ const changelogData: ChangelogItem[] = [
     },
   },
   {
-    id: "2",
+    id: "3",
     version: "2.0.0",
     date: "Jan 05, 2026",
     title: "Originality Map 2.0",
@@ -57,7 +74,7 @@ const changelogData: ChangelogItem[] = [
     },
   },
   {
-    id: "3",
+    id: "4",
     version: "1.5.0",
     date: "Dec 15, 2025",
     title: "Core Platform Launch",

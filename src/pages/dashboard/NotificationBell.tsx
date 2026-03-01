@@ -23,7 +23,7 @@ const NotificationBell: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "high" | "medium" | "low">(
-    "all"
+    "all",
   );
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -39,20 +39,20 @@ const NotificationBell: React.FC = () => {
         const result = await NotificationService.getNotifications(
           limit,
           offset,
-          filters
+          filters,
         );
         setNotifications(result.notifications);
         setUnreadCount(result.unreadCount);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to fetch notifications"
+          err instanceof Error ? err.message : "Failed to fetch notifications",
         );
         console.error("Error fetching notifications:", err);
       } finally {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   const markAsRead = async (notificationId: string) => {
@@ -68,7 +68,7 @@ const NotificationBell: React.FC = () => {
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to mark notification as read"
+          : "Failed to mark notification as read",
       );
       console.error("Error marking notification as read:", err);
     }
@@ -87,7 +87,7 @@ const NotificationBell: React.FC = () => {
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to mark all notifications as read"
+          : "Failed to mark all notifications as read",
       );
       console.error("Error marking all notifications as read:", err);
     }
@@ -101,7 +101,7 @@ const NotificationBell: React.FC = () => {
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to dismiss notification"
+        err instanceof Error ? err.message : "Failed to dismiss notification",
       );
       console.error("Error dismissing notification:", err);
     }
@@ -109,7 +109,7 @@ const NotificationBell: React.FC = () => {
 
   const snoozeNotification = async (
     notificationId: string,
-    hours: number = 1
+    hours: number = 1,
   ) => {
     try {
       await NotificationService.snoozeNotification(notificationId, hours);
@@ -117,7 +117,7 @@ const NotificationBell: React.FC = () => {
       setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to snooze notification"
+        err instanceof Error ? err.message : "Failed to snooze notification",
       );
       console.error("Error snoozing notification:", err);
     }
@@ -127,8 +127,10 @@ const NotificationBell: React.FC = () => {
     // Mark as read if not already
     if (!notification.read) {
       // Optimistically update UI locally
-      setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true } : n));
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)),
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
 
       try {
         await NotificationService.markAsRead(notification.id);
@@ -141,17 +143,31 @@ const NotificationBell: React.FC = () => {
 
     // Navigate based on type/data
     if (notification.data) {
-      const { workspaceId, taskId, projectId } = notification.data || {};
+      const { workspaceId, taskId, projectId, documentId } =
+        notification.data || {};
+      const docId = projectId || documentId;
 
       // Task related
       if (taskId && workspaceId) {
-        navigate(`/dashboard/workspace/${workspaceId}/tasks?taskId=${taskId}`);
+        navigate(`/dashboard/workspace/${workspaceId}/kanban?taskId=${taskId}`);
+        return;
+      }
+
+      // Document related
+      if (docId) {
+        navigate(`/dashboard/editor/${docId}`);
         return;
       }
 
       // Chat related
       if (notification.type === "mention" && !taskId && workspaceId) {
         navigate(`/dashboard/workspace/${workspaceId}/chat`);
+        return;
+      }
+
+      // Workspace related
+      if (workspaceId) {
+        navigate(`/dashboard/workspace/${workspaceId}/overview`);
         return;
       }
     }
@@ -231,7 +247,7 @@ const NotificationBell: React.FC = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
     );
 
     if (diffInHours < 1) {
@@ -500,8 +516,7 @@ const NotificationBell: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
-        aria-label="Notifications"
-      >
+        aria-label="Notifications">
         <Bell className="h-5 w-5 text-gray-700" />
         {unreadCount > 0 && (
           <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
@@ -509,7 +524,7 @@ const NotificationBell: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-200 bg-white rounded-lg shadow-lg border border-white z-50">
+        <div className="absolute right-0 mt-2 w-300 bg-white rounded-lg shadow-lg border border-white z-50">
           <div className="p-4 border-b border-white">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-medium text-gray-700">
@@ -520,8 +535,7 @@ const NotificationBell: React.FC = () => {
                   variant="ghost"
                   size="sm"
                   onClick={markAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
+                  className="text-sm text-blue-600 hover:text-blue-800">
                   Mark all as read
                 </Button>
               )}
@@ -538,26 +552,22 @@ const NotificationBell: React.FC = () => {
             <div className="flex space-x-2">
               <button
                 onClick={() => setFilter("all")}
-                className={`px-3 py-1 text-xs rounded-full ${filter === "all" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-700"}`}
-              >
+                className={`px-3 py-1 text-xs rounded-full ${filter === "all" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-700"}`}>
                 All
               </button>
               <button
                 onClick={() => setFilter("high")}
-                className={`px-3 py-1 text-xs rounded-full ${filter === "high" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-700"}`}
-              >
+                className={`px-3 py-1 text-xs rounded-full ${filter === "high" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-700"}`}>
                 High
               </button>
               <button
                 onClick={() => setFilter("medium")}
-                className={`px-3 py-1 text-xs rounded-full ${filter === "medium" ? "bg-purple-100 text-purple-800" : "bg-gray-100 text-gray-700"}`}
-              >
+                className={`px-3 py-1 text-xs rounded-full ${filter === "medium" ? "bg-purple-100 text-purple-800" : "bg-gray-100 text-gray-700"}`}>
                 Medium
               </button>
               <button
                 onClick={() => setFilter("low")}
-                className={`px-3 py-1 text-xs rounded-full ${filter === "low" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-700"}`}
-              >
+                className={`px-3 py-1 text-xs rounded-full ${filter === "low" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-700"}`}>
                 Low
               </button>
             </div>
@@ -600,14 +610,15 @@ const NotificationBell: React.FC = () => {
                             <ul>
                               {notifications.map((notification) => {
                                 const priorityLevel = getPriority(
-                                  notification.type
+                                  notification.type,
                                 );
                                 return (
                                   <li
                                     key={notification.id}
-                                    onClick={() => handleNotificationClick(notification)}
-                                    className={`p-4 hover:bg-gray-50 border-l-4 ${getPriorityColor(priorityLevel)} ${!notification.read ? "bg-blue-50" : ""} cursor-pointer transition-colors`}
-                                  >
+                                    onClick={() =>
+                                      handleNotificationClick(notification)
+                                    }
+                                    className={`p-4 hover:bg-gray-50 border-l-4 ${getPriorityColor(priorityLevel)} ${!notification.read ? "bg-blue-50" : ""} cursor-pointer transition-colors`}>
                                     <div className="flex justify-between">
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-start">
@@ -623,7 +634,7 @@ const NotificationBell: React.FC = () => {
                                             </p>
                                             <p className="text-xs text-gray-700 mt-1">
                                               {formatDate(
-                                                notification.created_at
+                                                notification.created_at,
                                               )}
                                             </p>
                                           </div>
@@ -636,8 +647,7 @@ const NotificationBell: React.FC = () => {
                                               markAsRead(notification.id)
                                             }
                                             className="text-xs text-gray-700 hover:text-gray-700 flex items-center"
-                                            aria-label="Mark as read"
-                                          >
+                                            aria-label="Mark as read">
                                             <Check className="h-3 w-3 mr-1" />
                                             Read
                                           </button>
@@ -646,12 +656,11 @@ const NotificationBell: React.FC = () => {
                                           onClick={() =>
                                             snoozeNotification(
                                               notification.id,
-                                              1
+                                              1,
                                             )
                                           }
                                           className="text-xs text-gray-700 hover:text-gray-700 flex items-center"
-                                          aria-label="Snooze"
-                                        >
+                                          aria-label="Snooze">
                                           <Snooze className="h-3 w-3 mr-1" />
                                           Snooze
                                         </button>
@@ -660,8 +669,7 @@ const NotificationBell: React.FC = () => {
                                             dismissNotification(notification.id)
                                           }
                                           className="text-xs text-gray-700 hover:text-gray-700 flex items-center"
-                                          aria-label="Dismiss"
-                                        >
+                                          aria-label="Dismiss">
                                           <Archive className="h-3 w-3 mr-1" />
                                           Dismiss
                                         </button>
@@ -692,10 +700,18 @@ const NotificationBell: React.FC = () => {
             <button
               onClick={() => {
                 setIsOpen(false);
-                navigate("/dashboard/notifications");
+                // Check if we have a workspace context for the notifications page
+                const workspaceId = notifications.find(
+                  (n) => n.data?.workspaceId,
+                )?.data?.workspaceId;
+                if (workspaceId) {
+                  navigate(`/dashboard/workspace/${workspaceId}/notifications`);
+                } else {
+                  // Fallback or generic notifications if possible
+                  navigate("/dashboard/notifications");
+                }
               }}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
+              className="text-sm text-blue-600 hover:text-blue-800">
               View all notifications
             </button>
           </div>

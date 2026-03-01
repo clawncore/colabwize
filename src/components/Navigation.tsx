@@ -14,6 +14,7 @@ import {
   Lightbulb,
   Shield,
   Calendar,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "../hooks/useAuth";
@@ -113,8 +114,8 @@ export default function Navigation() {
     {
       name: "Authorship Certificate",
       href: "/solutions/authorship-certificate",
-      icon: <Users className="h-5 w-5" />,
-      description: "Work together seamlessly in real-time",
+      icon: <FileText className="h-5 w-5" />,
+      description: "Prove the authenticity of your work",
     },
     {
       name: "Draft Comparison",
@@ -122,12 +123,24 @@ export default function Navigation() {
       icon: <FileText className="h-5 w-5" />,
       description: "Compare your drafts and get insights",
     },
+    {
+      name: "Collaboration",
+      href: "/solutions/collaboration",
+      icon: <Users className="h-5 w-5" />,
+      description: "Work together seamlessly in real-time",
+    },
+    {
+      name: "Team Workspace",
+      href: "/solutions/team-workspace",
+      icon: <LayoutDashboard className="h-5 w-5" />,
+      description: "Centralized hub to manage your group projects",
+    },
   ];
 
   // Handle mouse enter with delay cancellation
   const handleMouseEnter = (
     setOpen: (open: boolean) => void,
-    timeoutRef: React.MutableRefObject<NodeJS.Timeout | null>
+    timeoutRef: React.MutableRefObject<NodeJS.Timeout | null>,
   ) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -139,7 +152,7 @@ export default function Navigation() {
   // Handle mouse leave with delay
   const handleMouseLeave = (
     setOpen: (open: boolean) => void,
-    timeoutRef: React.MutableRefObject<NodeJS.Timeout | null>
+    timeoutRef: React.MutableRefObject<NodeJS.Timeout | null>,
   ) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -151,7 +164,7 @@ export default function Navigation() {
 
   return (
     <nav className="fixed top-0 w-full bg-[#F3F0EC] border-b border-white z-50 rounded-b-xl">
-      <div className="container-custom">
+      <div className="container-custom relative">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
@@ -164,178 +177,402 @@ export default function Navigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {/* Solutions Dropdown - 3 columns */}
+          <div className="hidden lg:flex items-center space-x-8 static">
+            {/* Solutions Dropdown */}
             <div
-              className="relative"
+              className="relative group"
               onMouseEnter={() =>
                 handleMouseEnter(setSolutionsOpen, solutionsTimeoutRef)
               }
               onMouseLeave={() =>
                 handleMouseLeave(setSolutionsOpen, solutionsTimeoutRef)
               }>
-              <div className="text-sm font-medium transition-colors duration-200 text-gray-800 flex items-center gap-1 cursor-pointer focus:outline-none">
+              <div className="text-[15px] font-medium transition-colors duration-200 text-gray-800 hover:text-blue-600 flex items-center gap-1 cursor-pointer focus:outline-none py-4">
                 Solutions
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${solutionsOpen ? "rotate-180" : ""
-                    }`}
+                  className={`h-4 w-4 transition-transform duration-200 ${
+                    solutionsOpen ? "rotate-180" : ""
+                  }`}
                 />
               </div>
               {solutionsOpen && (
                 <div
-                  className="absolute top-full left-0 mt-2 w-[42rem] bg-[#F3F0EC] border border-white rounded-xl shadow-lg z-50 p-4"
+                  className="absolute top-16 left-0 right-0 w-screen bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
                   onMouseEnter={() =>
                     handleMouseEnter(setSolutionsOpen, solutionsTimeoutRef)
                   }
                   onMouseLeave={() =>
                     handleMouseLeave(setSolutionsOpen, solutionsTimeoutRef)
                   }>
-                  <div className="grid grid-cols-2 gap-3">
-                    {solutionsItems.map((item, index) => (
-                      <Link
-                        key={index}
-                        to={item.href}
-                        className="cursor-pointer flex flex-col p-4 rounded-lg hover:bg-[#C9BFB2] transition-colors min-h-[100px]"
-                        onClick={() => setSolutionsOpen(false)}>
-                        <div className="flex items-center mb-2">
-                          <div className="flex items-center justify-center w-10 h-10 rounded-lg mr-3 text-blue-400">
-                            {item.icon}
+                  <div className="container-custom flex justify-between gap-12 pl-12">
+                    <div className="flex-[3] grid grid-cols-2 gap-x-12 gap-y-6 pr-12 border-r border-gray-100">
+                      <div className="col-span-1 mb-2">
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-3">
+                          Integrity & Proof
+                        </h3>
+                      </div>
+                      <div className="col-span-1 mb-2">
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-3">
+                          Team & Workspace
+                        </h3>
+                      </div>
+                      {/* Column 1 items */}
+                      <div className="flex flex-col gap-1">
+                        {solutionsItems.slice(0, 3).map((item, index) => (
+                          <Link
+                            key={index}
+                            to={item.href}
+                            className="cursor-pointer flex items-start p-3 rounded-xl hover:bg-gray-50 transition-colors group/item"
+                            onClick={() => setSolutionsOpen(false)}>
+                            <div>
+                              <div className="font-semibold text-sm text-gray-900 group-hover/item:text-blue-600">
+                                {item.name}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                {item.description}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                      {/* Column 2 items */}
+                      <div className="flex flex-col gap-1">
+                        {solutionsItems.slice(3, 6).map((item, index) => (
+                          <Link
+                            key={index}
+                            to={item.href}
+                            className="cursor-pointer flex items-start p-3 rounded-xl hover:bg-gray-50 transition-colors group/item"
+                            onClick={() => setSolutionsOpen(false)}>
+                            <div>
+                              <div className="font-semibold text-sm text-gray-900 group-hover/item:text-blue-600">
+                                {item.name}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                {item.description}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Right Promo */}
+                    <div className="w-[340px] pl-12 flex flex-col justify-center">
+                      <div
+                        className="bg-[#050B14] rounded-2xl overflow-hidden shadow-2xl h-[280px] w-full relative flex flex-col p-8 text-white cursor-pointer hover:shadow-blue-900/20 transition-all group/promo"
+                        onClick={() => {
+                          window.location.href = "/solutions/team-workspace";
+                          setSolutionsOpen(false);
+                        }}>
+                        <div className="absolute inset-0 z-0">
+                          <img
+                            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80"
+                            alt="Team Workspaces"
+                            className="w-full h-full object-cover opacity-40 group-hover/promo:scale-105 transition-transform duration-700"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#050B14] via-[#050B14]/80 to-transparent"></div>
+                        </div>
+                        <div className="relative z-10 flex flex-col h-full justify-center">
+                          <div className="text-[11px] font-bold tracking-[0.2em] text-center mb-4 uppercase text-blue-400">
+                            New Offering
                           </div>
-                          <div className="font-semibold text-sm text-gray-800">
-                            {item.name}
+                          <h4 className="text-3xl font-black text-center mb-4 leading-tight tracking-tight">
+                            TEAM
+                            <br />
+                            WORKSPACES
+                          </h4>
+                          <p className="text-[14px] text-gray-300 mb-6 text-center leading-relaxed">
+                            Centralize your team's research. Organize projects
+                            and monitor activities seamlessly.
+                          </p>
+                          <div className="mt-auto text-center">
+                            <span className="text-sm font-bold text-white group-hover/promo:text-blue-300 transition-colors border-b-2 border-transparent hover:border-blue-300 pb-1">
+                              See how it works &rarr;
+                            </span>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-800 pl-13">
-                          {item.description}
-                        </div>
-                      </Link>
-                    ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Product Dropdown - 2 columns */}
+            {/* Product Dropdown */}
             <div
-              className="relative"
+              className="relative group"
               onMouseEnter={() =>
                 handleMouseEnter(setProductOpen, productTimeoutRef)
               }
               onMouseLeave={() =>
                 handleMouseLeave(setProductOpen, productTimeoutRef)
               }>
-              <div className="text-sm font-medium transition-colors duration-200 text-gray-800 flex items-center gap-1 cursor-pointer focus:outline-none">
+              <div className="text-[15px] font-medium transition-colors duration-200 text-gray-800 hover:text-blue-600 flex items-center gap-1 cursor-pointer focus:outline-none py-4">
                 Product
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${productOpen ? "rotate-180" : ""
-                    }`}
+                  className={`h-4 w-4 transition-transform duration-200 ${
+                    productOpen ? "rotate-180" : ""
+                  }`}
                 />
               </div>
               {productOpen && (
                 <div
-                  className="absolute top-full left-0 mt-2 w-[36rem] bg-[#F3F0EC] border border-white rounded-xl shadow-lg z-50 p-4"
+                  className="absolute top-16 left-0 right-0 w-screen bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
                   onMouseEnter={() =>
                     handleMouseEnter(setProductOpen, productTimeoutRef)
                   }
                   onMouseLeave={() =>
                     handleMouseLeave(setProductOpen, productTimeoutRef)
                   }>
-                  <div className="grid grid-cols-2 gap-3">
-                    {productItems.map((item, index) => (
-                      <Link
-                        key={index}
-                        to={item.href}
-                        className="cursor-pointer flex flex-col p-4 rounded-lg hover:bg-[#C9BFB2] transition-colors min-h-[100px]"
-                        onClick={() => setProductOpen(false)}>
-                        <div className="flex items-center mb-2">
-                          <div className="flex items-center justify-center w-10 h-10 rounded-lg mr-3 text-blue-400">
-                            {item.icon}
+                  <div className="container-custom flex justify-between gap-12 pl-12">
+                    <div className="flex-[3] grid grid-cols-2 gap-x-12 gap-y-6 pr-12 border-r border-gray-100">
+                      <div className="col-span-1 mb-2">
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-3">
+                          Explore
+                        </h3>
+                      </div>
+                      <div className="col-span-1 mb-2">
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-3">
+                          Updates
+                        </h3>
+                      </div>
+                      {/* Column 1 items */}
+                      <div className="flex flex-col gap-1">
+                        {productItems.slice(0, 2).map((item, index) => (
+                          <Link
+                            key={index}
+                            to={item.href}
+                            className="cursor-pointer flex items-start p-3 rounded-xl hover:bg-gray-50 transition-colors group/item"
+                            onClick={() => setProductOpen(false)}>
+                            <div>
+                              <div className="font-semibold text-sm text-gray-900 group-hover/item:text-blue-600">
+                                {item.name}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                {item.description}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                      {/* Column 2 items */}
+                      <div className="flex flex-col gap-1">
+                        {productItems.slice(2, 4).map((item, index) => (
+                          <Link
+                            key={index}
+                            to={item.href}
+                            className="cursor-pointer flex items-start p-3 rounded-xl hover:bg-gray-50 transition-colors group/item"
+                            onClick={() => setProductOpen(false)}>
+                            <div>
+                              <div className="font-semibold text-sm text-gray-900 group-hover/item:text-blue-600">
+                                {item.name}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                {item.description}
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Right Promo */}
+                    <div className="w-[340px] pl-12 flex flex-col justify-center">
+                      <div
+                        className="bg-[#050B14] rounded-2xl overflow-hidden shadow-2xl h-[280px] w-full relative flex flex-col p-8 text-white cursor-pointer hover:shadow-indigo-900/20 transition-all group/promo"
+                        onClick={() => {
+                          window.location.href = "/changelog";
+                          setProductOpen(false);
+                        }}>
+                        <div className="absolute inset-0 z-0">
+                          <img
+                            src="https://images.unsplash.com/photo-1621360841013-c76831f13886?w=600&q=80"
+                            alt="New Version"
+                            className="w-full h-full object-cover opacity-30 group-hover/promo:scale-105 transition-transform duration-700"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#050B14] via-[#050B14]/80 to-transparent"></div>
+                        </div>
+                        <div className="relative z-10 flex flex-col h-full justify-center">
+                          <div className="text-[11px] font-bold tracking-[0.2em] text-center mb-4 uppercase text-indigo-400">
+                            Release
                           </div>
-                          <div className="font-semibold text-sm text-gray-800">
-                            {item.name}
+                          <h4 className="text-3xl font-black text-center mb-4 leading-tight tracking-tight">
+                            VERSION
+                            <br />
+                            2.2.0
+                          </h4>
+                          <p className="text-[14px] text-gray-300 mb-6 text-center leading-relaxed">
+                            Discover Chat with PDF, Real-Time Collaboration and
+                            more.
+                          </p>
+                          <div className="mt-auto text-center">
+                            <span className="text-sm font-bold text-white group-hover/promo:text-indigo-300 transition-colors border-b-2 border-transparent hover:border-indigo-300 pb-1">
+                              View Changelog &rarr;
+                            </span>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-800 pl-13">
-                          {item.description}
-                        </div>
-                      </Link>
-                    ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="text-sm font-medium transition-colors duration-200 text-gray-800 flex items-center gap-1 cursor-pointer focus:outline-none">
+            {/* Pricing */}
+            <div className="text-[15px] font-medium transition-colors duration-200 text-gray-800 hover:text-blue-600 flex items-center gap-1 cursor-pointer focus:outline-none py-4">
               <Link to="/pricing">Pricing</Link>
             </div>
 
-            {/* Resources Dropdown - 3 columns */}
+            {/* Resources Dropdown */}
             <div
-              className="relative"
+              className="relative group"
               onMouseEnter={() =>
                 handleMouseEnter(setResourcesOpen, resourcesTimeoutRef)
               }
               onMouseLeave={() =>
                 handleMouseLeave(setResourcesOpen, resourcesTimeoutRef)
               }>
-              <div className="text-sm font-medium transition-colors duration-200 text-gray-800 flex items-center gap-1 cursor-pointer focus:outline-none">
+              <div className="text-[15px] font-medium transition-colors duration-200 text-gray-800 hover:text-blue-600 flex items-center gap-1 cursor-pointer focus:outline-none py-4">
                 Resources
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${resourcesOpen ? "rotate-180" : ""
-                    }`}
+                  className={`h-4 w-4 transition-transform duration-200 ${
+                    resourcesOpen ? "rotate-180" : ""
+                  }`}
                 />
               </div>
               {resourcesOpen && (
                 <div
-                  className="absolute top-full left-0 mt-2 w-[42rem] bg-[#F3F0EC] border border-white rounded-xl shadow-lg z-50 p-4"
+                  className="absolute top-16 left-0 right-0 w-screen bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
                   onMouseEnter={() =>
                     handleMouseEnter(setResourcesOpen, resourcesTimeoutRef)
                   }
                   onMouseLeave={() =>
                     handleMouseLeave(setResourcesOpen, resourcesTimeoutRef)
                   }>
-                  <div className="grid grid-cols-2 gap-3">
-                    {resourcesItems.map((item, index) =>
-                      item.external ? (
-                        <a
-                          key={index}
-                          href={item.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="cursor-pointer flex flex-col p-4 rounded-lg hover:bg-[#C9BFB2] transition-colors min-h-[100px]"
-                          onClick={() => setResourcesOpen(false)}>
-                          <div className="flex items-center mb-2">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-lg mr-3 text-blue-400">
-                              {item.icon}
-                            </div>
-                            <div className="font-semibold text-sm text-gray-800">
-                              {item.name}
-                            </div>
+                  <div className="container-custom flex justify-between gap-12 pl-12">
+                    <div className="flex-[3] grid grid-cols-2 gap-x-12 gap-y-6 pr-12 border-r border-gray-100">
+                      <div className="col-span-1 mb-2">
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-3">
+                          Learn
+                        </h3>
+                      </div>
+                      <div className="col-span-1 mb-2">
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest pl-3">
+                          Support
+                        </h3>
+                      </div>
+                      {/* Column 1 items */}
+                      <div className="flex flex-col gap-1">
+                        {resourcesItems.slice(0, 2).map((item, index) =>
+                          item.external ? (
+                            <a
+                              key={index}
+                              href={item.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="cursor-pointer flex items-start p-3 rounded-xl hover:bg-gray-50 transition-colors group/item"
+                              onClick={() => setResourcesOpen(false)}>
+                              <div>
+                                <div className="font-semibold text-sm text-gray-900 group-hover/item:text-blue-600">
+                                  {item.name}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                  {item.description}
+                                </div>
+                              </div>
+                            </a>
+                          ) : (
+                            <Link
+                              key={index}
+                              to={item.href}
+                              className="cursor-pointer flex items-start p-3 rounded-xl hover:bg-gray-50 transition-colors group/item"
+                              onClick={() => setResourcesOpen(false)}>
+                              <div>
+                                <div className="font-semibold text-sm text-gray-900 group-hover/item:text-blue-600">
+                                  {item.name}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                  {item.description}
+                                </div>
+                              </div>
+                            </Link>
+                          ),
+                        )}
+                      </div>
+                      {/* Column 2 items */}
+                      <div className="flex flex-col gap-1">
+                        {resourcesItems.slice(2, 4).map((item, index) =>
+                          item.external ? (
+                            <a
+                              key={index}
+                              href={item.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="cursor-pointer flex items-start p-3 rounded-xl hover:bg-gray-50 transition-colors group/item"
+                              onClick={() => setResourcesOpen(false)}>
+                              <div>
+                                <div className="font-semibold text-sm text-gray-900 group-hover/item:text-blue-600">
+                                  {item.name}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                  {item.description}
+                                </div>
+                              </div>
+                            </a>
+                          ) : (
+                            <Link
+                              key={index}
+                              to={item.href}
+                              className="cursor-pointer flex items-start p-3 rounded-xl hover:bg-gray-50 transition-colors group/item"
+                              onClick={() => setResourcesOpen(false)}>
+                              <div>
+                                <div className="font-semibold text-sm text-gray-900 group-hover/item:text-blue-600">
+                                  {item.name}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                  {item.description}
+                                </div>
+                              </div>
+                            </Link>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                    {/* Right Promo */}
+                    <div className="w-[440px] pl-12 flex flex-col justify-center">
+                      <div
+                        className="bg-[#050B14] rounded-2xl overflow-hidden shadow-2xl h-[280px] w-full relative flex flex-col p-8 text-white cursor-pointer hover:shadow-emerald-900/20 transition-all group/promo"
+                        onClick={() => {
+                          window.location.href = "/resources/blogs";
+                          setResourcesOpen(false);
+                        }}>
+                        <div className="absolute inset-0 z-0">
+                          <img
+                            src="https://images.unsplash.com/photo-1515524738708-327c5b0586e9?w=600&q=80"
+                            alt="Masterclass"
+                            className="w-full h-full object-cover opacity-30 group-hover/promo:scale-105 transition-transform duration-700 mix-blend-luminosity"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#050B14] via-[#050B14]/80 to-emerald-900/30"></div>
+                        </div>
+                        <div className="relative z-10 flex flex-col h-full justify-center">
+                          <div className="text-[11px] font-bold tracking-[0.2em] text-center mb-4 uppercase text-emerald-400">
+                            Masterclass
                           </div>
-                          <div className="text-xs text-gray-800 pl-13">
-                            {item.description}
+                          <h4 className="text-3xl font-black text-center mb-4 leading-tight tracking-tight">
+                            ACADEMIC
+                            <br />
+                            INTEGRITY
+                          </h4>
+                          <p className="text-[14px] text-gray-300 mb-6 text-center leading-relaxed">
+                            Learn how to ensure your work is original and
+                            well-cited with our comprehensive guides.
+                          </p>
+                          <div className="mt-auto text-center">
+                            <span className="text-sm font-bold text-white group-hover/promo:text-emerald-300 transition-colors border-b-2 border-transparent hover:border-emerald-300 pb-1">
+                              Read the Guide &rarr;
+                            </span>
                           </div>
-                        </a>
-                      ) : (
-                        <Link
-                          key={index}
-                          to={item.href}
-                          className="cursor-pointer flex flex-col p-4 rounded-lg hover:bg-[#C9BFB2] transition-colors min-h-[100px]"
-                          onClick={() => setResourcesOpen(false)}>
-                          <div className="flex items-center mb-2">
-                            <div className="flex items-center justify-center w-10 h-10 rounded-lg mr-3 text-blue-400">
-                              {item.icon}
-                            </div>
-                            <div className="font-semibold text-sm text-gray-800">
-                              {item.name}
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-800 pl-13">
-                            {item.description}
-                          </div>
-                        </Link>
-                      )
-                    )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -411,10 +648,11 @@ export default function Navigation() {
           onClick={() => setIsOpen(false)}></div>
       )}
       <div
-        className={`md:hidden fixed top-16 right-0 left-0 bg-[#F3F0EC] z-40 transition-all duration-300 ease-in-out ${isOpen
-          ? "opacity-100 translate-y-0 pointer-events-auto max-h-screen overflow-y-auto"
-          : "opacity-0 -translate-y-full pointer-events-none max-h-0 overflow-hidden"
-          }`}>
+        className={`md:hidden fixed top-16 right-0 left-0 bg-[#F3F0EC] z-40 transition-all duration-300 ease-in-out ${
+          isOpen
+            ? "opacity-100 translate-y-0 pointer-events-auto max-h-screen overflow-y-auto"
+            : "opacity-0 -translate-y-full pointer-events-none max-h-0 overflow-hidden"
+        }`}>
         <div className="container-custom pt-6 pb-8">
           <div className="flex flex-col space-y-6">
             {/* Mobile Navigation Items */}
@@ -430,8 +668,9 @@ export default function Navigation() {
                   className="flex justify-between items-center w-full text-left font-medium text-gray-800 py-2">
                   <span>Solutions</span>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${solutionsOpen ? "rotate-180" : ""
-                      }`}
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      solutionsOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
                 {solutionsOpen && (
@@ -464,8 +703,9 @@ export default function Navigation() {
                   className="flex justify-between items-center w-full text-left font-medium text-gray-800 py-2">
                   <span>Product</span>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${productOpen ? "rotate-180" : ""
-                      }`}
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      productOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
                 {productOpen && (
@@ -508,8 +748,9 @@ export default function Navigation() {
                   className="flex justify-between items-center w-full text-left font-medium text-gray-800 py-2">
                   <span>Resources</span>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${resourcesOpen ? "rotate-180" : ""
-                      }`}
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      resourcesOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
                 {resourcesOpen && (
@@ -541,7 +782,7 @@ export default function Navigation() {
                           <span className="text-blue-400">{item.icon}</span>
                           <span>{item.name}</span>
                         </Link>
-                      )
+                      ),
                     )}
                   </div>
                 )}

@@ -10,6 +10,7 @@ import {
   Map,
   SearchCheck,
   History,
+  LayoutDashboard,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -24,16 +25,19 @@ function HeroSection() {
   const [loopNum, setLoopNum] = useState(0);
   const [typingSpeed, setTypingSpeed] = useState(50);
 
-  const phrases = React.useMemo(() => [
-    {
-      text: "Your Academic Success, Defended.",
-      gradientWord: "Defended.",
-    },
-    {
-      text: "A Platform for Original, Credible, and Human Work.",
-      gradientWord: "Human Work.",
-    },
-  ], []);
+  const phrases = React.useMemo(
+    () => [
+      {
+        text: "Your Academic Success, Defended.",
+        gradientWord: "Defended.",
+      },
+      {
+        text: "A Platform for Original, Credible, and Human Work.",
+        gradientWord: "Human Work.",
+      },
+    ],
+    [],
+  );
 
   useEffect(() => {
     const currentPhrase = phrases[loopNum % phrases.length];
@@ -106,6 +110,16 @@ function HeroSection() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
+
+            <Button
+              asChild
+              size="lg"
+              className="bg-gradient-to-r from-green-600 to-blue-700 text-white hover:from-green-700 hover:to-blue-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-green-500/20 transition-all duration-300">
+              <Link to="/schedule-demo#demo-form" className="flex items-center">
+                Request a demo
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
           </div>
 
           {/* Enhanced Trust Indicator with People Icons */}
@@ -136,7 +150,7 @@ function HeroSection() {
         {/* Editor Image */}
         <div className="mt-12 max-w-6xl mx-auto px-4">
           <img
-            src="https://i.ibb.co/sdHVBb82/editor.png?w=1920&h=1080&fit=crop&crop=center"
+            src="https://image2url.com/r2/default/gifs/1772299539496-34bfb324-dfb3-495e-bbac-029572fc2676.gif?w=1920&h=1080&fit=crop&crop=center"
             alt="Editor"
             className="w-full rounded-lg shadow-2xl"
           />
@@ -148,101 +162,154 @@ function HeroSection() {
 
 // Preview Section Component
 function PreviewSection() {
+  const [activeTab, setActiveTab] = useState(0);
+
+  const features = [
+    {
+      id: "originality-map",
+      icon: Map,
+      title: "Explainable Originality Map",
+      description:
+        "Color-coded heatmap shows exactly which parts of your document need attention.",
+      image: "https://i.ibb.co/sdHVBb82/editor.png?w=800&q=80",
+      iconColor: "text-purple-600",
+      iconBg: "bg-purple-100",
+      previewBg: "bg-purple-50",
+    },
+    {
+      id: "citation-auditor",
+      icon: SearchCheck,
+      title: "Citation Confidence Auditor",
+      description:
+        "Get confidence scores for each section and warnings about outdated or unsupported claims.",
+      image:
+        "https://i.ibb.co/sY9F6B3/Screenshot-2026-01-13-203136.png?w=800&q=80",
+      iconColor: "text-green-600",
+      iconBg: "bg-green-100",
+      previewBg: "bg-green-50",
+    },
+    {
+      id: "smart-citations",
+      icon: Sparkles,
+      title: "Smart Citation Builder",
+      description:
+        "Instantly find credible sources and add accurate citations without leaving your workflow.",
+      image:
+        "https://i.ibb.co/7djtzT8g/Screenshot-2026-01-13-193634.png?w=800&q=80",
+      iconColor: "text-blue-600",
+      iconBg: "bg-blue-100",
+      previewBg: "bg-blue-50",
+    },
+    {
+      id: "defensibility-log",
+      icon: History,
+      title: "Defensibility Log",
+      description:
+        "Generate authorship certificates proving your work is original with time tracking.",
+      image:
+        "https://i.ibb.co/Pv7B5kmy/Screenshot-2026-01-14-092154.png?w=800&q=80",
+      iconColor: "text-amber-600",
+      iconBg: "bg-amber-100",
+      previewBg: "bg-amber-50",
+    },
+  ];
+
   return (
-    <section className="section-padding bg-white">
-      <div className="container-custom">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            See ColabWize in Action
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Experience the power of integrated academic writing tools.
-          </p>
-        </div>
-
-        <div className="relative mt-16">
-          {/* Hero Image/Preview */}
-          <div className="mt-16 relative">
-            <div className="relative rounded-2xl border border-border bg-white shadow-2xl overflow-hidden">
-              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
-              <div className="p-8 bg-white relative">
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="w-3 h-3 rounded-full bg-destructive/60" />
-                  <div className="w-3 h-3 rounded-full bg-warning/60" />
-                  <div className="w-3 h-3 rounded-full bg-success/60" />
-                  <span className="ml-4 text-xl font-semibold text-muted-foreground">
-                    Climate_Research_Paper.docx
-                  </span>
-                </div>
-                <div className="space-y-3 font-sans text-sm leading-relaxed text-foreground/90">
-                  <h3 className="font-serif text-xl font-semibold text-foreground mb-4">
-                    The Impact of Climate Change on Marine Ecosystems
-                  </h3>
-                  <p>
-                    Climate change represents one of the most significant
-                    challenges facing marine ecosystems today.
-                    <span
-                      className="bg-red-100 text-red-800 px-1 rounded border-b-2 border-red-500 cursor-pointer"
-                      title="Originality Alert: 89% match found in 'Journal of Marine Biology'">
-                      Rising ocean temperatures have led to widespread coral
-                      bleaching events, threatening biodiversity across tropical
-                      reef systems.
-                    </span>
-                  </p>
-                  <p>
-                    Recent studies indicate that
-                    <span
-                      className="bg-green-100 text-green-800 px-1 rounded border-b-2 border-green-500 cursor-pointer"
-                      title="Authorship Verified: High confidence this is human-written">
-                      the acidification of seawater is occuring at an
-                      unprecedented rate
-                    </span>
-                    , with pH levels dropping by 0.1 units since the industrial
-                    revolution.
-                  </p>
-                  <p className="text-muted-foreground">
-                    Furthermore, the migration patterns of numerous species have
-                    been
-                    <span
-                      className="bg-yellow-100 px-1 rounded border-b-2 border-yellow-500 cursor-pointer"
-                      title="Citation Gap: Claim lacks supporting evidence. Recommended source: NOAA">
-                      significantly altered
-                    </span>
-                    , disrupting established food chains and ecological
-                    relationships...
-                  </p>
-                </div>
+    <section className="section-padding bg-white overflow-hidden">
+      <div className="container-custom max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-stretch">
+          {/* Left Column - Texts & Actions */}
+          <div className="w-full lg:w-[40%] flex flex-col justify-center py-8">
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-gray-900 font-semibold">
+                  Core Features
+                </span>
+                <span className="bg-blue-100 text-blue-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">
+                  New
+                </span>
               </div>
+              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-6">
+                Streamline your academic workflow.
+              </h2>
+              <button className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg">
+                <ArrowRight className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* Floating Cards */}
-            <div className="absolute -left-4 top-1/4 bg-white rounded-lg shadow-xl border border-border p-4 hidden lg:block">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-100">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">Citation Confidence</p>
-                  <p className="text-xs text-muted-foreground">
-                    Strong (85/100)
-                  </p>
-                </div>
-              </div>
+            <div className="flex flex-col">
+              {features.map((feature, index) => {
+                const isActive = activeTab === index;
+                const Icon = feature.icon;
+                return (
+                  <div
+                    key={feature.id}
+                    className="border-b border-gray-100 last:border-0">
+                    <button
+                      onClick={() => setActiveTab(index)}
+                      className="w-full text-left py-5 flex items-start gap-4 group transition-all outline-none">
+                      <div
+                        className={`mt-0.5 p-2 rounded-full ${feature.iconBg} transition-transform duration-300 ${isActive ? "scale-110 shadow-sm" : "group-hover:scale-110"}`}>
+                        <Icon
+                          strokeWidth={2.5}
+                          className={`w-5 h-5 ${feature.iconColor}`}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h3
+                          className={`text-lg font-bold ${isActive ? "text-gray-900" : "text-gray-400 group-hover:text-gray-600"} transition-colors`}>
+                          {feature.title}
+                        </h3>
+                        {/* Smooth expand/collapse using grid */}
+                        <div
+                          className={`grid transition-all duration-300 ease-in-out ${isActive ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0"}`}>
+                          <div className="overflow-hidden">
+                            <p className="text-gray-500 text-sm leading-relaxed pr-4 font-medium">
+                              {feature.description}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
+          </div>
 
-            <div className="absolute -right-4 top-1/3 bg-white rounded-lg shadow-xl border border-border p-4 hidden lg:block">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-100">
-                  <Sparkles className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">Originality Map</p>
-                  <p className="text-xs text-muted-foreground">
-                    Need Attention
-                  </p>
+          {/* Right Column - Preview Area */}
+          <div className="w-full lg:w-[60%] relative min-h-[400px] lg:min-h-[600px] rounded-3xl overflow-hidden shadow-2xl shadow-gray-200/50">
+            {features.map((feature, index) => (
+              <div
+                key={feature.id}
+                className={`absolute inset-0 transition-all duration-700 ease-in-out flex items-center justify-center p-8 lg:p-12 ${feature.previewBg} ${
+                  activeTab === index
+                    ? "opacity-100 z-10"
+                    : "opacity-0 z-0 pointer-events-none"
+                }`}>
+                <div
+                  className={`w-full h-full relative rounded-2xl overflow-hidden shadow-2xl border border-black/5 bg-white transition-all duration-700 ease-out transform ${
+                    activeTab === index
+                      ? "translate-y-0 scale-100 opacity-100 delay-100"
+                      : "translate-y-8 scale-95 opacity-0"
+                  }`}>
+                  {/* MacOS like window header */}
+                  <div className="h-10 bg-gray-50/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-4 gap-2 absolute top-0 w-full z-10">
+                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                  </div>
+                  {/* The image should cover the rest of the window */}
+                  <div className="absolute inset-0 pt-10">
+                    <img
+                      src={feature.image}
+                      alt={feature.title}
+                      className="w-full h-full object-cover object-left-top"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -253,14 +320,42 @@ function PreviewSection() {
 // Logo Ticker Component
 function LogoTicker() {
   const logos = [
-    { name: "Vignan University", url: "https://vignan.ac.in/newvignan/assets/images/Logo%20with%20Deemed.svg" },
-    { name: "University of Cambridge", url: "https://upload.wikimedia.org/wikipedia/commons/4/4d/University_of_Cambridge_logo.png" },
-    { name: "University of Guelph", url: "https://logowik.com/content/uploads/images/university-of-guelph5416.logowik.com.webp" },
-    { name: "Harvard", url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Harvard_University_logo.svg/2560px-Harvard_University_logo.svg.png" },
-    { name: "Stanford", url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Stanford_Cardinal_logo.svg/1200px-Stanford_Cardinal_logo.svg.png" },
-    { name: "MIT", url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/MIT_logo.svg/1200px-MIT_logo.svg.png" },
-    { name: "Oxford", url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Oxford-University-Circlet.svg/1200px-Oxford-University-Circlet.svg.png" },
-    { name: "Waterloo", url: "https://upload.wikimedia.org/wikipedia/en/thumb/6/6e/University_of_Waterloo_seal.svg/1200px-University_of_Waterloo_seal.svg.png" },
+    {
+      name: "Vignan University",
+      url: "https://vignan.ac.in/newvignan/assets/images/Logo%20with%20Deemed.svg",
+    },
+    {
+      name: "University of Cambridge",
+      url: "https://upload.wikimedia.org/wikipedia/commons/4/4d/University_of_Cambridge_logo.png",
+    },
+    {
+      name: "University of Guelph",
+      url: "https://logowik.com/content/uploads/images/university-of-guelph5416.logowik.com.webp",
+    },
+    {
+      name: "Harvard",
+      url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Harvard_University_logo.svg/2560px-Harvard_University_logo.svg.png",
+    },
+    {
+      name: "Stanford",
+      url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Stanford_Cardinal_logo.svg/1200px-Stanford_Cardinal_logo.svg.png",
+    },
+    {
+      name: "MIT",
+      url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/MIT_logo.svg/1200px-MIT_logo.svg.png",
+    },
+    {
+      name: "Oxford",
+      url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Oxford-University-Circlet.svg/1200px-Oxford-University-Circlet.svg.png",
+    },
+    {
+      name: "Waterloo",
+      url: "https://upload.wikimedia.org/wikipedia/en/thumb/6/6e/University_of_Waterloo_seal.svg/1200px-University_of_Waterloo_seal.svg.png",
+    },
+    {
+      name: "University of Zimbabwe",
+      url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7P8adgf_pitULgaACniwnpnGa_TVbUAZitA&s",
+    },
   ];
 
   return (
@@ -274,8 +369,7 @@ function LogoTicker() {
             {[...logos, ...logos].map((logo, index) => (
               <div
                 key={index}
-                className="flex items-center justify-center grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
-              >
+                className="flex items-center justify-center grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
                 <img
                   src={logo.url}
                   alt={logo.name}
@@ -292,91 +386,193 @@ function LogoTicker() {
 
 // Features Grid Component
 function FeaturesGrid() {
+  const [activeTab, setActiveTab] = useState(0);
+
   const features = [
     {
+      id: "real-time-collaboration",
+      icon: Users,
+      title: "Real-Time Collaboration",
+      description:
+        "Write together seamlessly. Edit continuously with peers and experience conflict-free live co-authoring.",
+      image:
+        "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80",
+      iconColor: "text-indigo-600",
+      iconBg: "bg-indigo-100",
+      previewBg: "bg-indigo-50",
+    },
+    {
+      id: "team-workspaces",
+      icon: LayoutDashboard,
+      title: "Unified Team Workspaces",
+      description:
+        "Centralize your team's research. Organize projects, delegate responsibilities, and monitor activities seamlessly.",
+      image:
+        "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&q=80",
+      iconColor: "text-rose-600",
+      iconBg: "bg-rose-100",
+      previewBg: "bg-rose-50",
+    },
+    {
+      id: "chat-with-pdf",
+      icon: Bot,
+      title: "Chat with PDF",
+      description:
+        "Extract crucial insights immediately. Engage in a conversational dialogue directly with your academic materials.",
+      image:
+        "https://images.unsplash.com/photo-1614064641913-6b714041d1eb?w=800&q=80",
+      iconColor: "text-cyan-600",
+      iconBg: "bg-cyan-100",
+      previewBg: "bg-cyan-50",
+    },
+    {
+      id: "originality-map",
       icon: Map,
       title: "Explainable Originality Map",
       description:
         "Color-coded heatmap shows exactly which parts of your document need attention, with clear safety classifications (Green/Yellow/Red).",
-      color: "from-purple-600 to-purple-800",
-      href: "/solutions/originality-map",
-      image: "https://i.ibb.co/sdHVBb82/editor.png?w=800&q=80",
+      image:
+        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
+      iconColor: "text-purple-600",
+      iconBg: "bg-purple-100",
+      previewBg: "bg-purple-50",
     },
     {
+      id: "citation-auditor",
       icon: SearchCheck,
       title: "Citation Confidence Auditor",
       description:
         "Get confidence scores for each section and warnings about outdated or unsupported claims with suggestions for missing links.",
-      color: "from-green-600 to-green-800",
-      href: "/solutions/citation-confidence",
       image:
-        "https://i.ibb.co/sY9F6B3/Screenshot-2026-01-13-203136.png?w=800&q=80",
+        "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80",
+      iconColor: "text-green-600",
+      iconBg: "bg-green-100",
+      previewBg: "bg-green-50",
     },
     {
+      id: "smart-citations",
       icon: Sparkles,
       title: "Smart Citation Builder",
       description:
         "Instantly find credible sources and add accurate citations without leaving your workflow.",
-      color: "from-blue-600 to-blue-800",
-      href: "/solutions/smart-citations",
       image:
-        "https://i.ibb.co/7djtzT8g/Screenshot-2026-01-13-193634.png?w=800&q=80",
+        "https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=800&q=80",
+      iconColor: "text-blue-600",
+      iconBg: "bg-blue-100",
+      previewBg: "bg-blue-50",
     },
     {
+      id: "defensibility-log",
       icon: History,
       title: "Defensibility Log",
       description:
         "Generate authorship certificates proving your work is original with time tracking and manual effort verification.",
-      color: "from-amber-600 to-amber-800",
-      href: "/solutions/authorship-certificate",
       image:
-        "https://i.ibb.co/Pv7B5kmy/Screenshot-2026-01-14-092154.png?w=800&q=80",
+        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80",
+      iconColor: "text-amber-600",
+      iconBg: "bg-amber-100",
+      previewBg: "bg-amber-50",
     },
   ];
 
   return (
-    <section className="section-padding bg-white">
-      <div className="container-custom">
+    <section className="section-padding bg-slate-50 overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-white to-slate-50/50 -z-10"></div>
+      <div className="container-custom max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Four Core Features for Academic Success and Beyond
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
+            The Complete Academic Command Hub
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            From proof of authorship to publication, all essential tools in one
-            platform.
+            From proof of authorship to perfect collaboration, execute complex
+            workflows instantly right within the editor.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {features.map((feature, index) => (
-            <Card
-              key={index}
-              onClick={() => (window.location.href = feature.href)}
-              className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group bg-white border border-gray-200 overflow-hidden">
-              <CardContent className="p-0">
-                <div className="p-8">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-stretch bg-white rounded-3xl p-6 md:p-10 shadow-xl border border-gray-100">
+          {/* Left Column - Texts */}
+          <div className="w-full lg:w-[45%] flex flex-col justify-start pr-4">
+            <div className="flex flex-col">
+              {features.map((feature, index) => {
+                const isActive = activeTab === index;
+                const Icon = feature.icon;
+                return (
                   <div
-                    className={`inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <feature.icon className="h-7 w-7 text-white" />
+                    key={feature.id}
+                    className="border-b border-gray-50 last:border-0">
+                    <button
+                      onClick={() => setActiveTab(index)}
+                      className="w-full text-left py-4 flex items-center gap-4 group transition-all outline-none">
+                      <div
+                        className={`p-2.5 rounded-xl ${feature.iconBg} transition-transform duration-300 shrink-0 ${
+                          isActive
+                            ? "scale-110 shadow-sm"
+                            : "group-hover:scale-105"
+                        }`}>
+                        <Icon className={`w-5 h-5 ${feature.iconColor}`} />
+                      </div>
+                      <div className="flex-1">
+                        <h4
+                          className={`text-base font-bold ${
+                            isActive
+                              ? "text-gray-900"
+                              : "text-gray-400 group-hover:text-gray-600"
+                          } transition-colors tracking-tight`}>
+                          {feature.title}
+                        </h4>
+                        <div
+                          className={`grid transition-all duration-300 ease-in-out ${
+                            isActive
+                              ? "grid-rows-[1fr] opacity-100 mt-1"
+                              : "grid-rows-[0fr] opacity-0"
+                          }`}>
+                          <div className="overflow-hidden">
+                            <p className="text-gray-500 text-sm leading-relaxed pr-2 font-medium">
+                              {feature.description}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed mb-6">
-                    {feature.description}
-                  </p>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right Column - Images */}
+          <div className="flex-1 relative min-h-[400px] lg:min-h-full rounded-2xl overflow-hidden shadow-lg bg-gray-100 flex items-center justify-center border border-gray-100">
+            {features.map((feature, index) => (
+              <div
+                key={feature.id}
+                className={`absolute inset-0 transition-opacity duration-500 ease-in-out flex flex-col ${
+                  feature.previewBg
+                } ${
+                  activeTab === index
+                    ? "opacity-100 z-10"
+                    : "opacity-0 z-0 pointer-events-none"
+                }`}>
+                <img
+                  src={feature.image}
+                  alt={feature.title}
+                  className={`w-full h-full object-cover transition-transform duration-700 ease-out flex-1 ${
+                    activeTab === index ? "scale-100" : "scale-105"
+                  }`}
+                />
+
+                {/* Decorative fade at the bottom to blend */}
+                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-gray-900/40 to-transparent pointer-events-none mix-blend-multiply"></div>
+                <div className="absolute bottom-6 left-6 right-6">
+                  <div className="bg-white/90 backdrop-blur-md px-4 py-3 rounded-xl shadow-lg border border-white/20 inline-flex items-center gap-3">
+                    <feature.icon className={`w-5 h-5 ${feature.iconColor}`} />
+                    <span className="font-bold text-gray-900 text-sm tracking-tight">
+                      {feature.title}
+                    </span>
+                  </div>
                 </div>
-                <div className="h-48 overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10" />
-                  <img
-                    src={feature.image}
-                    alt={feature.title}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -605,9 +801,9 @@ export default function HomePage() {
   return (
     <Layout>
       <HeroSection />
-      <PreviewSection />
-      <ComparisonSection />
       <FeaturesGrid />
+      <ComparisonSection />
+      <PreviewSection />
       <TestimonialsSection />
       <LogoTicker />
       <CTASection />

@@ -106,6 +106,17 @@ class TeamChatService {
   async deleteMessage(messageId: string) {
     return await apiClient.delete(`/api/team-chat?id=${messageId}`, null);
   }
+
+  async clearChat(params: { workspaceId?: string; projectId?: string }) {
+    const query = new URLSearchParams();
+    if (params.workspaceId) query.append("workspaceId", params.workspaceId);
+    if (params.projectId) query.append("projectId", params.projectId);
+
+    return await apiClient.delete(
+      `/api/team-chat/clear?${query.toString()}`,
+      null,
+    );
+  }
 }
 
 const teamChatService = new TeamChatService();

@@ -11,109 +11,18 @@ class ApiClient {
 
   private async getAuthToken() {
     try {
-      console.log("Getting auth token from Supabase");
-      // Get Supabase token
       const {
         data: { session },
         error,
       } = await supabase.auth.getSession();
 
-      console.log("Session data:", session);
-      console.log("Session error:", error);
-
-      if (error) {
-        console.error("Error getting session:", error);
-        // Don't redirect immediately on session error during page load
-        // Let the route components handle authentication state
+      if (error || !session) {
         return null;
       }
 
-      if (!session) {
-        console.warn("No active session found");
-        // Try to get user directly to see if there's a session issue
-        const { data: userData, error: userError } =
-          await supabase.auth.getUser();
-        console.log("Direct user check:", userData, userError);
-
-        if (userData?.user && !userError) {
-          // If we can get the user but not the session, try to refresh
-          console.log("User exists but no session, attempting to refresh");
-          const { data: refreshedData, error: refreshError } =
-            await supabase.auth.refreshSession();
-          console.log("Refresh session result:", refreshedData);
-          console.log("Refresh session error:", refreshError);
-          if (refreshError) {
-            console.error("Failed to refresh session:", refreshError);
-            return null;
-          }
-          return refreshedData.session?.access_token || null;
-        }
-
-        // Don't redirect immediately if there's no session
-        // Let the route components handle authentication state
-        return null;
-      }
-
-      console.log("Session expires at:", session.expires_at);
-      console.log("Current time:", new Date().getTime() / 1000);
-
-      // Check if token is about to expire (within 5 minutes)
-      const expirationTime = new Date(session.expires_at * 1000);
-      const now = new Date();
-      const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
-
-      console.log("Token expiration check in apiClient:", {
-        expiresAt: session.expires_at,
-        expirationTime,
-        now,
-        fiveMinutesFromNow,
-        isExpiringSoon: expirationTime < fiveMinutesFromNow,
-        timeUntilExpiration: expirationTime.getTime() - now.getTime(),
-        timeUntilRefresh: fiveMinutesFromNow.getTime() - now.getTime(),
-      });
-
-      console.log("Expiration time:", expirationTime);
-      console.log("Five minutes from now:", fiveMinutesFromNow);
-
-      if (expirationTime < fiveMinutesFromNow) {
-        console.warn(
-          "Token is about to expire or already expired, attempting to refresh"
-        );
-        // Try to refresh the session
-        console.log("Attempting to refresh session");
-        const { data: refreshedData, error: refreshError } =
-          await supabase.auth.refreshSession();
-        console.log("Refresh session result:", refreshedData);
-        console.log("Refresh session error:", refreshError);
-        if (refreshError) {
-          console.error("Failed to refresh session:", refreshError);
-          // If refresh fails, try to get a new session
-          console.log("Trying to get new session after refresh failure");
-          const { data: newData, error: newError } =
-            await supabase.auth.getSession();
-          console.log("New session data:", newData);
-          console.log("New session error:", newError);
-          if (newError || !newData.session) {
-            console.error("Failed to get new session:", newError);
-            // Don't redirect immediately if we can't get a new session
-            // Let the route components handle authentication state
-            return null;
-          }
-          return newData.session?.access_token || null;
-        }
-        return refreshedData.session?.access_token || null;
-      }
-
-      const token = session?.access_token;
-      console.log(
-        "Returning token:",
-        token ? token.substring(0, 20) + "..." : null
-      );
-      return token;
+      return session?.access_token || null;
     } catch (error) {
       console.error("Error getting auth token:", error);
-      // Don't redirect immediately on auth error
-      // Let the route components handle authentication state
       return null;
     }
   }
@@ -121,7 +30,7 @@ class ApiClient {
   private async request(
     url: string,
     options: RequestInit = {},
-    retryCount = 0 // DISABLE retries by default to prevent infinite loops
+    retryCount = 0, // DISABLE retries by default to prevent infinite loops
   ) {
     const fullUrl = `${this.baseUrl}${url}`;
 
@@ -151,13 +60,16 @@ class ApiClient {
       // Determine user provider from token or session metadata if available
       // Since we don't have direct access to user metadata here without another call,
       // we'll try to infer or check local storage if stored during login
-      const oauthUserData = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem("oauthUserData") : null;
+      const oauthUserData =
+        typeof sessionStorage !== "undefined"
+          ? sessionStorage.getItem("oauthUserData")
+          : null;
       let isGoogle = false;
 
       if (oauthUserData) {
         try {
           const userData = JSON.parse(oauthUserData);
-          isGoogle = userData.provider === 'google';
+          isGoogle = userData.provider === "google";
         } catch (e) {
           // Ignore parse error
         }
@@ -166,7 +78,9 @@ class ApiClient {
         // OR check if we can get user details cheaply.
         // Ideally hybridAuth.ts sets a flag.
         // For now, let's look for a specific flag in localStorage set by login
-        isGoogle = typeof localStorage !== 'undefined' && localStorage.getItem("auth_provider") === "google";
+        isGoogle =
+          typeof localStorage !== "undefined" &&
+          localStorage.getItem("auth_provider") === "google";
       }
 
       if (isGoogle) {
@@ -209,12 +123,14 @@ class ApiClient {
           errorData.message === "jwt expired"
         ) {
           // Clear any stored data
-          console.error("CRITICAL: Auth error detected. Wiping session.", { message: errorData.message });
+          console.error("CRITICAL: Auth error detected. Wiping session.", {
+            message: errorData.message,
+          });
 
           // Prevent infinite reload loops - check if we just redirected
           const lastAuthError = sessionStorage.getItem("last_auth_error_time");
           const now = Date.now();
-          if (lastAuthError && (now - parseInt(lastAuthError)) < 5000) {
+          if (lastAuthError && now - parseInt(lastAuthError) < 5000) {
             console.error("Redirect loop detected. Stopping redirect.");
             throw new Error("Authentication failed - Loop detected");
           }
@@ -225,7 +141,10 @@ class ApiClient {
           // sessionStorage.clear(); // Don't clear session storage wholly so we can track the loop
 
           // Force redirect to login
-          if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {
+          if (
+            typeof window !== "undefined" &&
+            !window.location.pathname.startsWith("/auth")
+          ) {
             window.location.href = "/login";
           }
         }
@@ -247,7 +166,7 @@ class ApiClient {
           }
           // For other 404 errors, we'll still throw
           throw new Error(
-            errorData.message || `HTTP error! status: ${response.status}`
+            errorData.message || `HTTP error! status: ${response.status}`,
           );
         } catch (parseError) {
           // If we can't parse the JSON, throw a generic error
@@ -278,7 +197,7 @@ class ApiClient {
         (error as any).response = {
           data: errorData,
           status: response.status,
-          statusText: response.statusText
+          statusText: response.statusText,
         };
 
         // Attach debug info to the error object if available
@@ -308,10 +227,10 @@ class ApiClient {
         (error.name === "TypeError" && error.message.includes("aborted"))
       ) {
         console.log(
-          `Request to ${url} timed out - NOT retrying to prevent infinite loop`
+          `Request to ${url} timed out - NOT retrying to prevent infinite loop`,
         );
         throw new Error(
-          "Request timeout - service may be temporarily unavailable. Please try again later."
+          "Request timeout - service may be temporarily unavailable. Please try again later.",
         );
       }
 
@@ -327,11 +246,11 @@ class ApiClient {
         // This is likely a network connectivity issue
         if (retryCount > 0) {
           console.log(
-            `Retrying request to ${url} due to network error... (${retryCount} attempts left)`
+            `Retrying request to ${url} due to network error... (${retryCount} attempts left)`,
           );
           // Wait before retrying with exponential backoff (increased delay)
           await new Promise((resolve) =>
-            setTimeout(resolve, 10000 * (4 - retryCount))
+            setTimeout(resolve, 10000 * (4 - retryCount)),
           );
           return this.request(url, options, retryCount - 1);
         }
@@ -340,12 +259,12 @@ class ApiClient {
         const authToken = await this.getAuthToken();
         if (!authToken) {
           throw new Error(
-            "Authentication required - please sign in to access this feature"
+            "Authentication required - please sign in to access this feature",
           );
         }
 
         throw new Error(
-          "Network error - please check your connection and try again"
+          "Network error - please check your connection and try again",
         );
       }
 
@@ -373,7 +292,7 @@ class ApiClient {
         method: "POST",
         body: isFormData ? data : JSON.stringify(data),
       },
-      0
+      0,
     ); // Never retry POST requests
   }
 
@@ -388,7 +307,7 @@ class ApiClient {
         method: "PUT",
         body: isFormData ? data : JSON.stringify(data),
       },
-      0
+      0,
     ); // Never retry PUT requests
   }
 
@@ -403,7 +322,7 @@ class ApiClient {
         method: "PATCH",
         body: isFormData ? data : JSON.stringify(data),
       },
-      0
+      0,
     ); // Never retry PATCH requests
   }
 
@@ -417,7 +336,7 @@ class ApiClient {
         method: "DELETE",
         ...(data ? { body: JSON.stringify(data) } : {}),
       },
-      0
+      0,
     ); // Never retry DELETE requests
   }
 

@@ -15,6 +15,8 @@ import AuthorshipCertificatePage from "./pages/solutions/AuthorshipCertificatePa
 import UnifiedDashboardPage from "./pages/solutions/UnifiedDashboardPage";
 import AnalyticsMetricsPage from "./pages/solutions/AnalyticsMetricsPage";
 import { DraftComparisonPage } from "./pages/solutions/DraftComparisonPage";
+import CollaborationPage from "./pages/solutions/CollaborationPage";
+import TeamWorkspacePage from "./pages/solutions/TeamWorkspacePage";
 import { VerifyCertificatePage } from "./pages/public/VerifyCertificatePage";
 
 // Product Pages
@@ -149,9 +151,20 @@ function App() {
                       path="/solutions/draft-comparison"
                       element={<DraftComparisonPage />}
                     />
+                    <Route
+                      path="/solutions/collaboration"
+                      element={<CollaborationPage />}
+                    />
+                    <Route
+                      path="/solutions/team-workspace"
+                      element={<TeamWorkspacePage />}
+                    />
                     {/* Product Routes - Public */}
                     <Route path="/features" element={<FeaturesPage />} />
-                    <Route path="/integrations" element={<IntegrationsPage />} />
+                    <Route
+                      path="/integrations"
+                      element={<IntegrationsPage />}
+                    />
                     <Route path="/changelog" element={<ChangelogPage />} />
                     <Route path="/roadmap" element={<RoadmapPage />} />
                     <Route path="/pricing" element={<PricingPage />} />
@@ -192,17 +205,26 @@ function App() {
                     {/* Company Routes - Public */}
                     <Route path="/company/about" element={<AboutPage />} />
                     <Route path="/company/careers" element={<CareersPage />} />
-                    <Route path="/company/partners" element={<PartnersPage />} />
+                    <Route
+                      path="/company/partners"
+                      element={<PartnersPage />}
+                    />
                     <Route path="/company/faq" element={<FAQPage />} />
                     {/* Legal Routes - Public */}
-                    <Route path="/legal/cookies" element={<CookiePolicyPage />} />
+                    <Route
+                      path="/legal/cookies"
+                      element={<CookiePolicyPage />}
+                    />
                     <Route path="/legal/gdpr" element={<GDPRPage />} />
                     <Route path="/legal/security" element={<SecurityPage />} />
                     <Route
                       path="/legal/privacy"
                       element={<PrivacyPolicyPage />}
                     />
-                    <Route path="/legal/terms" element={<TermsOfServicePage />} />
+                    <Route
+                      path="/legal/terms"
+                      element={<TermsOfServicePage />}
+                    />
                     <Route
                       path="/docs/refund-policy"
                       element={<RefundPolicyPage />}
@@ -214,7 +236,10 @@ function App() {
                     {/* Alias for SEO */}
                     {/* Other Routes - Public */}
                     <Route path="/contact" element={<ContactPage />} />
-                    <Route path="/schedule-demo" element={<ScheduleDemoPage />} />
+                    <Route
+                      path="/schedule-demo"
+                      element={<ScheduleDemoPage />}
+                    />
                     {/* Guest Only Routes - Accessible only when not signed in */}
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />
@@ -252,8 +277,7 @@ function App() {
                         <ProtectedRoute>
                           <DashboardLayout />
                         </ProtectedRoute>
-                      }
-                    >
+                      }>
                       <Route index element={<Dashboard />} />
                       <Route
                         path="documents"
@@ -307,7 +331,8 @@ function App() {
                           <AdminRoute>
                             <NotificationSettings />
                           </AdminRoute>
-                        } />
+                        }
+                      />
 
                       {/* Workspace routes with layout <WorkspaceRoute> */}
                       <Route
@@ -326,10 +351,7 @@ function App() {
                         path="workspace/:id/projects"
                         element={<WorkspaceProjectsPage />}
                       />
-                      <Route
-                        path="workspace/:id/chat"
-                        element={<TeamChat />}
-                      />
+                      <Route path="workspace/:id/chat" element={<TeamChat />} />
                       <Route
                         path="workspace/:id/analytics"
                         element={<WorkspaceAnalytics />}
@@ -346,12 +368,25 @@ function App() {
                         path="workspace/:id/documents"
                         element={<DocumentManagementPage />}
                       />
+                      <Route
+                        path="notifications"
+                        element={<NotificationsPage />}
+                      />
 
                       {/* Settings routes with layout */}
                       <Route path="settings" element={<SettingsLayout />}>
-                        <Route path="profile" element={<ProfileSettingsPage />} />
-                        <Route path="account" element={<AccountSettingsPage />} />
-                        <Route path="billing" element={<BillingSettingsPage />} />
+                        <Route
+                          path="profile"
+                          element={<ProfileSettingsPage />}
+                        />
+                        <Route
+                          path="account"
+                          element={<AccountSettingsPage />}
+                        />
+                        <Route
+                          path="billing"
+                          element={<BillingSettingsPage />}
+                        />
                         <Route path="help" element={<HelpSettingsPage />} />
                         <Route path="feedback" element={<FeedbackPage />} />
                       </Route>

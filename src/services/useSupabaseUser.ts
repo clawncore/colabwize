@@ -22,10 +22,16 @@ export function useSupabaseUser() {
   const fetchUser = useCallback(async () => {
     try {
       console.log("Fetching user from Supabase");
-      const { data, error } = await supabase.auth.getUser();
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
       if (error) {
         // "Auth session missing!" is normal for guests/first load, don't spam console
-        if (error.name === "AuthSessionMissingError" || error.message.includes("Auth session missing")) {
+        if (
+          error.name === "AuthSessionMissingError" ||
+          error.message.includes("Auth session missing")
+        ) {
           console.log("No active user session");
         } else {
           console.error("Error fetching user:", error);
@@ -33,13 +39,13 @@ export function useSupabaseUser() {
         setUser(null);
         setToken(null);
       } else {
-        console.log("User fetched:", data.user?.id);
-        setUser(data.user);
-        userRef.current = data.user; // Update ref immediately
+        const currentUser = session?.user || null;
+        console.log("User fetched:", currentUser?.id);
+        setUser(currentUser);
+        userRef.current = currentUser; // Update ref immediately
 
-        if (data.user) {
-          const idToken = await getIdToken();
-          setToken(idToken);
+        if (currentUser) {
+          setToken(session?.access_token || null);
         } else {
           setToken(null);
         }
@@ -80,7 +86,7 @@ export function useSupabaseUser() {
           if (!initialized.current) {
             initialized.current = true;
           }
-        }
+        },
       );
 
       // Fetch user immediately
@@ -106,7 +112,7 @@ export function useSupabaseUser() {
       refetch: refetchUser,
       refreshUser: refetchUser,
     }),
-    [loading, token, refetchUser]
+    [loading, token, refetchUser],
   );
 }
 

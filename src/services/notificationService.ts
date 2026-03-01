@@ -141,6 +141,7 @@ class NotificationService {
   private static reconnectDelay: number = 1000;
   private static isAuthenticated: boolean = false;
   private static isConnecting: boolean = false;
+  private static pendingSubscriptions: Set<string> = new Set();
 
   // User subscription plan
   private static userPlan: string | null = null;
@@ -320,6 +321,26 @@ class NotificationService {
       console.log("Authenticated with notification server");
       this.isAuthenticated = true;
       this.emit("authenticated", { userId: data.userId });
+
+      // Send pending subscriptions
+      if (
+        this.pendingSubscriptions.size > 0 &&
+        this.ws?.readyState === WebSocket.OPEN
+      ) {
+        const channelsToSubscribe = Array.from(this.pendingSubscriptions);
+        console.log(
+          "Sending queued subscriptions for channels:",
+          channelsToSubscribe,
+        );
+        this.ws.send(
+          JSON.stringify({
+            type: "subscribe",
+            channels: channelsToSubscribe,
+          }),
+        );
+        this.pendingSubscriptions.clear();
+      }
+
       return;
     }
 
@@ -385,13 +406,15 @@ class NotificationService {
       );
     } else {
       console.warn(
-        "Cannot subscribe: WebSocket not connected or not authenticated",
+        "WebSocket not connected or not authenticated, queueing subscription",
       );
+      channels.forEach((ch) => this.pendingSubscriptions.add(ch));
     }
   }
 
   // Unsubscribe from notification channels
   static unsubscribeFromChannels(channels: string[]) {
+    channels.forEach((ch) => this.pendingSubscriptions.delete(ch));
     if (this.ws?.readyState === WebSocket.OPEN && this.isAuthenticated) {
       this.ws.send(
         JSON.stringify({
