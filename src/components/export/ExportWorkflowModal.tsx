@@ -199,6 +199,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                         id: project.id,
                         title: project.title,
                         content: currentContent,
+                        htmlContent: currentHtmlContent || editor?.getHTML() || "",
                         citations: citationsToSend,
                         includeAuthorshipCertificate,
                         metadata: {
@@ -369,29 +370,21 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                             {/* Detailed Violations List */}
                             {violations.length > 0 && (
                                 <div className="space-y-3 mt-4">
-                                    {violations.slice(0, 2).map((v: any, idx: number) => (
-                                        <div key={idx} className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-start justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: `${idx * 100}ms` }}>
-                                            <div className="flex items-start gap-2">
-                                                <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                                                <div>
-                                                    <p className="text-sm font-semibold text-gray-800">{v.message || "Citation Format Warning"}</p>
-                                                    <p className="text-xs text-gray-500">{v.context || "Check citation style guidelines."}</p>
-                                                </div>
+                                    {violations.slice(0, 3).map((v: any, idx: number) => (
+                                        <div key={idx} className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-sm transition-all hover:shadow-md hover:border-indigo-100" style={{ animationDelay: `${idx * 100}ms` }}>
+                                            <div className="bg-amber-100 p-2 rounded-lg mt-0.5">
+                                                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                                             </div>
-                                            <button
-                                                onClick={() => {
-                                                    // Simulate Fix
-                                                    const newViolations = violations.filter((_: any, i: number) => i !== idx);
-                                                    setAuditResult((prev: any) => ({ ...prev, violations: newViolations }));
-                                                    toast({ title: "Issue Resolved", description: "Citation corrected automatically.", variant: "default" });
-                                                }}
-                                                className="text-xs bg-white border border-gray-300 hover:bg-gray-50 text-indigo-600 font-semibold px-3 py-1.5 rounded-md shadow-sm transition-colors whitespace-nowrap">
-                                                Fix Issue
-                                            </button>
+                                            <div>
+                                                <p className="text-sm font-bold text-gray-900 mb-1">{v.message || "Citation Format Warning"}</p>
+                                                <p className="text-sm text-gray-600 leading-relaxed">{v.context || "Check citation style guidelines."}</p>
+                                            </div>
                                         </div>
                                     ))}
-                                    {violations.length > 2 && (
-                                        <p className="text-xs text-center text-gray-400 mt-2">+ {violations.length - 2} more issues...</p>
+                                    {violations.length > 3 && (
+                                        <div className="py-2 text-center border border-dashed border-gray-300 rounded-lg bg-gray-50">
+                                            <p className="text-sm font-medium text-gray-500">+ {violations.length - 3} additional issues detected</p>
+                                        </div>
                                     )}
                                 </div>
                             )}
@@ -666,15 +659,31 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
 
                 <div className="bg-white shadow-2xl w-full max-w-2xl aspect-[8.5/11] rounded-sm overflow-hidden flex flex-col transform scale-95 sm:scale-100 transition-transform origin-center">
                     {/* Real Document Content Preview */}
-                    <div className="flex-1 p-8 sm:p-12 overflow-y-auto bg-white article-content">
+                    <div className="flex-1 p-8 sm:p-12 overflow-y-auto bg-white article-content scrollbar-thin scrollbar-thumb-gray-200">
                         {currentHtmlContent ? (
-                            <div
-                                className="prose prose-sm max-w-none"
-                                dangerouslySetInnerHTML={{ __html: currentHtmlContent }}
-                            />
+                            <div className="max-w-none">
+                                {/* Academic Header Preview */}
+                                <div className="text-center mb-10 pb-8 border-b border-gray-200">
+                                    <h1 className="text-3xl font-bold text-gray-900 mb-6 font-serif leading-tight">{project.title}</h1>
+                                    {author && <p className="text-lg text-gray-800 font-medium mb-1">{author}</p>}
+                                    {affiliation && <p className="text-sm text-gray-600 font-serif">{affiliation}</p>}
+                                    {(course || instructor) && (
+                                        <p className="text-xs text-gray-500 mt-4 uppercase tracking-wider font-semibold">
+                                            {course} {course && instructor && <span className="mx-2 text-gray-300">•</span>} {instructor}
+                                        </p>
+                                    )}
+                                </div>
+                                <div
+                                    className="prose prose-sm sm:prose-base max-w-none text-gray-800 prose-headings:font-serif prose-headings:text-gray-900 prose-a:text-indigo-600"
+                                    dangerouslySetInnerHTML={{ __html: currentHtmlContent }}
+                                />
+                            </div>
                         ) : (
-                            <div className="flex items-center justify-center h-full text-gray-400 italic">
-                                Preview not available
+                            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                                <div className="w-16 h-16 border-2 border-dashed border-gray-200 rounded-lg mb-4 flex items-center justify-center">
+                                    <span className="text-2xl">📄</span>
+                                </div>
+                                <p className="text-sm font-medium italic">Preview not available</p>
                             </div>
                         )}
                     </div>

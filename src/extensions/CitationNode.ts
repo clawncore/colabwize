@@ -1,7 +1,6 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { CitationRegistryService } from "../services/CitationRegistryService";
 
-
 export interface CitationNodeOptions {
     HTMLAttributes: Record<string, any>;
 }
@@ -9,7 +8,7 @@ export interface CitationNodeOptions {
 declare module "@tiptap/core" {
     interface Commands<ReturnType> {
         citation: {
-            insertCitation: (attributes: { citationId: string }) => ReturnType;
+            insertCitation: (attributes: { citationId: string, text?: string, url?: string }) => ReturnType;
         };
     }
 }
@@ -23,7 +22,7 @@ export const CitationNode = Node.create<CitationNodeOptions>({
     addOptions() {
         return {
             HTMLAttributes: {
-                class: "citation-token",
+                class: "citation-node citation-pill",
             },
         };
     },
@@ -39,12 +38,25 @@ export const CitationNode = Node.create<CitationNodeOptions>({
                 default: "unresolved",
                 parseHTML: (element) => element.getAttribute("data-status"),
                 renderHTML: (attributes) => ({ "data-status": attributes.status }),
+            },
+            text: {
+                default: null,
+                parseHTML: (element) => element.getAttribute("data-text") || element.textContent,
+                renderHTML: (attributes) => ({ "data-text": attributes.text }),
+            },
+            url: {
+                default: null,
+                parseHTML: (element) => element.getAttribute("data-url") || element.getAttribute("href"),
+                renderHTML: (attributes) => ({ "data-url": attributes.url }),
             }
         };
     },
 
     parseHTML() {
         return [
+            {
+                tag: "a.citation-node",
+            },
             {
                 tag: "span[data-citation-id]",
             },
@@ -54,127 +66,48 @@ export const CitationNode = Node.create<CitationNodeOptions>({
         ];
     },
 
-    // Kept for SSR / clipboard serialization
+    // Deterministic rendering for export and in-editor display
     renderHTML({ HTMLAttributes, node }) {
-        return [
-            "span",
-            mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
-                class: "citation-pill citation-node",
-                "data-citation-id": node.attrs.citationId,
-                "data-status": node.attrs.status || "unresolved",
-            }),
-            node.attrs.citationId || "Citation"
-        ];
-    },
+        const { citationId, status, text, url } = node.attrs;
 
-    /**
-     * addNodeView — attaches a REAL native DOM click listener.
-     *
-     * ProseMirror `atom` nodes have their events intercepted before they bubble to
-     * Tiptap's `editorProps.handleClick`. A native addEventListener on the dom node
-     * fires unconditionally and is the only reliable way to handle citation clicks.
-     *
-     * · Regular click  → dispatches a `citation:click` CustomEvent (bubbles up to
-     *                    .ProseMirror where DocumentEditor listens via useEffect).
-     * · Ctrl/Cmd+Click → opens the citation URL directly in a new tab.
-     */
-    addNodeView() {
-        return ({ node }) => {
-            const dom = document.createElement("span");
-            const citationId = node.attrs.citationId;
+        // Fallback for legacy nodes that only have citationId saved
+        let displayText = text;
+        let extUrl = url;
 
-            const STATUS_STYLES: Record<string, { color: string; bg: string; border: string }> = {
-                verified: { color: "#15803d", bg: "#f0fdf4", border: "#4ade80" },
-                resolved: { color: "#1d4ed8", bg: "#eff6ff", border: "#93c5fd" },
-                warning: { color: "#92400e", bg: "#fffbeb", border: "#fbbf24" },
-                invalid: { color: "#b91c1c", bg: "#fef2f2", border: "#f87171" },
-                unresolved: { color: "#1d4ed8", bg: "rgba(239,246,255,0.6)", border: "#93c5fd" },
-            };
+        if (!displayText || !extUrl) {
+            const entry = CitationRegistryService.getCitation(citationId);
+            if (entry) {
+                if (!displayText) displayText = formatInTextCitation(entry);
+                if (!extUrl) extUrl = entry.url || (entry.doi ? `https://doi.org/${entry.doi}` : null);
+            } else {
+                if (!displayText) displayText = "[citation]";
+            }
+        }
 
-            const applyStyle = (entry: any) => {
-                const status = node.attrs.status || (entry ? "resolved" : "unresolved");
-                const s = STATUS_STYLES[status] || STATUS_STYLES.unresolved;
-                const displayText = entry ? formatInTextCitation(entry) : `(Loading...)`;
-
-                dom.className = "citation-pill citation-node";
-                dom.style.cssText = `
-                    display:inline;
-                    padding:1px 4px;
-                    border-radius:3px;
-                    border-bottom:1.5px solid ${s.border};
-                    cursor:pointer;
-                    font-weight:500;
-                    color:${s.color};
-                    background:${s.bg};
-                    text-decoration:underline;
-                    text-decoration-color:rgba(59,130,246,0.35);
-                    transition:opacity .15s;
-                    user-select:none;
-                `;
-                dom.textContent = displayText;
-                dom.setAttribute("data-citation-id", citationId);
-                dom.setAttribute("data-status", status);
-
-                if (entry) {
-                    dom.title = `${entry.sourceTitle || entry.raw_reference_text}\n${entry.url ? "Ctrl+Click to open" : "Click to scroll to bib"}`;
-                }
-            };
-
-            const paint = () => {
-                const entry = CitationRegistryService.getCitation(citationId);
-                if (entry) {
-                    applyStyle(entry);
-                } else {
-                    // Show a neutral placeholder while we fetch
-                    applyStyle(null);
-                    // Async fallback: try to fetch from backend and repaint
-                    CitationRegistryService.initializeFromBackend(
-                        (window as any).__currentProjectId__ || ''
-                    ).then(() => {
-                        const resolved = CitationRegistryService.getCitation(citationId);
-                        if (resolved) applyStyle(resolved);
-                        else applyStyle(null);
-                    }).catch(() => applyStyle(null));
-                }
-            };
-
-            paint();
-
-            dom.addEventListener("mouseenter", () => { dom.style.opacity = "0.75"; });
-            dom.addEventListener("mouseleave", () => { dom.style.opacity = "1"; });
-
-            dom.addEventListener("click", (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const entry = CitationRegistryService.getCitation(citationId);
-                const isExternal = (e as MouseEvent).ctrlKey || (e as MouseEvent).metaKey || (e as MouseEvent).shiftKey;
-
-                if (isExternal && entry?.url) {
-                    window.open(entry.url, "_blank", "noopener,noreferrer");
-                } else {
-                    const bibEntry = document.getElementById(`bib-${citationId}`);
-                    if (bibEntry) {
-                        bibEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        bibEntry.classList.add('highlighted');
-                        setTimeout(() => bibEntry.classList.remove('highlighted'), 2000);
-                    } else {
-                        if (entry?.url) {
-                            window.open(entry.url, "_blank", "noopener,noreferrer");
-                        }
-                    }
-                }
-            });
-
-            return {
-                dom,
-                update: (updatedNode) => {
-                    if (updatedNode.type.name !== "citation") return false;
-                    paint();
-                    return true;
-                },
-            };
+        const STATUS_STYLES: Record<string, { color: string; bg: string; border: string }> = {
+            verified: { color: "#15803d", bg: "#f0fdf4", border: "#4ade80" },
+            resolved: { color: "#1d4ed8", bg: "#eff6ff", border: "#93c5fd" },
+            warning: { color: "#92400e", bg: "#fffbeb", border: "#fbbf24" },
+            invalid: { color: "#b91c1c", bg: "#fef2f2", border: "#f87171" },
+            unresolved: { color: "#1d4ed8", bg: "rgba(239,246,255,0.6)", border: "#93c5fd" },
         };
+
+        const s = STATUS_STYLES[status] || STATUS_STYLES.unresolved;
+
+        return [
+            "a",
+            mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+                href: `#bib-${citationId}`,
+                "data-citation-id": citationId,
+                "data-status": status || "unresolved",
+                "data-url": extUrl,
+                "data-text": displayText,
+                // Inline styles mirror exactly what was previously in the DOM injected node
+                style: `display:inline; padding:1px 4px; border-radius:3px; border-bottom:1.5px solid ${s.border}; cursor:pointer; font-weight:500; color:${s.color}; background:${s.bg}; text-decoration:underline; text-decoration-color:rgba(59,130,246,0.35); user-select:none;`,
+                title: extUrl ? "Ctrl+Click to open external link" : "Click to scroll to bibliography"
+            }),
+            displayText
+        ];
     },
 
     addCommands() {
@@ -186,6 +119,8 @@ export const CitationNode = Node.create<CitationNodeOptions>({
                             type: this.name,
                             attrs: {
                                 citationId: attributes.citationId,
+                                text: attributes.text,
+                                url: attributes.url
                             },
                         });
                     },

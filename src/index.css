@@ -33,6 +33,19 @@ code {
   border-radius: 0 !important;
 }
 
+/* Custom styles for bibliography URL decorations */
+.bibliography-url-link {
+  color: #2563eb !important;
+  text-decoration: underline !important;
+  font-style: italic !important;
+  cursor: pointer !important;
+  transition: color 0.2s ease;
+}
+
+.bibliography-url-link:hover {
+  color: #1d4ed8 !important;
+}
+
 /* Tiptap editor specific styles */
 .ProseMirror {
   border-radius: 0 !important;
@@ -118,6 +131,12 @@ code {
 
 .prose:focus {
   border-radius: 0 !important;
+}
+
+/* Ensure long URLs in bibliography preview don't break the layout */
+.article-content .prose a {
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 /* Multi-column layout */
@@ -457,19 +476,15 @@ li.ProseMirror-selectednode:after {
 
 @layer components {
   .gradient-hero {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--cw-blue)) 0%,
-      hsl(var(--cw-purple)) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--cw-blue)) 0%,
+        hsl(var(--cw-purple)) 100%);
   }
 
   .gradient-cta {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--cw-purple)) 0%,
-      hsl(var(--cw-blue)) 100%
-    );
+    background: linear-gradient(135deg,
+        hsl(var(--cw-purple)) 0%,
+        hsl(var(--cw-blue)) 100%);
   }
 
   .glass-card {
@@ -560,7 +575,7 @@ li.ProseMirror-selectednode:after {
     overflow-y: hidden;
   }
 
-  .columns-wrapper > * {
+  .columns-wrapper>* {
     flex: 1;
     min-width: 0;
     padding: 0 1rem;
@@ -568,11 +583,11 @@ li.ProseMirror-selectednode:after {
     align-self: stretch;
   }
 
-  .columns-wrapper > *:first-child {
+  .columns-wrapper>*:first-child {
     padding-left: 0;
   }
 
-  .columns-wrapper > *:last-child {
+  .columns-wrapper>*:last-child {
     padding-right: 0;
   }
 
@@ -583,17 +598,17 @@ li.ProseMirror-selectednode:after {
       overflow-y: hidden;
     }
 
-    .columns-wrapper > * {
+    .columns-wrapper>* {
       padding: 0.5rem 0;
       box-sizing: border-box;
       align-self: stretch;
     }
 
-    .columns-wrapper > *:first-child {
+    .columns-wrapper>*:first-child {
       padding-top: 0;
     }
 
-    .columns-wrapper > *:last-child {
+    .columns-wrapper>*:last-child {
       padding-bottom: 0;
     }
   }
@@ -610,7 +625,7 @@ li.ProseMirror-selectednode:after {
     overflow-y: hidden;
   }
 
-  .columns-wrapper[data-columns="2"] > * {
+  .columns-wrapper[data-columns="2"]>* {
     flex: 1;
     min-width: 0;
     position: relative;
@@ -619,11 +634,11 @@ li.ProseMirror-selectednode:after {
     align-self: stretch;
   }
 
-  .columns-wrapper[data-columns="2"] > *:first-child {
+  .columns-wrapper[data-columns="2"]>*:first-child {
     padding-left: 0;
   }
 
-  .columns-wrapper[data-columns="2"] > *:last-child {
+  .columns-wrapper[data-columns="2"]>*:last-child {
     padding-right: 0;
   }
 
@@ -646,7 +661,7 @@ li.ProseMirror-selectednode:after {
     overflow-y: hidden;
   }
 
-  .columns-wrapper[data-columns="3"] > * {
+  .columns-wrapper[data-columns="3"]>* {
     flex: 1;
     min-width: 0;
     position: relative;
@@ -655,11 +670,11 @@ li.ProseMirror-selectednode:after {
     align-self: stretch;
   }
 
-  .columns-wrapper[data-columns="3"] > *:first-child {
+  .columns-wrapper[data-columns="3"]>*:first-child {
     padding-left: 0;
   }
 
-  .columns-wrapper[data-columns="3"] > *:last-child {
+  .columns-wrapper[data-columns="3"]>*:last-child {
     padding-right: 0;
   }
 
@@ -686,36 +701,32 @@ li.ProseMirror-selectednode:after {
   }
 
   /* Add visual distinction for columns */
-  .columns-wrapper > * {
+  .columns-wrapper>* {
     position: relative;
   }
 
   /* Visual indicator for column count - simplified */
-  .columns-wrapper[data-columns="2"] > *::before,
-  .columns-wrapper[data-columns="3"] > *::before {
+  .columns-wrapper[data-columns="2"]>*::before,
+  .columns-wrapper[data-columns="3"]>*::before {
     display: none;
   }
 
   /* Additional visual cues for column count */
   .columns-wrapper[data-columns="2"] {
-    background-image: repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 1px,
-      rgba(147, 197, 253, 0.1) 1px,
-      rgba(147, 197, 253, 0.1) 2px
-    );
+    background-image: repeating-linear-gradient(90deg,
+        transparent,
+        transparent 1px,
+        rgba(147, 197, 253, 0.1) 1px,
+        rgba(147, 197, 253, 0.1) 2px);
     background-size: 20px 100%;
   }
 
   .columns-wrapper[data-columns="3"] {
-    background-image: repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 1px,
-      rgba(248, 113, 113, 0.1) 1px,
-      rgba(248, 113, 113, 0.1) 2px
-    );
+    background-image: repeating-linear-gradient(90deg,
+        transparent,
+        transparent 1px,
+        rgba(248, 113, 113, 0.1) 1px,
+        rgba(248, 113, 113, 0.1) 2px);
     background-size: 15px 100%;
   }
 
@@ -785,17 +796,17 @@ li.ProseMirror-selectednode:after {
   }
 
   /* Add visual indication that columns are editable */
-  .columns-wrapper > * {
+  .columns-wrapper>* {
     min-height: 1.5em;
   }
 
   /* Improve column visibility and editing experience */
-  .columns-wrapper[data-columns="2"] > * {
+  .columns-wrapper[data-columns="2"]>* {
     border-radius: 0.25rem;
     background-color: rgba(214, 226, 255, 0.1);
   }
 
-  .columns-wrapper[data-columns="3"] > * {
+  .columns-wrapper[data-columns="3"]>* {
     border-radius: 0.25rem;
     background-color: rgba(248, 113, 113, 0.1);
   }
@@ -806,6 +817,7 @@ li.ProseMirror-selectednode:after {
   }
 
   .columns-wrapper[data-columns="2"] .columns-column {
+
     /* Citation Scanner Styles */
     .citation-scan-linked {
       border-bottom: 2px solid green;
@@ -886,6 +898,7 @@ li.ProseMirror-selectednode:after {
 }
 
 @keyframes blink {
+
   0%,
   100% {
     opacity: 1;
@@ -1007,7 +1020,7 @@ li[data-type="taskItem"] label {
   user-select: none;
 }
 
-li[data-type="taskItem"] > div {
+li[data-type="taskItem"]>div {
   flex: 1;
 }
 

@@ -1,4 +1,4 @@
-import { Node, Editor } from '@tiptap/core';
+import { Node, Editor, mergeAttributes } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { CitationRegistryService } from '../services/CitationRegistryService';
@@ -68,38 +68,16 @@ export const BibliographyEntry = Node.create<BibliographyEntryOptions>({
         ];
     },
 
-    renderHTML({ HTMLAttributes }) {
+    renderHTML({ HTMLAttributes, node }) {
         return [
             'div',
-            {
-                ...HTMLAttributes,
+            mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
                 'data-bibliography-entry': true,
-                class: 'bibliography-entry'
-            },
+                class: 'bibliography-entry p-3 my-2 rounded-md hover:bg-blue-50 transition-all border-l-4 border-transparent hover:border-blue-500 text-gray-800 leading-relaxed',
+                id: `bib-${node.attrs.citationId || ''}`
+            }),
             0, // content goes here
         ];
-    },
-
-    addNodeView() {
-        return ({ node }) => {
-            const dom = document.createElement('div');
-            dom.className = 'bibliography-entry';
-            dom.setAttribute('data-citation-id', node.attrs.citationId || '');
-            dom.setAttribute('id', `bib-${node.attrs.citationId}`); // For scroll targeting
-
-            // Content container for text
-            const contentDOM = document.createElement('span');
-            dom.appendChild(contentDOM);
-
-            return {
-                dom,
-                contentDOM,
-                update: (updatedNode) => {
-                    if (updatedNode.type.name !== 'bibliographyEntry') return false;
-                    return true;
-                }
-            };
-        };
     },
 
     addProseMirrorPlugins() {
@@ -121,8 +99,8 @@ export const BibliographyEntry = Node.create<BibliographyEntryOptions>({
                                 decorations.push(
                                     Decoration.inline(start, end, {
                                         class: 'bibliography-url-link',
-                                        'data-url': url,
-                                        style: 'color:#2563eb;text-decoration:underline;font-style:italic;cursor:pointer;'
+                                        // Global CSS rule now handles styling since Tiptap strips inline styles
+                                        'data-url': url
                                     })
                                 );
                             }

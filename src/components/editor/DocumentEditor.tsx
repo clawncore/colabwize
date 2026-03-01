@@ -25,6 +25,7 @@ import { MathExtension } from "../../extensions/MathExtension";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
 import { BibliographyEntry } from "../../extensions/BibliographyNode";
+import { NodeSelection } from '@tiptap/pm/state';
 import { documentService, Project } from "../../services/documentService";
 import { OriginalityScan } from "../../services/originalityService";
 import { AuthorshipService } from "../../services/authorshipService";
@@ -477,14 +478,55 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         ? undefined
         : formatContentForTiptap(project.content),
       // NOTE: In collab mode, content is loaded from Yjs (Hocuspocus server) not here.
-      onUpdate: ({ transaction }) => {
+      onUpdate: ({ editor, transaction }) => {
         // Prevent infinite loops from internal normalization/audit updates
+<<<<<<< Updated upstream
         if (
           transaction.getMeta("normalization") ||
           transaction.getMeta("integrity-check")
         ) {
+=======
+        if (transaction.getMeta('normalization') || transaction.getMeta('integrity-check') || transaction.getMeta('bibliography-sync')) {
+>>>>>>> Stashed changes
           return;
         }
+
+        // --- Auto-remove orphaned bibliography entries ---
+        // We use a short timeout to prevent Prosemirror "flush" errors during update cycles
+        setTimeout(() => {
+          if (editor.isDestroyed) return;
+          const currentDoc = editor.state.doc;
+          const citationIds = new Set<string>();
+
+          currentDoc.descendants((node) => {
+            if (node.type.name === 'citation' && node.attrs.citationId) {
+              citationIds.add(node.attrs.citationId);
+            }
+          });
+
+          const deletePositions: { from: number, to: number }[] = [];
+          currentDoc.descendants((node, pos) => {
+            if (node.type.name === 'bibliographyEntry') {
+              const id = node.attrs.citationId;
+              // If bibliography entry ID is not found in active citations, queue it for deletion
+              if (id && !citationIds.has(id)) {
+                deletePositions.push({ from: pos, to: pos + node.nodeSize });
+              }
+            }
+          });
+
+          if (deletePositions.length > 0) {
+            // Sort descending so deleting higher indexes doesn't shift lower indexes
+            deletePositions.sort((a, b) => b.from - a.from);
+            const tr = editor.state.tr;
+            deletePositions.forEach(({ from, to }) => {
+              tr.delete(from, to);
+            });
+            tr.setMeta('bibliography-sync', true);
+            editor.view.dispatch(tr);
+          }
+        }, 50);
+
         // Increment edit count when content changes
         setEditCount((prev) => prev + 1);
       },
@@ -493,10 +535,58 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           class: `focus:outline-none min-h-full prose-table:w-full prose-img:rounded-md prose-img:shadow-md`,
           spellcheck: "false",
         },
-        // CitationNode.addNodeView() handles clicks via native DOM listeners
-        // (atoms intercept ProseMirror's handleClick before it fires).
-        // We listen to the custom 'citation:click' event in a useEffect below instead.
-        handleClick: () => false,
+        // Citation click handling (must be done in ProseMirror to prevent default navigation before React sees it)
+        handleClick: (view, pos, event) => {
+          const target = event.target as HTMLElement;
+
+          // --- Handle clicks on bibliography URL decorations (blue underlined URLs) ---
+          const bibUrlLink = target.closest('.bibliography-url-link') as HTMLElement;
+          if (bibUrlLink) {
+            event.preventDefault();
+            event.stopPropagation();
+            const url = bibUrlLink.getAttribute('data-url');
+            if (url) window.open(url, '_blank', 'noopener,noreferrer');
+            return true;
+          }
+
+          // --- Handle clicks on in-text citation pills ---
+          const citation = target.closest("a.citation-node") as HTMLAnchorElement;
+          if (citation) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            // data-url = external source URL (DOI etc); href = internal #bib-xxx anchor
+            const externalUrl = citation.getAttribute('data-url');
+            const anchorHref = citation.getAttribute('href');
+            const isModifierClick = event.ctrlKey || event.metaKey || event.shiftKey;
+
+            if (isModifierClick && externalUrl) {
+              // Ctrl/Cmd+Click → open external source
+              window.open(externalUrl, '_blank', 'noopener,noreferrer');
+            } else if (anchorHref && anchorHref.startsWith('#')) {
+              // Normal click → scroll to bibliography entry and flash it
+              const targetId = anchorHref.substring(1);
+              const targetElement = document.getElementById(targetId);
+              if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetElement.style.transition = 'background-color 0.5s ease';
+                targetElement.style.backgroundColor = '#eff6ff';
+                setTimeout(() => { targetElement.style.backgroundColor = 'transparent'; }, 2000);
+              }
+            }
+
+            // Select the citation atom node so user can Backspace/Delete to remove it
+            try {
+              const sel = NodeSelection.create(view.state.doc, pos);
+              view.dispatch(view.state.tr.setSelection(sel));
+            } catch (e) {
+              // pos might not resolve to a node — not a critical failure
+            }
+            return true;
+          }
+
+          return false;
+        },
       },
       // Dependencies check: since `ydoc` and `provider` are stable state objects initialized
       // exactly once per component lifecycle, using them here is safe and effectively
@@ -984,12 +1074,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   useEffect(() => {
     const handleInsertCitation = (e: CustomEvent) => {
       if (editor && e.detail) {
-        const { citationId, text } = e.detail;
+        const { citationId, text, url } = e.detail;
 
         if (citationId) {
-          // Use semantic citation node
+          // Use semantic citation node — pass text + url so node doesn't fall back to raw registry title
           editor.commands.insertCitation({
             citationId,
+            text: text || undefined,
+            url: url || undefined,
           });
         } else {
           // Fallback to text insertion if no ID (should not happen with new logic)
@@ -1424,7 +1516,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
             {/* Main Editor Area */}
             <div
-              className={`flex-1 overflow-auto transition-all duration-500 ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}>
+              className={`flex-1 overflow-auto transition-all duration-500 ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}
+            // Click handling is now inside tiptap's editorProps.handleClick to successfully intercept navigation
+
+            >
               {editor && <TableBubbleMenu editor={editor} />}
               <EditorContent
                 editor={editor}

@@ -146,7 +146,8 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
 
                 // If we were waiting to cite a specific source, do it now
                 if (pendingCiteSource && onInsertCitation) {
-                    onInsertCitation(pendingCiteSource.raw_reference_text || pendingCiteSource.title || "Citation", {
+                    const textToInsert = (pendingCiteSource as any)._formattedInText || "Citation";
+                    onInsertCitation(textToInsert, {
                         eventId: "citation_inserted",
                         sourceId: pendingCiteSource.id || pendingCiteSource.doi || pendingCiteSource.title,
                         style: style,
@@ -333,38 +334,62 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                                         {/* Action Footer */}
                                         <div className="flex items-center gap-4 pt-2 border-t border-gray-50">
                                             {/* Interactive Cite Button Logic */}
-                                            {!citationStyle ? (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setPendingCiteSource(source);
-                                                        setShowStylePanel(true);
-                                                    }}
-                                                    className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"
-                                                >
-                                                    <Quote className="w-3.5 h-3.5 fill-current" />
-                                                    Cite
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (onInsertCitation) {
-                                                            onInsertCitation(source.raw_reference_text || source.title || "Citation", {
-                                                                eventId: "citation_inserted",
-                                                                sourceId: source.id || source.doi || source.title,
-                                                                style: citationStyle,
-                                                                timestamp: new Date().toISOString(),
-                                                                fullReferenceEntry: source
-                                                            });
-                                                        }
-                                                    }}
-                                                    className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"
-                                                >
-                                                    <Quote className="w-3.5 h-3.5 fill-current" />
-                                                    Cite
-                                                </button>
-                                            )}
+                                            {(() => {
+                                                const authors = Array.isArray(source.authors) ? source.authors : source.author ? [source.author] : [];
+                                                const getLastName = (a: any): string => {
+                                                    if (typeof a === 'string') {
+                                                        const trimmed = a.trim();
+                                                        if (trimmed.includes(',')) return trimmed.split(',')[0].trim();
+                                                        const parts = trimmed.split(' ').filter(Boolean);
+                                                        if (parts.length === 2) return parts[1];
+                                                        return trimmed;
+                                                    }
+                                                    return a.lastName || a.firstName || 'Author';
+                                                };
+
+                                                let authorText = 'Author';
+                                                if (authors.length === 1) authorText = getLastName(authors[0]);
+                                                else if (authors.length === 2) authorText = `${getLastName(authors[0])} & ${getLastName(authors[1])}`;
+                                                else if (authors.length > 2) authorText = `${getLastName(authors[0])} et al.`;
+
+                                                const year = source.year || 'n.d.';
+                                                const inTextText = `(${authorText}, ${year})`;
+
+                                                return !citationStyle ? (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            // We pass the formatted text through to pending
+                                                            const pendingSource = { ...source, _formattedInText: inTextText };
+                                                            setPendingCiteSource(pendingSource);
+                                                            setShowStylePanel(true);
+                                                        }}
+                                                        className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"
+                                                    >
+                                                        <Quote className="w-3.5 h-3.5 fill-current" />
+                                                        Cite
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (onInsertCitation) {
+                                                                onInsertCitation(inTextText, {
+                                                                    eventId: "citation_inserted",
+                                                                    sourceId: source.id || source.doi || source.title,
+                                                                    style: citationStyle,
+                                                                    timestamp: new Date().toISOString(),
+                                                                    fullReferenceEntry: source
+                                                                });
+                                                            }
+                                                        }}
+                                                        className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors"
+                                                    >
+                                                        <Quote className="w-3.5 h-3.5 fill-current" />
+                                                        Cite
+                                                    </button>
+                                                );
+                                            })()}
 
                                             <button
                                                 onClick={() => onSourceSelect(source)}

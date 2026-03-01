@@ -523,7 +523,16 @@ const EditorWorkspacePage: React.FC = () => {
 
       // 1. Insert in-text citation at cursor
       if (sourceId) {
-        editorInstance.commands.insertCitation({ citationId: sourceId });
+        let citationUrl = undefined;
+        if (trackingInfo && trackingInfo.fullReferenceEntry) {
+          const src = trackingInfo.fullReferenceEntry;
+          citationUrl = src.url || (src.doi ? `https://doi.org/${src.doi}` : undefined);
+        }
+        editorInstance.commands.insertCitation({
+          citationId: sourceId,
+          text: text,
+          url: citationUrl
+        });
       } else {
         editorInstance.chain().focus().insertContent(text).run();
       }

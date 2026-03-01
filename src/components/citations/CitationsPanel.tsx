@@ -141,13 +141,45 @@ export function CitationsPanel({
   };
 
   const insertCitation = (citation: StoredCitation) => {
-    // Dispatch event for editor to catch if direct prop isn't available
-    const authors = Array.isArray(citation.authors) ? citation.authors : citation.author ? [{ firstName: '', lastName: citation.author }] : [];
-    const authorText = authors[0] ? (typeof authors[0] === 'string' ? authors[0] : `${authors[0].lastName || authors[0].firstName}`) : 'Author';
+    const authors = Array.isArray(citation.authors)
+      ? citation.authors
+      : citation.author
+        ? [citation.author]
+        : [];
+
+    // Extract last name from whatever format the author comes in as
+    const getLastName = (a: any): string => {
+      if (typeof a === 'string') {
+        const trimmed = a.trim();
+        // "Smith, J." format — comma present, take part before it
+        if (trimmed.includes(',')) return trimmed.split(',')[0].trim();
+        // Two-word personal name e.g. "John Smith" — return last word (surname)
+        const parts = trimmed.split(' ').filter(Boolean);
+        if (parts.length === 2) return parts[1];
+        // Multi-word without comma = likely an organization name: use as-is
+        return trimmed;
+      }
+      return a.lastName || a.firstName || 'Author';
+    };
+
+    let authorText = 'Author';
+    if (authors.length === 1) {
+      authorText = getLastName(authors[0]);
+    } else if (authors.length === 2) {
+      authorText = `${getLastName(authors[0])} & ${getLastName(authors[1])}`;
+    } else if (authors.length > 2) {
+      authorText = `${getLastName(authors[0])} et al.`;
+    }
+
+    const year = citation.year || 'n.d.';
+    const inTextText = `(${authorText}, ${year})`;
+    const url = citation.url || (citation.doi ? `https://doi.org/${citation.doi}` : undefined);
+
     const event = new CustomEvent("insert-citation", {
       detail: {
-        text: `(${authorText}, ${citation.year || "N.d."})`,
+        text: inTextText,
         citationId: citation.id,
+        url,
       },
     });
     window.dispatchEvent(event);

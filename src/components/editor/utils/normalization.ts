@@ -7,8 +7,9 @@ import { CitationService } from "../../../services/citationService";
  * Parse author and year from an in-text citation like "(Smith, 2023)" or "(Smith et al., 2023)".
  */
 function parseInTextCitation(text: string): { author: string; year: string } | null {
-    // APA style: (Author, Year) or (Author et al., Year) or (Author & Author, Year)
-    const match = text.match(/^\(([A-Za-zÀ-ÿ'\-]+)(?:\s+et\s+al\.)?(?:\s*[,&]\s*[A-Za-zÀ-ÿ'\-]+)?,\s*(\d{4})\)$/);
+    // APA style: (Author, Year) or (Author et al., Year) or (Author & Author, Year) or (Author, Author, & Author, Year)
+    // Extract simply the first continuous word as the author, and the 4 digit year right before the parenthesis
+    const match = text.match(/^\(([A-Za-zÀ-ÿ'\-]+).*,\s*(\d{4})\)$/);
     if (match) return { author: match[1].toLowerCase(), year: match[2] };
     // IEEE style: [1] or [1-3]
     return null;
@@ -80,6 +81,12 @@ export async function detectAndNormalizeCitations(editor: Editor, projectId: str
                 stopScanning = true;
                 return false;
             }
+        }
+
+        // --- NEW: Never scan inside bibliography entries, and stop scanning once we hit them ---
+        if (node.type.name === 'bibliographyEntry') {
+            stopScanning = true;
+            return false;
         }
 
         const blockText = node.textContent;
