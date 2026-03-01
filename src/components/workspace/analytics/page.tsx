@@ -59,7 +59,6 @@ const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 export default function WorkspaceAnalytics() {
   const { id: workspaceId } = useParams<{ id: string }>();
-
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [workspaceName, setWorkspaceName] = useState<string>("");
@@ -99,7 +98,7 @@ export default function WorkspaceAnalytics() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-48 bg-slate-100 rounded-xl" />
+          <div key={i} className="h-48 bg-slate-200 rounded-xl" />
         ))}
       </div>
     );

@@ -325,25 +325,38 @@ export default function WorkspaceProjectsPage() {
   };
 
   const handleDeleteProject = async (project: any) => {
+    console.log("handleDeleteProject triggered for:", project.id);
     try {
-      if (
-        window.confirm(
-          "Are you sure you want to delete this project? This action cannot be undone.",
-        )
-      ) {
-        await documentService.deleteProject(project.id);
-        setProjects((prev) => prev.filter((p) => p.id !== project.id));
+      const confirmed = window.confirm(
+        "Are you sure you want to delete this project? This action cannot be undone.",
+      );
+      console.log("Delete confirmed by user:", confirmed);
 
-        toast({
-          title: "Success",
-          description: "Project deleted successfully!",
-        });
+      if (confirmed) {
+        console.log("Calling documentService.deleteProject...");
+        const result = await documentService.deleteProject(project.id);
+        console.log("Delete API result:", result);
+
+        if (result && result.success) {
+          setProjects((prev) => prev.filter((p) => p.id !== project.id));
+
+          toast({
+            title: "Success",
+            description: "Project deleted successfully!",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: result?.error || "Failed to delete project.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error: any) {
-      console.error("Failed to delete project:", error);
+      console.error("Failed to delete project Exception:", error);
       toast({
         title: "Error",
-        description: "Failed to delete project. Please try again.",
+        description: "An unexpected error occurred while deleting.",
         variant: "destructive",
       });
     }

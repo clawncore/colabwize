@@ -2,8 +2,6 @@
  * Utility functions for editor content validation and sanitization
  */
 
-
-
 /**
  * Recursively validates and cleans editor content to remove empty text nodes
  * and ensure compatibility with Tiptap schema
@@ -34,9 +32,11 @@ export function validateAndCleanContent(content: any): any {
     }
 
     // Check if this is an error message from document processing
-    if (content.includes("Unable to extract content") ||
+    if (
+      content.includes("Unable to extract content") ||
       content.includes("PDF appears to contain no extractable text") ||
-      content.includes("Unable to extract text from PDF")) {
+      content.includes("Unable to extract text from PDF")
+    ) {
       // Display error message prominently
       return {
         type: "doc",
@@ -47,13 +47,13 @@ export function validateAndCleanContent(content: any): any {
               {
                 type: "text",
                 text: "⚠️ Document Processing Issue: ",
-                marks: [{ type: "bold" }]
+                marks: [{ type: "bold" }],
               },
               {
                 type: "text",
-                text: content
-              }
-            ]
+                text: content,
+              },
+            ],
           },
           {
             type: "paragraph",
@@ -61,9 +61,9 @@ export function validateAndCleanContent(content: any): any {
               {
                 type: "text",
                 text: "Possible solutions:",
-                marks: [{ type: "bold" }]
-              }
-            ]
+                marks: [{ type: "bold" }],
+              },
+            ],
           },
           {
             type: "bulletList",
@@ -76,11 +76,11 @@ export function validateAndCleanContent(content: any): any {
                     content: [
                       {
                         type: "text",
-                        text: "The PDF may be scanned or image-based - try converting to text first"
-                      }
-                    ]
-                  }
-                ]
+                        text: "The PDF may be scanned or image-based - try converting to text first",
+                      },
+                    ],
+                  },
+                ],
               },
               {
                 type: "listItem",
@@ -90,11 +90,11 @@ export function validateAndCleanContent(content: any): any {
                     content: [
                       {
                         type: "text",
-                        text: "The PDF may be password-protected or corrupted"
-                      }
-                    ]
-                  }
-                ]
+                        text: "The PDF may be password-protected or corrupted",
+                      },
+                    ],
+                  },
+                ],
               },
               {
                 type: "listItem",
@@ -104,32 +104,42 @@ export function validateAndCleanContent(content: any): any {
                     content: [
                       {
                         type: "text",
-                        text: "Try uploading a different format (DOCX, TXT) instead"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+                        text: "Try uploading a different format (DOCX, TXT) instead",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
     }
 
-    // Otherwise wrap plain text in a paragraph
+    // Otherwise wrap plain text in paragraphs based on newlines
+    const textContent = content.replace(/\\n/g, "\n"); // Handle literal \n strings if they were stringified
+    const lines = textContent.split("\n");
+
     return {
       type: "doc",
-      content: [
-        {
+      content: lines.map((line: string) => {
+        // Even empty lines should be empty paragraphs in Tiptap to preserve spacing
+        if (!line.trim()) {
+          return {
+            type: "paragraph",
+            content: [],
+          };
+        }
+        return {
           type: "paragraph",
           content: [
             {
               type: "text",
-              text: content,
+              text: line,
             },
           ],
-        },
-      ],
+        };
+      }),
     };
   }
 
