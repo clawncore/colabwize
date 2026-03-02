@@ -93,8 +93,8 @@ export class CitationOrchestrator {
                     // 1. Order & Style Update
                     await CitationOrderManager.updateCitationNodes(editor, projectId, style);
 
-                    // 2. Integrity Check
-                    await CitationIntegrityWatcher.processUpdates(editor, projectId);
+                    // 2. Integrity Check (Disabled by user request - only manual via Audit button now)
+                    // await CitationIntegrityWatcher.processUpdates(editor, projectId);
 
                     const duration = Date.now() - startTime;
                     console.log(`[Orchestrator] Update Metrics`, {

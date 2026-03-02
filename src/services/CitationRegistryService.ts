@@ -180,4 +180,9 @@ export class CitationRegistryService {
         this.cache.clear();
         this.currentProjectId = null;
     }
+
+    static removeCitation(citationId: string): void {
+        this.cache.delete(citationId);
+        console.log(`🗑️ Removed citation ${citationId} from registry cache`);
+    }
 }

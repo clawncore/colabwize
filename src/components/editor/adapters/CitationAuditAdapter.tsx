@@ -4,7 +4,7 @@ import { Editor } from "@tiptap/react";
 import { Loader2, BarChart } from "lucide-react";
 import { useToast } from "../../../hooks/use-toast";
 import { UpgradeModal } from "../../subscription/UpgradeModal";
-import { runCitationAudit } from "../../../services/citationAudit/citationAuditEngine";
+import { BibliographyManager } from "../../../services/citationAudit/bibliographyEngine";
 
 interface CitationAuditAdapterProps {
     projectId: string;
@@ -39,11 +39,19 @@ export const CitationAuditAdapter: React.FC<CitationAuditAdapterProps> = ({
 
         try {
             setIsScanning(true);
-            const result = await runCitationAudit(
-                editor?.getJSON() as any, // Type assertion for compatibility
-                citationStyle || "APA",
-                citationLibrary
+            const rawResult = await BibliographyManager.auditDocument(
+                editor?.getJSON() as any, // Pass Tiptap document JSON
+                projectId
             );
+
+            // Map simplified audit to legacy format
+            const result = {
+                state: "COMPLETED_SUCCESS",
+                violations: rawResult.flags,
+                verificationResults: rawResult.verificationResults,
+                integrityIndex: rawResult.integrityIndex,
+                tierMetadata: {}
+            };
 
             onScanComplete(result);
 

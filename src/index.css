@@ -1290,3 +1290,10 @@ mark.citation-highlight[data-type="violation"] {
   pointer-events: none;
   z-index: 10;
 }
+
+/* Global Link Autostyling */
+.ProseMirror a {
+  text-decoration: underline;
+  color: #2563eb;
+  cursor: pointer;
+}

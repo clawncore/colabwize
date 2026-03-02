@@ -149,17 +149,28 @@ export function CitationsPanel({
 
     // Extract last name from whatever format the author comes in as
     const getLastName = (a: any): string => {
+      let extracted = 'Author';
       if (typeof a === 'string') {
         const trimmed = a.trim();
         // "Smith, J." format — comma present, take part before it
-        if (trimmed.includes(',')) return trimmed.split(',')[0].trim();
-        // Two-word personal name e.g. "John Smith" — return last word (surname)
-        const parts = trimmed.split(' ').filter(Boolean);
-        if (parts.length === 2) return parts[1];
-        // Multi-word without comma = likely an organization name: use as-is
-        return trimmed;
+        if (trimmed.includes(',')) extracted = trimmed.split(',')[0].trim();
+        else {
+          // Two-word personal name e.g. "John Smith" — return last word (surname)
+          const parts = trimmed.split(' ').filter(Boolean);
+          if (parts.length === 2) extracted = parts[1];
+          // Multi-word without comma = likely an organization name: use as-is
+          else extracted = trimmed;
+        }
+      } else if (typeof a === 'object' && a !== null) {
+        extracted = a.lastName || a.family || a.literal || a.name || a.firstName || a.given || 'Author';
       }
-      return a.lastName || a.firstName || 'Author';
+
+      // Safety truncation: if the extracted name is still a massive string (like a title)
+      // gracefully truncate it to the first logical word.
+      if (extracted.length > 25) {
+        extracted = extracted.split(' ')[0].replace(/[^a-zA-Z\-]/g, '');
+      }
+      return extracted || 'Author';
     };
 
     let authorText = 'Author';

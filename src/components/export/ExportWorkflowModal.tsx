@@ -15,7 +15,7 @@ import {
 import { apiClient } from "../../services/apiClient";
 import { Project } from "../../services/documentService";
 import { useToast } from "../../hooks/use-toast";
-import { runCitationAudit } from "../../services/citationAudit/citationAuditEngine";
+import { BibliographyManager } from "../../services/citationAudit/bibliographyEngine";
 import { detectAndNormalizeCitations } from "../editor/utils/normalization";
 import { CitationStyleDialog } from "../citations/CitationStyleDialog";
 
@@ -105,9 +105,9 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             // Get fresh content if editor is available (since normalization changed it)
             const contentToAudit = editor ? editor.getJSON() : currentContent;
 
-            const result = await runCitationAudit(
-                contentToAudit,
-                project.citation_style || "apa"
+            const result = await BibliographyManager.auditDocument(
+                contentToAudit as any,
+                project.id
             );
             setAuditResult(result);
         } catch (error) {

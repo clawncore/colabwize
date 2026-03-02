@@ -66,7 +66,8 @@ export const PasteCitationExtension = Extension.create({
 
                                     const citationNode = schema.nodes.citation.create({
                                         citationId: entry.ref_key,
-                                        status: 'unresolved' // Force new paste to be audited
+                                        status: 'unresolved', // Force new paste to be audited
+                                        text: matchText
                                     });
                                     nodes.push(citationNode);
                                 } catch (error) {

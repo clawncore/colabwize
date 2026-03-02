@@ -152,6 +152,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                         sourceId: pendingCiteSource.id || pendingCiteSource.doi || pendingCiteSource.title,
                         style: style,
                         timestamp: new Date().toISOString(),
+                        fullReferenceEntry: pendingCiteSource
                     });
                     setPendingCiteSource(null);
                 }
@@ -337,14 +338,23 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                                             {(() => {
                                                 const authors = Array.isArray(source.authors) ? source.authors : source.author ? [source.author] : [];
                                                 const getLastName = (a: any): string => {
+                                                    let extracted = 'Author';
                                                     if (typeof a === 'string') {
                                                         const trimmed = a.trim();
-                                                        if (trimmed.includes(',')) return trimmed.split(',')[0].trim();
-                                                        const parts = trimmed.split(' ').filter(Boolean);
-                                                        if (parts.length === 2) return parts[1];
-                                                        return trimmed;
+                                                        if (trimmed.includes(',')) extracted = trimmed.split(',')[0].trim();
+                                                        else {
+                                                            const parts = trimmed.split(' ').filter(Boolean);
+                                                            if (parts.length === 2) extracted = parts[1];
+                                                            else extracted = trimmed;
+                                                        }
+                                                    } else if (typeof a === 'object' && a !== null) {
+                                                        extracted = a.lastName || a.family || a.literal || a.name || a.firstName || a.given || 'Author';
                                                     }
-                                                    return a.lastName || a.firstName || 'Author';
+
+                                                    if (extracted.length > 25) {
+                                                        extracted = extracted.split(' ')[0].replace(/[^a-zA-Z\-]/g, '');
+                                                    }
+                                                    return extracted || 'Author';
                                                 };
 
                                                 let authorText = 'Author';

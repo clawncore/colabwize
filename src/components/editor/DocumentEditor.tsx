@@ -42,7 +42,6 @@ import {
   RephraseAdapter,
 } from "./adapters";
 import { CitationNode } from "../../extensions/CitationNode";
-import { PasteCitationExtension } from "../../extensions/PasteCitationExtension";
 import { CitationAuditAdapter } from "./adapters/CitationAuditAdapter";
 import { UpgradeModal } from "../subscription/UpgradeModal";
 import { CitationStyleDialog } from "../citations/CitationStyleDialog";
@@ -56,6 +55,8 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableRow } from "@tiptap/extension-table-row";
 import TextAlign from "@tiptap/extension-text-align";
+import Link from "@tiptap/extension-link";
+import { CitationLifecycleExtension } from "../../extensions/CitationLifecycleExtension";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import { TextStyle } from "@tiptap/extension-text-style";
@@ -71,11 +72,6 @@ import { GrammarBubbleMenu } from "./GrammarBubbleMenu";
 import { AuditReportModal } from "../audit/AuditReportModal";
 import { EditorToolbar } from "./editor-toolbar";
 import { ExportWorkflowModal } from "../export/ExportWorkflowModal";
-import {
-  detectAndNormalizeCitations,
-  synchronizeRegistryWithDocument,
-  detectAndNormalizeBibliography,
-} from "./utils/normalization";
 import { VersionHistoryModal } from "./VersionHistoryModal";
 import {
   Download,
@@ -501,8 +497,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         Subscript,
         CitationNode,
         BibliographyEntry,
-        PasteCitationExtension.configure({
-          projectId: project.id,
+        CitationLifecycleExtension,
+        Link.configure({
+          openOnClick: true,
+          autolink: true,
+          linkOnPaste: true,
+          HTMLAttributes: {
+            class: 'text-blue-600 underline', // Clickable and underlined globally
+          }
         }),
         AutoNumbering, // Enable automatic figure and table numbering
         GrammarExtension, // AI Grammar Checker
@@ -521,6 +523,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           return;
         }
 
+<<<<<<< Updated upstream
         // --- Auto-remove orphaned bibliography entries ---
         // We use a short timeout to prevent Prosemirror "flush" errors during update cycles
         setTimeout(() => {
@@ -559,6 +562,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           }
         }, 50);
 
+=======
+>>>>>>> Stashed changes
         // Increment edit count when content changes
         setEditCount((prev) => prev + 1);
       },
@@ -641,6 +646,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     [project.id, isCollaborative, collabReady],
   );
 
+<<<<<<< Updated upstream
   // --- Detect when EditorContent has mounted the editor view into the DOM ---
   // We can't use `onCreate` (fires in the Editor constructor before EditorContent renders).
   // Instead, poll with requestAnimationFrame until editor.view.dom is available.
@@ -680,6 +686,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   }, [editor]);
 
   // Load project content only once per document
+=======
+  // Load project content only once per document (Non-Collaborative Mode)
+>>>>>>> Stashed changes
   useEffect(() => {
     if (editor && isEditorMounted && isViewReady(editor)) {
       if (onEditorReady) {
@@ -721,51 +730,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             // Use timeout to ensure editor is stable and we don't conflict with initial render transactions
             setTimeout(async () => {
               if (editor && !editor.isDestroyed) {
-                const result = await detectAndNormalizeCitations(
-                  editor,
-                  project.id,
-                  project.citations || [],
-                );
-
-                // Recover any existing nodes that were lost from registry
-                await synchronizeRegistryWithDocument(editor, project.id);
-
-                // Normalize bibliography block to interactive nodes
-                await detectAndNormalizeBibliography(editor, project.id);
-
-                // AUTO-DETECT STYLE Logic (70% Threshold)
-                if (result && result.stats) {
-                  const { ieee, apa } = result.stats;
-                  const total = ieee + apa;
-
-                  if (total > 0) {
-                    const currentStyle = project.citation_style || "apa";
-                    let detectedStyle = null;
-
-                    if (ieee / total >= 0.7) detectedStyle = "ieee";
-                    else if (apa / total >= 0.7) detectedStyle = "apa"; // or 'mla' depending on default
-
-                    if (detectedStyle && detectedStyle !== currentStyle) {
-                      console.log(
-                        `[AutoStyle] Switching from ${currentStyle} to ${detectedStyle} (Confidence: ${Math.round(((detectedStyle === "ieee" ? ieee : apa) / total) * 100)}%)`,
-                      );
-
-                      // Update Project
-                      const updatedProject = {
-                        ...project,
-                        citation_style: detectedStyle,
-                      };
-                      if (onProjectUpdate) onProjectUpdate(updatedProject);
-
-                      // Notify User
-                      toast({
-                        title: "Citation Style Optimized",
-                        description: `Switched to ${detectedStyle.toUpperCase()} based on your content.`,
-                        duration: 3000,
-                      });
-                    }
-                  }
-                }
+                // Normalization now happens purely on the backend. No auto-style detection needed here anymore.
               }
             }, 500);
           } catch (error) {
@@ -790,6 +755,34 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     isCollaborative,
   ]);
 
+  // Load Normalization for Collaborative Mode once initial sync is complete
+  useEffect(() => {
+    if (
+      isCollaborative &&
+      editor &&
+      isSynced &&
+      !hasInitializedContentRef.current
+    ) {
+      console.log("[Collab] Initial Sync Complete, triggering normalization...");
+      hasInitializedContentRef.current = true;
+      currentProjectIdRef.current = project.id;
+
+      const initCollabRegistry = async () => {
+        try {
+          const { CitationRegistryService } = await import("../../services/CitationRegistryService");
+          await CitationRegistryService.initializeFromBackend(project.id);
+          (window as any).__currentProjectId__ = project.id;
+
+          // Normalization now happens purely on the backend. No auto-style detection needed here anymore.
+        } catch (e) {
+          console.error("Collab Normalization Failed:", e);
+        }
+      };
+
+      initCollabRegistry();
+    }
+  }, [isCollaborative, editor, isSynced, project.id, project.citations]);
+
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
@@ -804,6 +797,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }
   }, [editor, isPreviewMode, isEditorMounted]);
 
+<<<<<<< Updated upstream
   // --- Periodic Normalization & Ordering (Debounced) ---
   useEffect(() => {
     if (
@@ -852,6 +846,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     editCount,
     project.citation_style,
   ]); // Added project.citation_style to trigger style updates
+=======
+
+>>>>>>> Stashed changes
 
   // --- Background Grammar Check (Debounced) ---
   useEffect(() => {
@@ -1488,11 +1485,18 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
+<<<<<<< Updated upstream
                   className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
                     isPreviewMode
                       ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
+=======
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
+                    ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+>>>>>>> Stashed changes
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1508,11 +1512,18 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
+<<<<<<< Updated upstream
                   className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
                     isFocusMode
                       ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
+=======
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
+                    ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
+>>>>>>> Stashed changes
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />
