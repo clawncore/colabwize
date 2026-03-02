@@ -25,7 +25,7 @@ import { MathExtension } from "../../extensions/MathExtension";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
 import { BibliographyEntry } from "../../extensions/BibliographyNode";
-import { NodeSelection } from '@tiptap/pm/state';
+import { NodeSelection } from "@tiptap/pm/state";
 import { documentService, Project } from "../../services/documentService";
 import { OriginalityScan } from "../../services/originalityService";
 import { AuthorshipService } from "../../services/authorshipService";
@@ -95,6 +95,19 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 
+// Synchronous helper: safely check if editor's view is mounted.
+// This is CRITICAL for collaborative mode where isEditorMounted state can be
+// STALE after editor recreation. React batches state updates, so effects may
+// run with isEditorMounted=true against a new unmounted editor.
+function isViewReady(ed: any): boolean {
+  if (!ed) return false;
+  try {
+    return !!(ed.view && ed.view.dom);
+  } catch {
+    return false;
+  }
+}
+
 interface DocumentEditorProps {
   project: Project;
   onProjectUpdate?: (updatedProject: Project) => void;
@@ -118,13 +131,21 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [ydoc, setYdoc] = useState<Y.Doc | null>(null);
+  // --- FIX: Use refs for provider/ydoc to prevent useEditor re-creation ---
+  // Storing these as refs ensures the editor is only created ONCE per project
+  // in collab mode, after the Y.Doc is synced. Previously, using useState caused
+  // useEditor to re-fire when provider/ydoc went from null → initialized,
+  // which duplicated the document content.
+  const ydocRef = useRef<Y.Doc | null>(null);
+  const providerRef = useRef<HocuspocusProvider | null>(null);
+  const [collabReady, setCollabReady] = useState(false);
+  const [isEditorMounted, setIsEditorMounted] = useState(false);
+
   const [collabStatus, setCollabStatus] = useState<string>("disconnected");
   const [isSynced, setIsSynced] = useState(false);
   const [collabError, setCollabError] = useState<string | null>(null);
   const isSyncedRef = useRef(false);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
 
   // --- FIX 3: Stable cursor color - generated once per component mount ---
   const cursorColor = useMemo(
@@ -139,7 +160,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // Handle Hocuspocus Lifecycle
   useEffect(() => {
     if (!isCollaborative || !project.id) {
-      setProvider(null);
+      providerRef.current = null;
+      ydocRef.current = null;
+      setCollabReady(false);
       setIsSynced(false);
       isSyncedRef.current = false;
       return;
@@ -150,6 +173,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     );
     setCollabStatus("connecting");
     setIsSynced(false);
+    setCollabReady(false);
     isSyncedRef.current = false;
     setCollabError(null);
 
@@ -183,7 +207,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     // Create a fresh Y.Doc for THIS project instance
     const freshYdoc = new Y.Doc();
-    setYdoc(freshYdoc);
+    ydocRef.current = freshYdoc;
 
     const newProvider = new HocuspocusProvider({
       url: process.env.REACT_APP_HOCUSPOCUS_URL || "ws://localhost:9081",
@@ -201,6 +225,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         console.log(`[HP Sync] Project ${project.id} ready`);
         setIsSynced(true);
         isSyncedRef.current = true;
+        // --- KEY FIX: Only flip collabReady ONCE after sync ---
+        // This is the single state change that triggers useEditor to create
+        // the editor with the Collaboration extension. The Y.Doc already has
+        // server content at this point, so no duplication occurs.
+        setCollabReady(true);
         setCollabError(null);
         if (connectionTimeoutRef.current) {
           clearTimeout(connectionTimeoutRef.current);
@@ -230,7 +259,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       });
     }
 
-    setProvider(newProvider);
+    providerRef.current = newProvider;
 
     return () => {
       console.log(
@@ -238,7 +267,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       );
       newProvider.destroy();
       freshYdoc.destroy();
-      setYdoc(null);
+      providerRef.current = null;
+      ydocRef.current = null;
     };
   }, [project.id, isCollaborative]);
 
@@ -262,18 +292,18 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         connectionTimeoutRef.current = null;
       }
     };
-  }, [isCollaborative, isSynced, provider]);
+  }, [isCollaborative, isSynced]);
 
   // Sync user identity when user profile is loaded
   useEffect(() => {
-    if (provider && user && isSynced) {
+    if (providerRef.current && user && isSynced) {
       console.log("Syncing user identity to Hocuspocus awareness", user);
-      provider.setAwarenessField("user", {
+      providerRef.current.setAwarenessField("user", {
         name: user?.user_metadata?.full_name || user?.email || "Anonymous",
         color: cursorColor,
       });
     }
-  }, [provider, user, isSynced, cursorColor]);
+  }, [user, isSynced, cursorColor]);
 
   const [title, setTitle] = useState(project.title);
   const [description, setDescription] = useState(project.description || "");
@@ -409,26 +439,30 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // we can safely add the Collaboration extensions immediately without crashing.
   const editor = useEditor(
     {
+      immediatelyRender: false, // Defer view creation until EditorContent mounts the DOM
       extensions: [
         StarterKit.configure({
           history: !isCollaborative, // Disable history in collab mode (handled by Yjs)
         } as any),
-        ...(isCollaborative && provider && ydoc
+        ...(isCollaborative &&
+        collabReady &&
+        providerRef.current &&
+        ydocRef.current
           ? [
-            Collaboration.configure({
-              document: ydoc, // Bind directly to the stable Y.Doc
-            }),
-            CollaborationCursor.configure({
-              provider: provider, // Bind directly to the Hocuspocus provider
-              user: {
-                name:
-                  user?.user_metadata?.full_name ||
-                  user?.email ||
-                  "Anonymous",
-                color: cursorColor,
-              },
-            }),
-          ]
+              Collaboration.configure({
+                document: ydocRef.current, // Bind directly to the stable Y.Doc (ref)
+              }),
+              CollaborationCursor.configure({
+                provider: providerRef.current, // Bind directly to the Hocuspocus provider (ref)
+                user: {
+                  name:
+                    user?.user_metadata?.full_name ||
+                    user?.email ||
+                    "Anonymous",
+                  color: cursorColor,
+                },
+              }),
+            ]
           : []),
         HighlightExtension,
         CharacterCount,
@@ -480,7 +514,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       // NOTE: In collab mode, content is loaded from Yjs (Hocuspocus server) not here.
       onUpdate: ({ editor, transaction }) => {
         // Prevent infinite loops from internal normalization/audit updates
-        if (transaction.getMeta('normalization') || transaction.getMeta('integrity-check')) {
+        if (
+          transaction.getMeta("normalization") ||
+          transaction.getMeta("integrity-check")
+        ) {
           return;
         }
 
@@ -492,14 +529,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           const citationIds = new Set<string>();
 
           currentDoc.descendants((node) => {
-            if (node.type.name === 'citation' && node.attrs.citationId) {
+            if (node.type.name === "citation" && node.attrs.citationId) {
               citationIds.add(node.attrs.citationId);
             }
           });
 
-          const deletePositions: { from: number, to: number }[] = [];
+          const deletePositions: { from: number; to: number }[] = [];
           currentDoc.descendants((node, pos) => {
-            if (node.type.name === 'bibliographyEntry') {
+            if (node.type.name === "bibliographyEntry") {
               const id = node.attrs.citationId;
               // If bibliography entry ID is not found in active citations, queue it for deletion
               if (id && !citationIds.has(id)) {
@@ -515,8 +552,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             deletePositions.forEach(({ from, to }) => {
               tr.delete(from, to);
             });
-            tr.setMeta('bibliography-sync', true);
-            editor.view.dispatch(tr);
+            tr.setMeta("bibliography-sync", true);
+            try {
+              if (editor.view && editor.view.dom) editor.view.dispatch(tr);
+            } catch (e) {}
           }
         }, 50);
 
@@ -533,38 +572,48 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           const target = event.target as HTMLElement;
 
           // --- Handle clicks on bibliography URL decorations (blue underlined URLs) ---
-          const bibUrlLink = target.closest('.bibliography-url-link') as HTMLElement;
+          const bibUrlLink = target.closest(
+            ".bibliography-url-link",
+          ) as HTMLElement;
           if (bibUrlLink) {
             event.preventDefault();
             event.stopPropagation();
-            const url = bibUrlLink.getAttribute('data-url');
-            if (url) window.open(url, '_blank', 'noopener,noreferrer');
+            const url = bibUrlLink.getAttribute("data-url");
+            if (url) window.open(url, "_blank", "noopener,noreferrer");
             return true;
           }
 
           // --- Handle clicks on in-text citation pills ---
-          const citation = target.closest("a.citation-node") as HTMLAnchorElement;
+          const citation = target.closest(
+            "a.citation-node",
+          ) as HTMLAnchorElement;
           if (citation) {
             event.preventDefault();
             event.stopPropagation();
 
             // data-url = external source URL (DOI etc); href = internal #bib-xxx anchor
-            const externalUrl = citation.getAttribute('data-url');
-            const anchorHref = citation.getAttribute('href');
-            const isModifierClick = event.ctrlKey || event.metaKey || event.shiftKey;
+            const externalUrl = citation.getAttribute("data-url");
+            const anchorHref = citation.getAttribute("href");
+            const isModifierClick =
+              event.ctrlKey || event.metaKey || event.shiftKey;
 
             if (isModifierClick && externalUrl) {
               // Ctrl/Cmd+Click → open external source
-              window.open(externalUrl, '_blank', 'noopener,noreferrer');
-            } else if (anchorHref && anchorHref.startsWith('#')) {
+              window.open(externalUrl, "_blank", "noopener,noreferrer");
+            } else if (anchorHref && anchorHref.startsWith("#")) {
               // Normal click → scroll to bibliography entry and flash it
               const targetId = anchorHref.substring(1);
               const targetElement = document.getElementById(targetId);
               if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                targetElement.style.transition = 'background-color 0.5s ease';
-                targetElement.style.backgroundColor = '#eff6ff';
-                setTimeout(() => { targetElement.style.backgroundColor = 'transparent'; }, 2000);
+                targetElement.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+                targetElement.style.transition = "background-color 0.5s ease";
+                targetElement.style.backgroundColor = "#eff6ff";
+                setTimeout(() => {
+                  targetElement.style.backgroundColor = "transparent";
+                }, 2000);
               }
             }
 
@@ -586,12 +635,53 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       // binds the editor to them persistently until the component unmounts.
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [isCollaborative, project.id, provider, ydoc],
+    // --- FIX: Use collabReady (not provider/ydoc objects) to prevent double editor creation ---
+    // collabReady only becomes true ONCE after onSynced, so the editor is created exactly once
+    // per project with the Y.Doc already containing server content. No duplication.
+    [project.id, isCollaborative, collabReady],
   );
+
+  // --- Detect when EditorContent has mounted the editor view into the DOM ---
+  // We can't use `onCreate` (fires in the Editor constructor before EditorContent renders).
+  // Instead, poll with requestAnimationFrame until editor.view.dom is available.
+  useEffect(() => {
+    if (!editor) {
+      setIsEditorMounted(false);
+      return;
+    }
+
+    // Helper: check if view is truly mounted
+    const checkView = (): boolean => {
+      try {
+        return !!(editor.view && editor.view.dom);
+      } catch {
+        return false;
+      }
+    };
+
+    // Already mounted (e.g. non-collab mode where editor is reused)
+    if (checkView()) {
+      setIsEditorMounted(true);
+      return;
+    }
+
+    // Poll until EditorContent renders and mounts the view
+    let rafId: number;
+    const poll = () => {
+      if (checkView()) {
+        setIsEditorMounted(true);
+      } else {
+        rafId = requestAnimationFrame(poll);
+      }
+    };
+    rafId = requestAnimationFrame(poll);
+
+    return () => cancelAnimationFrame(rafId);
+  }, [editor]);
 
   // Load project content only once per document
   useEffect(() => {
-    if (editor) {
+    if (editor && isEditorMounted && isViewReady(editor)) {
       if (onEditorReady) {
         onEditorReady(editor);
       }
@@ -690,20 +780,39 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         initDocumentWithRegistry();
       }
     }
-  }, [project, editor, onEditorReady, onProjectUpdate, toast, isCollaborative]);
+  }, [
+    project,
+    editor,
+    isEditorMounted,
+    onEditorReady,
+    onProjectUpdate,
+    toast,
+    isCollaborative,
+  ]);
 
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   useEffect(() => {
-    if (editor && !editor.isDestroyed) {
+    if (
+      editor &&
+      !editor.isDestroyed &&
+      isEditorMounted &&
+      isViewReady(editor)
+    ) {
       editor.setEditable(!isPreviewMode);
     }
-  }, [editor, isPreviewMode]);
+  }, [editor, isPreviewMode, isEditorMounted]);
 
   // --- Periodic Normalization & Ordering (Debounced) ---
   useEffect(() => {
-    if (!editor || !project.citations) return;
+    if (
+      !editor ||
+      !isEditorMounted ||
+      !isViewReady(editor) ||
+      !project.citations
+    )
+      return;
 
     // Stress Guard: Increase debounce for large documents
     const citationCount = project.citations.length;
@@ -737,6 +846,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     return () => clearTimeout(timeoutId);
   }, [
     editor,
+    isEditorMounted,
     project.id,
     project.citations,
     editCount,
@@ -745,10 +855,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   // --- Background Grammar Check (Debounced) ---
   useEffect(() => {
-    if (!editor) return;
+    if (!editor || !isEditorMounted || !isViewReady(editor)) return;
 
     // Don't check strictly empty or very short docs
-    const text = editor.getText();
+    let text = "";
+    try {
+      text = editor.getText();
+    } catch (e) {
+      return; // editor view not available yet
+    }
     if (text.length < 10) return;
 
     const checkGrammar = async () => {
@@ -833,7 +948,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         tr.removeMark(start, end, markType);
 
         if (errors.length === 0) {
-          editor.view.dispatch(tr); // Dispatch clear
+          try {
+            if (editor.view && editor.view.dom) editor.view.dispatch(tr);
+          } catch (e) {} // Dispatch clear
           console.log("âœ… No grammar issues in block.");
           return;
         }
@@ -869,7 +986,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         });
 
         if (matchCount > 0 || errors.length === 0) {
-          editor.view.dispatch(tr);
+          try {
+            if (editor.view && editor.view.dom) editor.view.dispatch(tr);
+          } catch (e) {}
           console.log(`âœ… Applied ${matchCount} grammar highlights to block.`);
         }
       } catch (error) {
@@ -879,7 +998,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     const timeoutId = setTimeout(checkGrammar, 2000); // 2s debounce
     return () => clearTimeout(timeoutId);
-  }, [editCount, editor]); // Re-run on editCount change
+  }, [editCount, editor, isEditorMounted]); // Re-run on editCount change
 
   const statsRef = useRef({
     timeSpent: 0,
@@ -918,7 +1037,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
       // Get AI stats from extension storage if available
       const currentAiEditCount =
-        (editor?.storage as any).aiTracking?.aiEditCount || 0;
+        (editor?.storage as any)?.aiTracking?.aiEditCount || 0;
 
       // Calculate Deltas
       const timeDelta =
@@ -1267,7 +1386,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   return (
     <EditorProvider editor={editor}>
-      {editor && <GrammarBubbleMenu editor={editor} />}
+      {editor && isEditorMounted && <GrammarBubbleMenu editor={editor} />}
       <AuditReportModal
         isOpen={!!auditReport}
         onClose={() => setAuditReport(null)}
@@ -1369,10 +1488,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isPreviewMode
                       ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
+                  }`}
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1388,10 +1508,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isFocusMode
                       ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
+                  }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />
@@ -1500,27 +1621,40 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         )}
 
         {/* Editor Toolbar - Hidden in Focus Mode */}
-        {!isFocusMode && <EditorToolbar editor={editor} />}
+        {!isFocusMode && isEditorMounted && <EditorToolbar editor={editor} />}
 
         {/* Editor Content & Sidebar Container */}
         <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
             {/* Main Editor Area */}
             <div
-              className={`flex-1 overflow-auto transition-all duration-500 ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}
-            // Click handling is now inside tiptap's editorProps.handleClick to successfully intercept navigation
-
-            >
-              {editor && <TableBubbleMenu editor={editor} />}
+              className={`flex-1 overflow-auto transition-all duration-500 cursor-text ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}
+              onClick={(e) => {
+                // When clicking the empty space around the editor (not the content itself),
+                // focus the editor at the end so the user can start typing immediately
+                if (editor && !editor.isDestroyed && isViewReady(editor)) {
+                  const target = e.target as HTMLElement;
+                  // Only handle clicks on the wrapper itself or the EditorContent container,
+                  // NOT on actual editor content (ProseMirror handles those)
+                  const isProseMirror = target.closest(".ProseMirror");
+                  if (!isProseMirror) {
+                    e.preventDefault();
+                    editor.commands.focus("end");
+                  }
+                }
+              }}>
+              {editor && isEditorMounted && <TableBubbleMenu editor={editor} />}
               <EditorContent
                 editor={editor}
                 className={`${isFocusMode ? "max-w-[900px]" : "max-w-[816px]"} mx-auto prose prose-lg min-h-full focus:outline-none p-8 bg-white rounded-lg shadow-sm`}
               />
               {/* Behavioral Tracker */}
-              <BehavioralTracker
-                projectId={project.id}
-                userId={project.user_id}
-              />
+              {isEditorMounted && (
+                <BehavioralTracker
+                  projectId={project.id}
+                  userId={project.user_id}
+                />
+              )}
             </div>
           </div>
         </div>

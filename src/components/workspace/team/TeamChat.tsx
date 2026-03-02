@@ -24,9 +24,12 @@ import TeamChatService, {
 import { supabase } from "../../../lib/supabase/client";
 import { useUser } from "../../../services/useUser";
 import { useParams } from "react-router-dom";
-import WorkspaceService from "../../../services/workspaceService";
+import WorkspaceService, {
+  WorkspaceMember,
+} from "../../../services/workspaceService";
 import WorkspaceTaskService from "../../../services/workspaceTaskService";
 import NotificationService from "../../../services/notificationService";
+import { UserDetailsPanel } from "./UserDetailsPanel";
 
 interface TeamChatProps {
   workspaceId?: string;
@@ -56,6 +59,12 @@ export function TeamChat({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [members, setMembers] = useState<MentionUser[]>([]);
+  const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceMember[]>(
+    [],
+  );
+  const [selectedUser, setSelectedUser] = useState<WorkspaceMember | null>(
+    null,
+  );
   const [showScrollButton, setShowScrollButton] = useState(false);
 
   // Helper to format date for separators
@@ -138,7 +147,12 @@ export function TeamChat({
     if (effectiveWorkspaceId) {
       WorkspaceService.getWorkspace(effectiveWorkspaceId)
         .then((data) => {
-          if (data) setWorkspaceName(data.name);
+          if (data) {
+            setWorkspaceName(data.name);
+            if (data.members) {
+              setWorkspaceMembers(data.members);
+            }
+          }
         })
         .catch((err) => console.error("Failed to fetch workspace name", err));
     }
@@ -359,281 +373,311 @@ export function TeamChat({
     }
   };
 
+  const handleUserClick = (userId: string) => {
+    // Attempt to find the full member details
+    const member = workspaceMembers.find((m) => m.user_id === userId);
+    if (member) {
+      setSelectedUser(member);
+    } else {
+      console.warn("Could not find full member details for user:", userId);
+    }
+  };
+
   return (
     <div
-      className={`flex flex-col h-full bg-white border-l border-border overflow-hidden ${className}`}>
-      {/* Page Header - Refined Minimalist Style */}
-      <div className="px-6 py-4 bg-white border-b border-gray-100 flex items-center justify-between shrink-0">
-        <div className="flex flex-col">
-          <h1 className="text-base font-bold tracking-tight text-slate-800 flex items-center gap-2">
-            {workspaceName || (
-              <div className="h-5 w-32 bg-gray-50 animate-pulse rounded" />
-            )}{" "}
-            Group Chat
-          </h1>
-          <div className="flex items-center gap-2 mt-0.5">
-            <p className="text-[10px] text-emerald-600 flex items-center gap-1 font-bold tracking-wide uppercase">
-              <Lock className="w-2.5 h-2.5" /> Encrypted
-            </p>
-            <span className="text-[10px] text-slate-300">•</span>
-            <p className="text-[10px] text-slate-400 font-medium">
-              {messages.length} messages
-            </p>
+      className={`flex flex-row h-full border-l border-border bg-white overflow-hidden relative ${className}`}>
+      {/* Left Side: Main Chat UI */}
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+        {/* Page Header - Refined Minimalist Style */}
+        <div className="px-6 py-4 bg-white border-b border-gray-100 flex items-center justify-between shrink-0">
+          <div className="flex flex-col">
+            <h1 className="text-base font-bold tracking-tight text-slate-800 flex items-center gap-2">
+              {workspaceName || (
+                <div className="h-5 w-32 bg-gray-50 animate-pulse rounded" />
+              )}{" "}
+              Group Chat
+            </h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-[10px] text-emerald-600 flex items-center gap-1 font-bold tracking-wide uppercase">
+                <Lock className="w-2.5 h-2.5" /> Encrypted
+              </p>
+              <span className="text-[10px] text-slate-300">•</span>
+              <p className="text-[10px] text-slate-400 font-medium">
+                {messages.length} messages
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleNewChat}
+              className="h-8 w-8 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all"
+              title="New Chat">
+              <Plus className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSearching(!isSearching)}
+              className={`h-8 w-8 rounded-full transition-all ${isSearching ? "text-emerald-600 bg-emerald-50" : "text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"}`}
+              title="Chat History / Search">
+              <History className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearChat}
+              className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all"
+              title="Clear Chat">
+              <Eraser className="w-4 h-4" />
+            </Button>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleNewChat}
-            className="h-8 w-8 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all"
-            title="New Chat">
-            <Plus className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSearching(!isSearching)}
-            className={`h-8 w-8 rounded-full transition-all ${isSearching ? "text-emerald-600 bg-emerald-50" : "text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"}`}
-            title="Chat History / Search">
-            <History className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleClearChat}
-            className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all"
-            title="Clear Chat">
-            <Eraser className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
-      {isSearching && (
-        <div className="px-6 py-2 bg-slate-50/50 border-b border-gray-100 animate-in slide-in-from-top-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search in conversation..."
-              className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-9 pr-4 text-xs focus:outline-none focus:border-emerald-500/50 transition-all"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        {isSearching && (
+          <div className="px-6 py-2 bg-slate-50/50 border-b border-gray-100 animate-in slide-in-from-top-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search in conversation..."
+                className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-9 pr-4 text-xs focus:outline-none focus:border-emerald-500/50 transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Messages Area - Ultra-clean White Background */}
-      <div className="relative flex-1 flex flex-col min-h-0">
-        <ScrollArea
-          className="flex-1 px-4 py-6 scroll-smooth"
-          ref={scrollRef}
-          onScrollCapture={handleScroll}>
-          <div className="flex flex-col gap-4 max-w-4xl mx-auto pb-4">
-            {loading ? (
-              <div className="flex items-center justify-center py-10">
-                <Loader2 className="h-6 w-6 text-emerald-600 animate-spin" />
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <div className="bg-gray-50 p-6 rounded-full mb-6 border border-gray-100">
-                  <MessageSquare className="w-8 h-8 text-gray-300" />
+        {/* Messages Area - Ultra-clean White Background */}
+        <div className="relative flex-1 flex flex-col min-h-0">
+          <ScrollArea
+            className="flex-1 px-4 py-6 scroll-smooth"
+            ref={scrollRef}
+            onScrollCapture={handleScroll}>
+            <div className="flex flex-col gap-4 max-w-4xl mx-auto pb-4">
+              {loading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-6 w-6 text-emerald-600 animate-spin" />
                 </div>
-                <p className="text-sm font-semibold text-gray-400">
-                  Secure Team Communication
-                </p>
-                <p className="text-xs text-gray-300 mt-1 max-w-[200px]">
-                  Messages are protected with workspace-level encryption.
-                </p>
-              </div>
-            ) : (
-              (() => {
-                const filteredMessages = messages.filter(
-                  (msg) =>
-                    !searchQuery ||
-                    msg.content
-                      .toLowerCase()
-                      .includes(searchQuery.toLowerCase()) ||
-                    msg.user.full_name
-                      ?.toLowerCase()
-                      .includes(searchQuery.toLowerCase()) ||
-                    msg.user.email
-                      ?.toLowerCase()
-                      .includes(searchQuery.toLowerCase()),
-                );
-
-                if (filteredMessages.length === 0 && searchQuery) {
-                  return (
-                    <div className="flex flex-col items-center justify-center py-20 text-center text-slate-400">
-                      <Search className="w-8 h-8 opacity-20 mb-3" />
-                      <p>No messages found matching "{searchQuery}"</p>
-                    </div>
+              ) : messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-24 text-center">
+                  <div className="bg-gray-50 p-6 rounded-full mb-6 border border-gray-100">
+                    <MessageSquare className="w-8 h-8 text-gray-300" />
+                  </div>
+                  <p className="text-sm font-semibold text-gray-400">
+                    Secure Team Communication
+                  </p>
+                  <p className="text-xs text-gray-300 mt-1 max-w-[200px]">
+                    Messages are protected with workspace-level encryption.
+                  </p>
+                </div>
+              ) : (
+                (() => {
+                  const filteredMessages = messages.filter(
+                    (msg) =>
+                      !searchQuery ||
+                      msg.content
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase()) ||
+                      msg.user.full_name
+                        ?.toLowerCase()
+                        .includes(searchQuery.toLowerCase()) ||
+                      msg.user.email
+                        ?.toLowerCase()
+                        .includes(searchQuery.toLowerCase()),
                   );
-                }
 
-                let lastDate = "";
-                return filteredMessages.map((msg, index) => {
-                  const isMe = msg.user_id === user?.id;
-                  const msgDate = new Date(msg.created_at).toDateString();
-                  const showSeparator = msgDate !== lastDate;
-                  if (showSeparator) lastDate = msgDate;
+                  if (filteredMessages.length === 0 && searchQuery) {
+                    return (
+                      <div className="flex flex-col items-center justify-center py-20 text-center text-slate-400">
+                        <Search className="w-8 h-8 opacity-20 mb-3" />
+                        <p>No messages found matching "{searchQuery}"</p>
+                      </div>
+                    );
+                  }
 
-                  return (
-                    <div key={msg.id || index} className="flex flex-col gap-4">
-                      {showSeparator && (
-                        <div className="flex justify-center my-4 sticky top-2 z-10">
-                          <span className="bg-slate-100/80 backdrop-blur-sm text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm border border-slate-200/50 uppercase tracking-widest">
-                            {formatDateSeparator(msg.created_at)}
-                          </span>
-                        </div>
-                      )}
+                  let lastDate = "";
+                  return filteredMessages.map((msg, index) => {
+                    const isMe = msg.user_id === user?.id;
+                    const msgDate = new Date(msg.created_at).toDateString();
+                    const showSeparator = msgDate !== lastDate;
+                    if (showSeparator) lastDate = msgDate;
+
+                    return (
                       <div
-                        className={`flex items-start gap-2.5 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-                        <Avatar
-                          className={`h-7 w-7 shrink-0 border ${isMe ? "border-emerald-100" : "border-slate-100"}`}>
-                          <AvatarImage src={undefined} />
-                          <AvatarFallback
-                            className={`${isMe ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500"} text-[10px] font-bold`}>
-                            {msg.user.full_name?.charAt(0) ||
-                              msg.user.email?.charAt(0) ||
-                              "U"}
-                          </AvatarFallback>
-                        </Avatar>
-
-                        <div
-                          className={`group relative max-w-[85%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                          {!isMe && (
-                            <span className="text-[10px] font-bold text-slate-400 ml-1 mb-1 uppercase tracking-wider">
-                              {msg.user.full_name || "Team Member"}
+                        key={msg.id || index}
+                        className="flex flex-col gap-4">
+                        {showSeparator && (
+                          <div className="flex justify-center my-4 sticky top-2 z-10">
+                            <span className="bg-slate-100/80 backdrop-blur-sm text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm border border-slate-200/50 uppercase tracking-widest">
+                              {formatDateSeparator(msg.created_at)}
                             </span>
-                          )}
+                          </div>
+                        )}
+                        <div
+                          className={`flex items-start gap-2.5 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+                          <button
+                            onClick={() => handleUserClick(msg.user_id)}
+                            className="focus:outline-none transition-transform hover:scale-105"
+                            title={`View ${msg.user.full_name || "User"} profile`}>
+                            <Avatar
+                              className={`h-7 w-7 shrink-0 border ${isMe ? "border-emerald-100" : "border-slate-100"}`}>
+                              <AvatarImage src={undefined} />
+                              <AvatarFallback
+                                className={`${isMe ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-500"} text-[10px] font-bold`}>
+                                {msg.user.full_name?.charAt(0) ||
+                                  msg.user.email?.charAt(0) ||
+                                  "U"}
+                              </AvatarFallback>
+                            </Avatar>
+                          </button>
 
                           <div
-                            className={`text-[13px] leading-[1.5] py-2 px-3.5 rounded-2xl break-words relative transition-all border shadow-sm
+                            className={`group relative max-w-[85%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                            {!isMe && (
+                              <button
+                                onClick={() => handleUserClick(msg.user_id)}
+                                className="focus:outline-none text-[10px] font-bold text-slate-400 hover:text-emerald-600 transition-colors ml-1 mb-1 uppercase tracking-wider text-left"
+                                title={`View ${msg.user.full_name || "User"} profile`}>
+                                {msg.user.full_name || "Team Member"}
+                              </button>
+                            )}
+
+                            <div
+                              className={`text-[13px] leading-[1.5] py-2 px-3.5 rounded-2xl break-words relative transition-all border shadow-sm
                               ${
                                 isMe
                                   ? "bg-emerald-50/50 border-emerald-100 text-slate-800 rounded-tr-none"
                                   : "bg-white border-slate-100 text-slate-800 rounded-tl-none"
                               }`}>
-                            {msg.parent && (
-                              <div className="mb-2 p-2 bg-slate-50/80 border-l-2 border-emerald-500 rounded text-[11px] text-slate-500 italic flex flex-col gap-0.5">
-                                <span className="font-bold text-[10px] text-emerald-600 non-italic not-italic">
-                                  Replying to{" "}
-                                  {msg.parent.user.full_name || "Team Member"}
-                                </span>
-                                <span className="line-clamp-1">
-                                  {msg.parent.content}
-                                </span>
-                              </div>
-                            )}
+                              {msg.parent && (
+                                <div className="mb-2 p-2 bg-slate-50/80 border-l-2 border-emerald-500 rounded text-[11px] text-slate-500 italic flex flex-col gap-0.5">
+                                  <span className="font-bold text-[10px] text-emerald-600 non-italic not-italic">
+                                    Replying to{" "}
+                                    {msg.parent.user.full_name || "Team Member"}
+                                  </span>
+                                  <span className="line-clamp-1">
+                                    {msg.parent.content}
+                                  </span>
+                                </div>
+                              )}
 
-                            <div className="flex flex-col gap-0.5">
-                              <span>{msg.content}</span>
-                              <div
-                                className={`flex items-center justify-end gap-1 -mb-0.5 -mr-1 self-end`}>
-                                <span className="text-[9px] text-slate-400 font-medium">
-                                  {new Date(msg.created_at).toLocaleTimeString(
-                                    [],
-                                    {
+                              <div className="flex flex-col gap-0.5">
+                                <span>{msg.content}</span>
+                                <div
+                                  className={`flex items-center justify-end gap-1 -mb-0.5 -mr-1 self-end`}>
+                                  <span className="text-[9px] text-slate-400 font-medium">
+                                    {new Date(
+                                      msg.created_at,
+                                    ).toLocaleTimeString([], {
                                       hour: "2-digit",
                                       minute: "2-digit",
                                       hour12: false,
-                                    },
+                                    })}
+                                  </span>
+                                  {isMe && (
+                                    <CheckCheck className="w-3 h-3 text-emerald-500" />
                                   )}
-                                </span>
-                                {isMe && (
-                                  <CheckCheck className="w-3 h-3 text-emerald-500" />
-                                )}
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          {/* Message Actions (Visible on hover) */}
-                          <div
-                            className={`flex items-center gap-3 mt-1 opacity-0 group-hover:opacity-100 transition-opacity px-1`}>
-                            <button
-                              onClick={() => setReplyTo(msg)}
-                              className="text-[10px] text-slate-400 hover:text-emerald-600 flex items-center gap-1 transition-colors font-medium">
-                              <Reply className="w-3 h-3" /> Reply
-                            </button>
-                            {isMe && (
+                            {/* Message Actions (Visible on hover) */}
+                            <div
+                              className={`flex items-center gap-3 mt-1 opacity-0 group-hover:opacity-100 transition-opacity px-1`}>
                               <button
-                                onClick={() => handleDelete(msg.id)}
-                                className="text-[10px] text-slate-400 hover:text-rose-600 flex items-center gap-1 transition-colors font-medium">
-                                <Trash2 className="w-3 h-3" /> Delete
+                                onClick={() => setReplyTo(msg)}
+                                className="text-[10px] text-slate-400 hover:text-emerald-600 flex items-center gap-1 transition-colors font-medium">
+                                <Reply className="w-3 h-3" /> Reply
                               </button>
-                            )}
+                              {isMe && (
+                                <button
+                                  onClick={() => handleDelete(msg.id)}
+                                  className="text-[10px] text-slate-400 hover:text-rose-600 flex items-center gap-1 transition-colors font-medium">
+                                  <Trash2 className="w-3 h-3" /> Delete
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                });
-              })()
-            )}
-          </div>
-        </ScrollArea>
-
-        {/* Scroll to Bottom Button */}
-        {showScrollButton && (
-          <button
-            onClick={scrollToBottom}
-            className="absolute bottom-4 right-6 h-9 w-9 bg-white border border-slate-200 rounded-full shadow-lg flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:border-emerald-200 transition-all animate-bounce z-20"
-            title="Scroll to latest">
-            <ChevronDown className="w-5 h-5" />
-          </button>
-        )}
-      </div>
-
-      {/* Input Area */}
-      <div className="p-4 bg-white border-t border-border shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
-        {replyTo && (
-          <div className="flex items-center justify-between mb-3 p-2 bg-emerald-50/50 border-l-4 border-emerald-500 rounded text-[10px] animate-in slide-in-from-bottom-2">
-            <div className="flex items-center gap-2 truncate">
-              <div className="bg-emerald-100 p-1 rounded">
-                <Reply className="w-3 h-3 text-emerald-600" />
-              </div>
-              <div>
-                <span className="font-bold text-emerald-700">
-                  Replying to {replyTo.user.full_name || "User"}
-                </span>
-                <p className="text-slate-500 truncate max-w-[200px]">
-                  {replyTo.content}
-                </p>
-              </div>
+                    );
+                  });
+                })()
+              )}
             </div>
-            <button
-              onClick={() => setReplyTo(null)}
-              className="p-1 hover:bg-emerald-100 rounded-full transition-all">
-              <X className="w-3 h-3 text-slate-400" />
-            </button>
-          </div>
-        )}
+          </ScrollArea>
 
-        <form
-          onSubmit={handleSend}
-          className="flex gap-3 items-center max-w-4xl mx-auto">
-          <div className="flex-1 bg-slate-50 rounded-2xl border border-slate-200 focus-within:border-emerald-500/50 transition-all px-3 py-1 flex items-center shadow-sm">
-            <MentionInput
-              value={inputValue}
-              onChange={setInputValue}
-              users={members}
-              placeholder="Type a message..."
-              className="flex-1 bg-transparent border-none focus-visible:ring-0 min-h-[36px] max-h-[120px] text-[13px] py-2"
-              onEnter={() => handleSend()}
-            />
-          </div>
-          <Button
-            type="submit"
-            size="icon"
-            className="h-10 w-10 rounded-full bg-emerald-600 hover:bg-emerald-700 shadow-md transform hover:scale-105 active:scale-95 transition-all shrink-0"
-            disabled={!inputValue.trim()}>
-            <Send className="w-5 h-5 text-white" />
-          </Button>
-        </form>
+          {/* Scroll to Bottom Button */}
+          {showScrollButton && (
+            <button
+              onClick={scrollToBottom}
+              className="absolute bottom-4 right-6 h-9 w-9 bg-white border border-slate-200 rounded-full shadow-lg flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:border-emerald-200 transition-all animate-bounce z-20"
+              title="Scroll to latest">
+              <ChevronDown className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Input Area */}
+        <div className="p-4 bg-white border-t border-border shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
+          {replyTo && (
+            <div className="flex items-center justify-between mb-3 p-2 bg-emerald-50/50 border-l-4 border-emerald-500 rounded text-[10px] animate-in slide-in-from-bottom-2">
+              <div className="flex items-center gap-2 truncate">
+                <div className="bg-emerald-100 p-1 rounded">
+                  <Reply className="w-3 h-3 text-emerald-600" />
+                </div>
+                <div>
+                  <span className="font-bold text-emerald-700">
+                    Replying to {replyTo.user.full_name || "User"}
+                  </span>
+                  <p className="text-slate-500 truncate max-w-[200px]">
+                    {replyTo.content}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setReplyTo(null)}
+                className="p-1 hover:bg-emerald-100 rounded-full transition-all">
+                <X className="w-3 h-3 text-slate-400" />
+              </button>
+            </div>
+          )}
+
+          <form
+            onSubmit={handleSend}
+            className="flex gap-3 items-center max-w-4xl mx-auto">
+            <div className="flex-1 bg-slate-50 rounded-2xl border border-slate-200 focus-within:border-emerald-500/50 transition-all px-3 py-1 flex items-center shadow-sm">
+              <MentionInput
+                value={inputValue}
+                onChange={setInputValue}
+                users={members}
+                placeholder="Type a message..."
+                className="flex-1 bg-transparent border-none focus-visible:ring-0 min-h-[36px] max-h-[120px] text-[13px] py-2"
+                onEnter={() => handleSend()}
+              />
+            </div>
+            <Button
+              type="submit"
+              size="icon"
+              className="h-10 w-10 rounded-full bg-emerald-600 hover:bg-emerald-700 shadow-md transform hover:scale-105 active:scale-95 transition-all shrink-0"
+              disabled={!inputValue.trim()}>
+              <Send className="w-5 h-5 text-white" />
+            </Button>
+          </form>
+        </div>
       </div>
+
+      {/* Right Side: User Details Panel */}
+      {selectedUser && (
+        <UserDetailsPanel
+          member={selectedUser}
+          onClose={() => setSelectedUser(null)}
+        />
+      )}
     </div>
   );
 }

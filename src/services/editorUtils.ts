@@ -13,7 +13,7 @@ import { Editor } from "@tiptap/react";
 export function safeInsertContent(
   editor: Editor,
   content: any,
-  position?: number
+  position?: number,
 ): boolean {
   if (!editor) {
     console.warn("Cannot insert content: editor is not available");
@@ -26,14 +26,14 @@ export function safeInsertContent(
       // Check if position is a valid number
       if (typeof position !== "number" || isNaN(position)) {
         console.warn(
-          "Invalid position provided, falling back to current cursor position"
+          "Invalid position provided, falling back to current cursor position",
         );
         position = undefined;
       }
       // Check if position is within document bounds
       else if (position < 0 || position > editor.state.doc.content.size) {
         console.warn(
-          "Position out of bounds, falling back to current cursor position"
+          "Position out of bounds, falling back to current cursor position",
         );
         position = undefined;
       }
@@ -106,7 +106,7 @@ export function safeSetContent(editor: Editor, content: any): boolean {
  * @param editor The Tiptap editor instance
  */
 export function validateSelection(
-  editor: Editor
+  editor: Editor,
 ): { from: number; to: number } | null {
   if (!editor) {
     return null;
@@ -222,9 +222,11 @@ export function safeDeleteTable(editor: Editor): boolean {
       // We found a table, delete it safely
       const tr = editor.state.tr.delete(
         tablePos,
-        tablePos + $from.node(depth).nodeSize
+        tablePos + $from.node(depth).nodeSize,
       );
-      editor.view.dispatch(tr);
+      try {
+        if (editor.view && editor.view.dom) editor.view.dispatch(tr);
+      } catch (e) {}
       return true;
     } else {
       // Not in a table, try the standard delete command
@@ -318,7 +320,7 @@ export function validateTableStructure(tableNode: any): any {
  */
 export function applyTemplateContentWithValidation(
   editor: Editor,
-  templateContent: any
+  templateContent: any,
 ): boolean {
   if (!editor || !templateContent) {
     console.warn("Cannot apply template: editor or content not available");
@@ -376,7 +378,7 @@ export function applyTemplateContentWithValidation(
 export function safeInsertTable(
   editor: Editor,
   rows: number = 3,
-  cols: number = 3
+  cols: number = 3,
 ): boolean {
   if (!editor) {
     console.warn("Cannot insert table: editor is not available");
