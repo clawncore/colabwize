@@ -441,24 +441,24 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           history: !isCollaborative, // Disable history in collab mode (handled by Yjs)
         } as any),
         ...(isCollaborative &&
-        collabReady &&
-        providerRef.current &&
-        ydocRef.current
+          collabReady &&
+          providerRef.current &&
+          ydocRef.current
           ? [
-              Collaboration.configure({
-                document: ydocRef.current, // Bind directly to the stable Y.Doc (ref)
-              }),
-              CollaborationCursor.configure({
-                provider: providerRef.current, // Bind directly to the Hocuspocus provider (ref)
-                user: {
-                  name:
-                    user?.user_metadata?.full_name ||
-                    user?.email ||
-                    "Anonymous",
-                  color: cursorColor,
-                },
-              }),
-            ]
+            Collaboration.configure({
+              document: ydocRef.current, // Bind directly to the stable Y.Doc (ref)
+            }),
+            CollaborationCursor.configure({
+              provider: providerRef.current, // Bind directly to the Hocuspocus provider (ref)
+              user: {
+                name:
+                  user?.user_metadata?.full_name ||
+                  user?.email ||
+                  "Anonymous",
+                color: cursorColor,
+              },
+            }),
+          ]
           : []),
         HighlightExtension,
         CharacterCount,
@@ -523,47 +523,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           return;
         }
 
-<<<<<<< Updated upstream
-        // --- Auto-remove orphaned bibliography entries ---
-        // We use a short timeout to prevent Prosemirror "flush" errors during update cycles
-        setTimeout(() => {
-          if (editor.isDestroyed) return;
-          const currentDoc = editor.state.doc;
-          const citationIds = new Set<string>();
 
-          currentDoc.descendants((node) => {
-            if (node.type.name === "citation" && node.attrs.citationId) {
-              citationIds.add(node.attrs.citationId);
-            }
-          });
-
-          const deletePositions: { from: number; to: number }[] = [];
-          currentDoc.descendants((node, pos) => {
-            if (node.type.name === "bibliographyEntry") {
-              const id = node.attrs.citationId;
-              // If bibliography entry ID is not found in active citations, queue it for deletion
-              if (id && !citationIds.has(id)) {
-                deletePositions.push({ from: pos, to: pos + node.nodeSize });
-              }
-            }
-          });
-
-          if (deletePositions.length > 0) {
-            // Sort descending so deleting higher indexes doesn't shift lower indexes
-            deletePositions.sort((a, b) => b.from - a.from);
-            const tr = editor.state.tr;
-            deletePositions.forEach(({ from, to }) => {
-              tr.delete(from, to);
-            });
-            tr.setMeta("bibliography-sync", true);
-            try {
-              if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-            } catch (e) {}
-          }
-        }, 50);
-
-=======
->>>>>>> Stashed changes
         // Increment edit count when content changes
         setEditCount((prev) => prev + 1);
       },
@@ -646,7 +606,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     [project.id, isCollaborative, collabReady],
   );
 
-<<<<<<< Updated upstream
+
   // --- Detect when EditorContent has mounted the editor view into the DOM ---
   // We can't use `onCreate` (fires in the Editor constructor before EditorContent renders).
   // Instead, poll with requestAnimationFrame until editor.view.dom is available.
@@ -685,10 +645,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     return () => cancelAnimationFrame(rafId);
   }, [editor]);
 
-  // Load project content only once per document
-=======
   // Load project content only once per document (Non-Collaborative Mode)
->>>>>>> Stashed changes
   useEffect(() => {
     if (editor && isEditorMounted && isViewReady(editor)) {
       if (onEditorReady) {
@@ -797,58 +754,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }
   }, [editor, isPreviewMode, isEditorMounted]);
 
-<<<<<<< Updated upstream
-  // --- Periodic Normalization & Ordering (Debounced) ---
-  useEffect(() => {
-    if (
-      !editor ||
-      !isEditorMounted ||
-      !isViewReady(editor) ||
-      !project.citations
-    )
-      return;
 
-    // Stress Guard: Increase debounce for large documents
-    const citationCount = project.citations.length;
-    const debounceTime = citationCount > 80 ? 5000 : 2000;
-
-    if (citationCount > 80 && editCount % 5 === 0) {
-      console.warn(
-        `[StressGuard] Large document detected (${citationCount} refs). Debounce set to ${debounceTime}ms.`,
-      );
-    }
-
-    const timeoutId = setTimeout(async () => {
-      // 1. Run normalization (text -> blue pills)
-      await detectAndNormalizeCitations(
-        editor,
-        project.id,
-        project.citations || [],
-      );
-
-      // 2. Synchronize existing nodes with registry
-      await synchronizeRegistryWithDocument(editor, project.id);
-
-      import("../../services/CitationOrchestrator").then(
-        ({ CitationOrchestrator }) => {
-          const style = project.citation_style || "apa";
-          CitationOrchestrator.scheduleUpdate(editor, project.id, style);
-        },
-      );
-    }, debounceTime);
-
-    return () => clearTimeout(timeoutId);
-  }, [
-    editor,
-    isEditorMounted,
-    project.id,
-    project.citations,
-    editCount,
-    project.citation_style,
-  ]); // Added project.citation_style to trigger style updates
-=======
-
->>>>>>> Stashed changes
 
   // --- Background Grammar Check (Debounced) ---
   useEffect(() => {
@@ -947,7 +853,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) {} // Dispatch clear
+          } catch (e) { } // Dispatch clear
           console.log("âœ… No grammar issues in block.");
           return;
         }
@@ -985,7 +891,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (matchCount > 0 || errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) {}
+          } catch (e) { }
           console.log(`âœ… Applied ${matchCount} grammar highlights to block.`);
         }
       } catch (error) {
@@ -1485,18 +1391,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-<<<<<<< Updated upstream
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isPreviewMode
-                      ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
-=======
                   className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
                     ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
                     : "border-gray-300 text-gray-700 hover:bg-gray-50"
                     }`}
->>>>>>> Stashed changes
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1512,18 +1410,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-<<<<<<< Updated upstream
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isFocusMode
-                      ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
-=======
                   className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
                     ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
                     : "border-gray-300 text-gray-700 hover:bg-gray-50"
                     }`}
->>>>>>> Stashed changes
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />
