@@ -1,21 +1,23 @@
 # 🛠️ Team Setup: One-Click Git Workflow
 
-This project uses a "Main Integrator" workflow to avoid code-breaking conflicts.
+This project uses a "Main Integrator" workflow to avoid code-breaking conflicts across **Frontend** and **Backend**.
 
 ## 1. For the "Main Person" (You)
 You are the owner of the `main` branch. 
 
 ### Keyboard Shortcuts
-Use these two keys to manage the code:
-*   **Alt + M**: **Merge Craig's Work** into your machine.
-*   **Alt + P**: **Push to Main** (Sends your work + his work to the server).
+Use these keys to manage both repositories at once:
+*   **Alt + M**: **Merge Craig's Work** (Pulls and merges `craig-update` branch in both Frontend and Backend).
+*   **Alt + P**: **Push to Main** (Successfully pushes everything to the official `main` branches).
 
 ---
 
 ## 2. For the "Collaborator" (Craig)
-Craig works on a separate branch called `craig-update`. He needs to set up these local tasks.
+Craig works on separate branches called **`craig-update`** in **both** repositories (Root and Backend).
 
 ### Craig's tasks.json
+Craig should replace his `.vscode/tasks.json` with this version that handles both Frontend and Backend:
+
 ```json
 {
   "version": "2.0.0",
@@ -23,13 +25,13 @@ Craig works on a separate branch called `craig-update`. He needs to set up these
     {
       "label": "Push Share (Craig Only)",
       "type": "shell",
-      "command": "git add .; git commit -m 'Craig: Sharing updates'; git push origin craig-update",
+      "command": "git add .; git commit -m 'Craig: Sharing updates'; git push origin craig-update; Set-Location backend; git add .; git commit -m 'Craig: Sharing backend updates'; git push origin craig-update; Set-Location ..",
       "presentation": { "reveal": "always", "panel": "new" }
     },
     {
       "label": "Take Sync (Craig Only)",
       "type": "shell",
-      "command": "git add .; git commit -m 'Syncing with Main'; git pull origin main",
+      "command": "git add .; git commit -m 'Syncing with Main'; git pull origin main; Set-Location backend; git add .; git commit -m 'Syncing backend with Main'; git pull origin main; Set-Location ..",
       "presentation": { "reveal": "always", "panel": "new" }
     }
   ]
@@ -53,5 +55,5 @@ Craig works on a separate branch called `craig-update`. He needs to set up these
 ```
 
 ### Craig's Workflow:
-1.  **Alt + P**: When he wants to share his work with you.
-2.  **Alt + T**: When he wants to get the latest "Clean" code from you.
+1.  **Alt + P**: Push both Frontend and Backend changes to the sub-branches.
+2.  **Alt + T**: Pull the latest code from the Main branches into both his repositories.
