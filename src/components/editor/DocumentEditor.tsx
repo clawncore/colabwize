@@ -523,10 +523,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           return;
         }
 
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
         // Increment edit count when content changes
         setEditCount((prev) => prev + 1);
       },
@@ -609,14 +606,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     [project.id, isCollaborative, collabReady],
   );
 
-<<<<<<< Updated upstream
-
   // --- Detect when EditorContent has mounted the editor view into the DOM ---
   // We can't use `onCreate` (fires in the Editor constructor before EditorContent renders).
   // Instead, poll with requestAnimationFrame until editor.view.dom is available.
-=======
-  // Load project content only once per document (Non-Collaborative Mode)
->>>>>>> Stashed changes
   useEffect(() => {
     if (!editor) {
       setIsEditorMounted(false);
@@ -747,33 +739,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }
   }, [isCollaborative, editor, isSynced, project.id, project.citations]);
 
-  // Load Normalization for Collaborative Mode once initial sync is complete
-  useEffect(() => {
-    if (
-      isCollaborative &&
-      editor &&
-      isSynced &&
-      !hasInitializedContentRef.current
-    ) {
-      console.log("[Collab] Initial Sync Complete, triggering normalization...");
-      hasInitializedContentRef.current = true;
-      currentProjectIdRef.current = project.id;
 
-      const initCollabRegistry = async () => {
-        try {
-          const { CitationRegistryService } = await import("../../services/CitationRegistryService");
-          await CitationRegistryService.initializeFromBackend(project.id);
-          (window as any).__currentProjectId__ = project.id;
-
-          // Normalization now happens purely on the backend. No auto-style detection needed here anymore.
-        } catch (e) {
-          console.error("Collab Normalization Failed:", e);
-        }
-      };
-
-      initCollabRegistry();
-    }
-  }, [isCollaborative, editor, isSynced, project.id, project.citations]);
 
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
