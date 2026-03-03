@@ -60,6 +60,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     return "rgba(250, 204, 21, 0.3)"; // Low/Info (Yellow Tint) - Increased from 0.2
   };
 
+<<<<<<< Updated upstream
   const handleRunStyleAudit = useCallback(
     async (force = false) => {
       if (!editor) return;
@@ -76,6 +77,10 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
         );
         return;
       }
+=======
+    const handleRunStyleAudit = useCallback(async (force = false) => {
+        if (!editor) return;
+>>>>>>> Stashed changes
 
       try {
         // Clear any cached results to ensure fresh data
@@ -90,6 +95,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
           projectId,
         );
 
+<<<<<<< Updated upstream
         // Map the simplified output back to the store format temporarily
         const result = {
           state: "COMPLETED_SUCCESS",
@@ -97,6 +103,132 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
           verificationResults: rawResult.verificationResults,
           integrityIndex: rawResult.integrityIndex,
           tierMetadata: {}, // Stripped out tiered complexity
+=======
+            const rawResult = await BibliographyManager.auditDocument(
+                editor.getJSON(),
+                projectId
+            );
+
+            // Map the simplified output back to the store format temporarily
+            const result = {
+                state: "COMPLETED_SUCCESS",
+                violations: rawResult.flags,
+                verificationResults: rawResult.verificationResults,
+                integrityIndex: rawResult.integrityIndex,
+                tierMetadata: {} // Stripped out tiered complexity
+            };
+
+            // Only update if the component is still mounted (basic check)
+            setAuditResult(result);
+
+            if (result.state === "COMPLETED_SUCCESS" && result.violations.length > 0) {
+                toast({
+                    title: "Audit Complete",
+                    description: "Issues flagged for review in sidebar.",
+                    variant: "default"
+                });
+            } else if (result.state === "FAILED_QUOTA_EXCEEDED") {
+                toast({
+                    title: "Plan Limit Reached",
+                    description: (result as any).errorMessage || "You have reached your citation audit limit.",
+                    variant: "destructive"
+                });
+            } else if (result.state === "COMPLETED_SUCCESS") {
+                toast({ title: "Audit Complete", description: "No issues found.", variant: "default" });
+            }
+
+        } catch (error: any) {
+            console.error("Audit failed", error);
+            // This fallback usually won't be hit if citationAuditEngine handles errors, 
+            // but just in case:
+            setAuditResult({ state: "FAILED_SCAN_ABORTED", violations: [], errorMessage: error.message });
+        } finally {
+            setLocalLoading(false);
+            setLoading(false);
+        }
+    }, [editor, projectId, selectedStyle, toast, setAuditResult, setLoading, reset, citationLibrary, auditResult]);
+
+    // Clear cache and re-run when citation library changes (handling unstable props)
+    useEffect(() => {
+        // Simple length check + crude stringify to avoid deep comparison cost on every render
+        // or just rely on length if that's the main change.
+        // Let's use a safe comparison.
+        const prevLib = prevCitationLibraryRef.current;
+        const currLib = citationLibrary;
+
+        const hasChanged =
+            (!prevLib && currLib) ||
+            (prevLib && !currLib) ||
+            (prevLib && currLib && prevLib.length !== currLib.length) ||
+            (prevLib && currLib && JSON.stringify(prevLib.map((c: any) => c.id)) !== JSON.stringify(currLib.map((c: any) => c.id)));
+
+        if (hasChanged) {
+            console.log("📚 Citation library changed - clearing audit cache for fresh results");
+            reset();
+            prevCitationLibraryRef.current = currLib;
+        }
+    }, [citationLibrary, reset]);
+
+    // Auto-run audit when sidebar opens (disabled by user request)
+    useEffect(() => {
+        // We leave the effect here if we need to set state, but we don't trigger the audit.
+        /*
+        const isQuotaError = auditResult && (auditResult.state === "FAILED_QUOTA_EXCEEDED");
+        if (!auditResult && !localLoading && !isQuotaError) {
+            handleRunStyleAudit(false);
+        }
+        */
+    }, [auditResult, localLoading, handleRunStyleAudit]);
+
+    // Handle Clicks on Highlights
+    useEffect(() => {
+        if (!editor) return; // Removed auditResult dependency to allow clicking even if partial result? No, logic needs result.
+        if (!auditResult) return;
+
+        const handleEditorClick = (e: any) => {
+            const { state, view } = editor;
+            const pos = view.posAtCoords({ left: e.clientX, top: e.clientY });
+
+            if (pos && pos.pos) {
+                const $pos = state.doc.resolve(pos.pos);
+                const marks = $pos.marks();
+
+                const highlightMark = marks.find(m => m.type.name === 'citation-highlight');
+                if (highlightMark) {
+                    const attrs = highlightMark.attrs;
+
+                    // PRIMARY: read url/sourceTitle embedded directly in the mark
+                    let sourceUrl: string | null = attrs.url || null;
+                    let sourceTitle: string | null = attrs.sourceTitle || null;
+
+                    // FALLBACK: fuzzy match against verificationResults (legacy path)
+                    if (!sourceUrl && auditResult.verificationResults) {
+                        const verResult = auditResult.verificationResults.find((v: any) => {
+                            return v.message === attrs.message ||
+                                (v.inlineLocation && v.inlineLocation.text === attrs.sourceTitle);
+                        });
+                        if (verResult?.foundPaper?.url) {
+                            sourceUrl = verResult.foundPaper.url;
+                            sourceTitle = verResult.foundPaper.title || null;
+                        }
+                    }
+
+                    const description = sourceTitle
+                        ? `Source: ${sourceTitle}`
+                        : (attrs.message || "Citation flagged");
+
+                    const action = sourceUrl
+                        ? <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline ml-2">Open Link</a>
+                        : undefined;
+
+                    toast({
+                        title: attrs.ruleId === "VERIFIED" ? "✅ Verified Source" : (attrs.ruleId || "Citation Info"),
+                        description: <div className="flex flex-col gap-1">{description}{action}</div>,
+                        duration: 6000,
+                    });
+                }
+            }
+>>>>>>> Stashed changes
         };
 
         // Only update if the component is still mounted (basic check)
