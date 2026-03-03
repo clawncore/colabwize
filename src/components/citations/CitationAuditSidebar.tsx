@@ -4,9 +4,7 @@ import { ArrowLeft, FileText, Clock } from "lucide-react";
 import { BibliographyManager } from "../../services/citationAudit/bibliographyEngine";
 import { useToast } from "../../hooks/use-toast";
 import { useCitationAuditStore } from "../../stores/useCitationAuditStore";
-// import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import { CitationService } from "../../services/citationService";
-
 import { CitationAuditModal } from "./CitationAuditModal";
 
 interface CitationAuditSidebarProps {
@@ -62,7 +60,6 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     return "rgba(250, 204, 21, 0.3)"; // Low/Info (Yellow Tint) - Increased from 0.2
   };
 
-<<<<<<< Updated upstream
   const handleRunStyleAudit = useCallback(
     async (force = false) => {
       if (!editor) return;
@@ -79,10 +76,6 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
         );
         return;
       }
-=======
-    const handleRunStyleAudit = useCallback(async (force = false) => {
-        if (!editor) return;
->>>>>>> Stashed changes
 
       try {
         // Clear any cached results to ensure fresh data
@@ -92,15 +85,22 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
         setLoading(true);
         if (force) editor.commands.clearAllHighlights();
 
-        const result = await runCitationAudit(
+        const rawResult = await BibliographyManager.auditDocument(
           editor.getJSON(),
-          selectedStyle,
-          citationLibrary,
+          projectId,
         );
 
-<<<<<<< Updated upstream
+        // Map the simplified output back to the store format temporarily
+        const result = {
+          state: "COMPLETED_SUCCESS",
+          violations: rawResult.flags,
+          verificationResults: rawResult.verificationResults,
+          integrityIndex: rawResult.integrityIndex,
+          tierMetadata: {}, // Stripped out tiered complexity
+        };
+
         // Only update if the component is still mounted (basic check)
-        setAuditResult(result);
+        setAuditResult(result as any);
 
         if (
           result.state === "COMPLETED_SUCCESS" &&
@@ -134,57 +134,23 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
                   .run();
                 highlightsApplied++;
               }
-=======
-            const rawResult = await BibliographyManager.auditDocument(
-                editor.getJSON(),
-                projectId
-            );
-
-            // Map the simplified output back to the store format temporarily
-            const result = {
-                state: "COMPLETED_SUCCESS",
-                violations: rawResult.flags,
-                verificationResults: rawResult.verificationResults,
-                integrityIndex: rawResult.integrityIndex,
-                tierMetadata: {} // Stripped out tiered complexity
-            };
-
-            // Only update if the component is still mounted (basic check)
-            setAuditResult(result);
-
-            if (result.state === "COMPLETED_SUCCESS" && result.violations.length > 0) {
-                toast({
-                    title: "Audit Complete",
-                    description: "Issues flagged for review in sidebar.",
-                    variant: "default"
-                });
-            } else if (result.state === "FAILED_QUOTA_EXCEEDED") {
-                toast({
-                    title: "Plan Limit Reached",
-                    description: (result as any).errorMessage || "You have reached your citation audit limit.",
-                    variant: "destructive"
-                });
-            } else if (result.state === "COMPLETED_SUCCESS") {
-                toast({ title: "Audit Complete", description: "No issues found.", variant: "default" });
->>>>>>> Stashed changes
             }
           });
 
-<<<<<<< Updated upstream
           console.log(
             `✅ Applied ${highlightsApplied} highlights successfully`,
           );
 
           toast({
             title: "Audit Complete",
-            description: "Issues flagged for review.",
+            description: "Issues flagged for review in sidebar.",
             variant: "default",
           });
         } else if (result.state === "FAILED_QUOTA_EXCEEDED") {
           toast({
             title: "Plan Limit Reached",
             description:
-              result.errorMessage ||
+              (result as any).errorMessage ||
               "You have reached your citation audit limit.",
             variant: "destructive",
           });
@@ -241,6 +207,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     },
     [
       editor,
+      projectId,
       selectedStyle,
       toast,
       setAuditResult,
@@ -250,18 +217,6 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
       auditResult,
     ],
   );
-=======
-        } catch (error: any) {
-            console.error("Audit failed", error);
-            // This fallback usually won't be hit if citationAuditEngine handles errors, 
-            // but just in case:
-            setAuditResult({ state: "FAILED_SCAN_ABORTED", violations: [], errorMessage: error.message });
-        } finally {
-            setLocalLoading(false);
-            setLoading(false);
-        }
-    }, [editor, projectId, selectedStyle, toast, setAuditResult, setLoading, reset, citationLibrary, auditResult]);
->>>>>>> Stashed changes
 
   // Clear cache and re-run when citation library changes (handling unstable props)
   useEffect(() => {
@@ -289,34 +244,16 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     }
   }, [citationLibrary, reset]);
 
-<<<<<<< Updated upstream
-  // Auto-run audit when sidebar opens (triggered by green button)
+  // Auto-run audit when sidebar opens (disabled by user request)
   useEffect(() => {
-    // Only run if NO result and NOT loading
-    // And CRITICAL: Do NOT run if we are in a FAILED state that involves Quota.
-    // The reset() in the previous effect turns it to null, which triggers this value.
-    // So we must ensure that if we have a failed state, we don't just loop.
-
-    const isQuotaError =
-      auditResult && auditResult.state === "FAILED_QUOTA_EXCEEDED";
-
-    if (!auditResult && !localLoading && !isQuotaError) {
-      // Pass false to not force constant resets
-      handleRunStyleAudit(false);
-    }
+    // We leave the effect here if we need to set state, but we don't trigger the audit.
+    /*
+      const isQuotaError = auditResult && (auditResult.state === "FAILED_QUOTA_EXCEEDED");
+      if (!auditResult && !localLoading && !isQuotaError) {
+          handleRunStyleAudit(false);
+      }
+      */
   }, [auditResult, localLoading, handleRunStyleAudit]);
-=======
-    // Auto-run audit when sidebar opens (disabled by user request)
-    useEffect(() => {
-        // We leave the effect here if we need to set state, but we don't trigger the audit.
-        /*
-        const isQuotaError = auditResult && (auditResult.state === "FAILED_QUOTA_EXCEEDED");
-        if (!auditResult && !localLoading && !isQuotaError) {
-            handleRunStyleAudit(false);
-        }
-        */
-    }, [auditResult, localLoading, handleRunStyleAudit]);
->>>>>>> Stashed changes
 
   // Handle Clicks on Highlights
   useEffect(() => {

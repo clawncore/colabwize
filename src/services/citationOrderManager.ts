@@ -166,6 +166,9 @@ export class CitationOrderManager {
             console.warn(
               `[OrderManager] MISSING REGISTRY ENTRY: ${projectId} | ${n.id}`,
             );
+            return n.node.attrs.text
+              ? n.node.attrs.text.replace(/^[\s([]+|[\s)\]]+$/g, "")
+              : "Citation";
           }
 
           if (
@@ -184,12 +187,44 @@ export class CitationOrderManager {
               entry.csl_data.issued?.["date-parts"]?.[0]?.[0] || "????";
 
             if (author !== "Unknown") {
-              return `${author}, ${year}`;
+              return `${author.length > 25 ? author.split(" ")[0] : author}, ${year}`;
             }
           }
 
-          // Fallback: If we couldn't get a good author string, keep the original text
-          // but strip existing outer parentheses if they exist to prevent recursion.
+          // Fallback 1: structured authors array
+          if (entry.authors && entry.authors.length > 0 && entry.authors[0]) {
+            const first = entry.authors[0] as any;
+            let name =
+              typeof first === "string"
+                ? first.split(",")[0].trim()
+                : first.lastName || first.family || first.literal || "Unknown";
+            if (name !== "Unknown") {
+              if (name.length > 25)
+                name = name.split(" ")[0].replace(/[^A-Za-z]/g, "");
+              const year = entry.year || "????";
+              return `${name}, ${year}`;
+            }
+          }
+
+          // Fallback 2: Parse from raw_reference_text if it looks like a bibliography
+          if (entry.raw_reference_text) {
+            const match = entry.raw_reference_text.match(
+              /^([A-Z][a-zÀ-ÿ'\-]+(?:\s[A-Z]\.)?),/,
+            );
+            const parsedAuthor = match ? match[1].trim() : null;
+            const yearMatch =
+              entry.raw_reference_text.match(/\((\d{4})\)/) ||
+              entry.raw_reference_text.match(/\b(19|20)\d{2}\b/);
+            const parsedYear = yearMatch
+              ? yearMatch[1] || yearMatch[0]
+              : "????";
+
+            if (parsedAuthor) {
+              return `${parsedAuthor.length > 25 ? parsedAuthor.split(" ")[0] : parsedAuthor}, ${parsedYear}`;
+            }
+          }
+
+          // Fallback 3: Use existing pill text, stripping outer brackets
           const originalText =
             entry?.raw_reference_text || n.node.attrs.text || "Citation";
           return originalText.replace(/^[\s([]+|[\s)\]]+$/g, "");
@@ -235,22 +270,6 @@ export class CitationOrderManager {
           text: newText,
         });
 
-        // Apply Cluster Mark (Logic to be added if using Extension)
-        // Since Mark application on Atom Nodes requires `addMark`, we do:
-        // tr.addMark(pos, pos + nodeSize, schema.marks.citationCluster.create({ id: clusterId }));
-        // We need to know node size.
-        // We can't easily get it here without looking up again or storing it.
-        // We stored `end`. size = end - pos.
-
-        // const nodeSize = ...; // Need to access from `citations` list
-        // For now, let's just update Text as that's the main visual requirement.
-        // The prompt asked for "Wrap ... inside a cluster container".
-        // If we implemented CitationClusterExtension, we should use it.
-        // I'll skip Mark application in this specific step to avoid complexity with node lookups unless requested strict.
-        // Task says "Wrap adjacent nodes...".
-        // Okay, I will try to apply mark if schema exists.
-
-<<<<<<< Updated upstream
         const schema = editor.state.schema;
         if (schema.marks.citationCluster) {
           // Find node size
@@ -263,91 +282,6 @@ export class CitationOrderManager {
               schema.marks.citationCluster.create({ id: clusterId }),
             );
           }
-=======
-            if (style === 'ieee') {
-                // Get numbers
-                const nums = nodes.map(n => idMap.get(n.id) || 0);
-                // Format: [1], [1, 2], [1-3]
-                // Simple logic:
-                if (nums.length === 1) {
-                    clusterText = `[${nums[0]}]`;
-                } else {
-                    // Check for sequence
-                    const sorted = [...nums].sort((a, b) => a - b);
-                    const isSequence = sorted.every((val, i, arr) => i === 0 || val === arr[i - 1] + 1);
-
-                    if (isSequence && sorted.length > 2) {
-                        clusterText = `[${sorted[0]}–${sorted[sorted.length - 1]}]`;
-                    } else {
-                        clusterText = `[${sorted.join(', ')}]`;
-                    }
-                }
-            } else {
-                // APA / MLA: Join individual texts
-                const texts = nodes.map(n => {
-                    const entry = CitationRegistryService.getEntry(projectId, n.id);
-                    if (!entry) {
-                        console.warn(`[OrderManager] MISSING REGISTRY ENTRY: ${projectId} | ${n.id}`);
-                        return n.node.attrs.text ? n.node.attrs.text.replace(/^[\s([]+|[\s)\]]+$/g, '') : "Citation";
-                    }
-
-                    if (entry && entry.csl_data && entry.csl_data.author && entry.csl_data.author.length > 0) {
-                        const firstAuthor = entry.csl_data.author[0];
-                        const author = firstAuthor.family || firstAuthor.literal || firstAuthor.given || "Unknown";
-                        const year = entry.csl_data.issued?.['date-parts']?.[0]?.[0] || "????";
-
-                        if (author !== "Unknown") {
-                            return `${author.length > 25 ? author.split(' ')[0] : author}, ${year}`;
-                        }
-                    }
-
-                    // Fallback 1: structured authors array
-                    if (entry.authors && entry.authors.length > 0 && entry.authors[0]) {
-                        const first = entry.authors[0] as any;
-                        let name = typeof first === 'string' ? first.split(',')[0].trim() : (first.lastName || first.family || first.literal || "Unknown");
-                        if (name !== 'Unknown') {
-                            if (name.length > 25) name = name.split(' ')[0].replace(/[^A-Za-z]/g, '');
-                            const year = entry.year || "????";
-                            return `${name}, ${year}`;
-                        }
-                    }
-
-                    // Fallback 2: Parse from raw_reference_text if it looks like a bibliography
-                    if (entry.raw_reference_text) {
-                        const match = entry.raw_reference_text.match(/^([A-Z][a-zÀ-ÿ'\-]+(?:\s[A-Z]\.)?),/);
-                        const parsedAuthor = match ? match[1].trim() : null;
-                        const yearMatch = entry.raw_reference_text.match(/\((\d{4})\)/) || entry.raw_reference_text.match(/\b(19|20)\d{2}\b/);
-                        const parsedYear = yearMatch ? (yearMatch[1] || yearMatch[0]) : "????";
-
-                        if (parsedAuthor) {
-                            return `${parsedAuthor.length > 25 ? parsedAuthor.split(' ')[0] : parsedAuthor}, ${parsedYear}`;
-                        }
-                    }
-
-                    // Fallback 3: Use existing pill text, stripping outer brackets
-                    const originalText = n.node.attrs.text || "Citation";
-                    return originalText.replace(/^[\s([]+|[\s)\]]+$/g, '');
-                });
-
-                // (A, Y; B, Y)
-                clusterText = `(${texts.join('; ')})`;
-            }
-
-            // Assign Text to Nodes
-            // First node gets the text. Others get empty.
-            nodes.forEach((n, index) => {
-                const targetText = index === 0 ? clusterText : " ";
-
-                if (n.node.attrs.text !== targetText) {
-                    replacements.push({
-                        pos: n.pos,
-                        newText: targetText,
-                        id: n.id,
-                        clusterId: clusterId
-                    });
-                }
-            });
->>>>>>> Stashed changes
         }
 
         modified = true;
