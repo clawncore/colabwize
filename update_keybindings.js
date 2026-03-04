@@ -25,16 +25,6 @@ try {
       command: "workbench.action.tasks.runTask",
       args: "Take Sync (Craig Only)",
     },
-    {
-      key: "alt+m",
-      command: "workbench.action.tasks.runTask",
-      args: "Merge Craig's Work",
-    },
-    {
-      key: "alt+shift+p",
-      command: "workbench.action.tasks.runTask",
-      args: "Push to Main",
-    },
   ];
 
   // Check if they already exist to avoid duplicates
