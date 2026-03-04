@@ -14,18 +14,17 @@ const API_BASE_URL = ConfigService.getApiUrl();
 const fetchWithTimeout = (
   url: string,
   options: RequestInit = {},
-  timeout = 30000 // Increased from 15000ms to 30000ms (30 seconds)
+  timeout = 30000, // Increased from 15000ms to 30000ms (30 seconds)
 ): Promise<Response> => {
   return Promise.race([
     fetch(url, options),
     new Promise<Response>((_, reject) =>
-      setTimeout(
-        () => {
-          console.error(`[Timeout] Request to ${url} timed out after ${timeout}ms`);
-          reject(new Error("Request timeout after " + timeout + "ms"));
-        },
-        timeout
-      )
+      setTimeout(() => {
+        console.error(
+          `[Timeout] Request to ${url} timed out after ${timeout}ms`,
+        );
+        reject(new Error("Request timeout after " + timeout + "ms"));
+      }, timeout),
     ),
   ]) as Promise<Response>;
 };
@@ -49,7 +48,7 @@ export async function signUpWithEmail(
     field_of_study?: string;
     selected_plan?: string;
     affiliate_ref?: string;
-  }
+  },
 ): Promise<{
   success: boolean;
   user: any;
@@ -65,7 +64,7 @@ export async function signUpWithEmail(
     const payload = {
       email,
       password,
-      ...userData
+      ...userData,
     };
 
     // Call our backend hybrid endpoint which handles everything atomically
@@ -77,7 +76,7 @@ export async function signUpWithEmail(
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
 
     const result = await response.json();
@@ -92,9 +91,8 @@ export async function signUpWithEmail(
       user: result.user,
       message: result.message,
       otpSent: result.otpSent,
-      needsVerification: result.needsVerification || true
+      needsVerification: result.needsVerification || true,
     };
-
   } catch (error: any) {
     console.error("Hybrid signup error:", error);
     // Return error structure matching Promise return type
@@ -103,11 +101,10 @@ export async function signUpWithEmail(
       user: null,
       message: error.message || "Signup failed",
       otpSent: false,
-      needsVerification: false
+      needsVerification: false,
     };
   }
 }
-
 
 /**
  * Sign in with email and password using hybrid approach
@@ -115,8 +112,14 @@ export async function signUpWithEmail(
 export async function signInWithEmail(
   email: string,
   password: string,
-  rememberMe: boolean = false
-): Promise<{ success: boolean; user: any; userData: any; requires_2fa?: boolean; userId?: string }> {
+  rememberMe: boolean = false,
+): Promise<{
+  success: boolean;
+  user: any;
+  userData: any;
+  requires_2fa?: boolean;
+  userId?: string;
+}> {
   try {
     const sanitizedEmail = email.trim().toLowerCase();
     // First, sign in with Supabase Authentication
@@ -141,7 +144,8 @@ export async function signInWithEmail(
 
       // Enhance error message for potential OAuth users
       if (error.message === "Invalid login credentials") {
-        normalized.message = "Invalid login credentials. If you usually sign in with Google or Microsoft, please use that login method instead.";
+        normalized.message =
+          "Invalid login credentials. If you usually sign in with Google, please use that login method instead.";
       }
       if (
         typeof error.message === "string" &&
@@ -161,7 +165,6 @@ export async function signInWithEmail(
       });
       throw normalized;
     }
-
 
     // Get Supabase ID token (access token)
     let idToken = data.session?.access_token;
@@ -188,12 +191,12 @@ export async function signInWithEmail(
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "X-Auth-Organic": `Bearer ${tokenToUse}`
+          "X-Auth-Organic": `Bearer ${tokenToUse}`,
         },
         body: JSON.stringify({
           idToken: tokenToUse,
         }),
-      }
+      },
     );
 
     const backendResult = await response.json();
@@ -210,7 +213,9 @@ export async function signInWithEmail(
 
       return backendResult;
     } else {
-      throw new Error(backendResult.error || "Failed to verify user with backend");
+      throw new Error(
+        backendResult.error || "Failed to verify user with backend",
+      );
     }
   } catch (error: any) {
     // Map network/CORS issues for clearer UI feedback
@@ -221,7 +226,7 @@ export async function signInWithEmail(
     ) {
       console.error("Network/Fetch Error Details:", error);
       const networkErr: any = new Error(
-        "Network error: failed to reach authentication service"
+        "Network error: failed to reach authentication service",
       );
       networkErr.code = "NETWORK_ERROR";
       networkErr.originalError = error; // Attach original error
@@ -244,9 +249,17 @@ export async function signInWithEmail(
  * Sync user session with backend (check if user exists in DB)
  * Useful for OAuth callbacks to determine if user is new or returning
  */
-export async function syncUser(): Promise<{ success: boolean; user: any; requires_2fa?: boolean; userId?: string }> {
+export async function syncUser(): Promise<{
+  success: boolean;
+  user: any;
+  requires_2fa?: boolean;
+  userId?: string;
+}> {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
 
     if (error || !session?.access_token) {
       throw new Error("No active session");
@@ -255,8 +268,12 @@ export async function syncUser(): Promise<{ success: boolean; user: any; require
     const tokenToUse = session.access_token;
 
     // Determine header based on current provider
-    const isGoogle = typeof localStorage !== 'undefined' && localStorage.getItem("auth_provider") === "google";
-    const authHeader = isGoogle ? { "X-Auth-Google": `Bearer ${tokenToUse}` } : { "X-Auth-Organic": `Bearer ${tokenToUse}` };
+    const isGoogle =
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("auth_provider") === "google";
+    const authHeader = isGoogle
+      ? { "X-Auth-Google": `Bearer ${tokenToUse}` }
+      : { "X-Auth-Organic": `Bearer ${tokenToUse}` };
 
     const response = await fetchWithTimeout(
       `${API_BASE_URL}/api/auth/hybrid/signin`,
@@ -264,12 +281,12 @@ export async function syncUser(): Promise<{ success: boolean; user: any; require
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          ...authHeader
+          ...authHeader,
         },
         body: JSON.stringify({
           idToken: tokenToUse,
         }),
-      }
+      },
     );
 
     const result = await response.json();
@@ -491,8 +508,12 @@ export async function updateUserProfile(updates: {
     }
 
     // Determine header based on current provider
-    const isGoogle = typeof localStorage !== 'undefined' && localStorage.getItem("auth_provider") === "google";
-    const authHeader = isGoogle ? { "X-Auth-Google": `Bearer ${idToken}` } : { "X-Auth-Organic": `Bearer ${idToken}` };
+    const isGoogle =
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("auth_provider") === "google";
+    const authHeader = isGoogle
+      ? { "X-Auth-Google": `Bearer ${idToken}` }
+      : { "X-Auth-Organic": `Bearer ${idToken}` };
 
     // Send updates to our hybrid backend endpoint
     const response = await fetchWithTimeout(
@@ -501,13 +522,13 @@ export async function updateUserProfile(updates: {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          ...authHeader
+          ...authHeader,
         },
         body: JSON.stringify({
           idToken,
           updates,
         }),
-      }
+      },
     );
 
     const result = await response.json();
@@ -561,7 +582,7 @@ export async function getCurrentUser(): Promise<any> {
  * Get current user's ID token
  */
 export async function getIdToken(
-  forceRefresh: boolean = false
+  forceRefresh: boolean = false,
 ): Promise<string | null> {
   try {
     if (forceRefresh) {
@@ -601,7 +622,7 @@ export async function resetPassword(email: string): Promise<void> {
         body: JSON.stringify({
           email,
         }),
-      }
+      },
     );
 
     const result = await response.json();
@@ -622,7 +643,7 @@ export async function resetPassword(email: string): Promise<void> {
  */
 export async function verifyEmailOTP(
   email: string,
-  otp: string
+  otp: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
     // Get current user ID
@@ -642,13 +663,13 @@ export async function verifyEmailOTP(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Auth-Organic": `Bearer ${(await getIdToken()) || ""}`
+          "X-Auth-Organic": `Bearer ${(await getIdToken()) || ""}`,
         },
         body: JSON.stringify({
           userId: user.id,
           otp,
         }),
-      }
+      },
     );
 
     const result = await response.json();
@@ -680,7 +701,7 @@ export async function verifyEmailOTP(
 export async function verifyOTP(
   email: string,
   otp: string,
-  userId?: string // Made optional for backward compatibility but required for backend verification
+  userId?: string, // Made optional for backward compatibility but required for backend verification
 ): Promise<{ success: boolean; message: string }> {
   try {
     // If userId is provided, verify with our backend (Hybrid/Resend approach)
@@ -691,13 +712,13 @@ export async function verifyOTP(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Auth-Organic": `Bearer ${(await getIdToken()) || ""}`
+            "X-Auth-Organic": `Bearer ${(await getIdToken()) || ""}`,
           },
           body: JSON.stringify({
             userId,
             otp,
           }),
-        }
+        },
       );
 
       const result = await response.json();
@@ -706,8 +727,7 @@ export async function verifyOTP(
         logger.info("OTP verified successfully via Backend");
         return {
           success: true,
-          message:
-            result.message || "Email verified successfully.",
+          message: result.message || "Email verified successfully.",
         };
       } else {
         throw new Error(result.message || "Failed to verify OTP with backend");
@@ -719,7 +739,7 @@ export async function verifyOTP(
     const { error } = await supabase.auth.verifyOtp({
       email,
       token: otp,
-      type: 'signup',
+      type: "signup",
     });
 
     if (error) {
@@ -744,7 +764,7 @@ export async function verifyOTP(
 export async function resendVerificationEmail(
   email: string,
   userId?: string, // Added userId param
-  fullName?: string // Added fullName param
+  fullName?: string, // Added fullName param
 ): Promise<{ success: boolean; message: string }> {
   try {
     // If userId is provided, use our backend (Hybrid/Resend approach)
@@ -764,15 +784,16 @@ export async function resendVerificationEmail(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Auth-Organic": `Bearer ${(await getIdToken()) || ""}`
+            "X-Auth-Organic": `Bearer ${(await getIdToken()) || ""}`,
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       const result = await response.json();
 
-      if (response.ok && result?.success) { // Check for result.success explicitly or just 200 OK if structure differs, but typically we return {success:true}
+      if (response.ok && result?.success) {
+        // Check for result.success explicitly or just 200 OK if structure differs, but typically we return {success:true}
         logger.info("Verification email resent via Backend");
         return {
           success: true,
@@ -780,7 +801,9 @@ export async function resendVerificationEmail(
         };
       } else {
         // If backend fails, we might want to throw or fall back, but let's error for now to respect "Secret Services" usage
-        throw new Error(result.message || "Failed to send verification email via backend");
+        throw new Error(
+          result.message || "Failed to send verification email via backend",
+        );
       }
     }
 

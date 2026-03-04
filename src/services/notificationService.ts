@@ -880,12 +880,12 @@ class NotificationService {
     // Check if user's plan supports the required feature
     switch (requiredFeature) {
       case "collaboration":
-        // Collaboration features require at least Student plan
-        return this.userPlan === "student" || this.userPlan === "researcher";
+        // Collaboration features require at least Plus plan
+        return this.userPlan === "plus" || this.userPlan === "premium";
 
       case "research":
-        // Research features require at least Student plan
-        return this.userPlan === "student" || this.userPlan === "researcher";
+        // Research features require at least Plus plan
+        return this.userPlan === "plus" || this.userPlan === "premium";
 
       // Default case - if we don't know the feature, allow the notification
       default:

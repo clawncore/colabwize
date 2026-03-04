@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import NotificationService from "../../services/notificationService";
 import { Button } from "../../components/ui/button";
+import NotificationMessage from "../../components/notifications/NotificationMessage";
 
 const NotificationBell: React.FC = () => {
   const navigate = useNavigate();
@@ -629,9 +630,10 @@ const NotificationBell: React.FC = () => {
                                             <p className="text-sm font-medium text-gray-700 truncate">
                                               {notification.title}
                                             </p>
-                                            <p className="text-sm text-gray-700 mt-1">
-                                              {notification.message}
-                                            </p>
+                                            <NotificationMessage
+                                              notification={notification}
+                                              className="text-sm text-gray-700 mt-1"
+                                            />
                                             <p className="text-xs text-gray-700 mt-1">
                                               {formatDate(
                                                 notification.created_at,

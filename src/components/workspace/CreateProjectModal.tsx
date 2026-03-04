@@ -28,8 +28,8 @@ interface CreateProjectModalProps {
   onClose: () => void;
   onProjectCreate: (project: any) => void;
   isFreeUser?: boolean;
-  isStudentUser?: boolean;
-  isResearcherUser?: boolean;
+  isPlusUser?: boolean;
+  isPremiumUser?: boolean;
   maxProjects?: number; // Maximum projects allowed for the user's plan
   currentProjectCount?: number; // Current number of projects user has
   initialWorkspaceId?: string;
@@ -46,15 +46,12 @@ export default function CreateProjectModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [userPlan, setUserPlan] = useState<"free" | "student" | "researcher">(
-    "free"
-  );
+  const [userPlan, setUserPlan] = useState<"free" | "plus" | "premium">("free");
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState<string | null>(
-    initialWorkspaceId || null
+    initialWorkspaceId || null,
   );
-
 
   // Load workspaces when the modal opens
   useEffect(() => {
@@ -68,7 +65,7 @@ export default function CreateProjectModal({
           if (initialWorkspaceId) {
             // Verify the initial workspace exists in the user's workspaces
             const workspaceExists = userWorkspaces.some(
-              (ws) => ws.id === initialWorkspaceId
+              (ws) => ws.id === initialWorkspaceId,
             );
             if (workspaceExists) {
               setSelectedWorkspace(initialWorkspaceId);
@@ -90,8 +87,8 @@ export default function CreateProjectModal({
   }, [isOpen, user, initialWorkspaceId, selectedWorkspace]);
 
   // Derive user plan flags from the actual user plan state
-  const isStudentUser = userPlan === "student";
-  const isResearcherUser = userPlan === "researcher";
+  const isPlusUser = userPlan === "plus";
+  const isPremiumUser = userPlan === "premium";
 
   const {
     register,
@@ -122,7 +119,7 @@ export default function CreateProjectModal({
         try {
           const templates = await TemplateService.getTemplates({
             workspaceId: selectedWorkspace,
-            type: watchedFields.type
+            type: watchedFields.type,
           });
           setWorkspaceTemplates(templates);
         } catch (error) {
@@ -147,9 +144,9 @@ export default function CreateProjectModal({
             (typeof subscriptionData.subscription.plan === "string"
               ? subscriptionData.subscription.plan
               : subscriptionData.subscription.plan.id) as
-            | "free"
-            | "student"
-            | "researcher"
+              | "free"
+              | "plus"
+              | "premium",
           );
         } catch (err) {
           console.error("Failed to load subscription data:", err);
@@ -176,9 +173,9 @@ export default function CreateProjectModal({
               (typeof subscriptionData.subscription.plan === "string"
                 ? subscriptionData.subscription.plan
                 : subscriptionData.subscription.plan.id) as
-              | "free"
-              | "student"
-              | "researcher"
+                | "free"
+                | "plus"
+                | "premium",
             );
           } catch (err) {
             console.error("Failed to refresh subscription data:", err);
@@ -623,7 +620,7 @@ export default function CreateProjectModal({
       const createdProject = await documentService.createProject(
         projectData.title,
         projectData.description || "",
-        projectData.content || null
+        projectData.content || null,
       );
       console.log("Project created successfully:", createdProject);
 
@@ -684,13 +681,13 @@ export default function CreateProjectModal({
 
   // Get plan-specific styling
   const getPlanStyling = () => {
-    if (isResearcherUser) {
+    if (isPremiumUser) {
       return {
         headerBg: "bg-gradient-to-r from-purple-500 to-indigo-600 text-white",
         button:
           "bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700",
       };
-    } else if (isStudentUser) {
+    } else if (isPlusUser) {
       return {
         headerBg: "bg-gradient-to-r from-blue-500 to-cyan-600 text-white",
         button:
@@ -717,13 +714,12 @@ export default function CreateProjectModal({
             <div className="relative bg-white rounded-2xl shadow-xl border border-gray-300 w-full max-w-2xl">
               {/* Header with plan-specific styling */}
               <div
-                className={`flex items-center justify-between p-6 rounded-t-2xl ${planStyling.headerBg}`}
-              >
+                className={`flex items-center justify-between p-6 rounded-t-2xl ${planStyling.headerBg}`}>
                 <div className="flex items-center space-x-3">
                   <h2 className="text-xl font-semibold">Create New Project</h2>
-                  {isResearcherUser ? (
+                  {isPremiumUser ? (
                     <Crown className="w-5 h-5" />
-                  ) : isStudentUser ? (
+                  ) : isPlusUser ? (
                     <Rocket className="w-5 h-5" />
                   ) : (
                     <Zap className="w-5 h-5" />
@@ -731,11 +727,11 @@ export default function CreateProjectModal({
                 </div>
                 <button
                   onClick={onClose}
-                  className={`p-2 rounded-lg transition-colors duration-200 ${isResearcherUser || isStudentUser
-                    ? "text-white hover:bg-white/20"
-                    : "text-gray-700 hover:text-gray-700 dark:hover:text-gray-700"
-                    }`}
-                >
+                  className={`p-2 rounded-lg transition-colors duration-200 ${
+                    isPremiumUser || isPlusUser
+                      ? "text-white hover:bg-white/20"
+                      : "text-gray-700 hover:text-gray-700 dark:hover:text-gray-700"
+                  }`}>
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -767,8 +763,7 @@ export default function CreateProjectModal({
                       <select
                         {...register("type")}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
-                        onChange={(e) => handleTypeSelect(e.target.value)}
-                      >
+                        onChange={(e) => handleTypeSelect(e.target.value)}>
                         {projectTypes.map((type) => (
                           <option key={type.id} value={type.id}>
                             {type.label}
@@ -783,17 +778,13 @@ export default function CreateProjectModal({
                       )}
                     </div>
 
-
-
-
                     <div>
                       <label className="text-sm font-medium text-gray-500 dark:text-gray-500 block mb-2 mt-1">
                         Citation Style
                       </label>
                       <select
                         {...register("citationStyle")}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
-                      >
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700">
                         {citationStyles.map((style) => (
                           <option key={style.value} value={style.value}>
                             {style.label}
@@ -819,7 +810,10 @@ export default function CreateProjectModal({
                     </label>
                     <select
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
-                      value={selectedTemplate?.id || (selectedTemplate ? "default" : "blank")}
+                      value={
+                        selectedTemplate?.id ||
+                        (selectedTemplate ? "default" : "blank")
+                      }
                       onChange={(e) => {
                         const value = e.target.value;
                         if (value === "blank") {
@@ -827,14 +821,24 @@ export default function CreateProjectModal({
                         } else if (value === "default") {
                           // Re-fetch default based on current type
                           const type = watchedFields.type;
-                          TemplateService.getTemplateByType(type).then(t => setSelectedTemplate(t));
+                          TemplateService.getTemplateByType(type).then((t) =>
+                            setSelectedTemplate(t),
+                          );
                         } else {
-                          const template = workspaceTemplates.find(t => t.id === value);
+                          const template = workspaceTemplates.find(
+                            (t) => t.id === value,
+                          );
                           if (template) setSelectedTemplate(template);
                         }
-                      }}
-                    >
-                      <option value="default">Default {projectTypes.find(t => t.id === watchedFields.type)?.label} Template</option>
+                      }}>
+                      <option value="default">
+                        Default{" "}
+                        {
+                          projectTypes.find((t) => t.id === watchedFields.type)
+                            ?.label
+                        }{" "}
+                        Template
+                      </option>
                       <option value="blank">Blank Document</option>
                       {workspaceTemplates.length > 0 && (
                         <optgroup label="Workspace Templates">
@@ -903,8 +907,7 @@ export default function CreateProjectModal({
                       onChange={(e) =>
                         setSelectedWorkspace(e.target.value || null)
                       }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
-                    >
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700">
                       <option value="">None (Personal Project)</option>
                       {workspaces.map((workspace) => (
                         <option key={workspace.id} value={workspace.id}>
@@ -930,24 +933,22 @@ export default function CreateProjectModal({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-6 py-3 border border-gray-300 text-gray-700 dark:text-gray-700 rounded-lg hover:bg-cw-light-gray dark:hover:bg-white transition-colors duration-200"
-                  >
+                    className="px-6 py-3 border border-gray-300 text-gray-700 dark:text-gray-700 rounded-lg hover:bg-cw-light-gray dark:hover:bg-white transition-colors duration-200">
                     Cancel
                   </button>
 
                   <Button
                     type="submit"
                     loading={isLoading}
-                    disabled={!isValid || isLoading || !watchedFields.name}
-                  >
+                    disabled={!isValid || isLoading || !watchedFields.name}>
                     {isLoading ? "Creating..." : "Create Project"}
                   </Button>
                 </div>
               </form>
             </div>
           </div>
-        </div >
-      </div >
+        </div>
+      </div>
     </>
   );
 }

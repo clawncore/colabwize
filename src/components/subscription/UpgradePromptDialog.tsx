@@ -11,10 +11,10 @@ interface UpgradePromptDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   feature:
-  | "originality_scan"
-  | "citation_check"
-  | "certificate"
-  | "rephrase_suggestions";
+    | "originality_scan"
+    | "citation_check"
+    | "certificate"
+    | "rephrase_suggestions";
   limit?: number;
 }
 
@@ -24,8 +24,8 @@ const FEATURE_MESSAGES = {
     description: "You've used all your scans this month.",
     featureName: "Originality Scanning",
     benefits: [
-      "50 originality scans/month with Student plan",
-      "Unlimited scans with Researcher plan",
+      "50 originality scans/month with Plus plan",
+      "Unlimited scans with Premium plan",
       "Advanced similarity detection",
       "Priority scanning",
     ],
@@ -46,8 +46,8 @@ const FEATURE_MESSAGES = {
     description: "You've generated all your certificates this month.",
     featureName: "Authorship Certificates",
     benefits: [
-      "50 certificates/month with Student plan",
-      "Unlimited certificates with Researcher plan",
+      "50 certificates/month with Plus plan",
+      "Unlimited certificates with Premium plan",
       "No watermarks on paid plans",
       "Professional PDF format with QR codes",
     ],
@@ -58,8 +58,8 @@ const FEATURE_MESSAGES = {
     featureName: "Rephrase Suggestions",
     benefits: [
       "3 suggestions/month on Free plan",
-      "50 suggestions/month on Student plan",
-      "Unlimited suggestions on Researcher plan",
+      "50 suggestions/month on Plus plan",
+      "Unlimited suggestions on Premium plan",
       "Advanced AI paraphrasing",
     ],
   },
@@ -92,7 +92,8 @@ export const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({
           </DialogTitle>
 
           <DialogDescription className="text-gray-600 mb-6">
-            {config.description} Upgrade your plan, buy more credits, or wait for your monthly reset.
+            {config.description} Upgrade your plan, buy more credits, or wait
+            for your monthly reset.
           </DialogDescription>
         </div>
 
@@ -156,14 +157,14 @@ export const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({
               <div className="text-gray-600">{limit}/month</div>
             </div>
             <div className="border-l border-r border-gray-200">
-              <div className="font-semibold text-indigo-600">Student</div>
+              <div className="font-semibold text-indigo-600">Plus</div>
               <div className="text-gray-600">50/month</div>
-              <div className="text-xs text-gray-500">$4.99/mo</div>
+              <div className="text-xs text-gray-500">$12.99/mo</div>
             </div>
             <div>
-              <div className="font-semibold text-purple-600">Researcher</div>
+              <div className="font-semibold text-purple-600">Premium</div>
               <div className="text-gray-600">Unlimited</div>
-              <div className="text-xs text-gray-500">$12.99/mo</div>
+              <div className="text-xs text-gray-500">$18.99/mo</div>
             </div>
           </div>
         </div>

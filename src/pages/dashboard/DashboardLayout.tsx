@@ -23,6 +23,7 @@ import {
   Home,
   Settings,
   CreditCard,
+  Zap,
   LogOut,
   Trash2,
   Crown,
@@ -46,6 +47,7 @@ import {
   Sparkles,
   User,
   HelpCircle,
+  Rocket,
 } from "lucide-react";
 import {
   Link,
@@ -250,7 +252,7 @@ export default function DashboardLayout({
     },
     {
       id: "pdf-chat",
-      label: "AI Reader",
+      label: "PDF Chat",
       icon: Sparkles,
       href: "/dashboard/pdf-upload",
     },
@@ -301,8 +303,8 @@ export default function DashboardLayout({
         : String(planData);
     const id = planId.toLowerCase();
 
-    if (id === "student") return "Student Pro";
-    if (id === "researcher") return "Researcher";
+    if (id === "plus" || id === "student") return "Plus";
+    if (id === "premium" || id === "researcher") return "Premium";
     if (id === "payg") return "Pay As You Go";
     if (id === "free") return "Free Plan";
 
@@ -321,26 +323,19 @@ export default function DashboardLayout({
     }
   };
 
-  type PlanType = "Student Pro" | "Researcher" | "Free Plan" | string;
+  type PlanType = "Plus" | "Premium" | "Free Plan" | string;
 
   const getPlanBadgeColor = (plan: PlanType): string => {
-    const planBadgeColors: Record<string, string> = {
-      "Student Pro": "bg-blue-100 text-blue-700",
-      Researcher: "bg-purple-100 text-purple-700",
-      "Free Plan": "bg-gray-100 text-gray-700",
-    };
-
-    // Special badge for premium users
-    if (
-      plan &&
-      (plan.includes("Student") ||
-        plan.includes("Pro") ||
-        plan.includes("Researcher"))
-    ) {
-      return "bg-gradient-to-r from-blue-500 to-purple-600 text-white";
+    if (plan === "Plus") {
+      return "bg-gradient-to-r from-blue-500 to-cyan-600 text-white";
     }
-
-    return planBadgeColors[plan] || "bg-gray-100 text-gray-700";
+    if (plan === "Premium") {
+      return "bg-gradient-to-r from-purple-600 to-indigo-700 text-white";
+    }
+    if (plan === "Pay As You Go") {
+      return "bg-amber-100 text-amber-700 border border-amber-200";
+    }
+    return "bg-gray-100 text-gray-700";
   };
 
   const getGreeting = () => {
@@ -358,10 +353,12 @@ export default function DashboardLayout({
     }
 
     const planColor = getPlanBadgeColor(userPlan);
+    const Icon = userPlan === "Premium" ? Crown : Rocket;
+
     return (
       <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${planColor} shadow-sm`}>
-        <Crown className="mr-1 h-3 w-3" />
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${planColor} shadow-sm border border-white/10`}>
+        <Icon className="mr-1 h-3 w-3" />
         {userPlan}
       </span>
     );
@@ -534,15 +531,14 @@ export default function DashboardLayout({
                         className={`
                       ml-0.5 px-2 py-1 text-xs font-bold rounded-full shadow-sm
                       ${
-                        userPlan.includes("Student") || userPlan.includes("Pro")
+                        userPlan.includes("Plus") || userPlan.includes("Pro")
                           ? "bg-blue-600 text-white"
                           : "bg-purple-600 text-white"
                       }
                     `}>
-                        {userPlan.includes("Student") ||
-                        userPlan.includes("Pro")
-                          ? "PRO"
-                          : "RESEARCHER"}
+                        {userPlan.includes("Plus") || userPlan.includes("Pro")
+                          ? "PLUS"
+                          : "PREMIUM"}
                       </span>
                     )
                   )}
@@ -621,8 +617,7 @@ export default function DashboardLayout({
                     ${
                       userPlan === "Free Plan" || !userPlan
                         ? "bg-gradient-to-br from-gray-400 to-gray-600"
-                        : userPlan.includes("Student") ||
-                            userPlan.includes("Pro")
+                        : userPlan.includes("Plus") || userPlan.includes("Pro")
                           ? "bg-gradient-to-br from-blue-500 to-blue-700"
                           : "bg-gradient-to-br from-purple-500 to-purple-700"
                     }
@@ -647,8 +642,7 @@ export default function DashboardLayout({
                           className={`
                         absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow-sm
                         ${
-                          userPlan.includes("Student") ||
-                          userPlan.includes("Pro")
+                          userPlan.includes("Plus") || userPlan.includes("Pro")
                             ? "bg-blue-500 border-2 border-white"
                             : "bg-purple-500 border-2 border-white"
                         }
@@ -672,7 +666,7 @@ export default function DashboardLayout({
                           ${
                             userPlan === "Free Plan" || !userPlan
                               ? "bg-gradient-to-br from-gray-400 to-gray-600"
-                              : userPlan.includes("Student") ||
+                              : userPlan.includes("Plus") ||
                                   userPlan.includes("Pro")
                                 ? "bg-gradient-to-br from-blue-500 to-blue-700"
                                 : "bg-gradient-to-br from-purple-500 to-purple-700"
@@ -700,7 +694,7 @@ export default function DashboardLayout({
                                 className={`
                               absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm
                               ${
-                                userPlan.includes("Student") ||
+                                userPlan.includes("Plus") ||
                                 userPlan.includes("Pro")
                                   ? "bg-blue-500 border-2 border-white"
                                   : "bg-purple-500 border-2 border-white"
@@ -1214,7 +1208,13 @@ export default function DashboardLayout({
                         onClick={() => setIsUsageCollapsed(!isUsageCollapsed)}
                         className="w-full flex items-center justify-between focus:outline-none">
                         <span className="text-sm font-medium text-gray-700 flex items-center">
-                          <Crown className="mr-2 h-4 w-4 text-purple-600" />
+                          {userPlan === "Premium" ? (
+                            <Crown className="mr-2 h-4 w-4 text-purple-600" />
+                          ) : userPlan === "Plus" ? (
+                            <Rocket className="mr-2 h-4 w-4 text-blue-600" />
+                          ) : (
+                            <Zap className="mr-2 h-4 w-4 text-amber-500" />
+                          )}
                           {userPlan}
                         </span>
                         {isUsageCollapsed ? (
@@ -1320,8 +1320,8 @@ export default function DashboardLayout({
 
                       // Use actual limit or fallback for Free, but treat Premium as unlimited visually if needed
                       const isPremium =
-                        userPlan.toLowerCase().includes("researcher") ||
-                        userPlan.toLowerCase().includes("student");
+                        userPlan.toLowerCase().includes("premium") ||
+                        userPlan.toLowerCase().includes("plus");
                       const derivedLimit = isPremium ? 100 : 3;
                       const percent = isPremium
                         ? 0

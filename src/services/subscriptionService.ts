@@ -8,7 +8,7 @@ export interface Plan {
   interval: string;
   features: string[];
   popular?: boolean;
-  researcher?: boolean;
+  premium?: boolean;
   monthlyPrice?: number;
   yearlyPrice?: number;
   oneTime?: boolean;

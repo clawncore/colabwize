@@ -35,7 +35,9 @@ Students and researchers face a career-ending paradox:
 ## 🛡️ CORE FEATURES (Keep Simple)
 
 ### 1. Originality Map (The Wedge)
+
 Turnitin-style similarity detection with color-coded heatmap.
+
 - **Safety Classification System:**
   - 🟢 **Green:** 0-24% similarity (Safe)
   - 🟡 **Yellow:** 25-49% similarity (Review)
@@ -47,6 +49,7 @@ Turnitin-style similarity detection with color-coded heatmap.
 - **Tech Stack:** `sentence-transformers` (MiniLM/MPNet), Cosine similarity, Google Custom Search API, Copyscape/Copyleak integration.
 
 ### 2. AI-Probability Heatmap
+
 - Highlight specific sentences that appear "too perfect" or "robotic".
 - AI detection meter showing overall AI probability score.
 - Sentence-level analysis for targeted revision.
@@ -54,7 +57,9 @@ Turnitin-style similarity detection with color-coded heatmap.
 - **Tech Stack:** AI detection API integration.
 
 ### 3. Citation Confidence Auditor
+
 Scan bibliographies to flag problematic citations:
+
 - Too old (>5 years for science, >10 for humanities).
 - Improperly formatted.
 - Potentially fake/hallucinated (cross-reference with CrossRef).
@@ -66,7 +71,9 @@ Scan bibliographies to flag problematic citations:
 - **Tech Stack:** CrossRef API, PubMed API, ArXiv API, Semantic Scholar API.
 
 ### 4. Authorship Certificate (The Moat)
+
 **The "Proof of Authenticity" System.** Tracks and generates verifiable proof including:
+
 - Keystroke log summary (40+ hours of active typing time).
 - Writing timeline with session timestamps.
 - Edit pattern analysis (proof of organic writing, not copy-paste).
@@ -77,6 +84,7 @@ Scan bibliographies to flag problematic citations:
 - **Success Metric:** 30% of users download their certificate.
 
 ### 5. Anxiety Reality Check Panel
+
 - Clear breakdown: "X% similarity from References".
 - "Trust Score" based on citation quality.
 - **Reassuring Contextual Messages:**
@@ -86,6 +94,7 @@ Scan bibliographies to flag problematic citations:
 - De-escalate panic with data-driven reassurance.
 
 ### 6. Draft Comparison Guard
+
 - Upload two versions of a document (Draft 1 vs Draft 2).
 - Detect and highlight:
   - Self-plagiarism risk.
@@ -99,6 +108,7 @@ Scan bibliographies to flag problematic citations:
 ## 📚 RESEARCH VAULT (Literature Management)
 
 ### 7. PDF Annotator & Organization
+
 - Built-in PDF reader with highlighting and margin notes.
 - Categorization tags (Methodology, Results, Theories, Gaps, etc.).
 - Automatic metadata extraction (DOI, Journal Name, Authors).
@@ -107,6 +117,7 @@ Scan bibliographies to flag problematic citations:
 - Source map showing every PDF opened, highlighted, and referenced.
 
 ### 8. Literature Review Manager
+
 - Organize sources by themes and research questions.
 - Note-taking system with automatic source tracking.
 - Citation journey tracking (when each source was added and how it was used).
@@ -117,6 +128,7 @@ Scan bibliographies to flag problematic citations:
 ## ✍️ HUMAN-FIRST WRITING ENVIRONMENT
 
 ### 9. Focus Mode Writing Interface
+
 - Minimalist, distraction-free text editor (TipTap).
 - No AI autofill or autocomplete suggestions.
 - Writing progress tracker with visual timeline.
@@ -124,12 +136,14 @@ Scan bibliographies to flag problematic citations:
 - Writing productivity metrics (track sessions, word count growth).
 
 ### 10. Outline & Structure Builder
+
 - Drag-and-drop tool to organize chapters.
 - Pre-structured sections: Abstract, Introduction, Methods, Results, Discussion, Conclusion.
 - Document templates for different paper types.
 - Structure analyzer checking for logical flow and coherence.
 
 ### 11. Version History & Provenance
+
 - Time-lapse recording of writing process.
 - Word-by-word growth over time.
 - Complete edit history with timestamps.
@@ -141,6 +155,7 @@ Scan bibliographies to flag problematic citations:
 ## 🔧 SMART CITATION ENGINE
 
 ### 12. One-Click Bibliography Generator
+
 - Support for 10,000+ citation styles (APA 7th, MLA, Chicago, Harvard, IEEE, Vancouver, etc.).
 - In-text citation generator (copy-paste directly in correct format).
 - Auto-citation from DOI/URL.
@@ -151,10 +166,13 @@ Scan bibliographies to flag problematic citations:
 ---
 
 ## 🛡️ ADVANCED AUTHENTICITY & TRUST FEATURES
+
 **Critical Features for 100% Turnitin Safety**
 
 ### 31. Writing Pattern Fingerprint
+
 Behavioral biometrics that prove human authorship. Track unique typing patterns:
+
 - **Typing Speed Variations:** Humans slow down when thinking.
 - **Pause Patterns:** Thinking breaks between paragraphs.
 - **Deletion/Correction Patterns:** Humans make mistakes and fix them.
@@ -167,7 +185,9 @@ Behavioral biometrics that prove human authorship. Track unique typing patterns:
 - **Why it Matters:** AI generates text instantly; humans have natural rhythms that prove authenticity.
 
 ### 32. Multi-Draft Evolution Tracker
+
 Mandatory multi-draft system that forces an organic writing process. Track evolution across minimum 3 drafts:
+
 - **Rough Draft:** Initial ideas, fragments, messy notes.
 - **Working Draft:** Structured but incomplete.
 - **Final Draft:** Polished version.
@@ -180,7 +200,9 @@ Mandatory multi-draft system that forces an organic writing process. Track evolu
 - **Why it Matters:** AI creates polished text immediately; humans build progressively.
 
 ### 33. Source Integration Verification
+
 Prove that the user actually **READ** the sources they cited. Track for each cited source:
+
 - Time spent reading the PDF.
 - Sections highlighted/annotated.
 - Notes taken while reading.
@@ -194,7 +216,6 @@ Prove that the user actually **READ** the sources they cited. Track for each cit
   - "Highlighted 8 passages"
   - "Added citation 3 days after reading"
 - **Why it Matters:** Proves sources weren't just copied from AI-generated bibliography.
-
 
 ## Tech Stack
 
@@ -369,7 +390,7 @@ Success Metrics:
 - AI detection
 - Watermarked certificate
 
-### Student Tier ($9.99/month):
+### Plus Tier ($9.99/month):
 
 - Unlimited document scans
 - Full originality map
@@ -377,9 +398,9 @@ Success Metrics:
 - Professional certificate (no watermark)
 - Email support
 
-### Researcher Tier ($19.99/month):
+### Premium Tier ($19.99/month):
 
-- Everything in Student
+- Everything in Plus
 - Priority scanning
 - Advanced citation suggestions
 - Export to multiple formats

@@ -66,22 +66,48 @@ export default function WorkspaceMembersPage() {
   const [revokingInviteId, setRevokingInviteId] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
 
+  const getUserColor = (userId: string) => {
+    const colors = [
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-purple-500",
+      "bg-amber-500",
+      "bg-pink-500",
+      "bg-indigo-500",
+      "bg-teal-500",
+      "bg-cyan-500",
+      "bg-rose-500",
+      "bg-emerald-500",
+    ];
+
+    // Simple hash to get consistent color for a user
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    return colors[Math.abs(hash) % colors.length];
+  };
+
   const isOwner = workspace?.owner_id === user?.id;
   const currentUserMember = workspace?.members?.find(
-    (m) => m.user_id === user?.id
+    (m) => m.user_id === user?.id,
   );
-  const canManageMembers =
-    isOwner || currentUserMember?.role === "admin";
+  const canManageMembers = isOwner || currentUserMember?.role === "admin";
 
   const loadWorkspace = async () => {
     setIsLoading(true);
     try {
       const [workspaceData, invitationsData] = await Promise.all([
         WorkspaceService.getWorkspace(workspaceId),
-        WorkspaceService.getWorkspaceInvitations(workspaceId)
+        WorkspaceService.getWorkspaceInvitations(workspaceId),
       ]);
       setWorkspace(workspaceData);
-      setPendingInvitations(Array.isArray(invitationsData) ? invitationsData.filter((i: any) => i.status === "pending") : []);
+      setPendingInvitations(
+        Array.isArray(invitationsData)
+          ? invitationsData.filter((i: any) => i.status === "pending")
+          : [],
+      );
     } catch (error) {
       toast({
         title: "Error",
@@ -234,8 +260,7 @@ export default function WorkspaceMembersPage() {
               <Button
                 onClick={handleInvite}
                 disabled={isInviting || !inviteEmail}
-                className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white"
-              >
+                className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white">
                 {isInviting ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
@@ -262,16 +287,17 @@ export default function WorkspaceMembersPage() {
               {pendingInvitations.map((invite) => (
                 <div
                   key={invite.id}
-                  className="flex items-center justify-between p-4 rounded-xl border bg-card/50 shadow-sm"
-                >
+                  className="flex items-center justify-between p-4 rounded-xl border bg-card/50 shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                    <div
+                      className={`h-10 w-10 rounded-full ${getUserColor(invite.id)} flex items-center justify-center text-white font-bold shadow-sm`}>
                       <Mail className="w-5 h-5" />
                     </div>
                     <div>
                       <p className="text-sm font-medium">{invite.email}</p>
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
-                        Invited as {invite.role} • By {invite.inviter.full_name || invite.inviter.email}
+                        Invited as {invite.role} • By{" "}
+                        {invite.inviter.full_name || invite.inviter.email}
                       </p>
                     </div>
                   </div>
@@ -280,8 +306,7 @@ export default function WorkspaceMembersPage() {
                     size="sm"
                     className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     onClick={() => handleRevokeInvite(invite.id)}
-                    disabled={revokingInviteId === invite.id}
-                  >
+                    disabled={revokingInviteId === invite.id}>
                     {revokingInviteId === invite.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
@@ -315,14 +340,12 @@ export default function WorkspaceMembersPage() {
               return (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-4 rounded-xl border bg-card shadow-sm hover:shadow-md transition-all"
-                >
+                  className="flex items-center justify-between p-4 rounded-xl border bg-card shadow-sm hover:shadow-md transition-all">
                   {/* Member Info */}
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">
-                      {member.user.full_name
-                        ?.substring(0, 2)
-                        .toUpperCase() ||
+                    <div
+                      className={`h-10 w-10 rounded-full ${getUserColor(member.user_id)} shadow-sm flex items-center justify-center text-white font-bold text-sm border border-white/20`}>
+                      {member.user.full_name?.substring(0, 2).toUpperCase() ||
                         member.user.email.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
@@ -350,13 +373,10 @@ export default function WorkspaceMembersPage() {
                         <button
                           onClick={() =>
                             setRoleDropdownOpen(
-                              roleDropdownOpen === member.id
-                                ? null
-                                : member.id
+                              roleDropdownOpen === member.id ? null : member.id,
                             )
                           }
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer hover:opacity-80 ${roleConfig.color}`}
-                        >
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer hover:opacity-80 ${roleConfig.color}`}>
                           <RoleIcon className="w-3.5 h-3.5" />
                           {roleConfig.label}
                           <ChevronDown className="w-3 h-3 ml-0.5" />
@@ -364,7 +384,7 @@ export default function WorkspaceMembersPage() {
 
                         {/* Role Dropdown */}
                         {roleDropdownOpen === member.id && (
-                          <div className="absolute right-0 top-full mt-1 w-48 bg-card border rounded-lg shadow-lg z-50 py-1">
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-white border rounded-lg shadow-lg z-50 py-1">
                             {Object.entries(ROLE_CONFIG).map(
                               ([key, config]) => (
                                 <button
@@ -372,11 +392,29 @@ export default function WorkspaceMembersPage() {
                                   onClick={() =>
                                     handleRoleChange(member.id, key)
                                   }
-                                  className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-muted transition-colors ${member.role === key
-                                    ? "bg-muted font-bold"
-                                    : ""
-                                    }`}
-                                >
+                                  className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs transition-all rounded-md mx-1 ${
+                                    member.role === key
+                                      ? ((
+                                          {
+                                            admin:
+                                              "bg-amber-50 text-amber-700 border border-amber-200 font-bold",
+                                            editor:
+                                              "bg-blue-50 text-blue-700 border border-blue-200 font-bold",
+                                            viewer:
+                                              "bg-slate-100 text-slate-700 border border-slate-200 font-bold",
+                                          } as Record<string, string>
+                                        )[key] ?? "bg-muted font-bold")
+                                      : ((
+                                          {
+                                            admin:
+                                              "text-foreground hover:bg-amber-50 hover:text-amber-700",
+                                            editor:
+                                              "text-foreground hover:bg-blue-50 hover:text-blue-700",
+                                            viewer:
+                                              "text-foreground hover:bg-slate-100 hover:text-slate-700",
+                                          } as Record<string, string>
+                                        )[key] ?? "hover:bg-muted")
+                                  }`}>
                                   <config.icon className="w-3.5 h-3.5" />
                                   <div className="text-left">
                                     <p className="font-medium">
@@ -387,15 +425,14 @@ export default function WorkspaceMembersPage() {
                                     </p>
                                   </div>
                                 </button>
-                              )
+                              ),
                             )}
                           </div>
                         )}
                       </div>
                     ) : (
                       <span
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${roleConfig.color}`}
-                      >
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${roleConfig.color}`}>
                         <RoleIcon className="w-3.5 h-3.5" />
                         {roleConfig.label}
                       </span>
@@ -410,8 +447,7 @@ export default function WorkspaceMembersPage() {
                               size="sm"
                               onClick={() => handleRemoveMember(member.id)}
                               disabled={removingMemberId === member.id}
-                              className="bg-red-600 hover:bg-red-700 text-white text-xs h-7 px-2"
-                            >
+                              className="bg-red-600 hover:bg-red-700 text-white text-xs h-7 px-2">
                               {removingMemberId === member.id ? (
                                 <Loader2 className="h-3 w-3 animate-spin" />
                               ) : (
@@ -422,8 +458,7 @@ export default function WorkspaceMembersPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => setConfirmRemove(null)}
-                              className="text-xs h-7 px-2"
-                            >
+                              className="text-xs h-7 px-2">
                               Cancel
                             </Button>
                           </div>
@@ -433,8 +468,7 @@ export default function WorkspaceMembersPage() {
                             variant="ghost"
                             onClick={() => setConfirmRemove(member.id)}
                             className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
-                            title="Remove member"
-                          >
+                            title="Remove member">
                             <UserMinus className="w-4 h-4" />
                           </Button>
                         )}

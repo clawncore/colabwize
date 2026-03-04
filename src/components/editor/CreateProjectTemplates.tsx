@@ -14,7 +14,6 @@ import {
   FileText,
   AlertCircle,
   GraduationCap,
-
   ScrollText,
 } from "lucide-react";
 
@@ -23,8 +22,8 @@ export interface CreateProjectTemplatesProps {
   onClose: () => void;
   onProjectCreate: (project: any) => void;
   isFreeUser?: boolean;
-  isStudentUser?: boolean;
-  isResearcherUser?: boolean;
+  isPlusUser?: boolean;
+  isPremiumUser?: boolean;
   maxProjects?: number;
   currentProjectCount?: number;
   initialWorkspaceId?: string;
@@ -131,19 +130,19 @@ export default function CreateProjectTemplates({
     try {
       // Logic to handle "blank" mode actually using "blank" type
 
-
       // CRITICAL FIX: Ensure template is loaded if in template mode
-      if (startMode === 'template' && !selectedTemplate) {
-        setError("Template failed to load. Please try again or choose 'Blank Document'.");
+      if (startMode === "template" && !selectedTemplate) {
+        setError(
+          "Template failed to load. Please try again or choose 'Blank Document'.",
+        );
         setIsLoading(false);
         return;
       }
 
       // ARCHITECTURAL FIX: Inject template content at creation time, not navigation time
       // This makes content persistent in the database from the start
-      const initialContent = startMode === 'blank'
-        ? null
-        : selectedTemplate?.content || null;
+      const initialContent =
+        startMode === "blank" ? null : selectedTemplate?.content || null;
 
       // Create project with template content already injected
       const result = await documentService.createProject(
@@ -151,7 +150,7 @@ export default function CreateProjectTemplates({
         data.description || "",
         initialContent,
         "", // projectId placeholder
-        initialWorkspaceId
+        initialWorkspaceId,
       );
 
       if (result.success && result.data) {
@@ -212,16 +211,15 @@ export default function CreateProjectTemplates({
     }
   };
 
-
-
-
   if (!isOpen) return null;
 
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Create New Project</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Create New Project
+          </h2>
           <p className="text-xs text-gray-500 mt-0.5">
             Choose a starting point for your document.
           </p>
@@ -229,18 +227,17 @@ export default function CreateProjectTemplates({
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
         {/* 1. STARTING MODE SELECTION - Compact Horizontal */}
         {/* 1. STARTING MODE SELECTION - Visual Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Start Blank */}
           <div
             onClick={() => handleModeSelect("blank")}
-            className={`group relative h-32 rounded-xl border-2 cursor-pointer transition-all duration-300 overflow-hidden ${startMode === "blank"
-              ? "border-blue-600 shadow-lg ring-2 ring-blue-100"
-              : "border-gray-100 shadow-sm hover:border-blue-300 hover:shadow-md"
-              }`}
-          >
+            className={`group relative h-32 rounded-xl border-2 cursor-pointer transition-all duration-300 overflow-hidden ${
+              startMode === "blank"
+                ? "border-blue-600 shadow-lg ring-2 ring-blue-100"
+                : "border-gray-100 shadow-sm hover:border-blue-300 hover:shadow-md"
+            }`}>
             {/* Background Image with Overlay */}
             <div className="absolute inset-0">
               <img
@@ -248,24 +245,40 @@ export default function CreateProjectTemplates({
                 alt="Blank"
                 className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
               />
-              <div className={`absolute inset-0 transition-colors ${startMode === "blank" ? "bg-blue-900/10" : "bg-white/40 group-hover:bg-white/20"}`} />
+              <div
+                className={`absolute inset-0 transition-colors ${startMode === "blank" ? "bg-blue-900/10" : "bg-white/40 group-hover:bg-white/20"}`}
+              />
               <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent" />
             </div>
 
             <div className="relative z-10 h-full p-6 flex flex-col justify-center max-w-[70%]">
               <div className="flex items-center gap-3 mb-1">
-                <div className={`p-2 rounded-lg ${startMode === "blank" ? "bg-blue-600 text-white" : "bg-white text-gray-600 shadow-sm"}`}>
+                <div
+                  className={`p-2 rounded-lg ${startMode === "blank" ? "bg-blue-600 text-white" : "bg-white text-gray-600 shadow-sm"}`}>
                   <File className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-lg text-gray-900">Start Blank</h3>
               </div>
-              <p className="text-sm text-gray-600 pl-1">Start from a clean slate. Best for custom writing.</p>
+              <p className="text-sm text-gray-600 pl-1">
+                Start from a clean slate. Best for custom writing.
+              </p>
             </div>
 
             {/* Selection Indicator */}
             {startMode === "blank" && (
               <div className="absolute top-4 right-4 bg-blue-600 text-white p-1.5 rounded-full shadow-md animate-in zoom-in">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
               </div>
             )}
           </div>
@@ -273,11 +286,11 @@ export default function CreateProjectTemplates({
           {/* Use Template */}
           <div
             onClick={() => handleModeSelect("template")}
-            className={`group relative h-32 rounded-xl border-2 cursor-pointer transition-all duration-300 overflow-hidden ${startMode === "template"
-              ? "border-blue-600 shadow-lg ring-2 ring-blue-100"
-              : "border-gray-100 shadow-sm hover:border-purple-300 hover:shadow-md"
-              }`}
-          >
+            className={`group relative h-32 rounded-xl border-2 cursor-pointer transition-all duration-300 overflow-hidden ${
+              startMode === "template"
+                ? "border-blue-600 shadow-lg ring-2 ring-blue-100"
+                : "border-gray-100 shadow-sm hover:border-purple-300 hover:shadow-md"
+            }`}>
             {/* Background Image with Overlay */}
             <div className="absolute inset-0">
               <img
@@ -290,28 +303,45 @@ export default function CreateProjectTemplates({
 
             <div className="relative z-10 h-full p-6 flex flex-col justify-center max-w-[70%]">
               <div className="flex items-center gap-3 mb-1">
-                <div className={`p-2 rounded-lg ${startMode === "template" ? "bg-purple-600 text-white" : "bg-white text-gray-600 shadow-sm"}`}>
+                <div
+                  className={`p-2 rounded-lg ${startMode === "template" ? "bg-purple-600 text-white" : "bg-white text-gray-600 shadow-sm"}`}>
                   <BookOpen className="w-5 h-5" />
                 </div>
-                <h3 className="font-bold text-lg text-gray-900">Use a Template</h3>
+                <h3 className="font-bold text-lg text-gray-900">
+                  Use a Template
+                </h3>
               </div>
-              <p className="text-sm text-gray-600 pl-1">Choose from structured academic formats.</p>
+              <p className="text-sm text-gray-600 pl-1">
+                Choose from structured academic formats.
+              </p>
             </div>
 
             {startMode === "template" && (
               <div className="absolute top-4 right-4 bg-purple-600 text-white p-1.5 rounded-full shadow-md animate-in zoom-in">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
               </div>
             )}
           </div>
         </div>
 
-
         {/* 2. VISUAL TEMPLATE GALLERY (Only if Template Mode) - 4 Columns */}
         {startMode === "template" && (
           <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Available Templates</label>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Available Templates
+              </label>
             </div>
 
             {/* Premium Template Selection Grid with Images */}
@@ -321,20 +351,22 @@ export default function CreateProjectTemplates({
                 // Map ID to image filename
                 const images: any = {
                   "research-paper": "/images/templates/research-paper.png",
-                  "literature-review": "/images/templates/literature-review.png",
-                  "research-proposal": "/images/templates/research-proposal.png",
-                  "thesis": "/images/templates/thesis.png",
+                  "literature-review":
+                    "/images/templates/literature-review.png",
+                  "research-proposal":
+                    "/images/templates/research-proposal.png",
+                  thesis: "/images/templates/thesis.png",
                 };
 
                 return (
                   <div
                     key={type.id}
                     onClick={() => handleTypeSelect(type.id)}
-                    className={`group relative rounded-xl border-2 cursor-pointer transition-all duration-300 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 ${isSelected
-                      ? "border-blue-600 ring-2 ring-blue-100 shadow-lg"
-                      : "border-gray-100 bg-white hover:border-blue-200"
-                      }`}
-                  >
+                    className={`group relative rounded-xl border-2 cursor-pointer transition-all duration-300 overflow-hidden flex flex-col h-full hover:shadow-xl hover:-translate-y-1 ${
+                      isSelected
+                        ? "border-blue-600 ring-2 ring-blue-100 shadow-lg"
+                        : "border-gray-100 bg-white hover:border-blue-200"
+                    }`}>
                     {/* Image Cover */}
                     <div className="relative h-32 w-full overflow-hidden bg-gray-100">
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity" />
@@ -346,7 +378,18 @@ export default function CreateProjectTemplates({
                       {/* Checkmark Badge */}
                       {isSelected && (
                         <div className="absolute top-2 right-2 z-20 bg-blue-600 text-white p-1 rounded-full shadow-lg animate-in zoom-in">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={3}>
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
                         </div>
                       )}
                     </div>
@@ -354,7 +397,8 @@ export default function CreateProjectTemplates({
                     {/* Content */}
                     <div className="p-4 flex-1 flex flex-col bg-white relative z-20">
                       <div className="flex items-start gap-2 mb-1">
-                        <h3 className={`font-bold text-sm leading-tight ${isSelected ? "text-blue-700" : "text-gray-900 group-hover:text-blue-700 transition-colors"}`}>
+                        <h3
+                          className={`font-bold text-sm leading-tight ${isSelected ? "text-blue-700" : "text-gray-900 group-hover:text-blue-700 transition-colors"}`}>
                           {type.name}
                         </h3>
                       </div>
@@ -371,8 +415,7 @@ export default function CreateProjectTemplates({
             <div className="text-center pt-2">
               <span
                 className="text-[10px] text-gray-400 cursor-help border-b border-dotted border-gray-300 hover:text-gray-600 transition-colors"
-                title="Template marketplace coming post-MVP"
-              >
+                title="Template marketplace coming post-MVP">
                 + Template Marketplace (Coming Soon)
               </span>
             </div>
@@ -382,25 +425,37 @@ export default function CreateProjectTemplates({
         {/* 3. PROJECT DETAILS FORM (Conditional) */}
         {(startMode === "blank" || (startMode === "template" && watchType)) && (
           <div className="pt-5 border-t border-gray-100 animate-in fade-in duration-500">
-
             <div className="grid grid-cols-12 gap-5">
               {/* Left Col: Inputs */}
               <div className="col-span-12 md:col-span-9 space-y-4">
                 {/* Project Name */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Project Name</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                    Project Name
+                  </label>
                   <input
-                    {...register("name", { required: "Project name is required" })}
+                    {...register("name", {
+                      required: "Project name is required",
+                    })}
                     type="text"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 text-sm"
-                    placeholder={startMode === 'blank' ? "Untitled Document" : `${projectTypes.find(t => t.id === watchType)?.name || 'Project'} Draft`}
+                    placeholder={
+                      startMode === "blank"
+                        ? "Untitled Document"
+                        : `${projectTypes.find((t) => t.id === watchType)?.name || "Project"} Draft`
+                    }
                   />
                 </div>
 
                 {/* Due Date & Description */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">Due Date <span className="text-gray-400 font-normal">(Optional)</span></label>
+                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                      Due Date{" "}
+                      <span className="text-gray-400 font-normal">
+                        (Optional)
+                      </span>
+                    </label>
                     <div className="relative">
                       <input
                         {...register("dueDate")}
@@ -411,7 +466,12 @@ export default function CreateProjectTemplates({
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">Description <span className="text-gray-400 font-normal">(Optional)</span></label>
+                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                      Description{" "}
+                      <span className="text-gray-400 font-normal">
+                        (Optional)
+                      </span>
+                    </label>
                     <input
                       {...register("description")}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 text-sm"
@@ -435,15 +495,13 @@ export default function CreateProjectTemplates({
                   type="submit"
                   loading={isLoading}
                   className="w-full h-10 text-sm"
-                  disabled={!isValid || isLoading || !watchedFields.name}
-                >
+                  disabled={!isValid || isLoading || !watchedFields.name}>
                   {isLoading ? "Creating..." : "Create Project"}
                 </Button>
               </div>
             </div>
           </div>
         )}
-
       </form>
     </div>
   );

@@ -27,8 +27,6 @@ interface HelpArticle {
   views: number;
 }
 
-
-
 const HelpSettingsPage: React.FC = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,7 +50,9 @@ const HelpSettingsPage: React.FC = () => {
   const [submittingFeature, setSubmittingFeature] = useState(false);
   const [featureSubmitted, setFeatureSubmitted] = useState(false);
   const [votedFeatures, setVotedFeatures] = useState<string[]>([]);
-  const [selectedVideo, setSelectedVideo] = useState<VideoTutorial | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<VideoTutorial | null>(
+    null,
+  );
   const [imgError, setImgError] = useState<Record<string, boolean>>({});
 
   const handleImgError = (id: string) => {
@@ -116,7 +116,7 @@ const HelpSettingsPage: React.FC = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(feedbackData),
-        }
+        },
       );
 
       if (response.ok) {
@@ -159,11 +159,12 @@ const HelpSettingsPage: React.FC = () => {
       try {
         const subscription = await SubscriptionService.getCurrentSubscription();
         const planData = subscription?.subscription?.plan;
-        userPlan = typeof planData === 'string' ? planData : (planData?.id || "free");
+        userPlan =
+          typeof planData === "string" ? planData : planData?.id || "free";
       } catch (planError) {
         console.warn(
           "Could not fetch user plan, defaulting to free:",
-          planError
+          planError,
         );
         userPlan = "free";
       }
@@ -467,8 +468,7 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
               {videoTutorials.map((video) => (
                 <div
                   key={video.id}
-                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col h-full"
-                >
+                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col h-full">
                   <div className="bg-gray-100 aspect-video relative group overflow-hidden">
                     {video.videoId ? (
                       <>
@@ -508,11 +508,11 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                       <button
                         onClick={() => video.videoId && setSelectedVideo(video)}
                         disabled={!video.videoId}
-                        className={`flex items-center text-sm font-medium ${video.videoId
-                          ? "text-blue-600 hover:text-blue-700"
-                          : "text-gray-400 cursor-not-allowed"
-                          }`}
-                      >
+                        className={`flex items-center text-sm font-medium ${
+                          video.videoId
+                            ? "text-blue-600 hover:text-blue-700"
+                            : "text-gray-400 cursor-not-allowed"
+                        }`}>
                         <Play className="h-4 w-4 mr-1" />
                         {video.videoId ? "Watch Tutorial" : "Coming Soon"}
                       </button>
@@ -636,7 +636,7 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700  mb-1">
-                    Priority (Pro users)
+                    Priority (Plus users)
                   </label>
                   <select
                     value={ticketPriority}
@@ -651,8 +651,8 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 <div className="bg-blue-50  p-4 rounded-lg">
                   <p className="text-sm text-blue-700 ">
                     <span className="font-medium">Response Time:</span> Free:
-                    Within 48 hours | Pro: Within 24 hours | Researcher: Within
-                    12 hours
+                    Within 48 hours | Plus: Within 24 hours | Premium: Within 12
+                    hours
                   </p>
                 </div>
 
@@ -694,10 +694,11 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
             {/* Copy Status Notification */}
             {copyStatus && (
               <div
-                className={`mb-4 p-3 rounded-lg text-sm ${copyStatus.type === "success"
-                  ? "bg-green-50 text-green-700  "
-                  : "bg-red-50 text-red-700  "
-                  }`}>
+                className={`mb-4 p-3 rounded-lg text-sm ${
+                  copyStatus.type === "success"
+                    ? "bg-green-50 text-green-700  "
+                    : "bg-red-50 text-red-700  "
+                }`}>
                 {copyStatus.message}
               </div>
             )}
@@ -903,10 +904,11 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 </p>
                 <button
                   onClick={() => handleVote("dark-mode")}
-                  className={`mt-2 text-sm font-medium ${votedFeatures.includes("dark-mode")
-                    ? "text-green-600 "
-                    : "text-blue-600 hover:text-blue-700  "
-                    }`}
+                  className={`mt-2 text-sm font-medium ${
+                    votedFeatures.includes("dark-mode")
+                      ? "text-green-600 "
+                      : "text-blue-600 hover:text-blue-700  "
+                  }`}
                   disabled={votedFeatures.includes("dark-mode")}>
                   {votedFeatures.includes("dark-mode")
                     ? "Voted"
@@ -929,10 +931,11 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 </p>
                 <button
                   onClick={() => handleVote("offline-mode")}
-                  className={`mt-2 text-sm font-medium ${votedFeatures.includes("offline-mode")
-                    ? "text-green-600 "
-                    : "text-blue-600 hover:text-blue-700  "
-                    }`}
+                  className={`mt-2 text-sm font-medium ${
+                    votedFeatures.includes("offline-mode")
+                      ? "text-green-600 "
+                      : "text-blue-600 hover:text-blue-700  "
+                  }`}
                   disabled={votedFeatures.includes("offline-mode")}>
                   {votedFeatures.includes("offline-mode")
                     ? "Voted"
@@ -955,10 +958,11 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 </p>
                 <button
                   onClick={() => handleVote("mobile-app")}
-                  className={`mt-2 text-sm font-medium ${votedFeatures.includes("mobile-app")
-                    ? "text-green-600 "
-                    : "text-blue-600 hover:text-blue-700  "
-                    }`}
+                  className={`mt-2 text-sm font-medium ${
+                    votedFeatures.includes("mobile-app")
+                      ? "text-green-600 "
+                      : "text-blue-600 hover:text-blue-700  "
+                  }`}
                   disabled={votedFeatures.includes("mobile-app")}>
                   {votedFeatures.includes("mobile-app")
                     ? "Voted"
@@ -972,12 +976,15 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
 
       {/* Video Modal */}
       {selectedVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedVideo(null)}>
-          <div className="relative w-full max-w-4xl bg-black rounded-xl overflow-hidden shadow-2xl aspect-video" onClick={e => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setSelectedVideo(null)}>
+          <div
+            className="relative w-full max-w-4xl bg-black rounded-xl overflow-hidden shadow-2xl aspect-video"
+            onClick={(e) => e.stopPropagation()}>
             <button
               className="absolute top-4 right-4 p-2 text-white/70 hover:text-white bg-black/50 hover:bg-black/70 rounded-full transition-colors z-10"
-              onClick={() => setSelectedVideo(null)}
-            >
+              onClick={() => setSelectedVideo(null)}>
               <X className="h-6 w-6" />
             </button>
             <iframe
