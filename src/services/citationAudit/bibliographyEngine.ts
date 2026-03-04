@@ -14,12 +14,12 @@ export class BibliographyManager {
      * 
      * Then it sends the matched pairs to the backend for Forensic verification.
      */
-    static async auditDocument(content: JSONContent, projectId: string): Promise<SimplifiedAuditResult> {
+    static async auditDocument(doc: any, projectId: string): Promise<SimplifiedAuditResult> {
         // 1. Extract Citation Nodes
-        const citations = this.extractCitationNodes(content);
+        const citations = this.extractCitationNodes(doc);
 
         // 2. Extract Reference List
-        const references = this.extractReferences(content);
+        const references = this.extractReferences(doc);
 
         // 3. Match them up
         const matchedPairs = this.matchCitationsToReference(citations, references);
@@ -40,84 +40,135 @@ export class BibliographyManager {
         };
     }
 
-    private static extractCitationNodes(doc: JSONContent) {
+    private static extractCitationNodes(doc: any) {
+        if (!doc) return [];
         const citations: any[] = [];
-        let offset = 0;
 
-        function walk(node: JSONContent, currentOffset: number) {
-            if (node.type === "citation") {
-                citations.push({
-                    citationId: node.attrs?.citationId,
-                    text: node.attrs?.text || "[Citation]",
-                    start: currentOffset,
-                    end: currentOffset + 1
-                });
-            } else if (node.marks) {
-                const citationMark = node.marks.find(m => m.type === "citation");
-                if (citationMark && node.text) {
+        // Use ProseMirror's precise node and pos tracker
+        if (typeof doc.descendants === 'function') {
+            doc.descendants((node: any, pos: number) => {
+                // Handle Node Types
+                if (node.type.name === "citation") {
                     citations.push({
-                        citationId: citationMark.attrs?.citationId,
-                        text: node.text,
-                        start: currentOffset,
-                        end: currentOffset + node.text.length
+                        citationId: node.attrs?.citationId,
+                        text: node.attrs?.text || "[Citation]",
+                        start: pos,
+                        end: pos + node.nodeSize
                     });
                 }
-            }
 
-            if (node.text) {
-                offset += node.text.length;
-            } else {
-                offset += 1; // Open tag
-                if (node.content) {
-                    node.content.forEach(child => {
-                        walk(child, offset);
+                // Handle Marks (Legacy or mixed support)
+                if (node.marks) {
+                    const citationMark = node.marks.find((m: any) => m.type.name === "citation");
+                    if (citationMark && node.text) {
+                        citations.push({
+                            citationId: citationMark.attrs?.citationId,
+                            text: node.text,
+                            start: pos,
+                            end: pos + node.nodeSize
+                        });
+                    }
+                }
+            });
+        } else if (doc.content) {
+            // Fallback for headless JSON audits (e.g. exports) where exact visual indices are not needed
+            let currentPos = 1;
+            const walk = (node: any) => {
+                const startPos = currentPos;
+                if (node.type === "citation") {
+                    citations.push({
+                        citationId: node.attrs?.citationId,
+                        text: node.attrs?.text || "[Citation]",
+                        start: startPos,
+                        end: startPos + 1
                     });
                 }
-                offset += 1; // Close tag
-            }
-        }
-
-        if (doc.content) {
-            doc.content.forEach(child => walk(child, offset));
+                if (node.marks) {
+                    const citationMark = node.marks.find((m: any) => m.type === "citation");
+                    if (citationMark && node.text) {
+                        citations.push({
+                            citationId: citationMark.attrs?.citationId,
+                            text: node.text,
+                            start: startPos,
+                            end: startPos + node.text.length
+                        });
+                    }
+                }
+                if (node.text) {
+                    currentPos += node.text.length;
+                } else {
+                    currentPos += 1;
+                    if (node.content) node.content.forEach(walk);
+                    currentPos += 1;
+                }
+            };
+            doc.content.forEach(walk);
         }
 
         return citations;
     }
 
-    private static extractReferences(doc: JSONContent) {
+    private static extractReferences(doc: any) {
         const references: any[] = [];
         let inRefSection = false;
-        let offset = 0;
 
-        function walk(node: JSONContent) {
-            if (node.type === "heading" && node.content) {
-                const text = node.content.map(c => c.text || "").join("").toLowerCase();
-                if (text.includes("references") || text.includes("works cited") || text.includes("bibliography")) {
-                    inRefSection = true;
+        if (typeof doc.descendants === 'function') {
+            doc.descendants((node: any, pos: number) => {
+                if (node.type.name === "heading") {
+                    const textContent = node.textContent?.toLowerCase() || "";
+                    if (textContent.includes("references") || textContent.includes("works cited") || textContent.includes("bibliography")) {
+                        inRefSection = true;
+                    } else if (inRefSection) {
+                        // Stop if we hit another non-reference heading
+                        inRefSection = false;
+                    }
+                } else if (inRefSection && (node.type.name === "paragraph" || node.type.name === "listItem" || node.type.name === "bibliographyEntry")) {
+                    const textContent = node.textContent || "";
+                    const text = node.type.name === "bibliographyEntry" ? (node.attrs?.refText || textContent) : textContent;
+
+                    if (text.trim().length > 5) {
+                        references.push({
+                            id: node.attrs?.citationId || text.substring(0, 20),
+                            text: text,
+                            start: pos,
+                            end: pos + node.nodeSize
+                        });
+                    }
+                }
+            });
+        } else if (doc.content) {
+            let currentPos = 1;
+            const walk = (node: any) => {
+                const startPos = currentPos;
+                const textContent = node.content ? node.content.filter((c: any) => c.text).map((c: any) => c.text).join("") : "";
+
+                if (node.type === "heading") {
+                    const text = textContent.toLowerCase();
+                    if (text.includes("references") || text.includes("works cited") || text.includes("bibliography")) {
+                        inRefSection = true;
+                    } else if (inRefSection) {
+                        inRefSection = false;
+                    }
+                } else if (inRefSection && (node.type === "paragraph" || node.type === "listItem" || node.type === "bibliographyEntry")) {
+                    const text = node.type === "bibliographyEntry" ? (node.attrs?.refText || textContent) : textContent;
+                    if (text.trim().length > 5) {
+                        references.push({
+                            id: node.attrs?.citationId || text.substring(0, 20),
+                            text: text,
+                            start: startPos,
+                            end: startPos + (node.text ? node.text.length : 1)
+                        });
+                    }
+                }
+
+                if (node.text) {
+                    currentPos += node.text.length;
                 } else {
-                    inRefSection = false;
+                    currentPos += 1;
+                    if (node.content) node.content.forEach(walk);
+                    currentPos += 1;
                 }
-            } else if (inRefSection && (node.type === "paragraph" || node.type === "listItem")) {
-                const text = node.content ? node.content.map(c => c.text || "").join("") : "";
-                if (text.trim().length > 10) {
-                    references.push({
-                        id: text.substring(0, 20), // Hack: we need a real ID system for references if not using backend DB
-                        text: text,
-                        start: offset,
-                        end: offset + text.length
-                    });
-                }
-            }
-
-            if (node.text) offset += node.text.length;
-            else {
-                offset += 1;
-                if (node.content) node.content.forEach(walk);
-                offset += 1;
-            }
-        }
-
-        if (doc.content) {
+            };
             doc.content.forEach(walk);
         }
 

@@ -1,5 +1,7 @@
 import { Node, mergeAttributes } from "@tiptap/core";
+import { ReactNodeViewRenderer } from "@tiptap/react";
 import { CitationRegistryService } from "../services/CitationRegistryService";
+import { CitationComponent } from "../components/editor/views/CitationComponent";
 
 export interface CitationNodeOptions {
     HTMLAttributes: Record<string, any>;
@@ -74,11 +76,12 @@ export const CitationNode = Node.create<CitationNodeOptions>({
         const displayText = text || "[citation]";
 
         return [
-            "span",
+            "a",
             mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+                class: "citation-node",
                 "data-citation-id": citationId,
                 "data-text": displayText,
-                style: `color:#2563eb; font-weight:500;`, // Simple blue text, no hyperlink
+                style: `color:#2563eb; font-weight:500; cursor:pointer; text-decoration:none;`,
             }),
             displayText
         ];
@@ -94,10 +97,16 @@ export const CitationNode = Node.create<CitationNodeOptions>({
                             attrs: {
                                 citationId: attributes.citationId,
                                 text: attributes.text,
+                                url: attributes.url,
+                                status: "resolved", // Explicitly set to resolved for blue pill
                             },
                         });
                     },
         };
+    },
+
+    addNodeView() {
+        return ReactNodeViewRenderer(CitationComponent);
     },
 });
 

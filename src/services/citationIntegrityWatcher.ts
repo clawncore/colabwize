@@ -102,7 +102,7 @@ export class CitationIntegrityWatcher {
       if (tr.docChanged) {
         try {
           if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-        } catch (e) {}
+        } catch (e) { }
       }
     }
   }
@@ -152,7 +152,7 @@ export class CitationIntegrityWatcher {
         }
 
         if (url) {
-          status = "verified"; // Has link = green (verified)
+          status = "resolved"; // FORCE BLUE (Per User Request: "dont run any green")
         } else if (!entry.csl_data?.title && !entry.raw_reference_text) {
           status = "warning"; // Found but seems empty or weird
         }

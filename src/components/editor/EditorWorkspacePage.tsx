@@ -12,6 +12,7 @@ import { AIChatPanel } from "../aichat/AIChatPanel";
 import { TeamChat } from "../workspace/team/TeamChat";
 import { SourceDetailPanel } from "../citations/SourceDetailPanel";
 import { Project, documentService } from "../../services/documentService";
+import { formatCitation } from "../../utils/citationFormatter";
 // Custom hook usage instead of direct service
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import { UsageMeter } from "../../components/subscription/UsageMeter";
@@ -579,11 +580,36 @@ const EditorWorkspacePage: React.FC = () => {
       // 2. Append reference entry if provided
       if (trackingInfo && trackingInfo.fullReferenceEntry) {
         const source = trackingInfo.fullReferenceEntry;
-        const refText = source.raw_reference_text || source.title || text;
+        const style = trackingInfo.style ? trackingInfo.style.toLowerCase() : "apa";
+
+        let refText = text;
+
+        // Always try to generate the correctly formatted citation string on the fly, 
+        // to ensure bibliography formatting is correct even for newly added/unprocessed sources.
+        try {
+          const formatStyle = style === "mla" ? "MLA" :
+            style === "chicago" ? "Chicago" :
+              style === "ieee" ? "IEEE" : "APA";
+
+          const generatedRef = formatCitation(source, formatStyle as any, "reference-entry");
+          if (generatedRef) {
+            refText = generatedRef;
+          }
+        } catch (err) {
+          console.warn("Failed to dynamically format citation, using fallback", err);
+          if (source.formatted_citations && source.formatted_citations[style]) {
+            refText = source.formatted_citations[style].reference || source.formatted_citations[style];
+          } else if (source.raw_reference_text) {
+            refText = source.raw_reference_text;
+          } else if (source.title) {
+            refText = source.title;
+          }
+        }
+
         const widthRef = editorInstance.getText();
 
         // Simple duplicate check to avoid adding to references multiple times
-        if (!widthRef.includes(refText)) {
+        if (!widthRef.includes(refText) && !widthRef.includes(source.title)) {
           // Save current cursor position
           const currentPos = editorInstance.state.selection.anchor;
 

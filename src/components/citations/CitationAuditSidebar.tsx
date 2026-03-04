@@ -1,667 +1,361 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Editor } from "@tiptap/react";
-import { ArrowLeft, FileText, Clock } from "lucide-react";
-import { BibliographyManager } from "../../services/citationAudit/bibliographyEngine";
+import { ArrowLeft, FileText, RefreshCw, CheckCircle, XCircle, AlertTriangle, Info } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
-import { useCitationAuditStore } from "../../stores/useCitationAuditStore";
 import { CitationService } from "../../services/citationService";
-import { CitationAuditModal } from "./CitationAuditModal";
+import { ConfigService } from "../../services/ConfigService";
+import { supabase } from "../../lib/supabase/client";
 
 interface CitationAuditSidebarProps {
   projectId: string;
   editor: Editor | null;
   onClose: () => void;
-  onFindPapers: (keywords: string[]) => void;
+  onFindPapers?: (keywords: string[]) => void;
   initialResults?: any;
   citationStyle?: string | null;
   citationLibrary?: any[];
   onUpgrade?: () => void;
 }
 
+type AuditStatus = "IDLE" | "RUNNING" | "COMPLETED" | "FAILED";
+type IssueSeverity = "CRITICAL" | "MAJOR" | "MINOR" | "INFO";
+
+const STAGE_LABELS: Record<string, string> = {
+  INITIALIZING: "Initializing...",
+  EXTRACTION: "Extracting Citations",
+  CROSS_REFERENCE_MAPPING: "Mapping Cross-References",
+  DUPLICATE_DETECTION: "Checking for Duplicates",
+  URL_VALIDATION: "Validating Hyperlinks",
+  STYLE_COMPLIANCE: "Checking Style Formatting",
+  SCORE_GENERATION: "Calculating Score",
+  DONE: "Complete",
+};
+
+const SEVERITY_CONFIG: Record<IssueSeverity, { label: string; color: string; bg: string; icon: React.FC<any> }> = {
+  CRITICAL: { label: "Critical", color: "text-red-700", bg: "bg-red-50 border-red-200", icon: XCircle },
+  MAJOR: { label: "Major", color: "text-orange-700", bg: "bg-orange-50 border-orange-200", icon: AlertTriangle },
+  MINOR: { label: "Minor", color: "text-yellow-700", bg: "bg-yellow-50 border-yellow-200", icon: AlertTriangle },
+  INFO: { label: "Info", color: "text-blue-700", bg: "bg-blue-50 border-blue-200", icon: Info },
+};
+
 export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
   projectId,
   editor,
   onClose,
-  initialResults,
   citationStyle,
-  citationLibrary,
   onUpgrade,
 }) => {
-  const [localLoading, setLocalLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const { setAuditResult, setLoading, auditResult, reset } =
-    useCitationAuditStore();
-  const selectedStyle = citationStyle || "APA";
   const { toast } = useToast();
 
-  // Use refs to track previous values to prevent infinite loops from prop recreation
-  const prevCitationLibraryRef = React.useRef(citationLibrary);
+  // Async audit state
+  const [auditStatus, setAuditStatus] = useState<AuditStatus>("IDLE");
+  const [progress, setProgress] = useState(0);
+  const [currentStage, setCurrentStage] = useState("INITIALIZING");
+  const [auditReport, setAuditReport] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const sseRef = useRef<EventSource | null>(null);
 
-  // UARS: Universal Highlight Tokens
-  const getHighlightColor = (ruleId: string): string => {
-    const r = ruleId.toUpperCase();
-    if (
-      r.includes("VERIFICATION") ||
-      r.includes("REF") ||
-      r.includes("MISMATCH") ||
-      r.includes("UNMATCHED") ||
-      r.includes("ORPHAN")
-    ) {
-      return "rgba(220, 38, 38, 0.25)"; // High Risk (Red Tint) - Increased from 0.15
-    }
-    if (
-      r.includes("MIXED") ||
-      r.includes("CONSISTENCY") ||
-      r.includes("STYLE") ||
-      r.includes("INLINE")
-    ) {
-      return "rgba(245, 158, 11, 0.28)"; // Medium Risk (Amber Tint) - Increased from 0.18
-    }
-    return "rgba(250, 204, 21, 0.3)"; // Low/Info (Yellow Tint) - Increased from 0.2
-  };
-
-  const handleRunStyleAudit = useCallback(
-    async (force = false) => {
-      if (!editor) return;
-
-      // Prevent running if we have a fatal error, unless forced
-      if (
-        !force &&
-        auditResult &&
-        (auditResult.state === "FAILED_QUOTA_EXCEEDED" ||
-          auditResult.state === "FAILED_SUBSCRIPTION_ERROR")
-      ) {
-        console.log(
-          "🛑 Skipping auto-audit due to active quota/subscription error",
-        );
-        return;
-      }
-
-      try {
-        // Clear any cached results to ensure fresh data
-        if (force) reset();
-
-        setLocalLoading(true);
-        setLoading(true);
-        if (force) editor.commands.clearAllHighlights();
-
-        const rawResult = await BibliographyManager.auditDocument(
-          editor.getJSON(),
-          projectId,
-        );
-
-        // Map the simplified output back to the store format temporarily
-        const result = {
-          state: "COMPLETED_SUCCESS",
-          violations: rawResult.flags,
-          verificationResults: rawResult.verificationResults,
-          integrityIndex: rawResult.integrityIndex,
-          tierMetadata: {}, // Stripped out tiered complexity
-        };
-
-        // Only update if the component is still mounted (basic check)
-        setAuditResult(result as any);
-
-        if (
-          result.state === "COMPLETED_SUCCESS" &&
-          result.violations.length > 0
-        ) {
-          // Apply UARS Highlights
-          console.log(
-            `🎨 Applying ${result.violations.length} citation highlights to editor`,
-          );
-          let highlightsApplied = 0;
-
-          // Clear old highlights first to be safe
-          editor.commands.clearAllHighlights();
-
-          result.violations.forEach((flag: any) => {
-            if (flag.anchor) {
-              const color = getHighlightColor(flag.ruleId);
-              const docSize = editor.state.doc.content.size;
-              const start = Math.max(0, Math.min(flag.anchor.start, docSize));
-              const end = Math.max(start, Math.min(flag.anchor.end, docSize));
-
-              if (start < end) {
-                editor
-                  .chain()
-                  .highlightRange(start, end, {
-                    color: color, // Tiptap will apply this as background-color
-                    message: flag.message,
-                    ruleId: flag.ruleId,
-                    expected: flag.expected,
-                  })
-                  .run();
-                highlightsApplied++;
-              }
-            }
-          });
-
-          console.log(
-            `✅ Applied ${highlightsApplied} highlights successfully`,
-          );
-
-          toast({
-            title: "Audit Complete",
-            description: "Issues flagged for review in sidebar.",
-            variant: "default",
-          });
-        } else if (result.state === "FAILED_QUOTA_EXCEEDED") {
-          toast({
-            title: "Plan Limit Reached",
-            description:
-              (result as any).errorMessage ||
-              "You have reached your citation audit limit.",
-            variant: "destructive",
-          });
-        } else if (result.state === "COMPLETED_SUCCESS") {
-          toast({
-            title: "Audit Complete",
-            description: "No issues found.",
-            variant: "default",
-          });
-        }
-
-        // Verified Citations - Green Tint (embed url for click handler)
-        if (result.verificationResults) {
-          result.verificationResults.forEach((ver: any) => {
-            if (ver.existenceStatus === "CONFIRMED" && ver.inlineLocation) {
-              const docSize = editor.state.doc.content.size;
-              const vStart = Math.max(
-                0,
-                Math.min(ver.inlineLocation.start, docSize),
-              );
-              const vEnd = Math.max(
-                vStart,
-                Math.min(ver.inlineLocation.end, docSize),
-              );
-              if (vStart < vEnd) {
-                editor
-                  .chain()
-                  .highlightRange(vStart, vEnd, {
-                    color: "rgba(22, 163, 74, 0.15)", // Success Green Tint
-                    message: ver.message || `Verified source`,
-                    ruleId: "VERIFIED",
-                    // Embed hyperlink data directly so click handler doesn't need fuzzy match
-                    url: ver.foundPaper?.url || null,
-                    sourceTitle: ver.foundPaper?.title || null,
-                  })
-                  .run();
-              }
-            }
-          });
-        }
-      } catch (error: any) {
-        console.error("Audit failed", error);
-        // This fallback usually won't be hit if citationAuditEngine handles errors,
-        // but just in case:
-        setAuditResult({
-          state: "FAILED_SCAN_ABORTED",
-          violations: [],
-          errorMessage: error.message,
-        });
-      } finally {
-        setLocalLoading(false);
-        setLoading(false);
-      }
-    },
-    [
-      editor,
-      projectId,
-      selectedStyle,
-      toast,
-      setAuditResult,
-      setLoading,
-      reset,
-      citationLibrary,
-      auditResult,
-    ],
-  );
-
-  // Clear cache and re-run when citation library changes (handling unstable props)
+  // Cleanup SSE on unmount
   useEffect(() => {
-    // Simple length check + crude stringify to avoid deep comparison cost on every render
-    // or just rely on length if that's the main change.
-    // Let's use a safe comparison.
-    const prevLib = prevCitationLibraryRef.current;
-    const currLib = citationLibrary;
-
-    const hasChanged =
-      (!prevLib && currLib) ||
-      (prevLib && !currLib) ||
-      (prevLib && currLib && prevLib.length !== currLib.length) ||
-      (prevLib &&
-        currLib &&
-        JSON.stringify(prevLib.map((c: any) => c.id)) !==
-        JSON.stringify(currLib.map((c: any) => c.id)));
-
-    if (hasChanged) {
-      console.log(
-        "📚 Citation library changed - clearing audit cache for fresh results",
-      );
-      reset();
-      prevCitationLibraryRef.current = currLib;
-    }
-  }, [citationLibrary, reset]);
-
-  // Auto-run audit when sidebar opens (disabled by user request)
-  useEffect(() => {
-    // We leave the effect here if we need to set state, but we don't trigger the audit.
-    /*
-      const isQuotaError = auditResult && (auditResult.state === "FAILED_QUOTA_EXCEEDED");
-      if (!auditResult && !localLoading && !isQuotaError) {
-          handleRunStyleAudit(false);
+    return () => {
+      if (sseRef.current) {
+        sseRef.current.close();
       }
-      */
-  }, [auditResult, localLoading, handleRunStyleAudit]);
+    };
+  }, []);
 
-  // Handle Clicks on Highlights
-  useEffect(() => {
-    if (!editor) return; // Removed auditResult dependency to allow clicking even if partial result? No, logic needs result.
-    if (!auditResult) return;
+  // ── Highlight helpers ──────────────────────────────────────────────────────
+  const applyHighlights = useCallback((report: any) => {
+    if (!editor || !report?.issues?.length) return;
+    editor.commands.clearAllHighlights?.();
 
-    const handleEditorClick = (e: any) => {
-      const { state, view } = editor;
-      const pos = view.posAtCoords({ left: e.clientX, top: e.clientY });
+    const docSize = editor.state.doc.content.size;
+    report.issues.forEach((issue: any) => {
+      if (!issue.location?.startPos) return;
+      const start = Math.max(0, Math.min(issue.location.startPos, docSize));
+      const end = Math.max(start, Math.min(issue.location.endPos ?? start + 1, docSize));
+      if (start >= end) return;
 
-      if (pos && pos.pos) {
-        const $pos = state.doc.resolve(pos.pos);
-        const marks = $pos.marks();
+      const colorMap: Record<IssueSeverity, string> = {
+        CRITICAL: "rgba(220, 38, 38, 0.22)",
+        MAJOR: "rgba(234, 88, 12, 0.22)",
+        MINOR: "rgba(250, 204, 21, 0.28)",
+        INFO: "rgba(59, 130, 246, 0.18)",
+      };
+      const color = colorMap[issue.severity as IssueSeverity] ?? colorMap.INFO;
 
-        const highlightMark = marks.find(
-          (m) => m.type.name === "citation-highlight",
-        );
-        if (highlightMark) {
-          const attrs = highlightMark.attrs;
+      editor.chain().highlightRange?.(start, end, {
+        color,
+        message: issue.message,
+        ruleId: issue.type,
+        expected: issue.suggestedFix,
+      }).run();
+    });
+  }, [editor]);
 
-          // PRIMARY: read url/sourceTitle embedded directly in the mark
-          let sourceUrl: string | null = attrs.url || null;
-          let sourceTitle: string | null = attrs.sourceTitle || null;
+  // ── Start the async backend audit ─────────────────────────────────────────
+  const handleRunAudit = useCallback(async () => {
+    if (!editor) return;
 
-          // FALLBACK: fuzzy match against verificationResults (legacy path)
-          if (!sourceUrl && auditResult.verificationResults) {
-            const verResult = auditResult.verificationResults.find((v: any) => {
-              return (
-                v.message === attrs.message ||
-                (v.inlineLocation &&
-                  v.inlineLocation.text === attrs.sourceTitle)
-              );
-            });
-            if (verResult?.foundPaper?.url) {
-              sourceUrl = verResult.foundPaper.url;
-              sourceTitle = verResult.foundPaper.title || null;
-            }
+    // Close any old SSE stream
+    if (sseRef.current) {
+      sseRef.current.close();
+      sseRef.current = null;
+    }
+
+    setAuditStatus("RUNNING");
+    setProgress(0);
+    setCurrentStage("INITIALIZING");
+    setAuditReport(null);
+    setErrorMessage(null);
+    editor.commands.clearAllHighlights?.();
+
+    try {
+      // 1. Get the document's Prosemirror JSON
+      const docState = editor.state.doc.toJSON();
+      const documentId = (editor.state.doc as any).attrs?.id || projectId;
+
+      // 2. POST to /api/audit/start → get auditId back immediately
+      const auditId = await CitationService.startAudit(documentId, projectId, docState);
+
+      // 3. Open SSE stream — token from Supabase session (EventSource doesn't support headers)
+      const baseUrl = ConfigService.getApiUrl();
+      const sessionResult = await supabase.auth.getSession();
+      const token = sessionResult.data.session?.access_token ?? "";
+      const sseUrl = `${baseUrl}/api/audit/progress/${auditId}`;
+
+      const sse = new EventSource(`${sseUrl}?token=${encodeURIComponent(token)}`);
+      sseRef.current = sse;
+
+      sse.onmessage = (event) => {
+        if (event.data === "connected") return;
+
+        try {
+          const payload = JSON.parse(event.data);
+
+          if (payload.error) {
+            setAuditStatus("FAILED");
+            setErrorMessage(payload.error);
+            sse.close();
+            return;
           }
 
-          const description = sourceTitle
-            ? `Source: ${sourceTitle}`
-            : attrs.message || "Citation flagged";
+          setProgress(payload.progress ?? 0);
+          setCurrentStage(payload.currentStage ?? "RUNNING");
 
-          const action = sourceUrl ? (
-            <a
-              href={sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-bold underline ml-2">
-              Open Link
-            </a>
-          ) : undefined;
-
-          toast({
-            title:
-              attrs.ruleId === "VERIFIED"
-                ? "✅ Verified Source"
-                : attrs.ruleId || "Citation Info",
-            description: (
-              <div className="flex flex-col gap-1">
-                {description}
-                {action}
-              </div>
-            ),
-            duration: 6000,
-          });
+          if (payload.status === "COMPLETED" && payload.report) {
+            setAuditStatus("COMPLETED");
+            setAuditReport(payload.report);
+            applyHighlights(payload.report);
+            sse.close();
+          } else if (payload.status === "FAILED") {
+            setAuditStatus("FAILED");
+            setErrorMessage("The audit encountered an internal error.");
+            sse.close();
+          }
+        } catch {
+          // Ignore parse errors for transient SSE messages
         }
-      }
-    };
+      };
 
-    // Attach listener to the editor's DOM element safely
-    let attachedDom: HTMLElement | null = null;
-    try {
-      if (editor.view && editor.view.dom) {
-        attachedDom = editor.view.dom;
-        attachedDom.addEventListener("click", handleEditorClick);
-      }
-    } catch (e) {
-      // view not ready yet
+      sse.onerror = () => {
+        // Suppress error if we completed cleanly
+        if (auditStatus === "COMPLETED") return;
+        setAuditStatus("FAILED");
+        setErrorMessage("Lost connection to audit server. Please retry.");
+        sse.close();
+      };
+
+    } catch (err: any) {
+      setAuditStatus("FAILED");
+      setErrorMessage(err.message || "Failed to start audit.");
+      toast({ title: "Audit Failed", description: err.message, variant: "destructive" });
     }
+  }, [editor, projectId, applyHighlights, toast]);
 
-    return () => {
-      if (attachedDom) {
-        attachedDom.removeEventListener("click", handleEditorClick);
-      }
-    };
-  }, [editor, auditResult, toast]);
+  // ── Derived values ─────────────────────────────────────────────────────────
+  const criticalCount = auditReport?.issues?.filter((i: any) => i.severity === "CRITICAL").length ?? 0;
+  const majorCount = auditReport?.issues?.filter((i: any) => i.severity === "MAJOR").length ?? 0;
+  const minorCount = auditReport?.issues?.filter((i: any) => i.severity === "MINOR").length ?? 0;
+  const infoCount = auditReport?.issues?.filter((i: any) => i.severity === "INFO").length ?? 0;
+  const score = auditReport?.summary?.complianceScore ?? null;
+  const isExportBlocked = criticalCount > 0;
 
-  const handleAddSource = async (source: any) => {
-    if (!editor) return;
-    try {
-      const timeString = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      const collectionName = `Audit Findings ${timeString}`; // "Audit Findings 10:45 PM"
+  // ── Stage label ────────────────────────────────────────────────────────────
+  const stageLabel = STAGE_LABELS[currentStage] ?? currentStage;
 
-      await CitationService.addCitation(
-        editor.getAttributes("document")?.projectId || "default",
-        {
-          title: source.title,
-          authors: source.author ? [source.author] : source.authors || [],
-          year: source.year || new Date().getFullYear(),
-          doi: source.doi,
-          url: source.url,
-          source: source.source,
-          type: source.type || "journal-article",
-          abstract: source.abstract,
-          tags: [collectionName, "audit-result"],
-        },
-      );
+  // ── Score color ────────────────────────────────────────────────────────────
+  const scoreColor = score === null ? "text-slate-400"
+    : score >= 85 ? "text-emerald-600"
+      : score >= 65 ? "text-orange-500"
+        : "text-red-600";
 
-      // Optional: trigger a refresh of sources list if we had access to it,
-      // but the toast in VerificationResultsPanel gives feedback.
-    } catch (error) {
-      console.error(error);
-      throw error; // Let child component handle/toast error
-    }
-  };
-
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-full bg-[#f8fafc] border-r border-[#e5e7eb]">
-      {/* Header: Minimal */}
+      {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7eb] bg-white">
         <div className="flex items-center gap-2">
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-[#f1f5f9] rounded text-[#6b7280]">
+          <button onClick={onClose} className="p-1 hover:bg-[#f1f5f9] rounded text-[#6b7280]">
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <h2 className="text-sm font-semibold text-[#111827]">
-            Citation Audit
-          </h2>
+          <h2 className="text-sm font-semibold text-[#111827]">Citation Audit</h2>
         </div>
+        {auditStatus === "COMPLETED" || auditStatus === "FAILED" ? (
+          <button
+            onClick={handleRunAudit}
+            className="p-1.5 text-slate-500 hover:bg-slate-100 rounded transition-colors"
+            title="Re-run Audit"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        ) : null}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {localLoading ? (
-          <div className="text-center py-8 text-[#6b7280] text-sm animate-pulse">
-            Analyzing citations...
-          </div>
-        ) : auditResult ? (
-          <>
-            {/* ERROR STATE: Subscription Error */}
-            {auditResult.state === "FAILED_SUBSCRIPTION_ERROR" && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-                <h3 className="text-amber-800 font-semibold mb-2 flex items-center gap-2">
-                  <span>🔒</span> Premium Feature
-                </h3>
-                <p className="text-sm text-amber-600 mb-3">
-                  {auditResult.errorMessage ||
-                    "This feature is not available on your current plan."}
-                </p>
-                <button
-                  onClick={() => onUpgrade?.()}
-                  className="w-full py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-medium transition-colors">
-                  View Upgrade Options
-                </button>
-              </div>
-            )}
 
-            {/* NORMAL RESULTS (Only show if NOT in critical error state) */}
-            {!["FAILED_SUBSCRIPTION_ERROR"].includes(auditResult.state) && (
-              <>
-                {/* Sidebar = Counts Only (No Graphs, No Explanations) */}
-                {/* Improved Tier-Aware Findings Overview */}
-                <div className="space-y-3">
-                  {/* Tier 1: Structural (Always Runs) */}
-                  <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-1 h-full bg-slate-300"></div>
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-tight">
-                        Tier 1: Formatting & Structure
-                      </h4>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        UNIVERSAL
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-slate-500 uppercase">
-                          Total
-                        </span>
-                        <span className="font-medium text-slate-900">
-                          {auditResult.tierMetadata?.STRUCTURAL?.stats
-                            ?.totalCitations || 0}{" "}
-                          Citations
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-slate-500 uppercase">
-                          Matched
-                        </span>
-                        <span className="font-medium text-slate-900">
-                          {auditResult.tierMetadata?.STRUCTURAL?.stats
-                            ?.matched || 0}{" "}
-                          Linked
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-slate-500 uppercase">
-                          Issues
-                        </span>
-                        {/* Sum of formatting + orphans */}
-                        <span className="font-medium text-amber-600">
-                          {auditResult.violations?.filter(
-                            (v: any) => !v.ruleId?.includes("VERIFICATION"),
-                          ).length || 0}{" "}
-                          Flags
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Tier 2: Claim Verification (Conditional) */}
-                  <div
-                    className={`bg-white p-3 rounded-lg border ${auditResult.tierMetadata?.CLAIM?.executed ? "border-indigo-100 shadow-sm" : "border-slate-100 bg-slate-50/50"} relative overflow-hidden`}>
-                    <div
-                      className={`absolute top-0 right-0 w-1 h-full ${auditResult.tierMetadata?.CLAIM?.executed ? "bg-indigo-500" : "bg-slate-200"}`}></div>
-                    <div className="flex justify-between items-center mb-2">
-                      <h4
-                        className={`text-xs font-bold uppercase tracking-tight ${auditResult.tierMetadata?.CLAIM?.executed ? "text-indigo-900" : "text-slate-400"}`}>
-                        Tier 2: Claim Verification
-                      </h4>
-                      {auditResult.tierMetadata?.CLAIM?.executed ? (
-                        <span className="text-[10px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded font-medium">
-                          ACTIVE
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-slate-400">
-                          SKIPPED
-                        </span>
-                      )}
-                    </div>
-
-                    {auditResult.tierMetadata?.CLAIM?.executed ? (
-                      <div className="grid grid-cols-2 gap-4 text-xs">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-indigo-400 uppercase">
-                            Claims Audited
-                          </span>
-                          <span className="font-bold text-indigo-700 text-lg">
-                            {auditResult.tierMetadata?.CLAIM?.stats
-                              ?.candidates || 0}
-                          </span>
-                          <span className="text-[9px] text-slate-400 leading-tight">
-                            factual claims detected
-                          </span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-indigo-400 uppercase">
-                            Verification Rate
-                          </span>
-                          <div className="flex items-baseline gap-1">
-                            <span className="font-bold text-indigo-700 text-lg">
-                              {auditResult.tierMetadata?.CLAIM?.stats
-                                ?.verified || 0}
-                            </span>
-                            <span className="text-[10px] text-slate-500">
-                              /{" "}
-                              {auditResult.tierMetadata?.CLAIM?.stats
-                                ?.candidates || 0}
-                            </span>
-                          </div>
-                          <span className="text-[9px] text-slate-400 leading-tight">
-                            sources confirmed
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-[10px] text-slate-400 italic">
-                        No factual claims detected in cited sentences.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Tier 3: Risk Analysis (Conditional) */}
-                  <div
-                    className={`bg-white p-3 rounded-lg border ${auditResult.tierMetadata?.RISK?.executed ? "border-red-100 shadow-sm" : "border-slate-100 bg-slate-50/50"} relative overflow-hidden`}>
-                    <div
-                      className={`absolute top-0 right-0 w-1 h-full ${auditResult.tierMetadata?.RISK?.executed ? "bg-red-500" : "bg-slate-200"}`}></div>
-                    <div className="flex justify-between items-center mb-2">
-                      <h4
-                        className={`text-xs font-bold uppercase tracking-tight ${auditResult.tierMetadata?.RISK?.executed ? "text-red-900" : "text-slate-400"}`}>
-                        Tier 3: Risk Assessment
-                      </h4>
-                      {auditResult.tierMetadata?.RISK?.executed ? (
-                        <span className="text-[10px] text-red-600 bg-red-50 px-1.5 py-0.5 rounded font-medium">
-                          ACTIVE
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-slate-400">
-                          SKIPPED
-                        </span>
-                      )}
-                    </div>
-                    {auditResult.tierMetadata?.RISK?.executed ? (
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="font-bold text-red-600">
-                          {auditResult.tierMetadata?.RISK?.stats?.risksFound ||
-                            0}
-                        </span>
-                        <span className="text-slate-600">
-                          Risk signals detected
-                        </span>
-                      </div>
-                    ) : (
-                      <p className="text-[10px] text-slate-400 italic">
-                        No high-risk domains or topics detected.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {initialResults?.suggestions &&
-                  initialResults.suggestions.length > 0 && (
-                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-3">
-                      <h4 className="text-xs font-bold text-blue-800 uppercase tracking-tight">
-                        Missing Citations
-                      </h4>
-                      <div className="space-y-2">
-                        {initialResults.suggestions
-                          .slice(0, 3)
-                          .map((s: any, i: number) => (
-                            <div
-                              key={i}
-                              className="text-xs text-blue-700 bg-white/50 p-2 rounded border border-blue-100/50">
-                              "{s.sentence.substring(0, 60)}..."
-                            </div>
-                          ))}
-                        {initialResults.suggestions.length > 3 && (
-                          <div className="text-[10px] text-blue-500 text-center italic">
-                            + {initialResults.suggestions.length - 3} more
-                            suggestions
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                {/* Metadata Anchor */}
-                <div className="flex flex-col gap-2 mt-4">
-                  <div className="flex items-center justify-between text-[10px] text-[#6b7280] uppercase tracking-wide font-medium bg-[#f1f5f9] px-3 py-1.5 rounded border border-[#e5e7eb]">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-3 h-3" />
-                      <span>
-                        Last scanned: {new Date().toLocaleDateString()}
-                      </span>
-                    </div>
-                    <span>
-                      Mode:{" "}
-                      {auditResult.tiersExecuted?.includes("RISK")
-                        ? "Deep Audit"
-                        : auditResult.tiersExecuted?.includes("CLAIM")
-                          ? "Claim Check"
-                          : "Standard"}
-                    </span>
-                  </div>
-
-                  {/* Tier Breakdown (Mini Diagnostics) */}
-                  {auditResult.tierMetadata && (
-                    <div className="grid grid-cols-3 gap-1">
-                      {["STRUCTURAL", "CLAIM", "RISK"].map((tier) => {
-                        const executed =
-                          auditResult.tierMetadata[tier]?.executed;
-                        return (
-                          <div
-                            key={tier}
-                            className={`text-[9px] text-center py-1 rounded border ${executed ? "bg-green-50 border-green-100 text-green-700" : "bg-gray-50 border-gray-100 text-gray-400"}`}>
-                            {tier} {executed ? "✓" : "○"}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Stronger Action Button */}
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="w-full py-2.5 px-3 bg-white hover:bg-[#f8fafc] border-2 border-[#cbd5e1] hover:border-[#94a3b8] rounded-lg text-sm font-semibold text-[#334155] hover:text-[#0f172a] shadow-sm transition-all flex items-center justify-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  Open Full Report
-                </button>
-
-                <div className="text-center pt-2">
-                  <button
-                    onClick={() => handleRunStyleAudit(true)}
-                    className="text-xs text-[#6b7280] hover:text-[#111827] underline">
-                    Rerun Analysis
-                  </button>
-                </div>
-              </>
-            )}
-          </>
-        ) : (
-          <div className="text-center py-8 text-[#6b7280] text-sm animate-pulse">
-            Preparing audit...
+        {/* ── IDLE STATE ── */}
+        {auditStatus === "IDLE" && (
+          <div className="text-center py-12 px-6">
+            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100">
+              <FileText className="w-8 h-8 text-blue-400 opacity-60" />
+            </div>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">Ready to Audit</h3>
+            <p className="text-sm text-gray-500 mb-8">
+              Click below to run a full citation integrity audit on your document.
+            </p>
+            <button
+              onClick={handleRunAudit}
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md shadow-blue-200 transition-all flex items-center justify-center gap-2"
+            >
+              Run Citation Audit
+            </button>
           </div>
         )}
 
-        <CitationAuditModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          editor={editor}
-          onAddSource={handleAddSource}
-          onUpgrade={onUpgrade}
-        />
+        {/* ── RUNNING STATE ── */}
+        {auditStatus === "RUNNING" && (
+          <div className="space-y-4 py-4">
+            <div className="text-center">
+              <p className="text-sm font-semibold text-slate-700 mb-1">Auditing…</p>
+              <p className="text-xs text-slate-400">{stageLabel}</p>
+            </div>
+            {/* Progress Bar */}
+            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="h-2.5 rounded-full bg-blue-500 transition-all duration-300 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-center text-xs text-slate-500 font-medium">{progress}%</p>
+          </div>
+        )}
+
+        {/* ── FAILED STATE ── */}
+        {auditStatus === "FAILED" && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+            <XCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+            <h3 className="text-sm font-semibold text-red-800 mb-1">Audit Failed</h3>
+            <p className="text-xs text-red-600 mb-3">{errorMessage || "An unexpected error occurred."}</p>
+            <button
+              onClick={handleRunAudit}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* ── COMPLETED STATE ── */}
+        {auditStatus === "COMPLETED" && auditReport && (
+          <div className="space-y-4">
+
+            {/* Score Card */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">
+                  Compliance Score
+                </p>
+                <span className={`text-4xl font-black ${scoreColor}`}>{score}</span>
+                <span className="text-slate-400 text-lg font-semibold">/100</span>
+              </div>
+              <div className="text-right">
+                {isExportBlocked ? (
+                  <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">
+                    <XCircle className="w-3 h-3" /> Export Blocked
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">
+                    <CheckCircle className="w-3 h-3" /> Ready to Export
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Summary Metrics */}
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "In-Text Citations", value: auditReport.summary.totalInTextCitations },
+                { label: "Bibliography Entries", value: auditReport.summary.uniqueBibliographyEntries },
+                { label: "Broken Citations", value: auditReport.summary.brokenCitations, danger: auditReport.summary.brokenCitations > 0 },
+                { label: "Uncited References", value: auditReport.summary.uncitedReferences },
+                { label: "Duplicate Entries", value: auditReport.summary.duplicatesDetected, danger: auditReport.summary.duplicatesDetected > 0 },
+                { label: "Invalid / HTTP URLs", value: auditReport.summary.invalidUrls, danger: auditReport.summary.invalidUrls > 0 },
+              ].map(({ label, value, danger }) => (
+                <div key={label} className={`bg-white border rounded-lg p-3 ${danger ? "border-red-200" : "border-slate-200"}`}>
+                  <p className={`text-xl font-black ${danger ? "text-red-600" : "text-slate-800"}`}>{value}</p>
+                  <p className="text-[10px] text-slate-400 leading-tight mt-0.5">{label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Issues List */}
+            {auditReport.issues && auditReport.issues.length > 0 ? (
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Issues</h4>
+                {(["CRITICAL", "MAJOR", "MINOR", "INFO"] as IssueSeverity[]).map(sev => {
+                  const sevIssues = auditReport.issues.filter((i: any) => i.severity === sev);
+                  if (!sevIssues.length) return null;
+                  const cfg = SEVERITY_CONFIG[sev];
+                  const Icon = cfg.icon;
+                  return (
+                    <div key={sev}>
+                      <p className={`text-[10px] uppercase font-bold tracking-widest mb-1 ${cfg.color}`}>
+                        {cfg.label} ({sevIssues.length})
+                      </p>
+                      <div className="space-y-1.5">
+                        {sevIssues.map((issue: any) => (
+                          <div key={issue.id} className={`flex gap-2 p-2.5 rounded-lg border text-xs ${cfg.bg}`}>
+                            <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${cfg.color}`} />
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-semibold ${cfg.color} truncate`}>{issue.type.replace(/_/g, " ")}</p>
+                              <p className="text-slate-600 mt-0.5 leading-snug">{issue.message}</p>
+                              {issue.suggestedFix && (
+                                <p className="mt-1.5 text-slate-500 italic leading-snug">
+                                  💡 {issue.suggestedFix}
+                                </p>
+                              )}
+                              {issue.autoFixAvailable && (
+                                <span className="mt-1.5 inline-block text-[10px] bg-white border border-emerald-200 text-emerald-700 font-semibold px-1.5 py-0.5 rounded-full">
+                                  Auto-fixable
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-slate-500 text-sm">
+                <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+                No issues found. Citations look good!
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

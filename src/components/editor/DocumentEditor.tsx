@@ -63,6 +63,7 @@ import TaskItem from "@tiptap/extension-task-item";
 import { TextStyle } from "@tiptap/extension-text-style";
 import FontFamily from "@tiptap/extension-font-family";
 import { formatContentForTiptap } from "../../utils/editorUtils";
+import { detectAndNormalizeCitations } from "./utils/normalization";
 import { GrammarExtension } from "../../extensions/GrammarExtension";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
@@ -466,26 +467,27 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       extensions: [
         StarterKit.configure({
           history: !isCollaborative, // Disable history in collab mode (handled by Yjs)
+          link: false, // Prevent duplicate extension names error if StarterKit includes it
         } as any),
         ...(isCollaborative &&
-        collabReady &&
-        providerRef.current &&
-        ydocRef.current
+          collabReady &&
+          providerRef.current &&
+          ydocRef.current
           ? [
-              Collaboration.configure({
-                document: ydocRef.current, // Bind directly to the stable Y.Doc (ref)
-              }),
-              CollaborationCursor.configure({
-                provider: providerRef.current, // Bind directly to the Hocuspocus provider (ref)
-                user: {
-                  name:
-                    user?.user_metadata?.full_name ||
-                    user?.email ||
-                    "Anonymous",
-                  color: cursorColor,
-                },
-              }),
-            ]
+            Collaboration.configure({
+              document: ydocRef.current, // Bind directly to the stable Y.Doc (ref)
+            }),
+            CollaborationCursor.configure({
+              provider: providerRef.current, // Bind directly to the Hocuspocus provider (ref)
+              user: {
+                name:
+                  user?.user_metadata?.full_name ||
+                  user?.email ||
+                  "Anonymous",
+                color: cursorColor,
+              },
+            }),
+          ]
           : []),
         HighlightExtension,
         CharacterCount,
@@ -723,7 +725,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             // Use timeout to ensure editor is stable and we don't conflict with initial render transactions
             setTimeout(async () => {
               if (editor && !editor.isDestroyed) {
-                // Normalization now happens purely on the backend. No auto-style detection needed here anymore.
+                await detectAndNormalizeCitations(editor, project.id, project.citations || []);
               }
             }, 500);
           } catch (error) {
@@ -769,7 +771,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           await CitationRegistryService.initializeFromBackend(project.id);
           (window as any).__currentProjectId__ = project.id;
 
-          // Normalization now happens purely on the backend. No auto-style detection needed here anymore.
+          await detectAndNormalizeCitations(editor, project.id, project.citations || []);
         } catch (e) {
           console.error("Collab Normalization Failed:", e);
         }
@@ -778,6 +780,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       initCollabRegistry();
     }
   }, [isCollaborative, editor, isSynced, project.id, project.citations]);
+
+
 
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -890,7 +894,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) {} // Dispatch clear
+          } catch (e) { } // Dispatch clear
           console.log("âœ… No grammar issues in block.");
           return;
         }
@@ -928,7 +932,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (matchCount > 0 || errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) {}
+          } catch (e) { }
           console.log(`âœ… Applied ${matchCount} grammar highlights to block.`);
         }
       } catch (error) {
@@ -1380,11 +1384,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               <div className="flex items-center space-x-2 flex-wrap">
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isPreviewMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
                       ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                    }`}
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1400,11 +1403,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isFocusMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
                       ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                    }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />

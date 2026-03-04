@@ -26,7 +26,8 @@ export function extractPatterns(
   }
 
   // APA e.g. (Smith, 2023) or (Smith et al., 2023)
-  const apaRegex = /\([A-Za-zÀ-ÿ\s\-\.,&]+(?:19|20)\d{2}[a-z]?\)/g;
+  // Use restrictive negative lookahead/character classes to prevent catastrophic backtracking
+  const apaRegex = /\([^()]{2,150}(?:19|20)\d{2}[a-z]?(?:\s*,?\s*[^)]*)?\)/g;
   while ((m = apaRegex.exec(text)) !== null) {
     if (m.index === apaRegex.lastIndex) apaRegex.lastIndex++;
     matches.push({
@@ -38,8 +39,7 @@ export function extractPatterns(
   }
 
   // Handle et al patterns if required by existing audits
-  const etAlPeriodRegex =
-    /\([A-Za-zÀ-ÿ\s\-]+et al\.,\s*(?:19|20)\d{2}[a-z]?\)/g;
+  const etAlPeriodRegex = /\([^()]{2,150}et al\.,\s*(?:19|20)\d{2}[a-z]?(?:\s*,?\s*[^)]*)?\)/g;
   while ((m = etAlPeriodRegex.exec(text)) !== null) {
     if (m.index === etAlPeriodRegex.lastIndex) etAlPeriodRegex.lastIndex++;
     matches.push({
@@ -50,7 +50,7 @@ export function extractPatterns(
     });
   }
 
-  const etAlNoPeriodRegex = /\([A-Za-zÀ-ÿ\s\-]+et al\s*(?:19|20)\d{2}[a-z]?\)/g;
+  const etAlNoPeriodRegex = /\([^()]{2,150}et al\s*(?:19|20)\d{2}[a-z]?(?:\s*,?\s*[^)]*)?\)/g;
   while ((m = etAlNoPeriodRegex.exec(text)) !== null) {
     if (m.index === etAlNoPeriodRegex.lastIndex) etAlNoPeriodRegex.lastIndex++;
     matches.push({

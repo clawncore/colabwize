@@ -41,14 +41,16 @@ export const CitationLifecycleExtension = Extension.create({
                         if (!id) return;
 
                         // Rule 1: Delete Bibliography if no in-text Citations exist
+                        // DISABLING THIS RULE to prevent unexpected data loss
                         if (node.type.name === "bibliographyEntry" && !citationIds.has(id)) {
-                            deletePositions.push({ from: pos, to: pos + node.nodeSize });
-                            idsToRemoveFromRegistry.add(id);
+                            // deletePositions.push({ from: pos, to: pos + node.nodeSize });
+                            // idsToRemoveFromRegistry.add(id);
                         }
 
                         // Rule 2: Delete Citations if their Bibliography entry was deleted
+                        // DISABLING THIS RULE to prevent new in-text citations from vanishing instantly
                         if (node.type.name === "citation" && !bibliographyIds.has(id)) {
-                            deletePositions.push({ from: pos, to: pos + node.nodeSize });
+                            // deletePositions.push({ from: pos, to: pos + node.nodeSize });
                         }
                     });
 

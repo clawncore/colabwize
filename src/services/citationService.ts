@@ -580,4 +580,22 @@ export class CitationService {
   static async createCitation(projectId: string, citationData: any): Promise<any> {
     return this.addCitation(projectId, citationData);
   }
+
+  /**
+   * Starts an asynchronous background citation audit.
+   * Returns an auditId that can be tracked via SSE.
+   */
+  static async startAudit(documentId: string, projectId: string, docState: any): Promise<string> {
+    try {
+      const response = await apiClient.post("/api/audit/start", {
+        documentId,
+        projectId,
+        docState,
+      });
+      return response.data.auditId;
+    } catch (error: any) {
+      console.error("Error starting audit:", error);
+      throw new Error(error.response?.data?.error || "Failed to start audit job");
+    }
+  }
 }

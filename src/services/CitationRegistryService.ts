@@ -100,13 +100,46 @@ export class CitationRegistryService {
         }
 
         try {
+            // --- AUTO-ENRICHMENT ---
+            // If this is an auto-imported citation from plain text, it likely lacks rich metadata.
+            // We silently ping the search API (OpenAlex) to find a match and enrich the data before saving.
+            let enrichedMetadata = metadata;
+            if (!metadata?.journal && !metadata?.url) {
+                try {
+                    console.log("🔍 Auto-enriching citation metadata for:", citationText);
+                    const query = metadata?.title || citationText.substring(0, 80);
+                    const searchResults = await CitationService.searchPapers(query);
+
+                    if (searchResults && searchResults.length > 0) {
+                        const bestMatch = searchResults[0];
+                        console.log("✅ Found enriched metadata match:", bestMatch.title);
+                        enrichedMetadata = {
+                            ...metadata,
+                            title: bestMatch.title || metadata?.title,
+                            authors: bestMatch.authors?.length ? bestMatch.authors : metadata?.authors,
+                            year: bestMatch.year || metadata?.year,
+                            journal: bestMatch.journal || metadata?.journal,
+                            url: bestMatch.url || metadata?.url,
+                            doi: bestMatch.doi || metadata?.doi,
+                            citationCount: bestMatch.citationCount || metadata?.citationCount,
+                            abstract: bestMatch.abstract || metadata?.abstract,
+                        };
+                    }
+                } catch (e) {
+                    console.warn("⚠️ Failed to enrich citation metadata on the fly:", e);
+                }
+            }
+
             const response = await CitationService.addCitation(projectId, {
-                title: metadata?.title || citationText.substring(0, 30) + '...',
-                authors: metadata?.authors || [],
-                year: typeof metadata?.year === 'number' ? metadata?.year : parseInt(String(metadata?.year) || '0'),
-                url: metadata?.url,
-                doi: metadata?.doi,
-                source: (metadata as any)?.source || "manual-ingest",
+                title: enrichedMetadata?.title || citationText.substring(0, 30) + '...',
+                authors: enrichedMetadata?.authors || [],
+                year: typeof enrichedMetadata?.year === 'number' ? enrichedMetadata?.year : parseInt(String(enrichedMetadata?.year) || '0'),
+                url: enrichedMetadata?.url,
+                doi: enrichedMetadata?.doi,
+                journal: enrichedMetadata?.journal,
+                citationCount: enrichedMetadata?.citationCount,
+                abstract: enrichedMetadata?.abstract,
+                source: (enrichedMetadata as any)?.source || "manual-ingest",
                 tags: ["auto-imported"]
             });
 

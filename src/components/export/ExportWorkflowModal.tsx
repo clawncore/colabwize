@@ -44,6 +44,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     onProjectUpdate,
 }) => {
     const [currentStep, setCurrentStep] = useState<Step>("audit");
+    const [auditStarted, setAuditStarted] = useState(false);
     // Checklist state removed
     const [selectedFormat, setSelectedFormat] = useState<ExportFormat | null>(null);
     const [exportMode, setExportMode] = useState<ExportMode>("standard");
@@ -79,6 +80,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             setCurrentStep("audit");
             setSelectedFormat(null);
             setAuditResult(null); // Reset audit
+            setAuditStarted(false);
 
             // Auto-fill from user profile in localStorage
             setAuthor(localStorage.getItem("user_full_name") || "");
@@ -94,6 +96,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     const performAudit = React.useCallback(async () => {
         if (auditResult) return; // Already audited
 
+        setAuditStarted(true);
         setIsAuditing(true);
         try {
             // SILENT NORMALIZATION (User Request)
@@ -104,6 +107,11 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
 
             // Get fresh content if editor is available (since normalization changed it)
             const contentToAudit = editor ? editor.getJSON() : currentContent;
+
+            if (!contentToAudit || !contentToAudit.content) {
+                console.warn("[ExportAudit] Aborting: No content available to audit.");
+                return;
+            }
 
             const result = await BibliographyManager.auditDocument(
                 contentToAudit as any,
@@ -119,11 +127,12 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     }, [auditResult, editor, project.citations, project.citation_style, currentContent, project.id]);
 
     // Trigger audit when entering audit step
-    useEffect(() => {
-        if (currentStep === "audit" && !auditResult && !isAuditing) {
-            performAudit();
-        }
-    }, [currentStep, auditResult, isAuditing, performAudit]);
+    // Removed automatic trigger to allow manual skip
+    // useEffect(() => {
+    //     if (currentStep === "audit" && !auditResult && !isAuditing) {
+    //         performAudit();
+    //     }
+    // }, [currentStep, auditResult, isAuditing, performAudit]);
 
 
     // --- Step 4: Format Logic ---
@@ -270,6 +279,39 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
                     <h3 className="text-lg font-semibold text-gray-900">Scanning Citations...</h3>
                     <p className="text-gray-500">Detecting style and verifying references.</p>
+                </div>
+            );
+        }
+
+        if (!auditStarted && !auditResult) {
+            return (
+                <div className="flex flex-col items-center justify-center h-full py-12 text-center">
+                    <div className="bg-indigo-50 p-4 rounded-full mb-6">
+                        <FileSearch className="w-10 h-10 text-indigo-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Compliance Check</h3>
+                    <p className="text-gray-500 max-w-md mx-auto mb-8">
+                        Would you like to run an automated check to verify your references and citation style formatting before exporting?
+                    </p>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => {
+                                setAuditStarted(true);
+                                setAuditResult({ violations: [] }); // Set empty so we can skip
+                                goToNextStep();
+                            }}
+                            className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                        >
+                            Skip Check
+                        </button>
+                        <button
+                            onClick={performAudit}
+                            className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors flex items-center gap-2"
+                        >
+                            <FileSearch className="w-4 h-4" />
+                            Run Audit
+                        </button>
+                    </div>
                 </div>
             );
         }
