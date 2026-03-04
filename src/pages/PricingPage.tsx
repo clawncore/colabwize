@@ -8,7 +8,6 @@ import Layout from "../components/Layout";
 
 import { useAuth } from "../hooks/useAuth";
 
-
 function IntroHero() {
   return (
     <section className="section-padding bg-white relative overflow-hidden">
@@ -43,7 +42,9 @@ function FeaturesPresentationFlow() {
   const { toast } = useToast();
   // Simplified loading logic as plans are now static-ish
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">(
+    "monthly",
+  );
   const [currentPlanId, setCurrentPlanId] = useState<string>("free");
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
 
@@ -60,7 +61,8 @@ function FeaturesPresentationFlow() {
 
           let planId = "free";
           if (typeof plan === "string") planId = plan;
-          else if (plan && typeof plan === "object" && "id" in plan) planId = (plan as any).id;
+          else if (plan && typeof plan === "object" && "id" in plan)
+            planId = (plan as any).id;
 
           setCurrentPlanId(planId || "free");
         } catch (error) {
@@ -71,100 +73,133 @@ function FeaturesPresentationFlow() {
     fetchSubscription();
   }, [user]);
 
-  const handleSelectPlan = useCallback(async (planId: string) => {
-    // 1. Handle Free Plan
-    if (planId === "free") {
-      if (currentPlanId !== "free") {
-        // Already on paid plan, redirect to dashboard to manage
-        navigate("/dashboard/billing");
+  const handleSelectPlan = useCallback(
+    async (planId: string) => {
+      // 1. Handle Free Plan
+      if (planId === "free") {
+        if (currentPlanId !== "free") {
+          // Already on paid plan, redirect to dashboard to manage
+          navigate("/dashboard/billing");
+          return;
+        }
+        navigate("/signup");
         return;
       }
-      navigate("/signup");
-      return;
-    }
 
-    // 2. Handle Credits (PAYG)
-    if (planId === "credits") {
+      // 2. Handle Credits (PAYG)
+      if (planId === "credits") {
+        if (!user) {
+          localStorage.setItem(
+            "intended_action",
+            JSON.stringify({ type: "credits", action: "/purchase-credits" }),
+          );
+          toast({
+            title: "Login Required",
+            description: "Please login to purchase credits",
+          });
+          navigate("/login");
+          return;
+        }
+        navigate("/purchase-credits");
+        return;
+      }
+
+      // 3. Handle Paid Subscriptions
       if (!user) {
-        localStorage.setItem("intended_action", JSON.stringify({ type: "credits", action: "/purchase-credits" }));
-        toast({ title: "Login Required", description: "Please login to purchase credits" });
+        localStorage.setItem(
+          "intended_subscription",
+          JSON.stringify({ planId, billingPeriod }),
+        );
+        toast({
+          title: "Login Required",
+          description: "Please login to subscribe",
+        });
         navigate("/login");
         return;
       }
-      navigate("/purchase-credits");
-      return;
-    }
 
-    // 3. Handle Paid Subscriptions
-    if (!user) {
-      localStorage.setItem("intended_subscription", JSON.stringify({ planId, billingPeriod }));
-      toast({ title: "Login Required", description: "Please login to subscribe" });
-      navigate("/login");
-      return;
-    }
+      // Strict Upgrade Guard
+      const canUpgrade =
+        subscriptionId === null ||
+        currentPlanId === "free" ||
+        (currentPlanId !== planId && planId === "premium");
 
-    // Strict Upgrade Guard
-    const canUpgrade =
-      subscriptionId === null ||
-      currentPlanId === "free" ||
-      (currentPlanId !== planId && planId === "researcher");
+      if (!canUpgrade) {
+        toast({
+          title: "Active Subscription Found",
+          description:
+            "You already have an active subscription. Manage it from your dashboard.",
+          variant: "destructive",
+        });
+        navigate("/dashboard/billing");
+        return;
+      }
 
-    if (!canUpgrade) {
-      toast({
-        title: "Active Subscription Found",
-        description: "You already have an active subscription. Manage it from your dashboard.",
-        variant: "destructive",
-      });
-      navigate("/dashboard/billing");
-      return;
-    }
-
-    try {
-      setCheckoutLoading(planId);
-      const checkoutUrl = await SubscriptionService.createCheckout(planId, billingPeriod, true);
-      window.location.href = checkoutUrl;
-    } catch (error) {
-      console.error("Checkout error:", error);
-      toast({ title: "Checkout Error", description: "Failed to create checkout session.", variant: "destructive" });
-      setCheckoutLoading(null);
-    }
-  }, [billingPeriod, navigate, toast, currentPlanId, user, subscriptionId]);
+      try {
+        setCheckoutLoading(planId);
+        const checkoutUrl = await SubscriptionService.createCheckout(
+          planId,
+          billingPeriod,
+          true,
+        );
+        window.location.href = checkoutUrl;
+      } catch (error) {
+        console.error("Checkout error:", error);
+        toast({
+          title: "Checkout Error",
+          description: "Failed to create checkout session.",
+          variant: "destructive",
+        });
+        setCheckoutLoading(null);
+      }
+    },
+    [billingPeriod, navigate, toast, currentPlanId, user, subscriptionId],
+  );
 
   // Pricing Constants
-  const STUDENT_PRICE = billingPeriod === "yearly" ? 47.9 : 4.99;
-  const RESEARCHER_PRICE = billingPeriod === "yearly" ? 124.7 : 12.99;
+  const PLUS_PRICE = billingPeriod === "yearly" ? 57.5 : 5.99;
+  const PREMIUM_PRICE = billingPeriod === "yearly" ? 124.7 : 12.99;
 
   const PriceDisplay = ({ price }: { price: number }) => (
     <div className="flex items-baseline justify-center gap-1 mb-1">
       <span className="text-4xl font-bold text-gray-900">${price}</span>
-      <span className="text-gray-500">{billingPeriod === "yearly" ? "/year" : "/mo"}</span>
+      <span className="text-gray-500">
+        {billingPeriod === "yearly" ? "/year" : "/mo"}
+      </span>
     </div>
   );
 
   const EffectiveMonthly = ({ price }: { price: number }) => {
     if (billingPeriod !== "yearly") return null;
-    return <div className="text-sm text-gray-500 mb-4">${(price / 12).toFixed(2)}/mo effective</div>;
+    return (
+      <div className="text-sm text-gray-500 mb-4">
+        ${(price / 12).toFixed(2)}/mo effective
+      </div>
+    );
   };
 
   return (
     <section className="section-padding bg-gray-50">
       <div className="container-custom">
-
         {/* Billing Toggle */}
         <div className="flex justify-center mb-16">
           <div className="inline-flex items-center bg-white rounded-full p-1 border border-gray-200 shadow-sm">
             <button
               onClick={() => setBillingPeriod("monthly")}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${billingPeriod === "monthly" ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"
-                }`}
-            >
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+                billingPeriod === "monthly"
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}>
               Monthly
             </button>
             <button
               onClick={() => setBillingPeriod("yearly")}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all relative ${billingPeriod === "yearly" ? "bg-green-600 text-white" : "text-gray-600 hover:text-gray-900"
-                }`}
-            >
+              className={`px-6 py-2 rounded-full text-sm font-medium transition-all relative ${
+                billingPeriod === "yearly"
+                  ? "bg-green-600 text-white"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}>
               Yearly
               <span className="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
                 SAVE 20%
@@ -175,220 +210,232 @@ function FeaturesPresentationFlow() {
 
         {/* SECTION 1: SUBSCRIPTION PLANS */}
         <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto mb-24">
+          {[
+            {
+              id: "free",
+              name: "Free",
+              subtitle: "Citation Preview",
+              price: "$0",
+              billingText: "Forever free",
+              included: [
+                "3 basic citation audits / mo",
+                "Max 20,000 characters (~3k words)",
+                "3 rephrases / mo (1 variant)",
+                "Preview certificate (watermarked)",
+              ],
+              locked: [
+                "Full citation analysis",
+                "Large academic papers",
+                "Submission-ready reports",
+              ],
+              buttonText: "Start Free",
+              buttonVariant: "outline" as const,
+              footer: "Preview only. Upgrade for full access.",
+            },
+            {
+              id: "plus",
+              name: "Plus",
+              subtitle: "Enhanced productivity for every user",
+              price: PLUS_PRICE,
+              popular: true,
+              included: [
+                "25 verified citation audits / mo",
+                "Max 80,000 characters (~12k words)",
+                "25 rephrases (up to 3 variants)",
+                "Citation confidence analysis",
+                "Verified academic certificate",
+              ],
+              locked: [
+                "Priority scanning",
+                "Draft comparison",
+                "Advanced analytics",
+              ],
+              buttonText:
+                checkoutLoading === "plus"
+                  ? "Processing..."
+                  : "Upgrade to Plus",
+              accentColor: "green",
+              className:
+                "border-green-500 border-2 shadow-xl transform lg:-translate-y-4",
+            },
+            {
+              id: "premium",
+              name: "Premium",
+              subtitle: "Institutional-grade institutional power",
+              price: PREMIUM_PRICE,
+              included: [
+                {
+                  text: "100 citation audits / month",
+                  subtext: "(Max 200,000 chars/doc)",
+                },
+                "Research Gaps & Insight Map",
+                "100 rephrases / month (Advanced)",
+                "Priority scanning (Queue Jump)",
+                "Draft comparison",
+                "Certified institutional-grade reports",
+              ],
+              note: "Designed for rigorous academic standards and frequent analysis.",
+              buttonText:
+                checkoutLoading === "premium"
+                  ? "Processing..."
+                  : "Upgrade to Premium",
+              accentColor: "blue",
+              className: "border-blue-200 ring-1 ring-blue-100/50",
+            },
+          ].map((plan) => (
+            <div
+              key={plan.id}
+              className={`bg-white rounded-2xl p-8 flex flex-col relative border ${plan.className || "border-gray-200"}`}>
+              {plan.popular && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-md">
+                  Most Popular
+                </div>
+              )}
 
-          {/* FREE PLAN */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-8 flex flex-col relative">
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Free</h3>
-              <p className="text-gray-500 text-sm h-5">Citation Preview</p>
-            </div>
-
-            <div className="mb-8 text-center pt-4 border-t border-gray-100">
-              <span className="text-4xl font-bold text-gray-900">$0</span>
-              <p className="text-xs text-gray-400 mt-2">Forever free</p>
-            </div>
-
-            <div className="space-y-4 flex-1 mb-8">
-              <p className="font-semibold text-sm text-gray-900 uppercase tracking-wide">Included:</p>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-gray-400 shrink-0" />
-                  <span className="text-gray-600">3 basic citation audits / mo</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-gray-400 shrink-0" />
-                  <span className="text-gray-600">Max 20,000 characters (~3k words)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-gray-400 shrink-0" />
-                  <span className="text-gray-600">3 rephrases / mo (1 variant)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-gray-400 shrink-0" />
-                  <span className="text-gray-600">Preview certificate (watermarked)</span>
-                </li>
-              </ul>
-
-              <div className="pt-4 border-t border-gray-50">
-                <p className="font-semibold text-sm text-gray-400 uppercase tracking-wide mb-3">Locked:</p>
-                <ul className="space-y-3 text-sm opacity-60">
-                  <li className="flex items-start gap-3">
-                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
-                      <span className="text-xs">🔒</span>
-                    </span>
-                    <span className="text-gray-500">Full citation analysis</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
-                      <span className="text-xs">🔒</span>
-                    </span>
-                    <span className="text-gray-500">Large academic papers</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
-                      <span className="text-xs">🔒</span>
-                    </span>
-                    <span className="text-gray-500">Submission-ready reports</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <Button
-              onClick={() => handleSelectPlan("free")}
-              variant="outline"
-              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              Start Free
-            </Button>
-            <p className="text-center text-xs text-gray-400 mt-3">Preview only. Upgrade for full access.</p>
-          </div>
-
-          {/* STUDENT PLAN */}
-          <div className="bg-white rounded-2xl border-2 border-green-500 p-8 flex flex-col relative shadow-xl transform lg:-translate-y-4">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-md">
-              Most Popular
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Student</h3>
-              <p className="text-green-600 font-medium text-sm h-5">Coursework, assignments, projects</p>
-            </div>
-
-            <div className="mb-8 text-center pt-4 border-t border-gray-100">
-              <PriceDisplay price={STUDENT_PRICE} />
-              <EffectiveMonthly price={STUDENT_PRICE} />
-            </div>
-
-            <div className="space-y-4 flex-1 mb-8">
-              <p className="font-semibold text-sm text-gray-900 uppercase tracking-wide">Everything in Free, plus:</p>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="text-gray-700 font-medium">25 verified citation audits / mo</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="text-gray-700">Max 80,000 characters (~12k words)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="text-gray-700">25 rephrases (up to 3 variants)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="text-gray-700 font-medium">Citation confidence analysis</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-green-500 shrink-0" />
-                  <span className="text-gray-700">Verified academic certificate</span>
-                </li>
-              </ul>
-
-              <div className="pt-4 border-t border-gray-50">
-                <p className="font-semibold text-sm text-gray-400 uppercase tracking-wide mb-3">Locked:</p>
-                <ul className="space-y-3 text-sm opacity-75">
-                  <li className="flex items-start gap-3">
-                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
-                      <span className="text-xs">🔒</span>
-                    </span>
-                    <span className="text-gray-500">Priority scanning</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
-                      <span className="text-xs">🔒</span>
-                    </span>
-                    <span className="text-gray-500">Draft comparison</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
-                      <span className="text-xs">🔒</span>
-                    </span>
-                    <span className="text-gray-500">Advanced analytics</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <Button
-              onClick={() => handleSelectPlan("student")}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-6 shadow-lg hover:shadow-green-200 transition-all"
-            >
-              {checkoutLoading === "student" ? "Processing..." : "Upgrade to Student"}
-            </Button>
-          </div>
-
-          {/* RESEARCHER PLAN */}
-          <div className="bg-white rounded-2xl border border-blue-200 p-8 flex flex-col relative ring-1 ring-blue-100/50">
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Researcher</h3>
-              <p className="text-blue-600 font-medium text-sm h-5">Theses, publications, serious research</p>
-            </div>
-
-            <div className="mb-8 text-center pt-4 border-t border-gray-100">
-              <PriceDisplay price={RESEARCHER_PRICE} />
-              <EffectiveMonthly price={RESEARCHER_PRICE} />
-            </div>
-
-            <div className="space-y-4 flex-1 mb-8">
-              <p className="font-semibold text-sm text-gray-900 uppercase tracking-wide">Everything in Student, plus:</p>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
-                  <span className="text-gray-900 font-semibold">100 citation audits / month</span>
-                  <span className="text-xs text-gray-400 mt-1">(Max 200,000 chars/doc)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
-                  <span className="text-gray-700">Research Gaps & Insight Map</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
-                  <span className="text-gray-700">100 rephrases / month (Advanced)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
-                  <span className="text-gray-700">Priority scanning (Queue Jump)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
-                  <span className="text-gray-700">Draft comparison</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-blue-600 shrink-0" />
-                  <span className="text-gray-700">Certified institutional-grade reports</span>
-                </li>
-              </ul>
-              <div className="pt-4 mt-6 bg-blue-50/50 rounded-lg p-4 border border-blue-100">
-                <p className="text-xs text-blue-800 font-medium text-center">
-                  Designed for rigorous academic standards and frequent analysis.
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  {plan.name}
+                </h3>
+                <p
+                  className={`${
+                    plan.accentColor === "green"
+                      ? "text-green-600"
+                      : plan.accentColor === "blue"
+                        ? "text-blue-600"
+                        : "text-gray-500"
+                  } font-medium text-sm h-5`}>
+                  {plan.subtitle}
                 </p>
               </div>
-            </div>
 
-            <Button
-              onClick={() => handleSelectPlan("researcher")}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-6"
-            >
-              {checkoutLoading === "researcher" ? "Processing..." : "Upgrade to Researcher"}
-            </Button>
-          </div>
+              <div className="mb-8 text-center pt-4 border-t border-gray-100">
+                {typeof plan.price === "string" ? (
+                  <span className="text-4xl font-bold text-gray-900">
+                    {plan.price}
+                  </span>
+                ) : (
+                  <PriceDisplay price={plan.price as number} />
+                )}
+                {plan.billingText ? (
+                  <p className="text-xs text-gray-400 mt-2">
+                    {plan.billingText}
+                  </p>
+                ) : (
+                  <EffectiveMonthly price={plan.price as number} />
+                )}
+              </div>
+
+              <div className="space-y-4 flex-1 mb-8">
+                <p className="font-semibold text-sm text-gray-900 uppercase tracking-wide">
+                  {plan.id === "free"
+                    ? "Included:"
+                    : plan.id === "plus"
+                      ? "Everything in Free, plus:"
+                      : "Everything in Plus, plus:"}
+                </p>
+                <ul className="space-y-3 text-sm">
+                  {plan.included.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <Check
+                        className={`h-5 w-5 shrink-0 ${
+                          plan.accentColor === "green"
+                            ? "text-green-500"
+                            : plan.accentColor === "blue"
+                              ? "text-blue-600"
+                              : "text-gray-400"
+                        }`}
+                      />
+                      <div className="flex flex-col">
+                        <span
+                          className={`${
+                            plan.id === "free"
+                              ? "text-gray-600"
+                              : "text-gray-700"
+                          } ${plan.id === "plus" ? "font-medium" : ""}`}>
+                          {typeof feature === "string" ? feature : feature.text}
+                        </span>
+                        {typeof feature === "object" && feature.subtext && (
+                          <span className="text-xs text-gray-400 mt-1">
+                            {feature.subtext}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                {plan.locked && (
+                  <div className="pt-4 border-t border-gray-50">
+                    <p className="font-semibold text-sm text-gray-400 uppercase tracking-wide mb-3">
+                      Locked:
+                    </p>
+                    <ul
+                      className={`space-y-3 text-sm ${
+                        plan.id === "free" ? "opacity-60" : "opacity-75"
+                      }`}>
+                      {plan.locked.map((lock, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <span className="h-5 w-5 flex items-center justify-center bg-gray-100 rounded-full shrink-0">
+                            <span className="text-xs">🔒</span>
+                          </span>
+                          <span className="text-gray-500">{lock}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {plan.note && (
+                  <div className="pt-4 mt-6 bg-blue-50/50 rounded-lg p-4 border border-blue-100">
+                    <p className="text-xs text-blue-800 font-medium text-center">
+                      {plan.note}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <Button
+                onClick={() => handleSelectPlan(plan.id)}
+                variant={plan.buttonVariant || "default"}
+                className={`w-full font-semibold py-6 ${
+                  plan.id === "free"
+                    ? "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    : plan.id === "plus"
+                      ? "bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-green-200 transition-all"
+                      : "bg-slate-900 hover:bg-slate-800 text-white"
+                }`}>
+                {plan.buttonText}
+              </Button>
+              {plan.footer && (
+                <p className="text-center text-xs text-gray-400 mt-3">
+                  {plan.footer}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* SECTION 2: USAGE ADD-ONS */}
         <div className="max-w-4xl mx-auto mt-20 border-t border-gray-200 pt-16">
           <div className="text-center mb-10">
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">Need more usage?</h3>
-            <p className="text-gray-600">Buy credits to extend usage on your Free or paid plan. No subscription required.</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              Need more usage?
+            </h3>
+            <p className="text-gray-600">
+              Buy credits to extend usage on your Free or paid plan. No
+              subscription required.
+            </p>
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 p-8 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
             <div className="flex-1">
-              <h4 className="text-lg font-bold text-gray-900 mb-2">Extend your usage</h4>
+              <h4 className="text-lg font-bold text-gray-900 mb-2">
+                Extend your usage
+              </h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-amber-500" />
-                  1 credit = 1,000 words processed
+                  <Zap className="h-4 w-4 text-amber-500" />1 credit = 1,000
+                  words processed
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-500" />
@@ -402,29 +449,49 @@ function FeaturesPresentationFlow() {
             </div>
 
             <div className="grid grid-cols-3 gap-4 w-full md:w-auto">
-              <div className="border border-gray-200 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
-                <div className="text-sm font-semibold text-gray-500 mb-1">Trial</div>
-                <div className="text-xl font-bold text-gray-900">$1.99</div>
-                <div className="text-xs text-gray-400">5 Credits</div>
-              </div>
-              <div className="border border-purple-200 bg-purple-50 rounded-lg p-4 text-center hover:border-purple-400 transition-colors">
-                <div className="text-sm font-semibold text-purple-700 mb-1">Standard</div>
-                <div className="text-xl font-bold text-gray-900">$6.99</div>
-                <div className="text-xs text-purple-600 font-medium">25 Credits</div>
-              </div>
-              <div className="border border-gray-200 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
-                <div className="text-xs font-semibold text-gray-500 mb-1">Power</div>
-                <div className="text-xl font-bold text-gray-900">$12.99</div>
-                <div className="text-xs text-gray-400">50 Credits</div>
-              </div>
+              {[
+                { name: "Trial", price: "$1.99", credits: "5 Credits" },
+                {
+                  name: "Standard",
+                  price: "$6.99",
+                  credits: "25 Credits",
+                  accent: true,
+                  className:
+                    "border-purple-200 bg-purple-50 hover:border-purple-400",
+                },
+                { name: "Power", price: "$12.99", credits: "50 Credits" },
+              ].map((pack, idx) => (
+                <div
+                  key={idx}
+                  className={`border rounded-lg p-4 text-center transition-colors ${
+                    pack.className || "border-gray-200 hover:border-gray-400"
+                  }`}>
+                  <div
+                    className={`text-sm font-semibold mb-1 ${
+                      pack.accent ? "text-purple-700" : "text-gray-500"
+                    }`}>
+                    {pack.name}
+                  </div>
+                  <div className="text-xl font-bold text-gray-900">
+                    {pack.price}
+                  </div>
+                  <div
+                    className={`text-xs ${
+                      pack.accent
+                        ? "text-purple-600 font-medium"
+                        : "text-gray-400"
+                    }`}>
+                    {pack.credits}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="flex flex-col items-center gap-3">
               <Button
                 onClick={() => handleSelectPlan("credits")}
                 variant="secondary"
-                className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-8"
-              >
+                className="bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold px-8">
                 Buy Credits
               </Button>
               <span className="text-[10px] text-gray-400 max-w-[150px] text-center leading-tight">
@@ -439,198 +506,234 @@ function FeaturesPresentationFlow() {
           <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
             Plan Comparison
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-300">
-                  <th className="text-left py-4 px-4 font-semibold text-gray-900">
+          <div>
+            <table className="w-full border-separate border-spacing-0">
+              <thead className="z-40">
+                <tr className="bg-white">
+                  <th className="sticky top-[64px] bg-white text-left py-4 px-4 font-semibold text-gray-900 border-b border-gray-300 z-40 shadow-sm">
                     Feature
                   </th>
-                  <th className="text-center py-4 px-4 font-semibold text-gray-900">
+                  <th className="sticky top-[64px] bg-white text-center py-4 px-4 font-semibold text-gray-900 border-b border-gray-300 z-40 shadow-sm">
                     Free
                   </th>
-                  <th className="text-center py-4 px-4 font-semibold text-gray-900">
-                    Student
+                  <th className="sticky top-[64px] bg-white text-center py-4 px-4 font-semibold text-gray-900 border-b border-gray-300 z-40 shadow-sm">
+                    Plus
                   </th>
-                  <th className="text-center py-4 px-4 font-semibold text-gray-900">
-                    Researcher
+                  <th className="sticky top-[64px] bg-white text-center py-4 px-4 font-semibold text-gray-900 border-b border-gray-300 z-40 shadow-sm">
+                    Premium
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Document Scans
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">
-                    3/month
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-900">
-                    25/month
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-900">
-                    100/month
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Originality Check
-                  </td>
-                  <td className="py4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Citation Confidence
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Certificate Generation
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
-                      Watermarked
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                      Professional
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                      Institution-grade
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Export Formats
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Priority Scanning
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Draft Comparison
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Advanced Analytics
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Support
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">Basic</td>
-                  <td className="py-4 px-4 text-center text-gray-900">Email</td>
-                  <td className="py-4 px-4 text-center text-gray-900">
-                    Priority
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Max Scan Size
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">
-                    20k chars
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-900">
-                    80k chars
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-900">
-                    200k chars
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Rephrase Suggestions
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">
-                    3/month
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-900">
-                    25/month
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-900">
-                    100/month
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Research Gaps & Insights
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Safe AI Integrity Assistant
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 font-medium text-gray-900">
-                    Advanced Citation Suggestions
-                  </td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center text-gray-600">-</td>
-                  <td className="py-4 px-4 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
+                {[
+                  {
+                    name: "Document Scans",
+                    free: "3/month",
+                    plus: "25/month",
+                    premium: "100/month",
+                  },
+                  {
+                    name: "Max Scan Size",
+                    free: "20k chars",
+                    plus: "80k chars",
+                    premium: "200k chars",
+                  },
+                  {
+                    name: "Rephrase Suggestions",
+                    free: "3/month",
+                    plus: "25/month",
+                    premium: "100/month",
+                  },
+                  { isHeader: true, name: "Collaboration & Teamwork" },
+                  {
+                    name: "Team Workspaces",
+                    free: "1 Workspace",
+                    plus: "5 Workspaces",
+                    premium: "Unlimited",
+                  },
+                  {
+                    name: "Collaborators per workspace",
+                    free: "2 Collaborators",
+                    plus: "10 Collaborators",
+                    premium: "Unlimited",
+                  },
+                  {
+                    name: "Templates",
+                    free: true,
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "Kanban",
+                    free: true,
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "File Sharing",
+                    free: true,
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "Calendar View",
+                    free: true,
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "Analytics",
+                    free: true,
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "Team Chat",
+                    free: true,
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "File Size Limit",
+                    free: "10MB",
+                    plus: "50MB",
+                    premium: "100MB",
+                  },
+                  {
+                    name: "Version History",
+                    free: true,
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "Draft Comparison",
+                    free: "-",
+                    plus: "-",
+                    premium: true,
+                  },
+                  { isHeader: true, name: "Integrity & AI Assistant" },
+                  {
+                    name: "Originality Check",
+                    free: true,
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "Safe AI Integrity Assistant",
+                    free: "-",
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "Chat with PDF",
+                    free: "-",
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "Research Assistant",
+                    free: "-",
+                    plus: "-",
+                    premium: true,
+                  },
+                  { isHeader: true, name: "Advanced Research" },
+                  {
+                    name: "Insight Map",
+                    free: "-",
+                    plus: "-",
+                    premium: true,
+                  },
+                  {
+                    name: "Research Gaps",
+                    free: "-",
+                    plus: "-",
+                    premium: true,
+                  },
+                  {
+                    name: "Search Alerts",
+                    free: "-",
+                    plus: "-",
+                    premium: true,
+                  },
+                  {
+                    name: "Advanced Citation Suggestions",
+                    free: "-",
+                    plus: "-",
+                    premium: true,
+                  },
+                  {
+                    name: "Advanced Analytics",
+                    free: "-",
+                    plus: "-",
+                    premium: true,
+                  },
+                  { isHeader: true, name: "Certificates & Export" },
+                  {
+                    name: "Certificate Generation",
+                    free: { label: "Watermarked", color: "gray" },
+                    plus: { label: "Professional", color: "green" },
+                    premium: { label: "Institution-grade", color: "blue" },
+                  },
+                  {
+                    name: "Export Formats",
+                    free: "-",
+                    plus: true,
+                    premium: true,
+                  },
+                  { isHeader: true, name: "Support & Processing" },
+                  {
+                    name: "Support",
+                    free: "Basic",
+                    plus: "Email",
+                    premium: "Priority",
+                  },
+                  {
+                    name: "Priority Scanning",
+                    free: "-",
+                    plus: "-",
+                    premium: true,
+                  },
+                ].map((feature, idx) =>
+                  feature.isHeader ? (
+                    <tr key={idx}>
+                      <td
+                        colSpan={4}
+                        className="sticky top-[121px] bg-white/95 backdrop-blur-sm py-4 px-4 text-xs font-bold text-gray-400 uppercase tracking-widest z-30 border-b border-gray-100">
+                        {feature.name}
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={idx}>
+                      <td className="py-4 px-4 font-medium text-gray-900">
+                        {feature.name}
+                      </td>
+                      {[feature.free, feature.plus, feature.premium].map(
+                        (val, i) => (
+                          <td key={i} className="py-4 px-4 text-center">
+                            {val === true ? (
+                              <Check className="h-5 w-5 text-green-500 mx-auto" />
+                            ) : val === "-" ? (
+                              <span className="text-gray-600">-</span>
+                            ) : typeof val === "object" ? (
+                              <span
+                                className={`text-xs px-2 py-1 rounded ${
+                                  val.color === "gray"
+                                    ? "bg-gray-200 text-gray-700"
+                                    : val.color === "green"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-blue-100 text-blue-800"
+                                }`}>
+                                {val.label}
+                              </span>
+                            ) : (
+                              <span className="text-gray-900">{val}</span>
+                            )}
+                          </td>
+                        ),
+                      )}
+                    </tr>
+                  ),
+                )}
               </tbody>
             </table>
           </div>
@@ -720,8 +823,7 @@ function ClosingCTA() {
                 href="https://docs.colabwize.com/quickstart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center"
-              >
+                className="flex items-center">
                 See How It Works
               </a>
             </Button>

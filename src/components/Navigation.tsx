@@ -197,7 +197,7 @@ export default function Navigation() {
               </div>
               {solutionsOpen && (
                 <div
-                  className="fixed top-[64px] left-0 right-0 w-full bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
+                  className="fixed top-[64px] left-0 right-0 w-full bg-white border-t border-gray-100 shadow-2xl z-50 p-8 flex justify-center rounded-b-3xl"
                   onMouseEnter={() =>
                     handleMouseEnter(setSolutionsOpen, solutionsTimeoutRef)
                   }
@@ -316,7 +316,7 @@ export default function Navigation() {
               </div>
               {productOpen && (
                 <div
-                  className="fixed top-[64px] left-0 right-0 w-full bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
+                  className="fixed top-[64px] left-0 right-0 w-full bg-white border-t border-gray-100 shadow-2xl z-50 p-8 flex justify-center rounded-b-3xl"
                   onMouseEnter={() =>
                     handleMouseEnter(setProductOpen, productTimeoutRef)
                   }
@@ -384,7 +384,7 @@ export default function Navigation() {
                         }}>
                         <div className="absolute inset-0 z-0">
                           <img
-                            src="https://images.unsplash.com/photo-1621360841013-c76831f13886?w=600&q=80"
+                            src="https://yt3.googleusercontent.com/Yd66oMdzg4iIcu32yB6rEe90aoFKhBizf3R2p6jdF5ECXegal0XFU881XkDOobZ398m90ugp=s900-c-k-c0x00ffffff-no-rj?w=600&q=80"
                             alt="New Version"
                             className="w-full h-full object-cover opacity-30 group-hover/promo:scale-105 transition-transform duration-700 block"
                           />
@@ -440,7 +440,7 @@ export default function Navigation() {
               </div>
               {resourcesOpen && (
                 <div
-                  className="fixed top-[64px] left-0 right-0 w-full bg-white border-t border-gray-100 shadow-xl z-50 p-8 flex justify-center"
+                  className="fixed top-[64px] left-0 right-0 w-full bg-white border-t border-gray-100 shadow-2xl z-50 p-8 flex justify-center rounded-b-3xl"
                   onMouseEnter={() =>
                     handleMouseEnter(setResourcesOpen, resourcesTimeoutRef)
                   }
@@ -546,7 +546,7 @@ export default function Navigation() {
                         }}>
                         <div className="absolute inset-0 z-0">
                           <img
-                            src="https://images.unsplash.com/photo-1515524738708-327c5b0586e9?w=600&q=80"
+                            src="https://youthincmag.com/wp-content/uploads/2020/02/Academic-Integrity.jpg?w=600&q=80"
                             alt="Masterclass"
                             className="w-full h-full object-cover opacity-30 group-hover/promo:scale-105 transition-transform duration-700 mix-blend-luminosity"
                           />

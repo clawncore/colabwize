@@ -71,7 +71,7 @@ interface ProjectCardsProps {
   onCreateProject?: () => void; // Add this new prop
   selectedProjects?: string[]; // For batch export
   onProjectSelect?: (projectId: string) => void; // For batch export
-  isResearcherPlan?: boolean; // For batch export
+  isPremiumPlan?: boolean; // For batch export
   currentUserId?: string; // Correct property name
 }
 
@@ -82,7 +82,7 @@ export default function ProjectCards({
   onCreateProject, // Add this new prop
   selectedProjects = [], // For batch export
   onProjectSelect, // For batch export
-  isResearcherPlan = false, // Restored prop
+  isPremiumPlan = false, // Restored prop
   currentUserId,
 }: Omit<ProjectCardsProps, "onViewModeChange"> & { currentUserId?: string }) {
   const navigate = useNavigate();
@@ -581,8 +581,8 @@ export default function ProjectCards({
               )}
             </div>
 
-            {/* Project selection checkbox - only for Researcher plan */}
-            {isResearcherPlan && (
+            {/* Project selection checkbox - only for Premium plan */}
+            {isPremiumPlan && (
               <div className="absolute top-3 left-3 z-10">
                 <button
                   onClick={(e) => {

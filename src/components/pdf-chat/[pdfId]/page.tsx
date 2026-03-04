@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   ArrowLeft,
   FileText,
@@ -8,6 +8,7 @@ import {
   LayoutList,
   Share2,
   Loader2,
+  MessageCircle,
 } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ResearchChatSidebar } from "../../research/ResearchChatSidebar";
@@ -20,16 +21,59 @@ export default function PdfChatViewerPage() {
   const sourceType = (searchParams.get("type") || "pdf") as "pdf" | "project";
 
   const [activeTab, setActiveTab] = useState<"view" | "summary" | "related">(
-    "view"
+    "view",
   );
   const [showChat, setShowChat] = useState(true);
   const [pdfData, setPdfData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [projectContent, setProjectContent] = useState<any | null>(null); // raw Tiptap JSON
   const [summary, setSummary] = useState<string | null>(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [relatedPapers, setRelatedPapers] = useState<any[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
+
+  // Text selection → chat
+  const [selectedText, setSelectedText] = useState("");
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const [selectionQuery, setSelectionQuery] = useState<string | null>(null);
+  const contentAreaRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    // Small delay so selection is finalised
+    setTimeout(() => {
+      const sel = window.getSelection();
+      const text = sel?.toString().trim() ?? "";
+      if (text.length > 5) {
+        setSelectedText(text);
+        setTooltipPos({ x: e.clientX, y: e.clientY });
+      } else {
+        setTooltipPos(null);
+      }
+    }, 50);
+  }, []);
+
+  // Hide tooltip when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const tooltip = document.getElementById("sel-chat-tooltip");
+      if (tooltip && !tooltip.contains(e.target as Node)) {
+        setTooltipPos(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleAskAboutSelection = () => {
+    const msg = `I've selected the following passage:\n\n"${selectedText}"\n\nCan you explain or elaborate on this?`;
+    setSelectionQuery(msg);
+    setShowChat(true);
+    setTooltipPos(null);
+    window.getSelection()?.removeAllRanges();
+  };
 
   React.useEffect(() => {
     if (!pdfId) return;
@@ -64,7 +108,13 @@ export default function PdfChatViewerPage() {
           const res = await fetch(`/api/documents/${pdfId}`, { headers });
           if (res.ok) {
             const data = await res.json();
-            setPdfData(data.data); // Adjust based на actual API response structure
+            const projectData = data.data;
+            setPdfData(projectData);
+
+            // Store raw Tiptap JSON for structured rendering
+            if (projectData?.content) {
+              setProjectContent(projectData.content);
+            }
           } else {
             console.error("Failed to fetch project data");
           }
@@ -108,13 +158,14 @@ export default function PdfChatViewerPage() {
       const fetchSummary = async () => {
         setLoadingSummary(true);
         try {
-          const chatMethod = sourceType === "pdf"
-            ? ResearchService.chatWithPdf
-            : ResearchService.chatWithProject;
+          const chatMethod =
+            sourceType === "pdf"
+              ? ResearchService.chatWithPdf
+              : ResearchService.chatWithProject;
 
           const result = await chatMethod(
             "Please provide a comprehensive summary of this document, highlighting the main objectives, methodology, key results, and conclusions.",
-            pdfId as string
+            pdfId as string,
           );
           setSummary(result);
         } catch (err) {
@@ -144,6 +195,13 @@ export default function PdfChatViewerPage() {
           } = await supabase.auth.getSession();
           const token = session?.access_token;
 
+          // Related papers is only supported for PDFs (uses filename-based search)
+          // Projects don't have a dedicated related endpoint
+          if (sourceType !== "pdf") {
+            setRelatedPapers([]);
+            return;
+          }
+
           const res = await fetch(`/api/pdf/${pdfId}/related`, {
             headers: {
               ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -163,39 +221,175 @@ export default function PdfChatViewerPage() {
     }
   }, [activeTab, pdfId, relatedPapers.length]);
 
-  const filename = pdfData?.filename || searchParams.get("name") || "Document";
+  const filename =
+    (sourceType === "project" ? pdfData?.title : pdfData?.filename) ||
+    searchParams.get("name") ||
+    "Document";
+
+  // Renders a Tiptap JSON node tree into styled React elements
+  const renderTiptapNode = (
+    node: any,
+    key: string | number,
+  ): React.ReactNode => {
+    if (!node) return null;
+
+    // Inline text with marks
+    if (node.type === "text") {
+      let el: React.ReactNode = node.text || "";
+      const marks: string[] = (node.marks || []).map((m: any) => m.type);
+      if (marks.includes("bold")) el = <strong key={key}>{el}</strong>;
+      if (marks.includes("italic")) el = <em key={key}>{el}</em>;
+      if (marks.includes("underline")) el = <u key={key}>{el}</u>;
+      if (marks.includes("strike")) el = <s key={key}>{el}</s>;
+      if (marks.includes("code"))
+        el = (
+          <code key={key} className="bg-muted px-1 rounded text-xs font-mono">
+            {el}
+          </code>
+        );
+      return el;
+    }
+
+    const children = node.content?.map((child: any, i: number) =>
+      renderTiptapNode(child, i),
+    );
+
+    switch (node.type) {
+      case "doc":
+        return (
+          <div key={key} className="space-y-4">
+            {children}
+          </div>
+        );
+      case "heading": {
+        const level = node.attrs?.level || 1;
+        const cls = [
+          "font-bold text-foreground mt-6 mb-2",
+          level === 1
+            ? "text-2xl"
+            : level === 2
+              ? "text-xl"
+              : level === 3
+                ? "text-lg"
+                : "text-base",
+        ].join(" ");
+        const Tag = `h${level}` as any;
+        return (
+          <Tag key={key} className={cls}>
+            {children}
+          </Tag>
+        );
+      }
+      case "paragraph":
+        return (
+          <p key={key} className="text-sm leading-relaxed text-foreground mb-3">
+            {children?.length ? children : <br />}
+          </p>
+        );
+      case "bulletList":
+        return (
+          <ul
+            key={key}
+            className="list-disc list-inside space-y-1 mb-3 text-sm text-foreground">
+            {children}
+          </ul>
+        );
+      case "orderedList":
+        return (
+          <ol
+            key={key}
+            className="list-decimal list-inside space-y-1 mb-3 text-sm text-foreground">
+            {children}
+          </ol>
+        );
+      case "listItem":
+        return (
+          <li key={key} className="leading-relaxed">
+            {children}
+          </li>
+        );
+      case "blockquote":
+        return (
+          <blockquote
+            key={key}
+            className="border-l-4 border-primary/40 pl-4 italic text-muted-foreground text-sm mb-3">
+            {children}
+          </blockquote>
+        );
+      case "codeBlock":
+        return (
+          <pre
+            key={key}
+            className="bg-muted rounded-lg p-4 text-xs font-mono overflow-x-auto mb-3">
+            <code>{children}</code>
+          </pre>
+        );
+      case "horizontalRule":
+        return <hr key={key} className="border-border my-4" />;
+      default:
+        return <div key={key}>{children}</div>;
+    }
+  };
 
   // Real paper object for chat context
   const paperContext = pdfData
     ? {
-      externalId: pdfData.id,
-      title: pdfData.filename,
-      source: "pdf_upload",
-      abstract: summary || "PDF Upload",
-      authors: [{ name: "User Uploaded" }],
-      year: new Date(pdfData.created_at).getFullYear(),
-    }
+        externalId: pdfData.id,
+        title: sourceType === "project" ? pdfData.title : pdfData.filename,
+        source: "pdf_upload" as const,
+        documentType: sourceType,
+        abstract: summary || "PDF Upload",
+        authors: [{ name: "User Uploaded" }],
+        year: new Date(pdfData.created_at).getFullYear(),
+      }
     : {
-      // Fallback/Loading context to preventing crashing before load
-      externalId: pdfId as string,
-      title: filename,
-      source: "pdf_upload",
-      abstract: "Loading...",
-      authors: [],
-      year: new Date().getFullYear(),
-    };
+        // Fallback/Loading context to preventing crashing before load
+        externalId: pdfId as string,
+        title: filename,
+        source: "pdf_upload" as const,
+        documentType: sourceType,
+        abstract: "Loading...",
+        authors: [],
+        year: new Date().getFullYear(),
+      };
 
   return (
     <div className="flex w-full h-[calc(100vh-4rem)] bg-background overflow-hidden relative">
+      {/* Floating selection tooltip */}
+      {tooltipPos && (
+        <div
+          id="sel-chat-tooltip"
+          style={{
+            position: "fixed",
+            top: tooltipPos.y - 48,
+            left: tooltipPos.x - 60,
+            zIndex: 9999,
+          }}
+          className="flex items-center gap-1.5 bg-gray-900 dark:bg-gray-800 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-xl border border-white/10 animate-in fade-in zoom-in-95 duration-150">
+          <MessageCircle className="w-3.5 h-3.5 text-violet-300" />
+          <button
+            onClick={handleAskAboutSelection}
+            className="hover:text-violet-300 transition-colors whitespace-nowrap">
+            Ask AI about this
+          </button>
+          {/* Caret */}
+          <span
+            className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-1.5 bg-gray-900 dark:bg-gray-800"
+            style={{ clipPath: "polygon(0 0, 100% 0, 50% 100%)" }}
+          />
+        </div>
+      )}
+
       {/* Main Content Column */}
-      <div className="flex-1 flex flex-col min-w-0 h-full">
+      <div
+        className="flex-1 flex flex-col min-w-0 h-full"
+        onMouseUp={handleMouseUp}>
         {/* Header */}
         <div className="flex items-center justify-between gap-4 p-4 border-b border-border shrink-0 bg-background z-10">
           <div className="flex items-center gap-4 min-w-0">
             <Link
-              to="/dashboard/pdf-chat"
-              className="p-2 hover:bg-muted rounded-lg text-muted-foreground transition-colors"
-            >
+              to="/dashboard/pdf-upload"
+              className="p-2 hover:bg-muted rounded-lg text-muted-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
@@ -204,7 +398,7 @@ export default function PdfChatViewerPage() {
               </h1>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 px-1.5 py-0.5 rounded font-medium">
-                  PDF
+                  {sourceType === "project" ? "Document" : "PDF"}
                 </span>
                 <span>•</span>
                 <span>Ready to chat</span>
@@ -212,51 +406,69 @@ export default function PdfChatViewerPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Tabs (Visible on large screens, or simplified) */}
-            {/* Tabs (Visible on large screens, or simplified) */}
-            <div className="hidden md:flex bg-muted p-1 rounded-lg mr-2">
-              <button
-                onClick={() => setActiveTab("view")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${activeTab === "view"
-                    ? "bg-background shadow-sm text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                  }`}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                View PDF
-              </button>
-              <button
-                onClick={() => setActiveTab("summary")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${activeTab === "summary"
-                    ? "bg-background shadow-sm text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                  }`}
-              >
-                <LayoutList className="w-3.5 h-3.5" />
-                Summary
-              </button>
-              <button
-                onClick={() => setActiveTab("related")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${activeTab === "related"
-                    ? "bg-background shadow-sm text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                  }`}
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                Related Papers
-              </button>
+          <div className="flex items-center gap-3">
+            {/* Tabs (Desktop) */}
+            <div className="hidden md:flex items-center p-1 bg-muted/50 border border-border/50 rounded-xl backdrop-blur-sm mr-2">
+              {[
+                {
+                  id: "view",
+                  label:
+                    sourceType === "project" ? "View Document" : "View PDF",
+                  icon: FileText,
+                },
+                { id: "summary", label: "Summary", icon: LayoutList },
+                ...(sourceType !== "project"
+                  ? [{ id: "related", label: "Related Papers", icon: Share2 }]
+                  : []),
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`relative px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-2 group ${
+                    activeTab === tab.id
+                      ? "text-white"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}>
+                  {activeTab === tab.id && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-lg shadow-sm animate-in fade-in zoom-in-95 duration-200" />
+                  )}
+                  <tab.icon
+                    className={`w-3.5 h-3.5 relative z-10 ${
+                      activeTab === tab.id
+                        ? "text-white"
+                        : "group-hover:scale-110 transition-transform"
+                    }`}
+                  />
+                  <span className="relative z-10">{tab.label}</span>
+                </button>
+              ))}
             </div>
 
+            {/* Ask AI Button */}
             <button
               onClick={() => setShowChat(!showChat)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showChat
-                  ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                  : "bg-background border border-border text-muted-foreground hover:bg-muted"
+              className={`group relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 shadow-md ${
+                showChat
+                  ? "bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-violet-500/25 ring-2 ring-violet-500/20"
+                  : "bg-background border border-border text-muted-foreground hover:border-violet-500/50 hover:text-foreground hover:shadow-lg hover:shadow-violet-500/10"
+              }`}>
+              {showChat && (
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
+              )}
+              <Sparkles
+                className={`w-4 h-4 transition-transform duration-300 ${
+                  showChat
+                    ? "text-white animate-pulse"
+                    : "text-muted-foreground group-hover:text-violet-500 group-hover:rotate-12"
                 }`}
-            >
-              <Sparkles className="w-4 h-4" />
+              />
               <span className="hidden sm:inline">Ask AI</span>
+              {showChat && (
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -265,31 +477,31 @@ export default function PdfChatViewerPage() {
         <div className="flex md:hidden bg-background border-b border-border overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab("view")}
-            className={`flex-1 min-w-[100px] px-4 py-3 text-xs font-medium border-b-2 transition-colors flex items-center justify-center gap-2 ${activeTab === "view"
+            className={`flex-1 min-w-[100px] px-4 py-3 text-xs font-medium border-b-2 transition-colors flex items-center justify-center gap-2 ${
+              activeTab === "view"
                 ? "border-primary text-primary bg-primary/5"
                 : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-          >
+            }`}>
             <FileText className="w-4 h-4" />
             View
           </button>
           <button
             onClick={() => setActiveTab("summary")}
-            className={`flex-1 min-w-[100px] px-4 py-3 text-xs font-medium border-b-2 transition-colors flex items-center justify-center gap-2 ${activeTab === "summary"
+            className={`flex-1 min-w-[100px] px-4 py-3 text-xs font-medium border-b-2 transition-colors flex items-center justify-center gap-2 ${
+              activeTab === "summary"
                 ? "border-primary text-primary bg-primary/5"
                 : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-          >
+            }`}>
             <LayoutList className="w-4 h-4" />
             Summary
           </button>
           <button
             onClick={() => setActiveTab("related")}
-            className={`flex-1 min-w-[100px] px-4 py-3 text-xs font-medium border-b-2 transition-colors flex items-center justify-center gap-2 ${activeTab === "related"
+            className={`flex-1 min-w-[100px] px-4 py-3 text-xs font-medium border-b-2 transition-colors flex items-center justify-center gap-2 ${
+              activeTab === "related"
                 ? "border-primary text-primary bg-primary/5"
                 : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-          >
+            }`}>
             <Share2 className="w-4 h-4" />
             Related
           </button>
@@ -312,6 +524,25 @@ export default function PdfChatViewerPage() {
                   className="w-full h-full border-none"
                   title="PDF Viewer"
                 />
+              ) : sourceType === "project" && projectContent ? (
+                <div className="w-full h-full overflow-y-auto p-6 md:p-10 flex justify-center bg-muted/20">
+                  <div className="w-full max-w-3xl bg-card rounded-2xl shadow-sm border border-border p-8 md:p-10 self-start">
+                    <h1 className="text-2xl font-bold text-foreground mb-1">
+                      {filename}
+                    </h1>
+                    <p className="text-xs text-muted-foreground mb-6 border-b border-border pb-4">
+                      {pdfData?.word_count?.toLocaleString() || ""} words
+                    </p>
+                    <div className="prose-sm max-w-none">
+                      {renderTiptapNode(projectContent, "root")}
+                    </div>
+                  </div>
+                </div>
+              ) : sourceType === "project" ? (
+                <div className="w-full max-w-4xl h-full bg-card shadow-sm border border-border rounded-xl overflow-hidden flex flex-col items-center justify-center text-muted-foreground">
+                  <FileText className="w-16 h-16 mb-4 opacity-20" />
+                  <p>This project has no content yet.</p>
+                </div>
               ) : (
                 <div className="w-full max-w-4xl h-full bg-card shadow-sm border border-border rounded-xl overflow-hidden flex flex-col items-center justify-center text-muted-foreground">
                   <FileText className="w-16 h-16 mb-4 opacity-20" />
@@ -353,8 +584,7 @@ export default function PdfChatViewerPage() {
                         setSummary(null);
                         setLoadingSummary(false);
                       }} // Retry logic could be better
-                      className="mt-4 text-primary hover:underline"
-                    >
+                      className="mt-4 text-primary hover:underline">
                       Retry
                     </button>
                   </div>
@@ -378,8 +608,7 @@ export default function PdfChatViewerPage() {
                     {[1, 2, 3].map((i) => (
                       <div
                         key={i}
-                        className="p-4 border border-border rounded-xl animate-pulse"
-                      >
+                        className="p-4 border border-border rounded-xl animate-pulse">
                         <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
                         <div className="h-3 bg-muted rounded w-1/2"></div>
                       </div>
@@ -389,9 +618,8 @@ export default function PdfChatViewerPage() {
                   <div className="grid gap-4">
                     {relatedPapers.map((paper: any) => (
                       <div
-                        key={paper.paperId}
-                        className="group relative p-5 border border-border rounded-xl hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md transition-all bg-card"
-                      >
+                        key={paper.paperId || paper.externalId || paper.url}
+                        className="group relative p-5 border border-border rounded-xl hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md transition-all bg-card">
                         <div className="flex justify-between items-start gap-4">
                           <div>
                             <h3 className="font-semibold text-foreground leading-tight mb-2 group-hover:text-primary transition-colors">
@@ -399,8 +627,7 @@ export default function PdfChatViewerPage() {
                                 href={paper.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="hover:underline"
-                              >
+                                className="hover:underline">
                                 {paper.title}
                               </a>
                             </h3>
@@ -430,8 +657,7 @@ export default function PdfChatViewerPage() {
                             href={paper.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 bg-muted text-muted-foreground rounded-lg group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
-                          >
+                            className="p-2 bg-muted text-muted-foreground rounded-lg group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                             <Share2 className="w-4 h-4" />
                           </a>
                         </div>
@@ -455,17 +681,19 @@ export default function PdfChatViewerPage() {
 
       {/* Chat Sidebar (Right) */}
       <div
-        className={`transition-all duration-300 ease-in-out border-l border-border bg-background ${showChat
+        className={`transition-all duration-300 ease-in-out border-l border-border bg-background ${
+          showChat
             ? "w-[400px] translate-x-0"
             : "w-0 translate-x-full opacity-0"
-          } overflow-hidden h-full shadow-lg z-20 shrink-0`}
-      >
+        } overflow-hidden h-full shadow-lg z-20 shrink-0`}>
         <div className="w-[400px] h-full">
           {paperContext.externalId && (
             <ResearchChatSidebar
               isOpen={showChat}
               onClose={() => setShowChat(false)}
               papers={[paperContext]}
+              pendingMessage={selectionQuery}
+              onQueryConsumed={() => setSelectionQuery(null)}
             />
           )}
         </div>

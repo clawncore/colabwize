@@ -10,7 +10,7 @@ export class ResearchService {
   // Perform a web search for research topics
   static async webSearch(
     query: string,
-    maxResults: number = 10
+    maxResults: number = 10,
   ): Promise<SearchResult[]> {
     try {
       const response = await apiClient.post("/api/ai/search/web", {
@@ -32,7 +32,7 @@ export class ResearchService {
   // Perform a deep search on specific sources
   static async deepSearch(
     query: string,
-    sources: string[]
+    sources: string[],
   ): Promise<DeepSearchResult[]> {
     try {
       const response = await apiClient.post("/api/ai/search/deep", {
@@ -54,7 +54,7 @@ export class ResearchService {
   // Analyze search results to generate insights
   static async analyzeSearchResults(
     query: string,
-    results: SearchResult[]
+    results: SearchResult[],
   ): Promise<string> {
     try {
       const response = await apiClient.post("/api/ai/search/analyze", {
@@ -77,7 +77,7 @@ export class ResearchService {
   static async getResearchGraph(paperId: string): Promise<any> {
     try {
       const response = await apiClient.get(
-        `/api/research/graph?paperId=${paperId}`
+        `/api/research/graph?paperId=${paperId}`,
       );
 
       if (!response && !response.data) {
@@ -98,7 +98,7 @@ export class ResearchService {
 
       if (!response.success) {
         throw new Error(
-          response.message || "Failed to fetch recent research topics"
+          response.message || "Failed to fetch recent research topics",
         );
       }
 
@@ -116,7 +116,7 @@ export class ResearchService {
     history: any[] = [],
     projectId?: string,
     sessionId?: string | null,
-    model?: string
+    model?: string,
   ): Promise<any> {
     try {
       const response = await apiClient.post("/api/research/chat", {
@@ -144,7 +144,7 @@ export class ResearchService {
   static async chatWithPdf(
     message: string,
     documentId: string,
-    history: any[] = []
+    history: any[] = [],
   ): Promise<string> {
     try {
       const response = await apiClient.post("/api/pdf/chat", {
@@ -153,7 +153,7 @@ export class ResearchService {
         history,
       });
 
-      if (!response && !response.answer) {
+      if (!response || !response.answer) {
         throw new Error("Failed to get chat response");
       }
 
@@ -168,7 +168,7 @@ export class ResearchService {
   static async chatWithProject(
     message: string,
     projectId: string,
-    history: any[] = []
+    history: any[] = [],
   ): Promise<string> {
     try {
       const response = await apiClient.post("/api/research/chat-project", {
@@ -177,7 +177,7 @@ export class ResearchService {
         history,
       });
 
-      if (!response && !response.answer) {
+      if (!response || !response.answer) {
         throw new Error("Failed to get chat response");
       }
 
@@ -188,10 +188,38 @@ export class ResearchService {
     }
   }
 
+  // Generate AI-suggested questions for an uploaded document or project
+  static async getSuggestedQuestions(
+    documentId: string,
+    type: "pdf" | "project",
+  ): Promise<string[]> {
+    try {
+      const prompt =
+        "List exactly 4 short, specific questions a reader would want to ask about this document. " +
+        "Return ONLY a numbered list (1. 2. 3. 4.), one question per line. No preamble or extra text.";
+
+      const answer =
+        type === "project"
+          ? await this.chatWithProject(prompt, documentId)
+          : await this.chatWithPdf(prompt, documentId);
+
+      return answer
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => /^\d+[.)\s]/.test(line))
+        .map((line) => line.replace(/^\d+[.)\s]+/, "").trim())
+        .filter(Boolean)
+        .slice(0, 4);
+    } catch (error) {
+      console.error("Error generating suggested questions:", error);
+      return [];
+    }
+  }
+
   // Save a research topic
   static async saveResearchTopic(
     topic: Omit<ResearchTopic, "id" | "createdAt">,
-    sourcesData: Omit<ResearchSource, "id">[] = []
+    sourcesData: Omit<ResearchSource, "id">[] = [],
   ): Promise<ResearchTopic> {
     try {
       const response = await apiClient.post("/api/ai/research/topics", {
@@ -225,7 +253,7 @@ export class ResearchService {
   // Get concept map
   static async getConceptMap(
     query: string,
-    projectId?: string | null
+    projectId?: string | null,
   ): Promise<any> {
     try {
       const response = await apiClient.post("/api/research/map", {
@@ -243,7 +271,7 @@ export class ResearchService {
   // Generate generic Studio Item (Flashcards, Quiz, Report, etc.)
   static async generateStudioItem(
     projectId: string,
-    type: string // "flashcards" | "quiz" | "reports" | "data_table"
+    type: string, // "flashcards" | "quiz" | "reports" | "data_table"
   ): Promise<any> {
     try {
       console.log("Calling generateStudioItem with:", { projectId, type });
@@ -286,7 +314,7 @@ export class ResearchService {
     try {
       const response = await apiClient.delete(
         `/api/research/library/${paperId}`,
-        null
+        null,
       );
 
       if (!response && !response.success) {
@@ -316,7 +344,7 @@ export class ResearchService {
   // Generate audio overview
   static async generateAudioOverview(
     projectId: string,
-    settings?: { tone: string; length: string }
+    settings?: { tone: string; length: string },
   ): Promise<any> {
     try {
       const response = await apiClient.post("/api/research/audio/generate", {
@@ -334,7 +362,7 @@ export class ResearchService {
   static async getAudioStatus(projectId: string): Promise<any> {
     try {
       const response = await apiClient.get(
-        `/api/research/audio/status/${projectId}`
+        `/api/research/audio/status/${projectId}`,
       );
       return response;
     } catch (error) {
@@ -345,7 +373,7 @@ export class ResearchService {
 
   // Get chat history for a project
   static async getChatHistory(
-    projectId: string
+    projectId: string,
   ): Promise<{ session: any; messages: any[] }> {
     try {
       const response = await apiClient.get(`/api/research/chat/${projectId}`);
@@ -362,7 +390,7 @@ export class ResearchService {
   static async getChatSessions(projectId: string): Promise<any[]> {
     try {
       const response = await apiClient.get(
-        `/api/research/chat/sessions/${projectId}`
+        `/api/research/chat/sessions/${projectId}`,
       );
       return response.sessions || [];
     } catch (error) {
@@ -373,11 +401,11 @@ export class ResearchService {
 
   // Get a specific chat session
   static async getChatSession(
-    sessionId: string
+    sessionId: string,
   ): Promise<{ session: any; messages: any[] }> {
     try {
       const response = await apiClient.get(
-        `/api/research/chat/session/${sessionId}`
+        `/api/research/chat/session/${sessionId}`,
       );
       return response;
     } catch (error) {

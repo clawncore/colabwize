@@ -1,4 +1,4 @@
-// Quota Management System for Researcher Plans
+// Quota Management System for Premium Plans
 export interface QuotaLimits {
   citationChecks: number;
   documentExports: number;
@@ -14,7 +14,7 @@ export interface CurrentUsage {
 }
 
 export interface QuotaStatus {
-  plan: 'free' | 'researcher' | 'enterprise';
+  plan: "free" | "plus" | "premium" | "enterprise";
   limits: QuotaLimits;
   usage: CurrentUsage;
   remaining: {
@@ -33,28 +33,43 @@ export class QuotaManager {
       citationChecks: 50,
       documentExports: 10,
       aiAssists: 20,
-      storageGB: 1
+      storageGB: 1,
     },
-    researcher: {
+    plus: {
+      citationChecks: 250,
+      documentExports: 50,
+      aiAssists: 100,
+      storageGB: 5,
+    },
+    premium: {
       citationChecks: 1000,
       documentExports: 100,
       aiAssists: 500,
-      storageGB: 10
+      storageGB: 10,
     },
     enterprise: {
       citationChecks: Infinity,
       documentExports: Infinity,
       aiAssists: Infinity,
-      storageGB: 100
-    }
+      storageGB: 100,
+    },
   };
 
-  static calculateRemaining(limits: QuotaLimits, usage: CurrentUsage): QuotaStatus['remaining'] {
+  static calculateRemaining(
+    limits: QuotaLimits,
+    usage: CurrentUsage,
+  ): QuotaStatus["remaining"] {
     return {
-      citationChecks: Math.max(0, limits.citationChecks - usage.citationChecksUsed),
-      documentExports: Math.max(0, limits.documentExports - usage.documentExportsUsed),
+      citationChecks: Math.max(
+        0,
+        limits.citationChecks - usage.citationChecksUsed,
+      ),
+      documentExports: Math.max(
+        0,
+        limits.documentExports - usage.documentExportsUsed,
+      ),
       aiAssists: Math.max(0, limits.aiAssists - usage.aiAssistsUsed),
-      storageGB: Math.max(0, limits.storageGB - usage.storageUsedGB)
+      storageGB: Math.max(0, limits.storageGB - usage.storageUsedGB),
     };
   }
 
@@ -67,8 +82,16 @@ export class QuotaManager {
     );
   }
 
-  static getQuotaStatus(plan: 'free' | 'researcher' | 'enterprise', usage: CurrentUsage): QuotaStatus {
-    const limits = this.PLANS[plan];
+  static getQuotaStatus(
+    plan: "free" | "plus" | "premium" | "enterprise",
+    usage: CurrentUsage,
+  ): QuotaStatus {
+    // Map legacy plans to new ones
+    let normalizedPlan: any = plan;
+    if (plan === "plus") normalizedPlan = "plus";
+    if (plan === "premium") normalizedPlan = "premium";
+
+    const limits = (this.PLANS as any)[normalizedPlan] || this.PLANS.free;
     const remaining = this.calculateRemaining(limits, usage);
 
     return {
@@ -76,7 +99,12 @@ export class QuotaManager {
       limits,
       usage,
       remaining,
-      isExceeded: this.checkIfExceeded({ plan, limits, usage, remaining } as QuotaStatus)
+      isExceeded: this.checkIfExceeded({
+        plan,
+        limits,
+        usage,
+        remaining,
+      } as QuotaStatus),
     };
   }
 
@@ -100,8 +128,13 @@ export class QuotaManager {
     return percentage >= 80; // Warn at 80% usage
   }
 
-  static getQuotaMessage(status: QuotaStatus, resource: keyof QuotaLimits): string {
-    const used = status.usage[`${resource}Used` as keyof CurrentUsage] as number;
+  static getQuotaMessage(
+    status: QuotaStatus,
+    resource: keyof QuotaLimits,
+  ): string {
+    const used = status.usage[
+      `${resource}Used` as keyof CurrentUsage
+    ] as number;
     const limit = status.limits[resource];
     const remaining = status.remaining[resource];
 
@@ -118,9 +151,9 @@ export class QuotaManager {
   }
 }
 
-// Temporary quota bypass for researcher plan
+// Temporary quota bypass for premium plan
 export class TemporaryQuotaBypass {
-  private static bypassKey = 'temp_quota_bypass_researcher';
+  private static bypassKey = "temp_quota_bypass_premium";
   private static expirationHours = 24;
 
   static enableTemporaryBypass(): void {
@@ -161,7 +194,7 @@ export class TemporaryQuotaBypass {
 
   static getFormattedTimeRemaining(): string {
     const msRemaining = this.getTimeRemaining();
-    if (msRemaining <= 0) return 'Expired';
+    if (msRemaining <= 0) return "Expired";
 
     const hours = Math.floor(msRemaining / (1000 * 60 * 60));
     const minutes = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60));

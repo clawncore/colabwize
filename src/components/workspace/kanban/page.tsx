@@ -408,6 +408,15 @@ export function KanbanBoard() {
   };
 
   const handleCreateTask = async () => {
+    if (!canEdit) {
+      toast({
+        title: "Permission Denied",
+        description:
+          "You do not have permission to create tasks in this workspace.",
+        variant: "destructive",
+      });
+      return;
+    }
     const title = prompt("Task Title:");
     if (!title) return;
 
@@ -426,6 +435,15 @@ export function KanbanBoard() {
   };
 
   const handleDeleteTask = async (id: string) => {
+    if (!canEdit) {
+      toast({
+        title: "Permission Denied",
+        description:
+          "You do not have permission to delete tasks in this workspace.",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       await WorkspaceTaskService.deleteTask(id);
       setTasks((prev) => prev.filter((t) => t.id !== id));
@@ -600,6 +618,7 @@ export function KanbanBoard() {
   };
 
   const handleBulkMove = async (status: string) => {
+    if (!canEdit) return;
     if (selectedTaskIds.length === 0) return;
 
     // Update locally for instant feedback
@@ -619,6 +638,7 @@ export function KanbanBoard() {
   };
 
   const handleBulkUpdatePriority = async (priority: string) => {
+    if (!canEdit) return;
     if (selectedTaskIds.length === 0) return;
 
     // Update locally
@@ -642,6 +662,7 @@ export function KanbanBoard() {
   };
 
   const handleBulkDelete = async () => {
+    if (!canEdit) return;
     if (selectedTaskIds.length === 0) return;
     // eslint-disable-next-line no-restricted-globals
     if (

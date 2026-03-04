@@ -477,10 +477,10 @@ export default function WorkspaceProjectsPage() {
     }
   };
 
-  // Check if user has Researcher plan
-  const isResearcherPlan =
-    subscriptionData?.plan === "Researcher" ||
-    subscriptionData?.plan?.name === "Researcher";
+  // Check if user has Premium plan
+  const isPremiumPlan =
+    subscriptionData?.plan === "Premium" ||
+    subscriptionData?.plan?.name === "Premium";
 
   if (userLoading) {
     return (
@@ -516,8 +516,8 @@ export default function WorkspaceProjectsPage() {
         </div>
 
         <div className="flex space-x-3">
-          {/* Batch Export Button - only for Researcher plan */}
-          {isResearcherPlan && projects.length > 0 && (
+          {/* Batch Export Button - only for Premium plan */}
+          {isPremiumPlan && projects.length > 0 && (
             <button
               onClick={handleBatchExport}
               disabled={selectedProjects.length === 0}
@@ -578,8 +578,8 @@ export default function WorkspaceProjectsPage() {
       {/* Filters */}
       {projects.length >= 0 && (
         <div className="flex items-center space-x-2 mb-6">
-          {/* Select All Checkbox - only for Researcher plan */}
-          {isResearcherPlan && (
+          {/* Select All Checkbox - only for Premium plan */}
+          {isPremiumPlan && (
             <div className="flex items-center mr-4">
               <input
                 type="checkbox"
@@ -732,7 +732,7 @@ export default function WorkspaceProjectsPage() {
                 setSelectedProjects([...selectedProjects, projectId]);
               }
             }}
-            isResearcherPlan={isResearcherPlan}
+            isPremiumPlan={isPremiumPlan}
             currentUserId={user?.id}
           />
         )}

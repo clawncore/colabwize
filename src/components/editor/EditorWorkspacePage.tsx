@@ -9,6 +9,7 @@ import { DraftComparisonPanel } from "../originality/DraftComparisonPanel";
 import { CitationConfidencePanel } from "../citations/CitationConfidencePanel";
 import { SourcesLibraryPanel } from "../citations/SourcesLibraryPanel";
 import { AIChatPanel } from "../aichat/AIChatPanel";
+import { TeamChat } from "../workspace/team/TeamChat";
 import { SourceDetailPanel } from "../citations/SourceDetailPanel";
 import { Project, documentService } from "../../services/documentService";
 // Custom hook usage instead of direct service
@@ -25,6 +26,7 @@ import {
   Network,
   Lightbulb,
   Bell,
+  History,
 } from "lucide-react";
 import { SearchAlertsPanel } from "./SearchAlertsPanel";
 import { AIProbabilityHeatmap } from "../originality/AIProbabilityHeatmap";
@@ -49,6 +51,11 @@ import {
 } from "../../components/ui/dropdown-menu";
 import { EditorHelpDialog } from "./EditorHelpDialog";
 import { UpgradeModal } from "../../components/subscription/UpgradeModal";
+import { CollaborationHistoryPanel } from "./CollaborationHistoryPanel";
+import workspaceService, {
+  WorkspaceMember,
+} from "../../services/workspaceService";
+import { useWorkspacePermissions } from "../../hooks/useWorkspacePermissions";
 
 // Define panel types
 export type RightPanelType =
@@ -61,6 +68,8 @@ export type RightPanelType =
   | "ai-results"
   | "originality-results"
   | "add-citation"
+  | "collaboration-history"
+  | "team-chat"
   | null;
 
 const EditorWorkspacePage: React.FC = () => {
@@ -105,6 +114,11 @@ const EditorWorkspacePage: React.FC = () => {
 
   // Focus Mode state
   const [isFocusMode, setIsFocusMode] = useState(false);
+
+  // Workspace permission — resolves once selectedProject.workspace_id is known
+  const { canEdit: canEditWorkspace } = useWorkspacePermissions(
+    selectedProject?.workspace_id ?? undefined,
+  );
 
   // Subscription state from global store
   const {
@@ -255,7 +269,7 @@ const EditorWorkspacePage: React.FC = () => {
 
     const updatedCitations = selectedProject.citations.map((c: any) =>
       (c.id && updatedSource.id && c.id === updatedSource.id) ||
-        c.title === updatedSource.title
+      c.title === updatedSource.title
         ? updatedSource
         : c,
     );
@@ -318,6 +332,23 @@ const EditorWorkspacePage: React.FC = () => {
             // Editor simply loads what backend gives it
             // No template injection logic - content is already set at creation time
             setSelectedProject(result.data);
+
+            // Fetch workspace members if project belongs to a workspace
+            if (result.data.workspace_id) {
+              setIsMembersLoading(true);
+              try {
+                const workspace = await workspaceService.getWorkspace(
+                  result.data.workspace_id,
+                );
+                setWorkspaceMembers(workspace.members || []);
+              } catch (err) {
+                console.error("Failed to fetch workspace members:", err);
+              } finally {
+                setIsMembersLoading(false);
+              }
+            } else {
+              setWorkspaceMembers([]);
+            }
           }
         } catch (error) {
           console.error("Failed to load project by ID:", error);
@@ -336,8 +367,8 @@ const EditorWorkspacePage: React.FC = () => {
     if (rawPlan) {
       const planId =
         typeof rawPlan === "object" ? (rawPlan as any).id : rawPlan;
-      if (planId === "student") planName = "Student Pro";
-      else if (planId === "researcher") planName = "Researcher";
+      if (planId === "plus") planName = "Plus";
+      else if (planId === "premium") planName = "Premium";
       else if (planId === "payg") planName = "Pay As You Go";
     }
     setUserPlan(planName);
@@ -491,12 +522,18 @@ const EditorWorkspacePage: React.FC = () => {
         return "Originality Report";
       case "add-citation":
         return "Add Citation";
+      case "team-chat":
+        return "Team Chat";
       default:
         return "Suggestions";
     }
   };
 
   const [editorInstance, setEditorInstance] = useState<any>(null);
+  const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceMember[]>(
+    [],
+  );
+  const [isMembersLoading, setIsMembersLoading] = useState(false);
 
   const handleInsertCitation = async (text: string, trackingInfo?: any) => {
     if (editorInstance) {
@@ -507,7 +544,8 @@ const EditorWorkspacePage: React.FC = () => {
       // CitationNode tries to render it. Without this, the node renders as (Unknown, ????)
       // because the async registry init hasn't returned yet.
       if (sourceId && source) {
-        const { CitationRegistryService } = await import("../../services/CitationRegistryService");
+        const { CitationRegistryService } =
+          await import("../../services/CitationRegistryService");
         CitationRegistryService.registerTempCitation(
           source.raw_reference_text || source.title || text,
           {
@@ -517,7 +555,7 @@ const EditorWorkspacePage: React.FC = () => {
             year: source.year,
             url: source.url,
             doi: source.doi,
-          }
+          },
         );
       }
 
@@ -526,12 +564,13 @@ const EditorWorkspacePage: React.FC = () => {
         let citationUrl = undefined;
         if (trackingInfo && trackingInfo.fullReferenceEntry) {
           const src = trackingInfo.fullReferenceEntry;
-          citationUrl = src.url || (src.doi ? `https://doi.org/${src.doi}` : undefined);
+          citationUrl =
+            src.url || (src.doi ? `https://doi.org/${src.doi}` : undefined);
         }
         editorInstance.commands.insertCitation({
           citationId: sourceId,
           text: text,
-          url: citationUrl
+          url: citationUrl,
         });
       } else {
         editorInstance.chain().focus().insertContent(text).run();
@@ -553,7 +592,11 @@ const EditorWorkspacePage: React.FC = () => {
           let chain = editorInstance.chain().setTextSelection(endPos);
 
           // Check if References header exists (heuristic)
-          if (!widthRef.includes("References") && !widthRef.includes("Bibliography") && !widthRef.includes("Works Cited")) {
+          if (
+            !widthRef.includes("References") &&
+            !widthRef.includes("Bibliography") &&
+            !widthRef.includes("Works Cited")
+          ) {
             chain = chain.insertContent([
               {
                 type: "heading",
@@ -571,7 +614,7 @@ const EditorWorkspacePage: React.FC = () => {
                 citationId: sourceId,
                 url: source.url || source.doi,
                 doi: source.doi,
-                refText: refText
+                refText: refText,
               },
               content: [{ type: "text", text: refText }],
             })
@@ -717,10 +760,11 @@ const EditorWorkspacePage: React.FC = () => {
                     setActiveLeftPanel("documents");
                     setIsLeftSidebarOpen(true);
                   }}
-                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "documents"
-                    ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    }`}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activeLeftPanel === "documents"
+                      ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  }`}
                   title={!isNavRailOpen ? "My Documents" : ""}>
                   <FileText
                     className={`w-4 h-4 ${activeLeftPanel === "documents" ? "text-[#6366F1]" : "text-gray-400"}`}
@@ -735,10 +779,11 @@ const EditorWorkspacePage: React.FC = () => {
                     setActiveSourceTab("sources");
                     setIsLeftSidebarOpen(true);
                   }}
-                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "sources"
-                    ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    }`}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activeLeftPanel === "sources"
+                      ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  }`}
                   title={!isNavRailOpen ? "Source Library" : ""}>
                   <BookOpen
                     className={`w-4 h-4 ${activeLeftPanel === "sources" ? "text-[#6366F1]" : "text-gray-400"}`}
@@ -751,10 +796,11 @@ const EditorWorkspacePage: React.FC = () => {
                   <div className="ml-9 mt-1 space-y-1 border-l-2 border-gray-100 pl-3 mb-4 transition-all">
                     <button
                       onClick={() => setActiveSourceTab("sources")}
-                      className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${activeSourceTab === "sources"
-                        ? "text-[#6366F1] bg-white shadow-sm"
-                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                        }`}>
+                      className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
+                        activeSourceTab === "sources"
+                          ? "text-[#6366F1] bg-white shadow-sm"
+                          : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                      }`}>
                       <div
                         className={`w-1.5 h-1.5 rounded-full ${activeSourceTab === "sources" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                       />
@@ -762,10 +808,11 @@ const EditorWorkspacePage: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setActiveSourceTab("collections")}
-                      className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${activeSourceTab === "collections"
-                        ? "text-[#6366F1] bg-white shadow-sm"
-                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                        }`}>
+                      className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
+                        activeSourceTab === "collections"
+                          ? "text-[#6366F1] bg-white shadow-sm"
+                          : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                      }`}>
                       <div
                         className={`w-1.5 h-1.5 rounded-full ${activeSourceTab === "collections" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                       />
@@ -773,10 +820,11 @@ const EditorWorkspacePage: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setActiveSourceTab("matrix")}
-                      className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${activeSourceTab === "matrix"
-                        ? "text-[#6366F1] bg-white shadow-sm"
-                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                        }`}>
+                      className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
+                        activeSourceTab === "matrix"
+                          ? "text-[#6366F1] bg-white shadow-sm"
+                          : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                      }`}>
                       <div
                         className={`w-1.5 h-1.5 rounded-full ${activeSourceTab === "matrix" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                       />
@@ -791,10 +839,11 @@ const EditorWorkspacePage: React.FC = () => {
                     setActiveLeftPanel("outline");
                     setIsLeftSidebarOpen(true);
                   }}
-                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "outline"
-                    ? "bg-[#F59E0B]/10 text-[#D97706] border border-[#F59E0B]/20"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    }`}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activeLeftPanel === "outline"
+                      ? "bg-[#F59E0B]/10 text-[#D97706] border border-[#F59E0B]/20"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  }`}
                   title={!isNavRailOpen ? "Outline" : ""}>
                   <PenTool
                     className={`w-4 h-4 ${activeLeftPanel === "outline" ? "text-[#D97706]" : "text-gray-400"}`}
@@ -808,10 +857,11 @@ const EditorWorkspacePage: React.FC = () => {
                     setActivePanelType("add-citation");
                     setIsRightSidebarOpen(true);
                   }}
-                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activePanelType === "add-citation"
-                    ? "bg-blue-100 text-blue-600 border border-blue-200"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    }`}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activePanelType === "add-citation"
+                      ? "bg-blue-100 text-blue-600 border border-blue-200"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  }`}
                   title={!isNavRailOpen ? "Add Citation" : ""}>
                   <PlusSquare
                     className={`w-4 h-4 ${activePanelType === "add-citation" ? "text-blue-600" : "text-gray-400"}`}
@@ -822,19 +872,20 @@ const EditorWorkspacePage: React.FC = () => {
                 <button
                   data-tour="visual-map"
                   onClick={() => {
-                    if (userPlan !== "Researcher") return;
+                    if (userPlan !== "Premium") return;
                     setActiveLeftPanel("visual-map");
                     setIsLeftSidebarOpen(true);
                   }}
-                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "visual-map"
-                    ? "bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20"
-                    : userPlan !== "Researcher"
-                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    }`}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activeLeftPanel === "visual-map"
+                      ? "bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20"
+                      : userPlan !== "Premium"
+                        ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  }`}
                   title={
-                    userPlan !== "Researcher"
-                      ? "Available on Researcher Plan"
+                    userPlan !== "Premium"
+                      ? "Available on Premium Plan"
                       : !isNavRailOpen
                         ? "Insight Map"
                         : ""
@@ -845,9 +896,9 @@ const EditorWorkspacePage: React.FC = () => {
                   {isNavRailOpen && (
                     <div className="flex items-center justify-between w-full">
                       <span>Insight Map</span>
-                      {userPlan !== "Researcher" && (
+                      {userPlan !== "Premium" && (
                         <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
-                          PRO
+                          PREMIUM
                         </span>
                       )}
                     </div>
@@ -857,19 +908,20 @@ const EditorWorkspacePage: React.FC = () => {
                 <button
                   data-tour="research-gaps"
                   onClick={() => {
-                    if (userPlan !== "Researcher") return;
+                    if (userPlan !== "Premium") return;
                     setActiveLeftPanel("research-gaps");
                     setIsLeftSidebarOpen(true);
                   }}
-                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "research-gaps"
-                    ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
-                    : userPlan !== "Researcher"
-                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    }`}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activeLeftPanel === "research-gaps"
+                      ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
+                      : userPlan !== "Premium"
+                        ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  }`}
                   title={
-                    userPlan !== "Researcher"
-                      ? "Available on Researcher Plan"
+                    userPlan !== "Premium"
+                      ? "Available on Premium Plan"
                       : !isNavRailOpen
                         ? "Research Gaps"
                         : ""
@@ -880,9 +932,9 @@ const EditorWorkspacePage: React.FC = () => {
                   {isNavRailOpen && (
                     <div className="flex items-center justify-between w-full">
                       <span>Research Gaps</span>
-                      {userPlan !== "Researcher" && (
+                      {userPlan !== "Premium" && (
                         <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
-                          PRO
+                          PREMIUM
                         </span>
                       )}
                     </div>
@@ -892,19 +944,20 @@ const EditorWorkspacePage: React.FC = () => {
                 <button
                   data-tour="search-alerts"
                   onClick={() => {
-                    if (userPlan !== "Researcher") return;
+                    if (userPlan !== "Premium") return;
                     setActiveLeftPanel("search-alerts");
                     setIsLeftSidebarOpen(true);
                   }}
-                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "search-alerts"
-                    ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
-                    : userPlan !== "Researcher"
-                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    }`}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activeLeftPanel === "search-alerts"
+                      ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                      : userPlan !== "Premium"
+                        ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  }`}
                   title={
-                    userPlan !== "Researcher"
-                      ? "Available on Researcher Plan"
+                    userPlan !== "Premium"
+                      ? "Available on Premium Plan"
                       : !isNavRailOpen
                         ? "Search Alerts"
                         : ""
@@ -913,7 +966,7 @@ const EditorWorkspacePage: React.FC = () => {
                     <Bell
                       className={`w-4 h-4 ${activeLeftPanel === "search-alerts" ? "text-indigo-600" : "text-gray-400"}`}
                     />
-                    {userPlan === "Researcher" && unreadAlertCount > 0 && (
+                    {userPlan === "Premium" && unreadAlertCount > 0 && (
                       <span className="absolute -top-1.5 -right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white border-2 border-[#f9fafb]">
                         {unreadAlertCount > 9 ? "9+" : unreadAlertCount}
                       </span>
@@ -922,9 +975,9 @@ const EditorWorkspacePage: React.FC = () => {
                   {isNavRailOpen && (
                     <div className="flex items-center justify-between w-full">
                       <span>Search Alerts</span>
-                      {userPlan !== "Researcher" && (
+                      {userPlan !== "Premium" && (
                         <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
-                          PRO
+                          PREMIUM
                         </span>
                       )}
                     </div>
@@ -934,19 +987,20 @@ const EditorWorkspacePage: React.FC = () => {
                 <button
                   data-tour="research-assistant"
                   onClick={() => {
-                    if (userPlan !== "Researcher") return;
+                    if (userPlan !== "Premium") return;
                     setActiveLeftPanel("research-assistant");
                     setIsLeftSidebarOpen(true);
                   }}
-                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "research-assistant"
-                    ? "bg-purple-100 text-purple-600 border border-purple-200"
-                    : userPlan !== "Researcher"
-                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    }`}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activeLeftPanel === "research-assistant"
+                      ? "bg-purple-100 text-purple-600 border border-purple-200"
+                      : userPlan !== "Premium"
+                        ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  }`}
                   title={
-                    userPlan !== "Researcher"
-                      ? "Available on Researcher Plan"
+                    userPlan !== "Premium"
+                      ? "Available on Premium Plan"
                       : !isNavRailOpen
                         ? "Research Assistant"
                         : ""
@@ -957,14 +1011,34 @@ const EditorWorkspacePage: React.FC = () => {
                   {isNavRailOpen && (
                     <div className="flex items-center justify-between w-full">
                       <span>Research Assistant</span>
-                      {userPlan !== "Researcher" && (
+                      {userPlan !== "Premium" && (
                         <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
-                          PRO
+                          PREMIUM
                         </span>
                       )}
                     </div>
                   )}
                 </button>
+
+                {selectedProject?.workspace_id && (
+                  <button
+                    data-tour="collaboration-history"
+                    onClick={() => {
+                      setActivePanelType("collaboration-history");
+                      setIsRightSidebarOpen(true);
+                    }}
+                    className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      activePanelType === "collaboration-history"
+                        ? "bg-blue-100 text-blue-600 border border-blue-200"
+                        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                    }`}
+                    title={!isNavRailOpen ? "Edit History" : ""}>
+                    <History
+                      className={`w-4 h-4 ${activePanelType === "collaboration-history" ? "text-blue-600" : "text-gray-400"}`}
+                    />
+                    {isNavRailOpen && "Edit History"}
+                  </button>
+                )}
               </div>
 
               {/* Credit Meter Fixed at Bottom of Rail */}
@@ -1170,7 +1244,7 @@ const EditorWorkspacePage: React.FC = () => {
             projectId={selectedProject?.id || ""}
             onBack={() => setSelectedLibrarySource(null)}
             onUpdate={handleSourceUpdate}
-            isResearcher={userPlan === "Researcher"}
+            isPremium={userPlan === "Premium"}
           />
         ) : activeLeftPanel === "sources" && activeSourceTab === "matrix" ? (
           <LiteratureMatrix
@@ -1266,6 +1340,7 @@ const EditorWorkspacePage: React.FC = () => {
             isFocusMode={isFocusMode}
             onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
             isCollaborative={!!selectedProject.workspace_id}
+            isReadOnly={!!selectedProject.workspace_id && !canEditWorkspace}
           />
         ) : (
           <div className="h-full flex flex-col items-center justify-center bg-gray-50">
@@ -1296,7 +1371,6 @@ const EditorWorkspacePage: React.FC = () => {
         )}
       </div>
 
-      {/* Toggle Right Sidebar Button - Hidden in Focus Mode */}
       {/* Toggle Right Sidebar Button - Hidden in Focus Mode OR Visual Map. ALLOWED in Research Gaps */}
       {!isFocusMode &&
         !(activeLeftPanel === "sources" && activeSourceTab === "matrix") && (
@@ -1304,7 +1378,9 @@ const EditorWorkspacePage: React.FC = () => {
             onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
             className={`absolute top-4 z-10 p-2 bg-white border border-gray-300 rounded-md shadow-md hover:bg-gray-50 transition-all`}
             style={{
-              right: isRightSidebarOpen ? `${rightSidebarWidth + 8}px` : "16px",
+              right: isRightSidebarOpen
+                ? `${(activePanelType === "team-chat" ? 400 : rightSidebarWidth) + 8}px`
+                : "16px",
             }}
             title={
               isRightSidebarOpen
@@ -1335,7 +1411,6 @@ const EditorWorkspacePage: React.FC = () => {
           </button>
         )}
 
-      {/* Right Sidebar - Feature-Specific Panels - Hidden in Focus Mode */}
       {/* Right Sidebar - Feature-Specific Panels - Hidden in Focus Mode OR Visual Map. ALLOWED in Research Gaps */}
       {!isFocusMode &&
         !(activeLeftPanel === "sources" && activeSourceTab === "matrix") &&
@@ -1348,7 +1423,9 @@ const EditorWorkspacePage: React.FC = () => {
               className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors"
             />
             <div
-              style={{ width: `${rightSidebarWidth}px` }}
+              style={{
+                width: `${activePanelType === "team-chat" ? 400 : rightSidebarWidth}px`,
+              }}
               className="flex-shrink-0 h-full transition-all border-l border-gray-200">
               {/* Render appropriate panel based on type */}
               {activePanelType === "citations" && selectedProject && (
@@ -1435,6 +1512,29 @@ const EditorWorkspacePage: React.FC = () => {
                   }}
                 />
               )}
+              {activePanelType === "collaboration-history" && (
+                <CollaborationHistoryPanel
+                  editor={editorInstance}
+                  members={workspaceMembers}
+                  isLoading={isMembersLoading}
+                  onClose={() => setIsRightSidebarOpen(false)}
+                />
+              )}
+              {activePanelType === "team-chat" &&
+                selectedProject?.workspace_id && (
+                  <TeamChat
+                    workspaceId={selectedProject.workspace_id}
+                    className="h-full"
+                  />
+                )}
+              {activePanelType === "team-chat" &&
+                !selectedProject?.workspace_id && (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                    <p className="text-sm text-slate-500">
+                      Team Chat is only available for workspace documents.
+                    </p>
+                  </div>
+                )}
             </div>
           </>
         )}

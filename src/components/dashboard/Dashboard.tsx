@@ -14,8 +14,8 @@ import {
   AlertTriangle,
   RefreshCw,
   CheckCircle,
-  Coins
-} from 'lucide-react';
+  Coins,
+} from "lucide-react";
 
 import { documentService, Project } from "../../services/documentService";
 import {
@@ -31,7 +31,9 @@ import {
 
 import { OnboardingTour } from "../onboarding/OnboardingTour";
 import { DocumentUploadModal } from "./DocumentUploadModal";
-import AnalyticsService, { type DashboardData } from "../../services/analyticsService";
+import AnalyticsService, {
+  type DashboardData,
+} from "../../services/analyticsService";
 import { useAuth } from "../../hooks/useAuth";
 import { useOnboarding } from "../../hooks/useOnboarding";
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
@@ -40,10 +42,19 @@ import { extractTextFromContent } from "../../utils/documentUtils";
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { shouldShowTour, completeOnboarding, skipOnboarding, loading: onboardingLoading } = useOnboarding();
+  const {
+    shouldShowTour,
+    completeOnboarding,
+    skipOnboarding,
+    loading: onboardingLoading,
+  } = useOnboarding();
   // Use global subscription store for accurate plan status
   // Use global subscription store for accurate plan status
-  const { plan, loading: subscriptionLoading, status: subscriptionStatus } = useSubscriptionStore();
+  const {
+    plan,
+    loading: subscriptionLoading,
+    status: subscriptionStatus,
+  } = useSubscriptionStore();
 
   // const { toast } = useToast();
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -59,12 +70,10 @@ export const Dashboard: React.FC = () => {
   // const [uploadingProject, setUploadingProject] = useState(false);
   const [latestProject, setLatestProject] = useState<Project | null>(null);
 
-
   // Trend data is now handled via dashboardData.trendData
 
-
   // Helper to ensure consistency with sidebar logic
-  const userPlan = plan || 'free';
+  const userPlan = plan || "free";
 
   const handleUpgradeClick = () => {
     navigate("/pricing");
@@ -76,14 +85,17 @@ export const Dashboard: React.FC = () => {
       const response = await documentService.getProjects();
       if (response.success && response.data && response.data.length > 0) {
         // Sort by updated_at desc just in case, though API usually does it
-        const sorted = [...response.data].sort((a, b) =>
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        const sorted = [...response.data].sort(
+          (a, b) =>
+            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
         );
 
         const latestBasic = sorted[0];
         // Fetch full details (including content) for the latest project
         try {
-          const fullProjectResponse = await documentService.getProjectById(latestBasic.id);
+          const fullProjectResponse = await documentService.getProjectById(
+            latestBasic.id,
+          );
           if (fullProjectResponse.success && fullProjectResponse.data) {
             setLatestProject(fullProjectResponse.data);
           } else {
@@ -107,7 +119,7 @@ export const Dashboard: React.FC = () => {
       const data = await AnalyticsService.getDashboardData();
 
       // Only update state if data actually changed or is different (deep compare would be better but this helps)
-      setDashboardData(prev => ({ ...prev, ...data }));
+      setDashboardData((prev) => ({ ...prev, ...data }));
 
       await fetchLatestProject();
     } catch (error) {
@@ -132,7 +144,11 @@ export const Dashboard: React.FC = () => {
     // fetchLatestProject();
   };
 
-  const handleContentReady = async (content: string, title: string, filename?: string) => {
+  const handleContentReady = async (
+    content: string,
+    title: string,
+    filename?: string,
+  ) => {
     try {
       setShowUploadModal(false);
       const result = await documentService.createProject(title, "", content);
@@ -155,7 +171,7 @@ export const Dashboard: React.FC = () => {
     }
   }, [fetchDashboardData, user]);
 
-  if (subscriptionLoading || subscriptionStatus === 'unknown') {
+  if (subscriptionLoading || subscriptionStatus === "unknown") {
     return (
       <div className="p-6 animate-pulse">
         <div className="flex justify-between items-start mb-8">
@@ -193,14 +209,14 @@ export const Dashboard: React.FC = () => {
           </h2>
 
           <p className="text-gray-600 mb-8 leading-relaxed">
-            We're having trouble connecting to the database. Your documents are safe, but we can't load them right now.
+            We're having trouble connecting to the database. Your documents are
+            safe, but we can't load them right now.
           </p>
 
           <button
             onClick={handleRetry}
             disabled={isRetrying}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
             {isRetrying ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -212,7 +228,8 @@ export const Dashboard: React.FC = () => {
           </button>
 
           <p className="mt-6 text-xs text-gray-400">
-            Error details: Network error - please check your connection and try again
+            Error details: Network error - please check your connection and try
+            again
           </p>
         </div>
       </div>
@@ -239,16 +256,16 @@ export const Dashboard: React.FC = () => {
         <div className="flex gap-3">
           <button
             onClick={() => navigate("/purchase-credits")}
-            className="flex items-center px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-          >
+            className="flex items-center px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
             <Coins className="w-3.5 h-3.5 mr-1.5 text-indigo-500" />
             Buy Credits
           </button>
-          {!['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) && (
+          {!["premium", "plus"].some((p) =>
+            userPlan.toLowerCase().includes(p),
+          ) && (
             <button
               onClick={handleUpgradeClick}
-              className="flex items-center px-3 py-1.5 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-sm font-bold rounded-lg hover:from-amber-500 hover:to-amber-700 active:bg-amber-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-            >
+              className="flex items-center px-3 py-1.5 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-sm font-bold rounded-lg hover:from-amber-500 hover:to-amber-700 active:bg-amber-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
               <Crown className="w-3.5 h-3.5 mr-1.5 text-amber-100" />
               Upgrade
             </button>
@@ -267,7 +284,6 @@ export const Dashboard: React.FC = () => {
       {latestProject && (
         <div className="mb-8">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden ring-1 ring-gray-50 flex flex-col lg:flex-row">
-
             {/* Left: Document Context & Visual Preview (65% width) */}
             <div className="lg:w-[65%] p-8 border-b lg:border-b-0 lg:border-r border-gray-100 bg-gradient-to-br from-white to-gray-50/30 flex flex-col">
               <div className="flex items-center justify-between mb-6">
@@ -293,7 +309,8 @@ export const Dashboard: React.FC = () => {
                   <span className="truncate">{latestProject.title}</span>
                 </h2>
                 <p className="text-sm text-gray-500 mt-2 line-clamp-2 max-w-2xl">
-                  {latestProject.description || "No description provided. Click to resume editing and add more details to your project analysis."}
+                  {latestProject.description ||
+                    "No description provided. Click to resume editing and add more details to your project analysis."}
                 </p>
               </div>
 
@@ -302,7 +319,9 @@ export const Dashboard: React.FC = () => {
                 <div className="bg-white p-6 rounded-t-xl shadow-sm border-x border-t border-gray-200 h-40 overflow-hidden relative mx-2">
                   <div className="text-sm text-gray-700 leading-relaxed font-serif opacity-90 whitespace-pre-wrap">
                     {extractTextFromContent(latestProject.content, 3000) || (
-                      <span className="italic text-gray-400">No content available for preview.</span>
+                      <span className="italic text-gray-400">
+                        No content available for preview.
+                      </span>
                     )}
                   </div>
                   {/* Gradient Fade to connect with button area */}
@@ -313,8 +332,7 @@ export const Dashboard: React.FC = () => {
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center z-10">
                   <Link
                     to={`/dashboard/editor/${latestProject.id}`}
-                    className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-base font-bold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
-                  >
+                    className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-base font-bold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
                     Resume Editing
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Link>
@@ -324,7 +342,9 @@ export const Dashboard: React.FC = () => {
 
             {/* Right: Key Metrics Column (35% width) */}
             <div className="lg:w-[35%] bg-gray-50/50 p-6 flex flex-col justify-between border-l border-white/50">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Current Status</h3>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
+                Current Status
+              </h3>
 
               <div className="space-y-3">
                 {/* Word Count */}
@@ -333,21 +353,35 @@ export const Dashboard: React.FC = () => {
                     <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
                       <FileSearch className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-700">Words</span>
+                    <span className="text-sm font-semibold text-gray-700">
+                      Words
+                    </span>
                   </div>
-                  <span className="font-bold text-gray-900">{latestProject.word_count || 0}</span>
+                  <span className="font-bold text-gray-900">
+                    {latestProject.word_count || 0}
+                  </span>
                 </div>
 
                 {/* Originality */}
-                <div className={`bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between ${!['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) ? 'opacity-90' : ''}`}>
+                <div
+                  className={`bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between ${!["premium", "plus"].some((p) => userPlan.toLowerCase().includes(p)) ? "opacity-90" : ""}`}>
                   <div className="flex items-center gap-3">
                     <div className="p-1.5 bg-green-50 text-green-600 rounded-lg">
                       <ShieldCheck className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-700">Originality</span>
+                    <span className="text-sm font-semibold text-gray-700">
+                      Originality
+                    </span>
                   </div>
-                  {['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) ? (
-                    <span className="font-bold text-green-600">{Math.round(latestProject.originality_scans?.[0]?.overallScore || 0)}%</span>
+                  {["premium", "plus"].some((p) =>
+                    userPlan.toLowerCase().includes(p),
+                  ) ? (
+                    <span className="font-bold text-green-600">
+                      {Math.round(
+                        latestProject.originality_scans?.[0]?.overallScore || 0,
+                      )}
+                      %
+                    </span>
                   ) : (
                     <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded flex items-center pointer-events-none">
                       <Lock className="w-2.5 h-2.5 mr-1" /> Premium
@@ -361,10 +395,16 @@ export const Dashboard: React.FC = () => {
                     <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                       <BookOpen className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-700">Citations</span>
+                    <span className="text-sm font-semibold text-gray-700">
+                      Citations
+                    </span>
                   </div>
-                  {['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) ? (
-                    <span className="font-bold text-gray-900 capitalize">{dashboardData.citationStatus || "-"}</span>
+                  {["premium", "plus"].some((p) =>
+                    userPlan.toLowerCase().includes(p),
+                  ) ? (
+                    <span className="font-bold text-gray-900 capitalize">
+                      {dashboardData.citationStatus || "-"}
+                    </span>
                   ) : (
                     <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded flex items-center pointer-events-none">
                       <Lock className="w-2.5 h-2.5 mr-1" /> Premium
@@ -378,10 +418,16 @@ export const Dashboard: React.FC = () => {
                     <div className="p-1.5 bg-purple-50 text-purple-600 rounded-lg">
                       <Award className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-700">Authorship</span>
+                    <span className="text-sm font-semibold text-gray-700">
+                      Authorship
+                    </span>
                   </div>
-                  {['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) ? (
-                    <span className="font-bold text-gray-900">{dashboardData.authorshipVerified ? "Verified" : "-"}</span>
+                  {["premium", "plus"].some((p) =>
+                    userPlan.toLowerCase().includes(p),
+                  ) ? (
+                    <span className="font-bold text-gray-900">
+                      {dashboardData.authorshipVerified ? "Verified" : "-"}
+                    </span>
                   ) : (
                     <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded flex items-center pointer-events-none">
                       <Lock className="w-2.5 h-2.5 mr-1" /> Premium
@@ -391,19 +437,19 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Upgrade Promo (Small) using empty space efficiently */}
-              {!['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) && (
+              {!["premium", "plus"].some((p) =>
+                userPlan.toLowerCase().includes(p),
+              ) && (
                 <div className="mt-4 pt-4 border-t border-gray-200/60">
                   <button
                     onClick={handleUpgradeClick}
-                    className="w-full py-2 bg-gradient-to-r from-gray-900 to-gray-800 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow hover:shadow-md transition-all flex items-center justify-center gap-2 group"
-                  >
+                    className="w-full py-2 bg-gradient-to-r from-gray-900 to-gray-800 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow hover:shadow-md transition-all flex items-center justify-center gap-2 group">
                     <Zap className="w-3.5 h-3.5 text-amber-400 group-hover:animate-pulse" />
                     Unlock All Insights
                   </button>
                 </div>
               )}
             </div>
-
           </div>
         </div>
       )}
@@ -421,8 +467,8 @@ export const Dashboard: React.FC = () => {
 
         <div className="relative">
           {/* Content wrapping for blur effect */}
-          <div className={`${!['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) ? "filter blur-sm select-none pointer-events-none opacity-60 transition-all duration-500" : ""}`}>
-
+          <div
+            className={`${!["premium", "plus"].some((p) => userPlan.toLowerCase().includes(p)) ? "filter blur-sm select-none pointer-events-none opacity-60 transition-all duration-500" : ""}`}>
             {/* Key Metrics Row - Redesigned Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {/* Originality Overview */}
@@ -433,15 +479,28 @@ export const Dashboard: React.FC = () => {
                   <div className="p-2 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100">
                     <ShieldCheck className="w-6 h-6" />
                   </div>
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Safety Score</span>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    Safety Score
+                  </span>
                 </div>
 
                 <div className="flex items-baseline mb-2">
-                  <span className="text-4xl font-extrabold text-gray-900 tracking-tight">{dashboardData.originalityScore ? Math.round(dashboardData.originalityScore) : 0}%</span>
-                  <span className="ml-2 text-sm font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">Safe</span>
+                  <span className="text-4xl font-extrabold text-gray-900 tracking-tight">
+                    {dashboardData.originalityScore
+                      ? Math.round(dashboardData.originalityScore)
+                      : 0}
+                    %
+                  </span>
+                  <span className="ml-2 text-sm font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
+                    Safe
+                  </span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2 overflow-hidden">
-                  <div className="bg-gradient-to-r from-indigo-500 to-blue-500 h-1.5 rounded-full shadow-lg" style={{ width: `${dashboardData.originalityScore || 0}%` }}></div>
+                  <div
+                    className="bg-gradient-to-r from-indigo-500 to-blue-500 h-1.5 rounded-full shadow-lg"
+                    style={{
+                      width: `${dashboardData.originalityScore || 0}%`,
+                    }}></div>
                 </div>
               </div>
 
@@ -453,17 +512,38 @@ export const Dashboard: React.FC = () => {
                   <div className="p-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-100">
                     <BookOpen className="w-6 h-6" />
                   </div>
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Citation Health</span>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    Citation Health
+                  </span>
                 </div>
 
                 <div className="flex items-baseline mb-2">
-                  <span className="text-3xl font-bold text-gray-900 capitalize">{dashboardData.citationStatus || "Pending"}</span>
+                  <span className="text-3xl font-bold text-gray-900 capitalize">
+                    {dashboardData.citationStatus || "Pending"}
+                  </span>
                 </div>
                 <div className="flex items-center mt-3 space-x-2">
                   <div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                    <div className={`h-1.5 rounded-full shadow-sm ${dashboardData.citationStatus === 'strong' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`} style={{ width: dashboardData.citationStatus === 'strong' ? '85%' : dashboardData.citationStatus === 'good' ? '70%' : '40%' }}></div>
+                    <div
+                      className={`h-1.5 rounded-full shadow-sm ${dashboardData.citationStatus === "strong" ? "bg-gradient-to-r from-green-500 to-emerald-500" : "bg-gradient-to-r from-amber-500 to-orange-500"}`}
+                      style={{
+                        width:
+                          dashboardData.citationStatus === "strong"
+                            ? "85%"
+                            : dashboardData.citationStatus === "good"
+                              ? "70%"
+                              : "40%",
+                      }}></div>
                   </div>
-                  <span className="text-xs font-bold text-gray-500">{dashboardData.citationStatus === 'strong' ? '85/100' : dashboardData.citationStatus === 'good' ? '70/100' : dashboardData.citationStatus ? '40/100' : '0/100'}</span>
+                  <span className="text-xs font-bold text-gray-500">
+                    {dashboardData.citationStatus === "strong"
+                      ? "85/100"
+                      : dashboardData.citationStatus === "good"
+                        ? "70/100"
+                        : dashboardData.citationStatus
+                          ? "40/100"
+                          : "0/100"}
+                  </span>
                 </div>
               </div>
 
@@ -475,16 +555,25 @@ export const Dashboard: React.FC = () => {
                   <div className="p-2 bg-purple-50 text-purple-700 rounded-lg border border-purple-100">
                     <Award className="w-6 h-6" />
                   </div>
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Authorship</span>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    Authorship
+                  </span>
                 </div>
 
                 <div className="flex items-center mt-1 mb-2">
-                  <CheckCircle className={`w-6 h-6 ${dashboardData.authorshipVerified ? 'text-green-500' : 'text-gray-300'} mr-2 fill-green-50`} />
-                  <span className="text-2xl font-bold text-gray-900">{dashboardData.authorshipVerified ? "Verified" : "Pending"}</span>
+                  <CheckCircle
+                    className={`w-6 h-6 ${dashboardData.authorshipVerified ? "text-green-500" : "text-gray-300"} mr-2 fill-green-50`}
+                  />
+                  <span className="text-2xl font-bold text-gray-900">
+                    {dashboardData.authorshipVerified ? "Verified" : "Pending"}
+                  </span>
                 </div>
                 <p className="text-xs font-medium text-gray-500 mt-2 flex items-center bg-gray-50 py-1 px-2 rounded-lg inline-block">
-                  <span className={`w-1.5 h-1.5 ${dashboardData.authorshipVerified ? 'bg-green-500' : 'bg-gray-400'} rounded-full mr-2`}></span>
-                  {dashboardData.authorshipVerified ? "Certificate Active" : "No Certificate"}
+                  <span
+                    className={`w-1.5 h-1.5 ${dashboardData.authorshipVerified ? "bg-green-500" : "bg-gray-400"} rounded-full mr-2`}></span>
+                  {dashboardData.authorshipVerified
+                    ? "Certificate Active"
+                    : "No Certificate"}
                 </p>
               </div>
             </div>
@@ -511,42 +600,54 @@ export const Dashboard: React.FC = () => {
                     <BarChart
                       data={dashboardData.trendData || []}
                       margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                      barSize={40}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+                      barSize={40}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="#F3F4F6"
+                      />
                       <XAxis
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 12, fontWeight: 500 }}
+                        tick={{
+                          fill: "#9CA3AF",
+                          fontSize: 12,
+                          fontWeight: 500,
+                        }}
                         dy={10}
                       />
                       <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
+                        tick={{ fill: "#9CA3AF", fontSize: 12 }}
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#1F2937',
-                          borderRadius: '8px',
-                          border: 'none',
-                          color: '#fff',
-                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                          backgroundColor: "#1F2937",
+                          borderRadius: "8px",
+                          border: "none",
+                          color: "#fff",
+                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
                         }}
-                        itemStyle={{ color: '#E5E7EB' }}
-                        cursor={{ fill: '#F9FAFB' }}
+                        itemStyle={{ color: "#E5E7EB" }}
+                        cursor={{ fill: "#F9FAFB" }}
                       />
                       <Bar
                         dataKey="documents"
                         name="Documents"
-                        radius={[4, 4, 0, 0]}
-                      >
-                        {
-                          (dashboardData.trendData || []).map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={index === (dashboardData.trendData || []).length - 1 ? '#4F46E5' : '#C7D2FE'} />
-                          ))
-                        }
+                        radius={[4, 4, 0, 0]}>
+                        {(dashboardData.trendData || []).map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={
+                              index ===
+                              (dashboardData.trendData || []).length - 1
+                                ? "#4F46E5"
+                                : "#C7D2FE"
+                            }
+                          />
+                        ))}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -566,8 +667,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <Link
                     to="/dashboard/analytics"
-                    className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center"
-                  >
+                    className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center">
                     View All
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </Link>
@@ -580,49 +680,73 @@ export const Dashboard: React.FC = () => {
                         <th className="px-6 py-3 font-semibold">Document</th>
                         <th className="px-6 py-3 font-semibold">Due Date</th>
                         <th className="px-6 py-3 font-semibold">Progress</th>
-                        <th className="px-6 py-3 font-semibold text-right">Status</th>
+                        <th className="px-6 py-3 font-semibold text-right">
+                          Status
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                      {dashboardData.upcomingDeadlines && dashboardData.upcomingDeadlines.length > 0 && dashboardData.upcomingDeadlines.map((doc: any, i) => {
-                        const dueDate = doc.due_date ? new Date(doc.due_date) : null;
-                        const isDueSoon = dueDate && (dueDate.getTime() - Date.now() < 172800000); // 2 days
-                        // Mock progress
-                        const progress = Math.min(100, Math.floor(((doc.word_count || 0) + (i * 200)) / 15));
+                      {dashboardData.upcomingDeadlines &&
+                        dashboardData.upcomingDeadlines.length > 0 &&
+                        dashboardData.upcomingDeadlines.map((doc: any, i) => {
+                          const dueDate = doc.due_date
+                            ? new Date(doc.due_date)
+                            : null;
+                          const isDueSoon =
+                            dueDate &&
+                            dueDate.getTime() - Date.now() < 172800000; // 2 days
+                          // Mock progress
+                          const progress = Math.min(
+                            100,
+                            Math.floor(((doc.word_count || 0) + i * 200) / 15),
+                          );
 
-                        return (
-                          <tr key={i} className="group hover:bg-gray-50/80 transition-colors">
-                            <td className="px-6 py-4 font-medium text-gray-900 truncate max-w-[140px]">
-                              {doc.title}
-                            </td>
-                            <td className="px-6 py-4 text-gray-500 font-medium">
-                              {dueDate ? dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : "--"}
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-24 bg-gray-100 rounded-full h-2 overflow-hidden">
-                                  <div className={`h-2 rounded-full transition-all duration-500 ${progress >= 100 ? 'bg-green-500' : 'bg-indigo-500'}`} style={{ width: `${progress}%` }}></div>
+                          return (
+                            <tr
+                              key={i}
+                              className="group hover:bg-gray-50/80 transition-colors">
+                              <td className="px-6 py-4 font-medium text-gray-900 truncate max-w-[140px]">
+                                {doc.title}
+                              </td>
+                              <td className="px-6 py-4 text-gray-500 font-medium">
+                                {dueDate
+                                  ? dueDate.toLocaleDateString(undefined, {
+                                      month: "short",
+                                      day: "numeric",
+                                    })
+                                  : "--"}
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-24 bg-gray-100 rounded-full h-2 overflow-hidden">
+                                    <div
+                                      className={`h-2 rounded-full transition-all duration-500 ${progress >= 100 ? "bg-green-500" : "bg-indigo-500"}`}
+                                      style={{ width: `${progress}%` }}></div>
+                                  </div>
+                                  <span className="text-xs font-semibold text-gray-400">
+                                    {progress}%
+                                  </span>
                                 </div>
-                                <span className="text-xs font-semibold text-gray-400">{progress}%</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${isDueSoon ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`}>
-                                {isDueSoon ? "Urgent" : "On Track"}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {
-                        (!dashboardData.upcomingDeadlines || dashboardData.upcomingDeadlines.length === 0) && (
-                          <tr>
-                            <td colSpan={4} className="px-6 py-8 text-center text-gray-400 italic">
-                              No active deadlines.
-                            </td>
-                          </tr>
-                        )
-                      }
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <span
+                                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${isDueSoon ? "bg-red-50 text-red-600 border border-red-100" : "bg-green-50 text-green-600 border border-green-100"}`}>
+                                  {isDueSoon ? "Urgent" : "On Track"}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      {(!dashboardData.upcomingDeadlines ||
+                        dashboardData.upcomingDeadlines.length === 0) && (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className="px-6 py-8 text-center text-gray-400 italic">
+                            No active deadlines.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -631,7 +755,9 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Premium Overlay */}
-          {!['researcher', 'student'].some(p => userPlan.toLowerCase().includes(p)) && (
+          {!["premium", "plus"].some((p) =>
+            userPlan.toLowerCase().includes(p),
+          ) && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4">
               {/* Simplified Overlay - No Box */}
               <div className="text-center">
@@ -639,22 +765,29 @@ export const Dashboard: React.FC = () => {
                   <Lock className="w-8 h-8 text-indigo-600" />
                 </div>
                 <h3 className="text-3xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">
-                  {userPlan?.includes("student") ? "Upgrade to Researcher" : "Unlock Advanced Analytics"}
+                  {userPlan?.includes("plus")
+                    ? "Upgrade to Premium"
+                    : "Unlock Advanced Analytics"}
                 </h3>
                 <p className="text-gray-700 font-medium mb-8 max-w-md mx-auto drop-shadow-sm">
-                  {userPlan?.includes("student")
+                  {userPlan?.includes("plus")
                     ? "Get enhanced analytics, unlimited scans, and priority processing."
                     : "Get full visibility into your Originality, Citation Health, and Authorship Verification status."}
                 </p>
                 <button
                   onClick={handleUpgradeClick}
-                  className="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold text-base rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center mx-auto transform hover:-translate-y-0.5"
-                >
-                  <span>{userPlan?.includes("student") ? "Upgrade to Researcher" : "Unlock Premium Features"}</span>
+                  className="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold text-base rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center mx-auto transform hover:-translate-y-0.5">
+                  <span>
+                    {userPlan?.includes("plus")
+                      ? "Upgrade to Premium"
+                      : "Unlock Premium Features"}
+                  </span>
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </button>
                 <p className="text-sm text-gray-600 font-semibold mt-4 bg-white/60 inline-block px-3 py-1 rounded-full backdrop-blur-sm">
-                  {userPlan?.includes("student") ? "Starting at $12/mo" : "Starting at $4.99/mo"}
+                  {userPlan?.includes("plus")
+                    ? "Starting at $12/mo"
+                    : "Starting at $5.99/mo"}
                 </p>
               </div>
             </div>

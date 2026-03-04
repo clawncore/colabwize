@@ -239,7 +239,7 @@ const AIResearchAssistant: React.FC<AIResearchAssistantProps> = ({
     // Check if user has access
     if (!hasAccess) {
       setError(
-        "Research Assistant is only available for Student Pro and Researcher plans. Please upgrade to access this feature.",
+        "Research Assistant is only available for Plus and Premium plans. Please upgrade to access this feature.",
       );
       return;
     }

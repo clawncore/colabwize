@@ -11,8 +11,8 @@ interface BillingContextType {
   error: string | null;
   refreshSubscription: () => Promise<void>;
   isFreeUser: boolean;
-  isStudentUser: boolean;
-  isResearcherUser: boolean;
+  isPlusUser: boolean;
+  isPremiumUser: boolean;
 }
 
 const BillingContext = createContext<BillingContextType | undefined>(undefined);
@@ -106,8 +106,8 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const planId = getPlanId(subscription);
   const isFreeUser = planId === "free";
-  const isStudentUser = planId === "student";
-  const isResearcherUser = planId === "researcher";
+  const isPlusUser = planId === "plus";
+  const isPremiumUser = planId === "premium";
 
   return (
     <BillingContext.Provider
@@ -117,10 +117,9 @@ export const BillingProvider: React.FC<{ children: React.ReactNode }> = ({
         error,
         refreshSubscription,
         isFreeUser,
-        isStudentUser,
-        isResearcherUser,
-      }}
-    >
+        isPlusUser,
+        isPremiumUser,
+      }}>
       {children}
     </BillingContext.Provider>
   );

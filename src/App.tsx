@@ -64,6 +64,7 @@ import CreditsPage from "./pages/dashboard/CreditsPage";
 import BillingDashboard from "./components/billing/BillingDashboard";
 import { DocumentAnalyticsPage } from "./components/dashboard/DocumentAnalyticsPage";
 import PdfUploadPage from "./components/pdf-chat/page";
+import PdfChatViewerPage from "./components/pdf-chat/[pdfId]/page";
 
 // Add imports for new settings pages
 import ProfileSettingsPage from "./components/settings/Profile";
@@ -288,6 +289,10 @@ function App() {
                         element={<BillingDashboard />}
                       />
                       <Route path="pdf-upload" element={<PdfUploadPage />} />
+                      <Route
+                        path="pdf-chat/:pdfId"
+                        element={<PdfChatViewerPage />}
+                      />
                       <Route path="billing/credits" element={<CreditsPage />} />
                       <Route
                         path="analytics"

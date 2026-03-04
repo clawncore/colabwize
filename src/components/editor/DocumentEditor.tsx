@@ -18,6 +18,7 @@ import { PricingTableExtension } from "../../extensions/PricingTableExtension";
 import { SectionExtension } from "../../extensions/SectionExtension";
 import { VisualElementExtension } from "../../extensions/VisualElementExtension";
 import { ColumnLayoutExtension } from "../../extensions/ColumnLayoutExtension";
+import { AuthorshipExtension } from "../../extensions/AuthorshipExtension";
 import { ImageExtension } from "../../extensions/AdvancedImageExtension";
 import { AITrackingExtension } from "../../extensions/AITrackingExtension";
 import { PlaceholderMarkExtension } from "../../extensions/PlaceholderMarkExtension";
@@ -88,6 +89,7 @@ import {
   PenTool,
   Loader2,
   History,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -113,6 +115,7 @@ interface DocumentEditorProps {
   isFocusMode?: boolean;
   onToggleFocusMode?: () => void;
   isCollaborative?: boolean;
+  isReadOnly?: boolean;
 }
 
 export const DocumentEditor: React.FC<DocumentEditorProps> = ({
@@ -124,6 +127,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   isFocusMode = false,
   onToggleFocusMode,
   isCollaborative = false,
+  isReadOnly = false,
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -143,15 +147,37 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const isSyncedRef = useRef(false);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // --- FIX 3: Stable cursor color - generated once per component mount ---
-  const cursorColor = useMemo(
-    () =>
-      "#" +
-      Math.floor(Math.random() * 16777215)
+  const hslToHex = (h: number, s: number, l: number) => {
+    l /= 100;
+    const a = (s * Math.min(l, 1 - l)) / 100;
+    const f = (n: number) => {
+      const k = (n + h / 30) % 12;
+      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(255 * color)
         .toString(16)
-        .padStart(6, "0"),
-    [], // Empty deps: only runs once on mount
-  );
+        .padStart(2, "0");
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+  };
+
+  const cursorColor = useMemo(() => {
+    if (!user?.id)
+      return (
+        "#" +
+        Math.floor(Math.random() * 16777215)
+          .toString(16)
+          .padStart(6, "0")
+      );
+
+    // Hash the user ID to a color
+    let hash = 0;
+    for (let i = 0; i < user.id.length; i++) {
+      hash = user.id.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const h = Math.abs(hash) % 360;
+    return hslToHex(h, 70, 50);
+  }, [user?.id]);
 
   // Handle Hocuspocus Lifecycle
   useEffect(() => {
@@ -436,29 +462,30 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const editor = useEditor(
     {
       immediatelyRender: false, // Defer view creation until EditorContent mounts the DOM
+      editable: !isReadOnly, // Lock editor for viewer-role collaborators
       extensions: [
         StarterKit.configure({
           history: !isCollaborative, // Disable history in collab mode (handled by Yjs)
         } as any),
         ...(isCollaborative &&
-          collabReady &&
-          providerRef.current &&
-          ydocRef.current
+        collabReady &&
+        providerRef.current &&
+        ydocRef.current
           ? [
-            Collaboration.configure({
-              document: ydocRef.current, // Bind directly to the stable Y.Doc (ref)
-            }),
-            CollaborationCursor.configure({
-              provider: providerRef.current, // Bind directly to the Hocuspocus provider (ref)
-              user: {
-                name:
-                  user?.user_metadata?.full_name ||
-                  user?.email ||
-                  "Anonymous",
-                color: cursorColor,
-              },
-            }),
-          ]
+              Collaboration.configure({
+                document: ydocRef.current, // Bind directly to the stable Y.Doc (ref)
+              }),
+              CollaborationCursor.configure({
+                provider: providerRef.current, // Bind directly to the Hocuspocus provider (ref)
+                user: {
+                  name:
+                    user?.user_metadata?.full_name ||
+                    user?.email ||
+                    "Anonymous",
+                  color: cursorColor,
+                },
+              }),
+            ]
           : []),
         HighlightExtension,
         CharacterCount,
@@ -484,6 +511,13 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         CalloutBlockExtension,
         CoverPageExtension,
         CustomCodeBlockExtension,
+        AuthorshipExtension.configure({
+          user: {
+            id: user?.id,
+            name: user?.user_metadata?.full_name || user?.email || "Anonymous",
+            color: cursorColor,
+          },
+        } as any),
         EnhancedFigureNode, // Replaces FigureExtension with auto-numbering
         KeywordsExtension,
         AITrackingExtension, // Add Custom AI Tracking Extension
@@ -498,14 +532,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         CitationNode,
         BibliographyEntry,
         CitationLifecycleExtension,
-        Link.configure({
-          openOnClick: true,
-          autolink: true,
-          linkOnPaste: true,
-          HTMLAttributes: {
-            class: 'text-blue-600 underline', // Clickable and underlined globally
-          }
-        }),
         AutoNumbering, // Enable automatic figure and table numbering
         GrammarExtension, // AI Grammar Checker
       ],
@@ -522,7 +548,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         ) {
           return;
         }
-
 
         // Increment edit count when content changes
         setEditCount((prev) => prev + 1);
@@ -605,6 +630,18 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     // per project with the Y.Doc already containing server content. No duplication.
     [project.id, isCollaborative, collabReady],
   );
+
+  // --- Sync read-only state reactively ---
+  // `editable` in useEditor options only applies at creation time.
+  // Since `isReadOnly` is derived from async permissions, we must call
+  // `setEditable` once permissions resolve so the editor reflects the true state.
+  useEffect(() => {
+    if (!editor) return;
+    const shouldBeEditable = !isReadOnly;
+    if (editor.isEditable !== shouldBeEditable) {
+      editor.setEditable(shouldBeEditable);
+    }
+  }, [editor, isReadOnly]);
 
   // --- Detect when EditorContent has mounted the editor view into the DOM ---
   // We can't use `onCreate` (fires in the Editor constructor before EditorContent renders).
@@ -719,13 +756,16 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       isSynced &&
       !hasInitializedContentRef.current
     ) {
-      console.log("[Collab] Initial Sync Complete, triggering normalization...");
+      console.log(
+        "[Collab] Initial Sync Complete, triggering normalization...",
+      );
       hasInitializedContentRef.current = true;
       currentProjectIdRef.current = project.id;
 
       const initCollabRegistry = async () => {
         try {
-          const { CitationRegistryService } = await import("../../services/CitationRegistryService");
+          const { CitationRegistryService } =
+            await import("../../services/CitationRegistryService");
           await CitationRegistryService.initializeFromBackend(project.id);
           (window as any).__currentProjectId__ = project.id;
 
@@ -738,8 +778,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       initCollabRegistry();
     }
   }, [isCollaborative, editor, isSynced, project.id, project.citations]);
-
-
 
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -754,8 +792,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       editor.setEditable(!isPreviewMode);
     }
   }, [editor, isPreviewMode, isEditorMounted]);
-
-
 
   // --- Background Grammar Check (Debounced) ---
   useEffect(() => {
@@ -854,7 +890,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) { } // Dispatch clear
+          } catch (e) {} // Dispatch clear
           console.log("âœ… No grammar issues in block.");
           return;
         }
@@ -892,7 +928,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (matchCount > 0 || errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) { }
+          } catch (e) {}
           console.log(`âœ… Applied ${matchCount} grammar highlights to block.`);
         }
       } catch (error) {
@@ -1298,6 +1334,28 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       />
       <div
         className={`flex flex-col h-full bg-white transition-all duration-500 ${isFocusMode ? "fixed inset-0 z-[100] p-0" : ""}`}>
+        {/* View-Only Banner */}
+        {isReadOnly && (
+          <div className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs font-medium flex-shrink-0">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-3.5 h-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span>
+              You have <strong>view-only</strong> access to this document.
+              Contact an admin to request editing permissions.
+            </span>
+          </div>
+        )}
+
         <UpgradeModal
           isOpen={showUpgradeModal}
           onClose={() => setShowUpgradeModal(false)}
@@ -1305,6 +1363,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           title="Premium Feature"
           message="Draft Comparison is available on paid plans. Upgrade to unlock accurate version comparison."
         />
+
         {/* Editor Header - Hidden in Focus Mode */}
         {!isFocusMode && (
           <div className="border-b border-gray-200 p-4 bg-white z-10 flex-shrink-0">
@@ -1319,6 +1378,44 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 />
               </div>
               <div className="flex items-center space-x-2 flex-wrap">
+                <button
+                  onClick={() => setIsPreviewMode(!isPreviewMode)}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isPreviewMode
+                      ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                  title={
+                    isPreviewMode
+                      ? "Switch to Edit Mode"
+                      : "Switch to Preview Mode"
+                  }>
+                  {isPreviewMode ? (
+                    <PenTool className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                  {isPreviewMode ? "Edit" : "Preview"}
+                </button>
+
+                <button
+                  onClick={onToggleFocusMode}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isFocusMode
+                      ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                  title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
+                  {isFocusMode ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {isFocusMode ? "Exit" : "Focus"}
+                  </span>
+                </button>
+
                 {isCollaborative && (
                   <Button
                     variant="outline"
@@ -1369,12 +1466,17 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                     <span className="font-bold text-xs">History</span>
                   </Button>
                 )}
-                <button
-                  className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
-                  onClick={() => setIsExportWorkflowOpen(true)}>
-                  <Download className="w-4 h-4" />
-                  Export
-                </button>
+
+                {/* Team Chat Button */}
+                {isCollaborative && onOpenPanel && (
+                  <button
+                    onClick={() => onOpenPanel("team-chat")}
+                    className="p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                    title="Open Team Chat">
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="hidden sm:inline">Chat</span>
+                  </button>
+                )}
 
                 <Button
                   variant="outline"
@@ -1389,42 +1491,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                     </span>
                   </div>
                 </Button>
-
-                <button
-                  onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
-                    ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  title={
-                    isPreviewMode
-                      ? "Switch to Edit Mode"
-                      : "Switch to Preview Mode"
-                  }>
-                  {isPreviewMode ? (
-                    <PenTool className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                  {isPreviewMode ? "Edit" : "Preview"}
-                </button>
-
-                <button
-                  onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
-                    ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
-                  {isFocusMode ? (
-                    <Minimize2 className="w-4 h-4" />
-                  ) : (
-                    <Maximize2 className="w-4 h-4" />
-                  )}
-                  <span className="hidden sm:inline">
-                    {isFocusMode ? "Exit" : "Focus"}
-                  </span>
-                </button>
 
                 {/* Originality Scan Pipeline (Plagiarism Detection) */}
                 <button
@@ -1441,22 +1507,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   <Eraser className="w-4 h-4" />
                 </button>
 
-                {/* Originality Scan Pipeline (Plagiarism Detection) */}
-                <OriginalityMapAdapter
-                  projectId={project.id}
-                  editor={editor}
-                  onScanComplete={(results) => {
-                    if (onOpenPanel) {
-                      onOpenPanel("originality-results", results);
-                    }
-                  }}
-                />
-
                 <button
-                  onClick={handleCompareClick}
-                  className="p-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
-                  title="Compare with Previous">
-                  <GitCompare className="w-4 h-4" />
+                  className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
+                  onClick={() => setIsExportWorkflowOpen(true)}>
+                  <Download className="w-4 h-4" />
+                  Export
                 </button>
 
                 {lastScanResult?.realityCheck && (
@@ -1522,16 +1577,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           </div>
         )}
 
-        {/* Editor Toolbar - Hidden in Focus Mode */}
-        {!isFocusMode && isEditorMounted && <EditorToolbar editor={editor} />}
+        {/* Editor Toolbar - Hidden in Focus Mode and read-only mode */}
+        {!isFocusMode && isEditorMounted && !isReadOnly && (
+          <EditorToolbar editor={editor} />
+        )}
 
         {/* Editor Content & Sidebar Container */}
         <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
             {/* Main Editor Area */}
             <div
-              className={`flex-1 overflow-auto transition-all duration-500 cursor-text ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}
+              className={`flex-1 overflow-auto transition-all duration-500 ${isReadOnly ? "cursor-default" : "cursor-text"} ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}
               onClick={(e) => {
+                // Skip focus-on-click for read-only viewers
+                if (isReadOnly) return;
                 // When clicking the empty space around the editor (not the content itself),
                 // focus the editor at the end so the user can start typing immediately
                 if (editor && !editor.isDestroyed && isViewReady(editor)) {
@@ -1546,10 +1605,18 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 }
               }}>
               {editor && isEditorMounted && <TableBubbleMenu editor={editor} />}
-              <EditorContent
-                editor={editor}
-                className={`${isFocusMode ? "max-w-[900px]" : "max-w-[816px]"} mx-auto prose prose-lg min-h-full focus:outline-none p-8 bg-white rounded-lg shadow-sm`}
-              />
+              {/* CSS-level read-only enforcement — bulletproof regardless of Tiptap editable state */}
+              <div
+                style={
+                  isReadOnly
+                    ? { pointerEvents: "none", userSelect: "none" }
+                    : undefined
+                }>
+                <EditorContent
+                  editor={editor}
+                  className={`${isFocusMode ? "max-w-[900px]" : "max-w-[816px]"} mx-auto prose prose-lg min-h-full focus:outline-none p-8 bg-white rounded-lg shadow-sm`}
+                />
+              </div>
               {/* Behavioral Tracker */}
               {isEditorMounted && (
                 <BehavioralTracker
@@ -1621,6 +1688,25 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               title="Find Missing Citations">
               <BookOpen className="w-4 h-4" />
               Find Papers
+            </button>
+
+            {/* Originality Scan Pipeline (Plagiarism Detection) */}
+            <OriginalityMapAdapter
+              projectId={project.id}
+              editor={editor}
+              onScanComplete={(results) => {
+                if (onOpenPanel) {
+                  onOpenPanel("originality-results", results);
+                }
+              }}
+            />
+
+            <button
+              onClick={handleCompareClick}
+              className="p-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+              title="Compare with Previous">
+              <GitCompare className="w-4 h-4" />
+              Compare
             </button>
 
             <AuthorshipCertificateAdapter

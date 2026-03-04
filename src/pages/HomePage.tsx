@@ -390,18 +390,6 @@ function FeaturesGrid() {
 
   const features = [
     {
-      id: "real-time-collaboration",
-      icon: Users,
-      title: "Real-Time Collaboration",
-      description:
-        "Write together seamlessly. Edit continuously with peers and experience conflict-free live co-authoring.",
-      image:
-        "https://image2url.com/r2/default/images/1772350833155-2a078749-5ed1-4b43-9b87-12532fe0d025.png?w=800&q=80",
-      iconColor: "text-indigo-600",
-      iconBg: "bg-indigo-100",
-      previewBg: "bg-indigo-50",
-    },
-    {
       id: "team-workspaces",
       icon: LayoutDashboard,
       title: "Unified Team Workspaces",
@@ -412,6 +400,18 @@ function FeaturesGrid() {
       iconColor: "text-rose-600",
       iconBg: "bg-rose-100",
       previewBg: "bg-rose-50",
+    },
+    {
+      id: "real-time-collaboration",
+      icon: Users,
+      title: "Real-Time Collaboration",
+      description:
+        "Write together seamlessly. Edit continuously with peers and experience conflict-free live co-authoring.",
+      image:
+        "https://image2url.com/r2/default/images/1772350833155-2a078749-5ed1-4b43-9b87-12532fe0d025.png?w=800&q=80",
+      iconColor: "text-indigo-600",
+      iconBg: "bg-indigo-100",
+      previewBg: "bg-indigo-50",
     },
     {
       id: "chat-with-pdf",

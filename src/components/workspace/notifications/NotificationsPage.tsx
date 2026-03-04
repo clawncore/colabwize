@@ -2,14 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useWorkspacePermissions } from "../../../hooks/useWorkspacePermissions";
 import {
   Bell,
   Check,
   Search,
-  Filter,
   Trash2,
   Clock as Snooze,
-  Archive,
   MessageSquare,
   FileText,
   Users,
@@ -17,7 +16,7 @@ import {
   CreditCard,
   AlertCircle,
   CheckCircle,
-  Info,
+  Settings2Icon,
   MoreHorizontal,
 } from "lucide-react";
 import NotificationService, {
@@ -33,10 +32,12 @@ import {
 } from "../../ui/dropdown-menu";
 import { Badge } from "../../ui/badge";
 import { Skeleton } from "../../ui/skeleton";
+import NotificationMessage from "../../notifications/NotificationMessage";
 
 const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
   const { id: workspaceId } = useParams<{ id?: string }>();
+  const { isAdmin } = useWorkspacePermissions(workspaceId);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -246,21 +247,24 @@ const NotificationsPage: React.FC = () => {
             onClick={() => setIsSearchVisible(!isSearchVisible)}>
             <Search className="h-4 w-4" />
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (workspaceId) {
-                navigate(
-                  `/dashboard/admin/${workspaceId}/notifications?tab=notifications`,
-                );
-              } else {
-                navigate(`/dashboard/settings/notifications`);
-              }
-            }}
-            className="text-slate-600 border-slate-200">
-            Settings
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (workspaceId) {
+                  navigate(
+                    `/dashboard/admin/${workspaceId}/notifications?tab=notifications`,
+                  );
+                } else {
+                  navigate(`/dashboard/settings/notifications`);
+                }
+              }}
+              className="text-slate-600 border-slate-200">
+              <Settings2Icon className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+          )}
         </div>
       </div>
 
@@ -376,18 +380,15 @@ const NotificationsPage: React.FC = () => {
                       {notification.title}
                     </h4>
                     <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap ml-2">
-                      {new Date(notification.created_at).toLocaleTimeString(
-                        [],
-                        { hour: "2-digit", minute: "2-digit" },
-                      )}
+                      {formatDate(notification.created_at)}
                     </span>
                   </div>
-                  <p
+                  <NotificationMessage
+                    notification={notification}
                     className={`text-sm leading-relaxed line-clamp-2 ${
                       !notification.read ? "text-slate-600" : "text-slate-500"
-                    }`}>
-                    {notification.message}
-                  </p>
+                    }`}
+                  />
                   <div className="flex items-center mt-2.5 space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     {!notification.read && (
                       <button
