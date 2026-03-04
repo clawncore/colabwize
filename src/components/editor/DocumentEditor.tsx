@@ -781,6 +781,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }
   }, [isCollaborative, editor, isSynced, project.id, project.citations]);
 
+  // --- Background Normalization (Debounced Loop) ---
+  // Periodically scans for new plain text citations to convert them to pills
+  useEffect(() => {
+    if (!editor || !isEditorMounted || !isViewReady(editor)) return;
+    if (editCount === 0) return; // Wait for first user edit
+
+    const timer = setTimeout(async () => {
+      console.log("ðŸ“  Running debounced normalization (post-edit)...");
+      await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+    }, 4500); // 4.5s debounce: long enough to not be annoying while typing
+
+    return () => clearTimeout(timer);
+  }, [editor, editCount, isEditorMounted, project.id, project.citations]);
+
 
 
   // --- Preview Mode (Read-Only) ---
