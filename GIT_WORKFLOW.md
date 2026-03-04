@@ -1,52 +1,29 @@
-# Team Git Workflow Guide
+# Team Git Workflow Guide (Multi-Repo)
 
-Follow this guide to avoid "Merge Conflicts" and broken code.
+Follow this guide to manage both **Frontend (Root)** and **Backend** repositories simultaneously.
 
-## 1. For the "Main" Person (Project Owner)
-Your job is to bring everyone's work together into the `main` branch.
+## 1. Integrator (Project Owner)
 
-### Morning Routine:
-```bash
-git pull origin main
-```
+Your job is to bring everyone's work together into the `main` branches.
 
-### When a Collaborator finishes their work:
-1.  **Get their branch**: `git fetch origin`
-2.  **Merge their work**:
-    ```bash
-    git checkout main
-    git merge craig-update
-    ```
-3.  **Fix errors**: If Git shows conflict markers (`<<<<`), fix the code in the editor, then:
-    ```bash
-    git add .
-    git commit -m "Merge Craig's work"
-    git push origin main
-    ```
+- **Alt + M**: **Merge Craig's Work**
+  - Checks out `main`, pulls latest, and merges `craig-update` in both repos.
+- **Alt + Shift + P**: **Push to Main**
+  - Pushes the local `main` branches to GitHub for both repos.
 
 ---
 
-## 2. For the "Collaborator" (Craig)
+## 2. Collaborator (Craig)
+
 Your job is to work in your own branch and keep it updated.
 
-### Morning Routine (Get the latest from Main):
-If the "Main" person updated the project, you need those changes on **your** branch.
-```bash
-git checkout craig-update
-git pull origin main           # This pulls the latest Main into YOUR branch
-```
+- **Alt + P**: **Push Share**
+  - Saves all work and pushes to your `craig-update` branch in both repos.
+- **Alt + T**: **Take Sync**
+  - Pulls the absolute latest code from the team (Main) into your branches.
 
-### Before you Push:
-Always make sure your code is updated with the latest from the team.
-```bash
-git pull origin main
-# (Fix any conflicts that appear in your editor)
-git add .
-git commit -m "My update"
-git push origin craig-update
-```
+## The Golden Rules
 
-## 3. The Golden Rules
-1.  **Pull every day.**
-2.  **Never Push broken code.** If you see red error markers in your editor, fix them BEFORE you push.
-3.  **Talk to your team.** If you are going to edit `DocumentEditor.tsx`, tell others so they don't edit it at the same time.
+1. **Pull every day.**
+2. **Never push broken code.** Check for red errors before hitting `Alt + P`.
+3. **Switching Folders**: The tasks use `Set-Location backend` which specifically targets the nested backend folder. Never rename this folder without updating `tasks.json`.

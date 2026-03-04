@@ -18,17 +18,22 @@ try {
     {
       key: "alt+p",
       command: "workbench.action.tasks.runTask",
-      args: "Push Share (Craig)",
+      args: "Push Share (Craig Only)",
     },
     {
-      key: "alt+s",
+      key: "alt+t",
       command: "workbench.action.tasks.runTask",
-      args: "Take Sync (Both)",
+      args: "Take Sync (Craig Only)",
     },
     {
       key: "alt+m",
       command: "workbench.action.tasks.runTask",
-      args: "Sum All Work (Merge Craig)",
+      args: "Merge Craig's Work",
+    },
+    {
+      key: "alt+shift+p",
+      command: "workbench.action.tasks.runTask",
+      args: "Push to Main",
     },
   ];
 
