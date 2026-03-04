@@ -1,4 +1,5 @@
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Node, mergeAttributes } from '@tiptap/core';
 export interface BibliographyEntryOptions {
     HTMLAttributes: Record<string, any>;
@@ -77,6 +78,46 @@ export const BibliographyEntry = Node.create<BibliographyEntryOptions>({
         ];
     },
 
-    // Removed ProseMirror plugins to strip hyperlink clickability from bibliography entries as requested
-});
+    addProseMirrorPlugins() {
+        return [
+            new Plugin({
+                key: new PluginKey('bibliography-url-highlight'),
+                props: {
+                    decorations(state) {
+                        const decorations: Decoration[] = [];
+                        const urlRegex = /https?:\/\/[^\s]+/g;
 
+                        state.doc.descendants((node, pos) => {
+                            if (node.type.name !== 'bibliographyEntry') return true;
+
+                            // Scan all text nodes inside this bibliographyEntry
+                            node.descendants((child, childPos) => {
+                                if (!child.isText || !child.text) return;
+
+                                const text = child.text;
+                                let match: RegExpExecArray | null;
+                                urlRegex.lastIndex = 0;
+
+                                while ((match = urlRegex.exec(text)) !== null) {
+                                    const from = pos + 1 + childPos + match.index;
+                                    const to = from + match[0].length;
+                                    const url = match[0];
+
+                                    decorations.push(
+                                        Decoration.inline(from, to, {
+                                            class: 'bibliography-url-link',
+                                            'data-url': url,
+                                            style: 'color: #2563eb; text-decoration: underline; cursor: pointer;',
+                                        })
+                                    );
+                                }
+                            });
+                        });
+
+                        return DecorationSet.create(state.doc, decorations);
+                    },
+                },
+            }),
+        ];
+    },
+});
