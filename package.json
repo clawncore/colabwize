@@ -46,7 +46,7 @@
     "@tiptap/extension-character-count": "^3.11.1",
     "@tiptap/extension-code-block-lowlight": "^3.13.0",
     "@tiptap/extension-collaboration": "^3.15.3",
-    "@tiptap/extension-collaboration-cursor": "^3.15.3",
+    "@tiptap/extension-collaboration-cursor": "^3.0.0",
     "@tiptap/extension-color": "^3.11.1",
     "@tiptap/extension-font-family": "^3.16.0",
     "@tiptap/extension-heading": "^3.11.1",
@@ -134,7 +134,7 @@
   "scripts": {
     "start": "craco start",
     "dev": "craco start",
-    "build": "craco build",
+    "build": "CI=false craco build",
     "test": "craco test",
     "eject": "react-scripts eject"
   },

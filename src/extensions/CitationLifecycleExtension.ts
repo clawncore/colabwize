@@ -1,6 +1,5 @@
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import { CitationRegistryService } from "../services/CitationRegistryService";
 
 export const CitationLifecycleExtension = Extension.create({
     name: "citationLifecycle",
@@ -33,7 +32,6 @@ export const CitationLifecycleExtension = Extension.create({
                     });
 
                     const deletePositions: { from: number; to: number }[] = [];
-                    const idsToRemoveFromRegistry = new Set<string>();
 
                     // 2. Identify violations of the linking rules (DISABLED AGGRESSIVE AUTO-DELETE)
                     // The Citation Audit Tool is responsible for warning users about uncited references

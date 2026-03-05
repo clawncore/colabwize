@@ -44,3 +44,5 @@ prisma/
 # Misc
 .DS_Store
 .vscode
+.vercel
+.env*.local

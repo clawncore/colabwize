@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NodeViewWrapper, NodeViewProps } from "@tiptap/react";
 import { CitationRegistryService, RegistryEntry } from "../../../services/CitationRegistryService";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../ui/hover-card";
-import { ExternalLink, Edit2, BookOpen, FileText, RefreshCw, FileText as FileTextIcon } from "lucide-react";
+import { Edit2, RefreshCw, FileText as FileTextIcon } from "lucide-react";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 
@@ -103,7 +103,7 @@ export const CitationComponent = (props: NodeViewProps) => {
                     <a
                         className="citation-node citation-pill"
                         data-citation-id={citationId}
-                        style={{ color: "#2563eb", fontWeight: 500, cursor: "pointer", textDecoration: "none" }}
+                        href="#"
                         onClick={(e) => {
                             e.preventDefault();
                             // If there's an active selection or click logic in editor, let it happen
