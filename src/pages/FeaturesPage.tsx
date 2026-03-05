@@ -157,6 +157,15 @@ function FeaturesPresentationFlow() {
       color: "from-indigo-600 to-indigo-800",
       reverse: false,
     },
+    {
+      icon: Map,
+      title: "Originality Map",
+      description: "Visualize your document's evolution and trace every idea back to its original source.",
+      benefits: ["Source tracing", "Idea evolution", "Visual mapping"],
+      imageUrl: "https://i.ibb.co/LnxYfW3/Screenshot-2026-01-13-201542.png?w=800&h=600&fit=crop",
+      color: "from-orange-600 to-orange-800",
+      reverse: true,
+    },
 
   ];
 
