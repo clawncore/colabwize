@@ -4,6 +4,7 @@ import { Button } from "../../components/ui/button";
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
 import { blogPosts } from "../../data/blogPosts";
+import { Helmet } from "react-helmet-async";
 
 // Intro Hero Section
 function IntroHero() {
@@ -205,9 +206,6 @@ function ClosingCTA() {
     </section>
   );
 }
-
-import { Helmet } from "react-helmet-async";
-
 export default function BlogsPage() {
   return (
     <Layout>
