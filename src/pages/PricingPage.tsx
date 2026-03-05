@@ -600,6 +600,12 @@ function FeaturesPresentationFlow() {
                     premium: "100MB",
                   },
                   {
+                    name: "PDF Annotator",
+                    free: true,
+                    plus: true,
+                    premium: true,
+                  },
+                  {
                     name: "Version History",
                     free: true,
                     plus: true,

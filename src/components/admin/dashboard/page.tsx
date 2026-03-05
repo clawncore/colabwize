@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../../services/useAuth";
 import { apiClient } from "../../../services/apiClient";
-import { ActivityFeed } from "../../workspace/team/ActivityFeed";
+import { AuditLogFeed, ActivityLog } from "../../workspace/team/AuditLogFeed";
 import { MemberList } from "../../workspace/team/MemberList";
 import { InviteMemberModal } from "../../workspace/InviteMemberModal";
 import { Button } from "../../ui/button";
@@ -32,6 +32,7 @@ export default function AdminDashboard() {
     recentTasks: [],
     recentProjects: [],
   });
+  const [auditLogs, setAuditLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCreateWorkspaceModal, setShowCreateWorkspaceModal] =
@@ -43,7 +44,7 @@ export default function AdminDashboard() {
   const [workspaceTemplates, setWorkspaceTemplates] = useState<any[]>([]);
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
   const { activeUsers } = usePresence(
-    workspace?.id ? `workspace-${workspace.id}` : ""
+    workspace?.id ? `workspace-${workspace.id}` : "",
   );
 
   useEffect(() => {
@@ -84,9 +85,19 @@ export default function AdminDashboard() {
         const currentWs = workspaces[0];
         setWorkspace(currentWs);
         const metricsData = await apiClient.get(
-          `/api/workspaces/${currentWs.id}/metrics`
+          `/api/workspaces/${currentWs.id}/metrics`,
         );
         setMetrics(metricsData);
+
+        try {
+          const auditData = await WorkspaceService.getActivityLog(
+            currentWs.id,
+            10,
+          );
+          setAuditLogs(auditData.items || []);
+        } catch (e) {
+          console.error("Failed to fetch audit logs on create");
+        }
       }
 
       setShowCreateWorkspaceModal(false);
@@ -119,9 +130,20 @@ export default function AdminDashboard() {
 
           // 2. Get Metrics using our new endpoint
           const metricsData = await apiClient.get(
-            `/api/workspaces/${currentWs.id}/metrics`
+            `/api/workspaces/${currentWs.id}/metrics`,
           );
           setMetrics(metricsData);
+
+          // 3. Get Audit Logs
+          try {
+            const auditData = await WorkspaceService.getActivityLog(
+              currentWs.id,
+              10,
+            );
+            setAuditLogs(auditData.items || []);
+          } catch (e) {
+            console.error("Failed to load generic activity logs:", e);
+          }
         }
       } catch (error) {
         console.error("Failed to load team dashboard:", error);
@@ -155,16 +177,14 @@ export default function AdminDashboard() {
         </p>
         <Button
           onClick={() => setShowCreateWorkspaceModal(true)}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer"
-        >
+          className="w-full bg-teal-500 hover:bg-teal-600 text-primary-foreground cursor-pointer">
           Create Workspace
         </Button>
 
         {/* Create Workspace Modal */}
         <Dialog
           open={showCreateWorkspaceModal}
-          onOpenChange={setShowCreateWorkspaceModal}
-        >
+          onOpenChange={setShowCreateWorkspaceModal}>
           <DialogContent className="sm:max-w-[425px] bg-white border-border">
             <DialogHeader>
               <DialogTitle>Create Workspace</DialogTitle>
@@ -218,8 +238,7 @@ export default function AdminDashboard() {
                   id="template"
                   className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
                   value={selectedTemplateId}
-                  onChange={(e) => setSelectedTemplateId(e.target.value)}
-                >
+                  onChange={(e) => setSelectedTemplateId(e.target.value)}>
                   <option value="">No Template (Blank)</option>
                   {workspaceTemplates.map((template) => (
                     <option key={template.id} value={template.id}>
@@ -228,7 +247,8 @@ export default function AdminDashboard() {
                   ))}
                 </select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Choosing a template will pre-configure labels and custom fields.
+                  Choosing a template will pre-configure labels and custom
+                  fields.
                 </p>
               </div>
             </div>
@@ -237,15 +257,13 @@ export default function AdminDashboard() {
                 variant="outline"
                 className="bg-muted hover:bg-muted/80 border-border"
                 onClick={() => setShowCreateWorkspaceModal(false)}
-                disabled={isCreatingWorkspace}
-              >
+                disabled={isCreatingWorkspace}>
                 Cancel
               </Button>
               <Button
                 className="bg-teal-500 border-teal-200 hover:bg-teal-600"
                 onClick={handleCreateWorkspace}
-                disabled={isCreatingWorkspace}
-              >
+                disabled={isCreatingWorkspace}>
                 {isCreatingWorkspace && (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 )}
@@ -275,7 +293,7 @@ export default function AdminDashboard() {
     })) || []),
   ].sort(
     (a, b) =>
-      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
   );
 
   // Extract online user IDs from presence
@@ -297,14 +315,16 @@ export default function AdminDashboard() {
           <Button
             variant="outline"
             onClick={() => setShowInviteModal(true)}
-            className="cursor-pointer border-primary text-primary hover:bg-primary/10"
-          >
+            className="cursor-pointer border-primary text-primary hover:bg-primary/10">
             <Users className="mr-2 h-4 w-4" /> Invite Member
           </Button>
           <Button
             className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={() => navigate(`/dashboard/workspace/${workspace.id}/documents?tab=create`)}
-          >
+            onClick={() =>
+              navigate(
+                `/dashboard/workspace/${workspace.id}/documents?tab=create`,
+              )
+            }>
             <Plus className="mr-2 h-4 w-4" /> New Project
           </Button>
         </div>
@@ -366,7 +386,7 @@ export default function AdminDashboard() {
             <h3 className="text-lg font-bold text-foreground mb-4">
               Team Activity
             </h3>
-            <ActivityFeed activities={combinedActivities} />
+            <AuditLogFeed activities={auditLogs} />
           </div>
         </div>
 
@@ -388,13 +408,6 @@ export default function AdminDashboard() {
                 onlineUserIds={onlineUserIds}
               />
             </div>
-
-            <Button
-              variant="ghost"
-              className="w-full mt-4 text-xs text-muted-foreground hover:text-foreground font-normal"
-            >
-              View all members
-            </Button>
           </div>
 
           {/* Quick Links / Projects could go here */}

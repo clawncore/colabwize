@@ -19,7 +19,6 @@ import {
   Logs,
   PlusCircle,
   CheckCircle2,
-  AlertCircle,
   History,
 } from "lucide-react";
 import WorkspaceService from "../../../services/workspaceService";
