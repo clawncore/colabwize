@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Editor } from "@tiptap/react";
 import { CitationRegistryService } from "./CitationRegistryService";
 

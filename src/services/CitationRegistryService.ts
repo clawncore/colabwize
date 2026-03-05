@@ -185,13 +185,66 @@ export class CitationRegistryService {
             return existing;
         }
 
+        // --- Local APA/MLA parser for instant metadata ---
+        // Enhanced Parse: "Hare, S., et al. (2010). Structural basis for HIV inhibition..."
+
+        let parsedAuthors: string[] = [];
+        let parsedYear: number | string = "N/A";
+        let parsedTitle: string = "Research Document";
+        let parsedJournal: string = "Academic Publication";
+
+        // 1. Identify Year (primary anchor)
+        const yearMatch = citationText.match(/\((\d{4}[a-z]?)\)/);
+        if (yearMatch) {
+            parsedYear = parseInt(yearMatch[1]);
+            const splitPos = citationText.indexOf(yearMatch[0]);
+
+            // 2. Authors are everything BEFORE the year
+            const authorPart = citationText.substring(0, splitPos).trim();
+            if (authorPart) {
+                parsedAuthors = [authorPart.replace(/[.,\s]+$/, '')];
+            }
+
+            // 3. Title is everything AFTER the year (up to the next major separator)
+            const postYear = citationText.substring(splitPos + yearMatch[0].length).trim();
+            const cleanPostYear = postYear.replace(/^[.,\s]+/, '');
+
+            // Typical APA: Title. Journal...
+            const segments = cleanPostYear.split(/\.\s+/);
+            if (segments.length > 0) {
+                parsedTitle = segments[0].trim();
+                if (segments.length > 1) {
+                    parsedJournal = segments[1].trim().split(',')[0].replace(/[.,\s]+$/, '');
+                }
+            }
+        } else {
+            // Fallback if no year bracket is found
+            const firstPeriod = citationText.indexOf('.');
+            if (firstPeriod > 10) {
+                parsedAuthors = [citationText.substring(0, firstPeriod).trim()];
+                parsedTitle = citationText.substring(firstPeriod + 1).split('.')[0].trim() || citationText;
+            }
+        }
+
+        const doiMatch = citationText.match(/10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i);
+        const parsedDoi = doiMatch ? doiMatch[0] : undefined;
+        const urlMatch = citationText.match(/(https?:\/\/[^\s>\]]+)/);
+        const parsedUrl = urlMatch ? urlMatch[1].replace(/[.,;:!?]+$/, '') :
+            (parsedDoi ? `https://doi.org/${parsedDoi}` : undefined);
+
         const tempId = metadata?.id || `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const tempEntry: RegistryEntry = {
             ref_key: tempId,
             raw_reference_text: citationText,
-            url: metadata?.url,
-            sourceTitle: metadata?.title,
-            ...metadata
+            url: metadata?.url || parsedUrl,
+            sourceTitle: metadata?.title || parsedTitle,
+            authors: metadata?.authors || (parsedAuthors.length > 0 ? parsedAuthors : ["Author List Unavailable"]),
+            year: metadata?.year ? (typeof metadata.year === 'number' ? metadata.year : parseInt(String(metadata.year))) : parsedYear,
+            doi: parsedDoi,
+            metadata: {
+                ...metadata,
+                journal: (metadata as any)?.journal || parsedJournal,
+            } as any
         };
 
         this.cache.set(tempEntry.ref_key, tempEntry);

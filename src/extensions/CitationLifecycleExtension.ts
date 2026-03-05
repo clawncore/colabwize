@@ -35,22 +35,28 @@ export const CitationLifecycleExtension = Extension.create({
                     const deletePositions: { from: number; to: number }[] = [];
                     const idsToRemoveFromRegistry = new Set<string>();
 
-                    // 2. Identify violations of the linking rules
+                    // 2. Identify violations of the linking rules (DISABLED AGGRESSIVE AUTO-DELETE)
+                    // The Citation Audit Tool is responsible for warning users about uncited references
+                    // or missing citations. Auto-deleting them immediately breaks user expectations when
+                    // pasting reference lists or typing out bibliographies prior to citing them.
+
+                    /*
                     newState.doc.descendants((node, pos) => {
                         const id = node.attrs.citationId;
                         if (!id) return;
 
                         // Rule 1: Delete Bibliography if no in-text Citations exist
-                        // DISABLING THIS RULE to prevent unexpected data loss
                         if (node.type.name === "bibliographyEntry" && !citationIds.has(id)) {
-                            // deletePositions.push({ from: pos, to: pos + node.nodeSize });
-                            // idsToRemoveFromRegistry.add(id);
+                            // IGNORE PROVISIONAL NODES added by fast-sync normalization
+                            if (id && (id.startsWith("temp-") || id.startsWith("temp_"))) return;
+                            deletePositions.push({ from: pos, to: pos + node.nodeSize });
+                            idsToRemoveFromRegistry.add(id);
                         }
 
                         // Rule 2: Delete Citations if their Bibliography entry was deleted
-                        // DISABLING THIS RULE to prevent new in-text citations from vanishing instantly
                         if (node.type.name === "citation" && !bibliographyIds.has(id)) {
-                            // deletePositions.push({ from: pos, to: pos + node.nodeSize });
+                            if (id.startsWith("temp-")) return;
+                            deletePositions.push({ from: pos, to: pos + node.nodeSize });
                         }
                     });
 
@@ -60,6 +66,7 @@ export const CitationLifecycleExtension = Extension.create({
                             CitationRegistryService.removeCitation(id);
                         });
                     }
+                    */
 
                     // 4. Append deterministic deletion transaction
                     if (deletePositions.length > 0) {
@@ -82,48 +89,7 @@ export const CitationLifecycleExtension = Extension.create({
                     return null;
                 },
             }),
-            new Plugin({
-                key: new PluginKey("citationClickHandler"),
-                props: {
-                    handleClick(view, pos, event) {
-                        const target = event.target as HTMLElement;
 
-                        // 1. Handle clicks on in-text citations -> Scroll to Bibliography
-                        if (target && target.closest(".citation-node")) {
-                            const citationEl = target.closest(".citation-node") as HTMLElement;
-                            const citationId = citationEl.getAttribute("data-citation-id");
-
-                            if (citationId) {
-                                // Find the bibliography entry
-                                const bibEntry = document.getElementById(`bib-${citationId}`);
-                                if (bibEntry) {
-                                    bibEntry.scrollIntoView({ behavior: "smooth", block: "center" });
-
-                                    // Add a temporary highlight flash effect
-                                    bibEntry.style.transition = "background-color 0.3s ease";
-                                    bibEntry.style.backgroundColor = "rgba(253, 224, 71, 0.4)"; // yellow-300 tint
-                                    setTimeout(() => {
-                                        bibEntry.style.backgroundColor = "transparent";
-                                    }, 1500);
-
-                                    return true; // Handled
-                                }
-                            }
-                        }
-
-                        // 2. Handle clicks on URLs in the bibliography -> Open in new tab
-                        if (target && target.classList.contains("bibliography-url-link")) {
-                            const url = target.getAttribute("data-url");
-                            if (url) {
-                                window.open(url, "_blank", "noopener,noreferrer");
-                                return true; // Handled
-                            }
-                        }
-
-                        return false; // Not handled
-                    }
-                }
-            }),
         ];
     },
 });

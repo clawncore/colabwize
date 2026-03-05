@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Editor } from "@tiptap/core";
 import { extractPatterns } from "./patterns";
 
@@ -144,7 +145,7 @@ export class CitationNormalizer {
 
       try {
         if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     return {

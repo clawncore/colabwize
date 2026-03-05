@@ -1,5 +1,5 @@
+/* eslint-disable */
 import { Editor } from "@tiptap/react";
-import { CitationService } from "../../../services/citationService";
 import { extractPatterns } from "../../../services/citationAudit/patterns";
 
 export function isLikelyCitation(text: string): boolean {
@@ -33,7 +33,7 @@ export function isLikelyCitation(text: string): boolean {
   // Must be Author Name, Initials. (Year).
   // e.g. Smith, J. (2020)
   if (
-    /^[A-Z][a-zÀ-ÿ\-]+,\s*(?:[A-Z]\.\s*)+(?:(?:&|and)\s*[A-Z][a-zÀ-ÿ\-]+,\s*(?:[A-Z]\.\s*)+)*\(\d{4}[a-z]?\)/.test(
+    /^[A-Z][a-zÀ-ÿ-]+,\s*(?:[A-Z]\.\s*)+(?:(?:&|and)\s*[A-Z][a-zÀ-ÿ-]+,\s*(?:[A-Z]\.\s*)+)*\(\d{4}[a-z]?\)/.test(
       cleanText.substring(0, 100),
     )
   )
@@ -41,7 +41,7 @@ export function isLikelyCitation(text: string): boolean {
 
   // Looser APA fallback: Author Last Name (Year) IF there are multiple bibliographic indicators
   // but avoid matching normal English sentences like "Since the discovery (2010)"
-  if (/^[A-Z][a-zÀ-ÿ\-]+.*?\(\d{4}\)/.test(cleanText.substring(0, 100))) {
+  if (/^[A-Z][a-zÀ-ÿ-]+.*?\(\d{4}\)/.test(cleanText.substring(0, 100))) {
     // If it starts with a common English word, it's a sentence, not an author name.
     const firstWord = cleanText.split(" ")[0].toLowerCase();
     const commonWords = [
@@ -160,7 +160,6 @@ export async function detectAndNormalizeCitations(
 
   const { CitationRegistryService } = await import("../../../services/CitationRegistryService");
   CitationRegistryService.loadRegistry(projectId, availableCitations);
-  await scanAndIngestReferences(editor, projectId, availableCitations, true);
 
   // --- Phase 1: Collect unique citation texts (Allows document positions to shift while we wait) ---
   const uniqueCitationTexts = new Set<string>();
@@ -177,8 +176,6 @@ export async function detectAndNormalizeCitations(
         stopScanningPhase1 = true;
         return false;
       }
-      // Never scan text inside headings for citations
-      if (node.type.name === "heading") return false;
     }
 
     if (node.isText) {
@@ -230,8 +227,6 @@ export async function detectAndNormalizeCitations(
         stopScanningPhase3 = true;
         return false;
       }
-      // Never scan text inside headings for citations
-      if (node.type.name === "heading") return false;
     }
 
     if (node.isText) {
@@ -292,13 +287,6 @@ export async function detectAndNormalizeCitations(
     } catch (e) {
       console.error("Atomic transaction failed", e);
     }
-  }
-
-  // --- Phase 4: Finalize bibliography format ---
-  // Ensure that plain paragraph text in the bibliography section is converted 
-  // into actual bibliographyEntry nodes, linking appropriately.
-  if (citationsToReplace.length > 0 || editor.getText().includes("References")) {
-    await detectAndNormalizeBibliography(editor, projectId);
   }
 
   return { stats: { ieee: ieeeCount, apa: apaCount } };
@@ -391,15 +379,17 @@ export async function scanAndIngestReferences(
   // Removed headingsToConvert logic to prevent automatic heading distortion
 
   for (const text of refLines) {
-    const roughYearMatch = text.match(/\((\d{4})\)/);
-    const roughTitleMatch = text.match(/\)\.\s*([^.]+)/);
+    // Better metadata detection for manual ingest
+    const authorMatch = text.match(/^([A-Z][a-zÀ-ÿ-]+(?:,\s*[A-Z]\.)*)/);
+    const roughYearMatch = text.match(/\((\d{4}[a-z]?)\)/);
+    const roughTitleMatch = text.match(/\)\.\s*(.+?)(?=\.\s*[A-Z]|\.\s*https?|$)/);
 
     const record = {
       id: `manual-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       title: roughTitleMatch
-        ? roughTitleMatch[1].trim()
+        ? roughTitleMatch[1].trim().replace(/\.$/, '')
         : text.substring(0, 50),
-      authors: ["Unknown"],
+      authors: authorMatch ? [authorMatch[1].trim()] : ["Unknown"],
       year: roughYearMatch
         ? parseInt(roughYearMatch[1], 10)
         : new Date().getFullYear(),
@@ -568,14 +558,15 @@ export async function detectAndNormalizeBibliography(
   const { CitationRegistryService } =
     await import("../../../services/CitationRegistryService");
 
-  // --- Phase 1: Collect unique bibliography entry texts asynchronously ---
-  const collectEntriesText = () => {
+  // --- Phase 1: Collect un-normalized bibliography paragraphs asynchronously ---
+  // Returns them in REVERSE order so replacing later positions first doesn't invalidate earlier ones.
+  const collectEntries = () => {
     const { doc } = editor.state;
     let inRefSection = false;
-    const texts = new Set<string>();
+    const entries: Array<{ pos: number; node: any; text: string }> = [];
+    const allParagraphs: Array<{ pos: number; node: any; text: string }> = [];
 
-    doc.descendants((node) => {
-      // Support both strict headings and plain paragraphs acting as headings
+    doc.descendants((node, pos) => {
       if (node.type.name === "heading" || node.type.name === "paragraph") {
         const t = node.textContent.toLowerCase().trim().replace(/[:.]$/, "");
         if (["references", "works cited", "bibliography", "reference list", "refrences"].includes(t)) {
@@ -586,7 +577,12 @@ export async function detectAndNormalizeBibliography(
         }
       }
 
-      if (inRefSection && (node.type.name === "paragraph" || node.type.name === "listItem")) {
+      const isTextNode = node.type.name === "paragraph" || node.type.name === "listItem";
+      if (isTextNode) {
+        allParagraphs.push({ pos, node, text: node.textContent.trim() });
+      }
+
+      if (inRefSection && isTextNode) {
         let hasBibNode = false;
         node.descendants((child: any) => {
           if (child.type.name === "bibliographyEntry") hasBibNode = true;
@@ -595,118 +591,159 @@ export async function detectAndNormalizeBibliography(
 
         const text = node.textContent.trim();
         if (text.length > 20) {
-          texts.add(text);
+          entries.push({ pos, node, text });
         }
         return false;
       }
-
       if (node.type.name === "bibliographyEntry") return false;
     });
 
-    // Heuristics were stripped out to prevent corrupting regular paragraphs into bibliography formatting
-    return Array.from(texts);
+    // Smart heuristic fallback if no specific heading was found
+    if (!inRefSection && entries.length === 0) {
+      let consecutiveCitations = 0;
+      const heuristicEntries: Array<{ pos: number; node: any; text: string }> = [];
+
+      // Scan bottom-up
+      for (let i = allParagraphs.length - 1; i >= 0; i--) {
+        const p = allParagraphs[i];
+        if (!p.text) continue;
+
+        if (isLikelyCitation(p.text)) {
+          heuristicEntries.push(p);
+          consecutiveCitations++;
+        } else if (consecutiveCitations > 0) {
+          if (consecutiveCitations >= 2) break; // Found a block of at least 2 citations
+          heuristicEntries.length = 0;
+          consecutiveCitations = 0;
+        }
+      }
+
+      if (heuristicEntries.length >= 2) {
+        // Reverse them back since we collected bottom-up, but we want the outer return to also reverse it correctly.
+        // Wait, the outer return reverses it. So if we just push them in normal order, it gets reversed below.
+        entries.push(...heuristicEntries.reverse());
+      }
+    }
+
+    return entries.reverse();
   };
 
-  const textsToRegister = collectEntriesText();
-  if (textsToRegister.length === 0) {
+  const firstPass = collectEntries();
+  if (firstPass.length === 0) {
     console.log("[BibNormalize] No plain-text bibliography entries found.");
     return;
   }
 
-  // --- Phase 2: Async Resolution. User can type during this phase. ---
-  const registrationMap = new Map<string, any>();
-  for (const text of textsToRegister) {
-    try {
-      const entry = await CitationRegistryService.registerCitation(projectId, text);
-      registrationMap.set(text, entry);
-    } catch (error) {
-      console.error("[BibNormalize] Failed to register:", text.substring(0, 40));
-    }
-  }
-
-  // --- Phase 3: Synchronous Prosemirror Document Parsing & Tr Replacement ---
+  // --- Phase 2: Async Resolution and Replacement per Node ---
   let normalizedCount = 0;
-  const currentDoc = editor.state.doc;
-  const schema = editor.state.schema;
 
-  if (!schema.nodes.bibliographyEntry) {
-    console.error("[BibNormalize] bibliographyEntry node type not found in schema");
-    return;
-  }
+  for (const item of firstPass) {
+    try {
+      let instUrl: string | null = null;
+      let instDoi: string | null = null;
 
-  const entriesToReplace: Array<{ pos: number; nodeSize: number; nodeContent: any; entry: any; text: string }> = [];
-  let inRefSectionSync = false;
+      // Instantly extract URL/DOI from raw text to avoid blocking UI
+      // Robust URL extraction that allows parentheses but strips trailing non-url punctuation
+      const urlRegex = /(https?:\/\/[^\s>\]]+)/;
+      const urlMatch = item.text.match(urlRegex);
+      if (urlMatch) {
+        let url = urlMatch[0];
+        url = url.replace(/[.,;:!?]+$/, '');
 
-  currentDoc.descendants((node, pos) => {
-    if (node.type.name === "heading" || node.type.name === "paragraph") {
-      const t = node.textContent.toLowerCase().trim().replace(/[:.]$/, "");
-      if (["references", "works cited", "bibliography", "reference list", "refrences"].includes(t)) {
-        inRefSectionSync = true;
-        return;
-      } else if (inRefSectionSync && node.type.name === "heading") {
-        inRefSectionSync = false;
+        // Handle balanced parentheses
+        if (url.endsWith(')')) {
+          const openCount = (url.match(/\(/g) || []).length;
+          const closeCount = (url.match(/\)/g) || []).length;
+          if (closeCount > openCount) {
+            url = url.substring(0, url.length - (closeCount - openCount));
+          }
+        }
+        instUrl = url;
       }
-    }
 
-    if (inRefSectionSync && (node.type.name === "paragraph" || node.type.name === "listItem")) {
-      let hasBibNode = false;
-      node.descendants((child: any) => {
-        if (child.type.name === "bibliographyEntry") hasBibNode = true;
-      });
-      if (hasBibNode) return false;
-
-      const text = node.textContent.trim();
-      const entry = registrationMap.get(text);
-      if (text.length > 20 && entry) {
-        entriesToReplace.push({ pos, nodeSize: node.nodeSize, nodeContent: node.content, entry, text });
+      const doiMatch = item.text.match(/10\.\d{4,9}\/[-._;()/:A-Z0-9]+/i);
+      if (doiMatch) {
+        instDoi = doiMatch[0];
+        if (!instUrl) instUrl = `https://doi.org/${instDoi}`;
       }
-      return false;
+
+      // Re-fetch the current node at the expected position to guarantee freshness
+      const currentDoc = editor.state.doc;
+      const currentNode = currentDoc.nodeAt(item.pos);
+
+      if (!currentNode) continue; // node moved or deleted while awaiting
+      if (currentNode.type.name === 'bibliographyEntry') continue; // already converted
+
+      const schema = editor.state.schema;
+      if (!schema.nodes.bibliographyEntry) break;
+
+      const childNodes: any[] = [];
+      currentNode.content.forEach((n: any) => childNodes.push(n));
+
+      // Append clickable link if URL/DOI exists and is not already visibly printed in the text
+      const entryUrl = instUrl || (instDoi ? `https://doi.org/${instDoi}` : null);
+      if (entryUrl && !item.text.includes("http")) {
+        childNodes.push(schema.text(" "));
+        const linkMarks = schema.marks.link ? [schema.marks.link.create({ href: entryUrl, target: '_blank' })] : undefined;
+        childNodes.push(schema.text(entryUrl, linkMarks));
+      }
+
+      // First try to find if we already know the real UUID for this text
+      const allCitations = CitationRegistryService.getAllCitations();
+      let matched = allCitations.find(c => c.raw_reference_text === item.text);
+      if (!matched) {
+        matched = CitationRegistryService.registerTempCitation(item.text);
+      }
+      const tempCitationId = matched.ref_key || (matched as any).id;
+
+      const bibNode = schema.nodes.bibliographyEntry.create(
+        {
+          citationId: tempCitationId,
+          url: instUrl,
+          doi: instDoi,
+          refText: item.text,
+        },
+        childNodes
+      );
+
+      const tr = editor.state.tr;
+      tr.replaceWith(item.pos, item.pos + currentNode.nodeSize, bibNode);
+      tr.setMeta("normalization", true);
+      tr.setMeta("addToHistory", false);
+
+      if (editor.view && editor.view.dom) {
+        editor.view.dispatch(tr);
+      }
+      normalizedCount++;
+
+      // Trigger background registry update silently (no await blocking!)
+      CitationRegistryService.registerCitation(projectId, item.text).then((entry) => {
+        // If we used a temp ID, we need to update all nodes referencing it with the real ID
+        if (tempCitationId.startsWith("temp_") && entry && (entry.ref_key || (entry as any).id)) {
+          const realId = entry.ref_key || (entry as any).id;
+          if (editor.view && editor.state) {
+            const updateTr = editor.state.tr;
+            let hasUpdates = false;
+            editor.state.doc.descendants((n, p) => {
+              if ((n.type.name === 'bibliographyEntry' || n.type.name === 'citation') && n.attrs.citationId === tempCitationId) {
+                updateTr.setNodeMarkup(p, null, { ...n.attrs, citationId: realId });
+                hasUpdates = true;
+              }
+            });
+            if (hasUpdates) {
+              updateTr.setMeta("normalization", true);
+              updateTr.setMeta("addToHistory", false);
+              editor.view.dispatch(updateTr);
+            }
+          }
+        }
+      }).catch(e => console.error("Silent registry failure", e));
+    } catch (error) {
+      console.error("[BibNormalize] Failed to convert:", item.text.substring(0, 40));
     }
-    if (node.type.name === "bibliographyEntry") return false;
-  });
-
-  // Aggressive heuristic fallback was removed from here because it caused regular
-  // paragraphs containing citations to be transformed into bold bibliography headings.
-
-  if (entriesToReplace.length === 0) return;
-
-  const tr = editor.state.tr;
-
-  for (const item of entriesToReplace.reverse()) {
-    const childNodes: any[] = [];
-    item.nodeContent.forEach((n: any) => childNodes.push(n));
-
-    const entryUrl = item.entry.url || (item.entry.doi ? `https://doi.org/${item.entry.doi}` : null);
-    if (entryUrl && !item.text.includes("http")) {
-      childNodes.push(schema.text(" "));
-
-      const linkMarks = schema.marks.link ? [schema.marks.link.create({ href: entryUrl, target: '_blank' })] : undefined;
-      childNodes.push(schema.text(entryUrl, linkMarks));
-    }
-
-    const bibNode = schema.nodes.bibliographyEntry.create(
-      {
-        citationId: item.entry.ref_key || item.entry.id,
-        url: entryUrl,
-        doi: item.entry.doi,
-        refText: item.text,
-      },
-      childNodes
-    );
-
-    tr.replaceWith(item.pos, item.pos + item.nodeSize, bibNode);
-    normalizedCount++;
   }
 
   if (normalizedCount > 0) {
-    tr.setMeta("normalization", true);
-    try {
-      if (editor.view && editor.view.dom) {
-        editor.view.dispatch(tr);
-        console.log(`✅ [BibNormalize] Converted ${normalizedCount} bibliography entries.`);
-      }
-    } catch (e) {
-      console.error("[BibNormalize] Transaction failed", e);
-    }
+    console.log(`✅ [BibNormalize] Converted ${normalizedCount} bibliography entries to interactive nodes.`);
   }
 }

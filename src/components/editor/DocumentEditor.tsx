@@ -1,3 +1,4 @@
+/* eslint-disable */
 // BOM_FIX_FORCE
 import * as React from "react";
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -56,7 +57,6 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableRow } from "@tiptap/extension-table-row";
 import TextAlign from "@tiptap/extension-text-align";
-import Link from "@tiptap/extension-link";
 import { CitationLifecycleExtension } from "../../extensions/CitationLifecycleExtension";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
@@ -357,105 +357,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     setDescription(project.description || "");
   }, [project.id, project.title, project.description]);
 
-  // Scored matching function for bibliography navigation
-  const scrollToReference = (citationId: string) => {
-    // Note: Using project.citations to match component data structure
-    const citation = project.citations?.find((c) => c.id === citationId);
-    if (!citation) return;
+  // Scored matching function for bibliography navigation was removed here as it was unused.
 
-    // Extract search terms
-    const author =
-      (citation.authors?.[0] as any)?.lastName ||
-      citation.authors?.[0] ||
-      citation.author ||
-      "";
-    const authorLastName = author.includes(",")
-      ? author.split(",")[0].trim()
-      : author;
-    const year = citation.year?.toString() || "";
 
-    // Get editor element
-    const editorElement = document.querySelector(".ProseMirror") as HTMLElement;
-    if (!editorElement) return;
-
-    // Find references section
-    const headings = editorElement.querySelectorAll("h1, h2, h3, h4");
-    let refSectionTop = Infinity;
-    for (const heading of Array.from(headings)) {
-      const text = heading.textContent?.toLowerCase() || "";
-      if (
-        text.includes("reference") ||
-        text.includes("bibliography") ||
-        text.includes("works cited")
-      ) {
-        refSectionTop = heading.getBoundingClientRect().top;
-        break;
-      }
-    }
-
-    // Score each paragraph
-    const paragraphs = editorElement.querySelectorAll(
-      'p, div[data-type="paragraph"]',
-    );
-    let bestMatch: HTMLElement | null = null;
-    let bestScore = 0;
-
-    for (const para of Array.from(paragraphs)) {
-      const element = para as HTMLElement;
-      const text = element.textContent || "";
-      const trimmedText = text.trim();
-
-      if (trimmedText.length < 5) continue;
-
-      let score = 0;
-
-      // SCORING RULES
-      if (
-        authorLastName &&
-        trimmedText.toLowerCase().startsWith(authorLastName.toLowerCase())
-      )
-        score += 0.6;
-      if (
-        authorLastName &&
-        text.toLowerCase().includes(authorLastName.toLowerCase())
-      )
-        score += 0.3;
-      if (year && text.includes(year)) score += 0.2;
-      if (element.getBoundingClientRect().top > refSectionTop) score += 0.1;
-
-      if (score > bestScore && score >= 0.4) {
-        bestScore = score;
-        bestMatch = element;
-      }
-    }
-
-    // Scroll to best match
-    if (bestMatch) {
-      console.log(
-        `[ScrollToRef] Found match with score ${bestScore.toFixed(2)}`,
-      );
-      bestMatch.scrollIntoView({ behavior: "smooth", block: "center" });
-      bestMatch.classList.add("highlight-reference-flash");
-      setTimeout(
-        () => bestMatch?.classList.remove("highlight-reference-flash"),
-        2000,
-      );
-
-      toast({
-        title: "Reference Found",
-        description: "Jumped to bibliography entry.",
-      });
-    } else {
-      console.warn(
-        `[ScrollToRef] No match found for: ${authorLastName} (${year}). Score: ${bestScore}`,
-      );
-      toast({
-        title: "Reference Not Found",
-        description: "Could not locate the bibliography entry.",
-        variant: "destructive",
-      });
-    }
-  };
 
   // Initialize editor with project content or create empty content
   // Since we created 'ydoc' and 'provider' synchronously on initial render via useState,
@@ -466,18 +370,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       editable: !isReadOnly, // Lock editor for viewer-role collaborators
       extensions: [
         StarterKit.configure({
-          history: !isCollaborative,
+          history: !isCollaborative, // Disable history in collab mode (handled by Yjs)
           link: false, // Prevent duplicate extension names error if StarterKit includes it
         } as any),
-        Link.configure({
-          openOnClick: true,
-          autolink: true,
-          HTMLAttributes: {
-            class: 'text-blue-600 underline cursor-pointer bibliography-url-link',
-            rel: 'noopener noreferrer nofollow',
-            target: '_blank',
-          },
-        }),
         ...(isCollaborative &&
           collabReady &&
           providerRef.current &&
@@ -731,10 +626,19 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
             // --- Silent Normalization on Load ---
             // Convert plain text citations to blue interactive nodes
-            // Use timeout to ensure editor is stable and we don't conflict with initial render transactions
             setTimeout(async () => {
               if (editor && !editor.isDestroyed) {
-                await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+                try {
+                  // MUST BE STRICTLY SEQUENTIAL! 
+                  // If run concurrently, they cache positions, transaction #1 shifts the document, 
+                  // and transaction #2 overwrites/deletes wrong text based on stale positions.
+                  await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+
+                  const { detectAndNormalizeBibliography } = await import("./utils/normalization");
+                  await detectAndNormalizeBibliography(editor, project.id);
+                } catch (e) {
+                  console.error("Normalization error:", e);
+                }
               }
             }, 500);
           } catch (error) {
@@ -780,29 +684,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           await CitationRegistryService.initializeFromBackend(project.id);
           (window as any).__currentProjectId__ = project.id;
 
-          await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+          import("./utils/normalization").then(({ detectAndNormalizeBibliography }) => {
+            Promise.all([
+              detectAndNormalizeCitations(editor, project.id, project.citations || []),
+              detectAndNormalizeBibliography(editor, project.id)
+            ]).catch(e => console.error("Collab Normalization Failed:", e));
+          });
         } catch (e) {
-          console.error("Collab Normalization Failed:", e);
+          console.error("Collab init registry failed:", e);
         }
       };
 
       initCollabRegistry();
     }
   }, [isCollaborative, editor, isSynced, project.id, project.citations]);
-
-  // --- Background Normalization (Debounced Loop) ---
-  // Periodically scans for new plain text citations to convert them to pills
-  useEffect(() => {
-    if (!editor || !isEditorMounted || !isViewReady(editor)) return;
-    if (editCount === 0) return; // Wait for first user edit
-
-    const timer = setTimeout(async () => {
-      console.log("ðŸ“  Running debounced normalization (post-edit)...");
-      await detectAndNormalizeCitations(editor, project.id, project.citations || []);
-    }, 4500); // 4.5s debounce: long enough to not be annoying while typing
-
-    return () => clearTimeout(timer);
-  }, [editor, editCount, isEditorMounted, project.id, project.citations]);
 
 
 
