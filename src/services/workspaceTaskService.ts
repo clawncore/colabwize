@@ -437,5 +437,5 @@ class WorkspaceTaskService {
     return response.task as WorkspaceTask;
   }
 }
-
-export default new WorkspaceTaskService();
+const workspaceTaskService = new WorkspaceTaskService();
+export default workspaceTaskService;

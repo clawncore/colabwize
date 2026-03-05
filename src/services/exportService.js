@@ -240,7 +240,7 @@ class ExportService {
       console.log("Constructed URLSearchParams:", paramEntries);
 
       // Check if format parameter is in the params
-      const hasFormat = paramEntries.some(([key, value]) => key === "format");
+      const hasFormat = paramEntries.some(([key]) => key === "format");
       console.log("Format parameter in params:", hasFormat);
 
       if (!hasFormat) {

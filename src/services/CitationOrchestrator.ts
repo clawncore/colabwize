@@ -1,7 +1,7 @@
 
 import { Editor } from "@tiptap/react";
 import { CitationOrderManager } from "./citationOrderManager";
-import { CitationIntegrityWatcher } from "./citationIntegrityWatcher";
+
 
 type LockMode = 'update' | 'export' | 'none';
 

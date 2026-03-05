@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Tag, Plus, X, ChevronDown, Check } from "lucide-react";
+import { Tag, Plus, X, Check } from "lucide-react";
 import {
   WorkspaceLabel,
   WorkspaceTask,

@@ -177,6 +177,8 @@ export async function detectAndNormalizeCitations(
         stopScanningPhase1 = true;
         return false;
       }
+      // Never scan text inside headings for citations
+      if (node.type.name === "heading") return false;
     }
 
     if (node.isText) {
@@ -228,6 +230,8 @@ export async function detectAndNormalizeCitations(
         stopScanningPhase3 = true;
         return false;
       }
+      // Never scan text inside headings for citations
+      if (node.type.name === "heading") return false;
     }
 
     if (node.isText) {
@@ -288,6 +292,13 @@ export async function detectAndNormalizeCitations(
     } catch (e) {
       console.error("Atomic transaction failed", e);
     }
+  }
+
+  // --- Phase 4: Finalize bibliography format ---
+  // Ensure that plain paragraph text in the bibliography section is converted 
+  // into actual bibliographyEntry nodes, linking appropriately.
+  if (citationsToReplace.length > 0 || editor.getText().includes("References")) {
+    await detectAndNormalizeBibliography(editor, projectId);
   }
 
   return { stats: { ieee: ieeeCount, apa: apaCount } };

@@ -82,6 +82,48 @@ export const CitationLifecycleExtension = Extension.create({
                     return null;
                 },
             }),
+            new Plugin({
+                key: new PluginKey("citationClickHandler"),
+                props: {
+                    handleClick(view, pos, event) {
+                        const target = event.target as HTMLElement;
+
+                        // 1. Handle clicks on in-text citations -> Scroll to Bibliography
+                        if (target && target.closest(".citation-node")) {
+                            const citationEl = target.closest(".citation-node") as HTMLElement;
+                            const citationId = citationEl.getAttribute("data-citation-id");
+
+                            if (citationId) {
+                                // Find the bibliography entry
+                                const bibEntry = document.getElementById(`bib-${citationId}`);
+                                if (bibEntry) {
+                                    bibEntry.scrollIntoView({ behavior: "smooth", block: "center" });
+
+                                    // Add a temporary highlight flash effect
+                                    bibEntry.style.transition = "background-color 0.3s ease";
+                                    bibEntry.style.backgroundColor = "rgba(253, 224, 71, 0.4)"; // yellow-300 tint
+                                    setTimeout(() => {
+                                        bibEntry.style.backgroundColor = "transparent";
+                                    }, 1500);
+
+                                    return true; // Handled
+                                }
+                            }
+                        }
+
+                        // 2. Handle clicks on URLs in the bibliography -> Open in new tab
+                        if (target && target.classList.contains("bibliography-url-link")) {
+                            const url = target.getAttribute("data-url");
+                            if (url) {
+                                window.open(url, "_blank", "noopener,noreferrer");
+                                return true; // Handled
+                            }
+                        }
+
+                        return false; // Not handled
+                    }
+                }
+            }),
         ];
     },
 });

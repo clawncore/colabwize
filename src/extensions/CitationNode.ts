@@ -1,6 +1,5 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { CitationRegistryService } from "../services/CitationRegistryService";
 import { CitationComponent } from "../components/editor/views/CitationComponent";
 
 export interface CitationNodeOptions {

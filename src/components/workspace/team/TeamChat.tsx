@@ -339,20 +339,7 @@ export function TeamChat({
     }, 100);
   };
 
-  const loadMessages = async () => {
-    setLoading(true);
-    try {
-      const data = await TeamChatService.getMessages({
-        workspaceId: effectiveWorkspaceId,
-        projectId,
-      });
-      setMessages(data);
-    } catch (err) {
-      console.error("Failed to load chat messages:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const handleClearChat = async () => {
     if (
@@ -548,11 +535,10 @@ export function TeamChat({
 
                             <div
                               className={`text-[13px] leading-[1.5] py-2 px-3.5 rounded-2xl break-words relative transition-all border shadow-sm
-                              ${
-                                isMe
+                              ${isMe
                                   ? "bg-emerald-50/50 border-emerald-100 text-slate-800 rounded-tr-none"
                                   : "bg-white border-slate-100 text-slate-800 rounded-tl-none"
-                              }`}>
+                                }`}>
                               {msg.parent && (
                                 <div className="mb-2 p-2 bg-slate-50/80 border-l-2 border-emerald-500 rounded text-[11px] text-slate-500 italic flex flex-col gap-0.5">
                                   <span className="font-bold text-[10px] text-emerald-600 non-italic not-italic">

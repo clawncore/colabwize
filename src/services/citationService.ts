@@ -503,15 +503,17 @@ export class CitationService {
     const year = citation.year || "n.d.";
     const title = citation.title || "Untitled";
 
+    const link = citation.doi ? ` https://doi.org/${citation.doi}` : (citation.url ? ` ${citation.url}` : "");
+
     switch (style) {
       case "apa":
-        return `${authorsString} (${year}). ${title}. ${citation.journal || ""}${citation.volume ? `, ${citation.volume}` : ""}${citation.issue ? `(${citation.issue})` : ""}${citation.pages ? `, ${citation.pages}` : ""}.${citation.doi ? ` https://doi.org/${citation.doi}` : ""}`;
+        return `${authorsString} (${year}). ${title}. ${citation.journal || ""}${citation.volume ? `, ${citation.volume}` : ""}${citation.issue ? `(${citation.issue})` : ""}${citation.pages ? `, ${citation.pages}` : ""}.${link}`;
 
       case "mla":
-        return `${authorsString}. "${title}." ${citation.journal || ""}${citation.volume ? ` ${citation.volume}` : ""}${citation.issue ? `.${citation.issue}` : ""} (${year})${citation.pages ? `: ${citation.pages}` : ""}.${citation.doi ? ` DOI: ${citation.doi}` : ""}`;
+        return `${authorsString}. "${title}." ${citation.journal || ""}${citation.volume ? ` ${citation.volume}` : ""}${citation.issue ? `.${citation.issue}` : ""} (${year})${citation.pages ? `: ${citation.pages}` : ""}.${link}`;
 
       case "chicago":
-        return `${authorsString}. "${title}." ${citation.journal || ""}${citation.volume ? ` ${citation.volume}` : ""}${citation.issue ? `, no. ${citation.issue}` : ""} (${year})${citation.pages ? `: ${citation.pages}` : ""}.${citation.doi ? ` https://doi.org/${citation.doi}` : ""}`;
+        return `${authorsString}. "${title}." ${citation.journal || ""}${citation.volume ? ` ${citation.volume}` : ""}${citation.issue ? `, no. ${citation.issue}` : ""} (${year})${citation.pages ? `: ${citation.pages}` : ""}.${link}`;
 
       default:
         return `${authorsString} (${year}). ${title}.`;

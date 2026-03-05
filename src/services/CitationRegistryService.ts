@@ -1,4 +1,3 @@
-import { apiClient } from "./apiClient";
 import { CitationService, StoredCitation } from "./citationService";
 
 export interface RegistryEntry {
@@ -131,9 +130,11 @@ export class CitationRegistryService {
             }
 
             const response = await CitationService.addCitation(projectId, {
-                title: enrichedMetadata?.title || citationText.substring(0, 30) + '...',
-                authors: enrichedMetadata?.authors || [],
-                year: typeof enrichedMetadata?.year === 'number' ? enrichedMetadata?.year : parseInt(String(enrichedMetadata?.year) || '0'),
+                title: enrichedMetadata?.title || citationText.substring(0, 50) + '...',
+                authors: enrichedMetadata?.authors?.length ? enrichedMetadata.authors : ["Unknown"],
+                year: typeof enrichedMetadata?.year === 'number' && !isNaN(enrichedMetadata.year)
+                    ? enrichedMetadata.year
+                    : (parseInt(String(enrichedMetadata?.year)) || new Date().getFullYear()),
                 url: enrichedMetadata?.url,
                 doi: enrichedMetadata?.doi,
                 journal: enrichedMetadata?.journal,

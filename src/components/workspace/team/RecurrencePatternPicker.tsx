@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calendar, Clock, X } from "lucide-react";
+import { Clock, X } from "lucide-react";
 
 interface RecurrencePatternPickerProps {
   value?: string; // pattern: "daily", "weekly", "monthly", "yearly"
@@ -31,6 +31,7 @@ export default function RecurrencePatternPicker({
       hasEndDate && endDate ? new Date(endDate) : undefined,
       hasMaxOccurrences ? maxOccurrences : undefined,
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pattern, endDate, hasEndDate, maxOccurrences, hasMaxOccurrences]);
 
   const daysOfWeek = [
@@ -96,11 +97,10 @@ export default function RecurrencePatternPicker({
               <button
                 key={day.value}
                 onClick={() => toggleDay(day.value)}
-                className={`flex-1 py-2 px-1 rounded-md text-xs font-medium transition-colors ${
-                  selectedDays.includes(day.value)
+                className={`flex-1 py-2 px-1 rounded-md text-xs font-medium transition-colors ${selectedDays.includes(day.value)
                     ? "bg-blue-500 text-white"
                     : "bg-white text-slate-600 border border-slate-300 hover:bg-slate-50"
-                }`}>
+                  }`}>
                 {day.label}
               </button>
             ))}

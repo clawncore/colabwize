@@ -466,9 +466,18 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       editable: !isReadOnly, // Lock editor for viewer-role collaborators
       extensions: [
         StarterKit.configure({
-          history: !isCollaborative, // Disable history in collab mode (handled by Yjs)
+          history: !isCollaborative,
           link: false, // Prevent duplicate extension names error if StarterKit includes it
         } as any),
+        Link.configure({
+          openOnClick: true,
+          autolink: true,
+          HTMLAttributes: {
+            class: 'text-blue-600 underline cursor-pointer bibliography-url-link',
+            rel: 'noopener noreferrer nofollow',
+            target: '_blank',
+          },
+        }),
         ...(isCollaborative &&
           collabReady &&
           providerRef.current &&
@@ -1399,8 +1408,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
                   className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
-                      ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
                     }`}
                   title={
                     isPreviewMode
@@ -1418,8 +1427,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 <button
                   onClick={onToggleFocusMode}
                   className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
-                      ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
                     }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (

@@ -85,7 +85,7 @@ export const BibliographyEntry = Node.create<BibliographyEntryOptions>({
                 props: {
                     decorations(state) {
                         const decorations: Decoration[] = [];
-                        const urlRegex = /https?:\/\/[^\s]+/g;
+                        const urlRegex = /https?:\/\/[^\s)\].]+/g;
 
                         state.doc.descendants((node, pos) => {
                             if (node.type.name !== 'bibliographyEntry') return true;
@@ -99,9 +99,12 @@ export const BibliographyEntry = Node.create<BibliographyEntryOptions>({
                                 urlRegex.lastIndex = 0;
 
                                 while ((match = urlRegex.exec(text)) !== null) {
+                                    // Make sure we strip any trailing generic punctuation that got caught
+                                    let url = match[0];
+                                    if (url.endsWith('.') || url.endsWith(',')) url = url.slice(0, -1);
+
                                     const from = pos + 1 + childPos + match.index;
-                                    const to = from + match[0].length;
-                                    const url = match[0];
+                                    const to = from + url.length;
 
                                     decorations.push(
                                         Decoration.inline(from, to, {

@@ -1,0 +1,87 @@
+Dolutegravir in HIV-1 Treatment: Pharmacology, Clinical Efficacy, and Safety
+
+Abstract
+
+Dolutegravir (DTG) is a second-generation integrase strand transfer inhibitor (INSTI) that has become a cornerstone of antiretroviral therapy (ART) for people living with HIV-1. Its high potency, favorable pharmacokinetic profile, strong genetic barrier to resistance, and once-daily dosing distinguish it from earlier agents. This paper reviews the drug’s mechanism of action, clinical efficacy, safety, resistance patterns, and its role in contemporary HIV management. Evidence from randomized controlled trials and clinical studies supports its widespread adoption in treatment-naïve and treatment-experienced patients.
+
+
+
+1. Introduction
+
+Since the discovery of HIV in the early 1980s, antiretroviral therapy has transformed the disease from a terminal illness into a manageable chronic condition . Integrase strand transfer inhibitors (INSTIs) represent a key class of antiretrovirals that target the HIV integrase enzyme, preventing viral DNA from integrating into the host genome . Dolutegravir, a second-generation INSTI, was approved by the U.S. Food and Drug Administration in 2013 and has rapidly become a first-line treatment option due to its efficacy and tolerability .
+
+
+
+2. Mechanism of Action
+
+Dolutegravir inhibits the HIV integrase enzyme by binding to the integrase–DNA complex and blocking the strand transfer step necessary for viral replication . The drug exhibits a slow dissociation from this complex, contributing to its prolonged antiviral activity and high genetic barrier to resistance compared with earlier INSTIs like raltegravir and elvitegravir .
+
+
+
+3. Pharmacokinetics and Pharmacodynamics
+
+Dolutegravir is absorbed orally, reaching peak plasma concentrations within 2–3 hours, and demonstrates a terminal half-life of approximately 14 hours, allowing for once-daily administration without pharmacokinetic boosting . It is metabolized primarily through uridine diphosphate glucuronosyltransferase 1A1 (UGT1A1) with a minor role for CYP3A4, contributing to a low potential for drug–drug interactions when compared with protease inhibitors .
+
+
+
+4. Clinical Efficacy
+
+4.1 Treatment-Naïve Patients
+
+Multiple Phase III trials have demonstrated the superior or noninferior efficacy of dolutegravir-based regimens in treatment-naïve adults. In the SPRING-2 study, dolutegravir showed noninferior virologic suppression compared with raltegravir at 48 weeks . The SINGLE trial demonstrated that dolutegravir combined with abacavir/lamivudine resulted in superior viral suppression compared with efavirenz/tenofovir/emtricitabine .
+
+4.2 Treatment-Experienced Patients
+
+For treatment-experienced patients with prior INSTI failure, dolutegravir given twice daily has shown robust activity. The VIKING studies revealed significant reductions in viral load, even in the presence of mutations conferring resistance to earlier INSTIs .
+
+
+
+5. Safety and Tolerability
+
+Dolutegravir is generally well tolerated. Common adverse effects include headache, nausea, and insomnia . Case reports have noted weight gain and neuropsychiatric symptoms in a subset of patients, requiring clinical monitoring . Mild elevations in serum creatinine are frequently observed due to inhibition of tubular secretion but do not indicate actual decline in renal glomerular filtration rate .
+
+
+
+6. Resistance Profile
+
+Dolutegravir has a high genetic barrier to resistance. In treatment-naïve patients, resistance mutations are rare, even on virologic failure . Certain mutations (e.g., R263K) confer modest resistance in vitro but remain uncommon in clinical practice, underscoring the drug’s robustness .
+
+
+
+7. Role in Contemporary HIV Treatment
+
+Because of its high efficacy, tolerability, and convenience, dolutegravir is recommended by international guidelines as a first-line agent for most individuals with HIV-1 . Its use in dual therapy regimens with lamivudine and other nucleoside reverse transcriptase inhibitors is also supported by evidence demonstrating maintained viral suppression with reduced drug exposure .
+
+
+
+8. Conclusion
+
+Dolutegravir represents a major advancement in HIV therapy, offering strong virologic suppression, a favorable safety profile, and minimal drug interactions. Its high genetic barrier to resistance positions it as a cornerstone of modern ART regimens globally. Future research should continue monitoring long-term outcomes, resistance patterns, and impacts on quality of life.
+
+
+
+References
+
+Deeks, S. G., Lewin, S. R., & Havlir, D. V. (2013). The end of AIDS: HIV infection as a chronic disease. Lancet, 382(9903), 1525–1533. https://doi.org/10.1016/S0140-6736(13)61809-7
+
+Finn, A., et al. (2016). Integrase Strand Transfer Inhibitors. Journal of Antimicrobial Chemotherapy, 71(4), 1031–1048. https://doi.org/10.1093/jac/dkv423
+
+Grinsztejn, B., et al. (2014). Efficacy and safety of dolutegravir in subjects with raltegravir-resistant HIV-1 infection (VIKING-3). Lancet Infectious Diseases, 14(2), 129–135. https://doi.org/10.1016/S1473-3099(13)70277-X
+
+Hare, S., et al. (2010). Structural basis for HIV-1 integrase inhibition and drug resistance. Proceedings of the National Academy of Sciences, 107(46), 19747–19752. https://doi.org/10.1073/pnas.1011128107
+
+Lake, J. E., & Currier, J. S. (2013). Metabolic disease in HIV infection. Lancet Diabetes & Endocrinology, 1(1), 66–75. https://doi.org/10.1016/S2213-8587(13)70011-Z
+
+Mesplède, T., & Wainberg, M. A. (2015). Resistance to integrase inhibitors. Infection, Genetics and Evolution, 36, 359–380. https://doi.org/10.1016/j.meegid.2015.10.019
+
+Min, S., et al. (2011). Safety, pharmacokinetics, and antiviral activity of dolutegravir. Antimicrobial Agents and Chemotherapy, 55(9), 3536–3542. https://doi.org/10.1128/AAC.00273-11
+
+Raffi, F., et al. (2013). Once-daily dolutegravir versus raltegravir in treatment-naïve adults with HIV-1 infection. Lancet, 381(9868), 735–743. https://doi.org/10.1016/S0140-6736(12)61999-8
+
+Steigbigel, R. T., et al. (2012). Dolutegravir in HIV-infected patients with raltegravir resistance: Results from the VIKING studies. Journal of Infectious Diseases, 206(1), 48–55. https://doi.org/10.1093/infdis/jis355
+
+Van Wyk, J., et al. (2019). Dolutegravir with lamivudine for initial treatment of HIV-1 infection. New England Journal of Medicine, 381(18), 1690–1701. https://doi.org/10.1056/NEJMoa1902821
+
+Walmsley, S., et al. (2013). Dolutegravir plus abacavir–lamivudine for the treatment of HIV-1 infection. New England Journal of Medicine, 369(19), 1807–1818. https://doi.org/10.1056/NEJMoa1305415
+
+World Health Organization. (2021). Consolidated guidelines on HIV prevention, testing, treatment, service delivery, and monitoring: Recommendations for a public health approach. https://www.who.int/publications/i/item/9789240031593

@@ -62,9 +62,9 @@ export const CitationComponent = (props: NodeViewProps) => {
                     {/* Header Tags */}
                     <div className="flex items-center gap-1.5 flex-wrap">
                         <Badge variant="secondary" className="px-[6px] py-[2px] text-[10px] bg-gray-100/80 text-gray-500 hover:bg-gray-100/80 font-medium border-0 shadow-none">Review</Badge>
-                        {(metadata?.metadata as any)?.metrics?.citedBy && (
+                        {(metadata?.metadata as any)?.citationCount !== undefined && (
                             <Badge variant="outline" className="px-[6px] py-[2px] text-[10px] text-gray-600 font-medium bg-gray-50/50 border-gray-100 shadow-none">
-                                <span className="text-[9px] text-gray-400 mr-1 uppercase">CITED BY</span> <span className="font-bold text-gray-900">{(metadata?.metadata as any).metrics.citedBy}</span>
+                                <span className="text-[9px] text-gray-400 mr-1 uppercase">CITED BY</span> <span className="font-bold text-gray-900">{(metadata?.metadata as any).citationCount}</span>
                             </Badge>
                         )}
                         {(metadata?.metadata as any)?.metrics?.impactFactor && (
@@ -87,7 +87,7 @@ export const CitationComponent = (props: NodeViewProps) => {
                             {metadata?.authors?.join(", ") || "Unknown Authors"}
                         </p>
                         <p className="text-[13px] text-emerald-600 font-medium mt-1">
-                            {(metadata?.metadata as any)?.journal || "Journal of Unknown"} · {metadata?.year || "N/A"}
+                            {(metadata?.metadata as any)?.journal || (metadata?.metadata as any)?.publisher || "Journal of Unknown"} · {metadata?.year || "N/A"}
                         </p>
                     </div>
 

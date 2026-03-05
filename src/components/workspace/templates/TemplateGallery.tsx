@@ -200,6 +200,7 @@ export default function TemplateGallery() {
       loadTemplates();
       fetchWorkspaceName();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId]);
 
   const fetchWorkspaceName = async () => {

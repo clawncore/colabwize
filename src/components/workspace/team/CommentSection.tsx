@@ -39,6 +39,7 @@ export function CommentSection({ taskId, workspaceId, currentUserId, canEdit = t
     if (taskId) {
       fetchComments();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId]);
 
   useEffect(() => {

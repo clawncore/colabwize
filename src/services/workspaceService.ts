@@ -269,5 +269,5 @@ class WorkspaceService {
     }
   }
 }
-
-export default new WorkspaceService();
+const workspaceService = new WorkspaceService();
+export default workspaceService;
