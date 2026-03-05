@@ -133,6 +133,17 @@ export default function DashboardLayout({
     fetchWorkspaces();
   }, [fetchWorkspaces]);
 
+  // Prevent indexing of dashboard pages
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.getElementsByTagName("head")[0].appendChild(meta);
+    return () => {
+      document.getElementsByTagName("head")[0].removeChild(meta);
+    };
+  }, []);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -819,8 +830,8 @@ export default function DashboardLayout({
                             ) : (
                               <Hash
                                 className={`w-4 h-4 flex-shrink-0 ${isActive
-                                    ? "text-emerald-500"
-                                    : "text-slate-300"
+                                  ? "text-emerald-500"
+                                  : "text-slate-300"
                                   }`}
                               />
                             )}
@@ -1044,8 +1055,8 @@ export default function DashboardLayout({
                                       className={`w-3 h-3 transition-transform duration-200 ${expandedWorkspaces.includes(
                                         `admin-${ws.id}`,
                                       )
-                                          ? "rotate-90"
-                                          : ""
+                                        ? "rotate-90"
+                                        : ""
                                         }`}
                                     />
                                   </div>

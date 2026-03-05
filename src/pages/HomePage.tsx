@@ -33,7 +33,7 @@ function HeroSection() {
       },
       {
         text: "A Platform for Original, Credible, and Human Work.",
-        gradientWord: "Human Work.",
+        gradientWord: "Work.",
       },
     ],
     [],
@@ -75,11 +75,11 @@ function HeroSection() {
   const currentPhrase = phrases[loopNum % phrases.length];
 
   return (
-    <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-white">
+    <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-white font-primary">
       {/* Content */}
       <div className="relative z-10 container-custom text-center mt-12">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-500 mb-6 leading-tight">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-800 mb-6 leading-tight">
             {typedText.includes(currentPhrase.gradientWord)
               ? typedText.replace(currentPhrase.gradientWord, "")
               : typedText}
@@ -93,7 +93,7 @@ function HeroSection() {
             )}
           </h1>
 
-          <p className="text-lg md:text-xl text-gray-500 font-semibold mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-500 font-medium mb-8 max-w-2xl mx-auto leading-relaxed">
             A comprehensive academic integrity and defensibility platform
             designed to transform the writing process from a source of anxiety
             into a source of confidence.
@@ -165,23 +165,13 @@ function PreviewSection() {
   const [activeTab, setActiveTab] = useState(0);
 
   const features = [
-    {
-      id: "originality-map",
-      icon: Map,
-      title: "Explainable Originality Map",
-      description:
-        "Color-coded heatmap shows exactly which parts of your document need attention.",
-      image: "https://i.ibb.co/sdHVBb82/editor.png?w=800&q=80",
-      iconColor: "text-purple-600",
-      iconBg: "bg-purple-100",
-      previewBg: "bg-purple-50",
-    },
+
     {
       id: "citation-auditor",
       icon: SearchCheck,
-      title: "Citation Confidence Auditor",
+      title: "Citation Auditor",
       description:
-        "Get confidence scores for each section and warnings about outdated or unsupported claims.",
+        "Advanced auditing that scores every claim in your document against credible research databases.",
       image:
         "https://i.ibb.co/sY9F6B3/Screenshot-2026-01-13-203136.png?w=800&q=80",
       iconColor: "text-green-600",
@@ -201,17 +191,18 @@ function PreviewSection() {
       previewBg: "bg-blue-50",
     },
     {
-      id: "defensibility-log",
-      icon: History,
-      title: "Defensibility Log",
+      id: "real-time-collaboration",
+      icon: Users,
+      title: "Real-Time Collaboration",
       description:
-        "Generate authorship certificates proving your work is original with time tracking.",
+        "Write together seamlessly. Edit continuously with peers and experience conflict-free live co-authoring.",
       image:
-        "https://i.ibb.co/Pv7B5kmy/Screenshot-2026-01-14-092154.png?w=800&q=80",
-      iconColor: "text-amber-600",
-      iconBg: "bg-amber-100",
-      previewBg: "bg-amber-50",
+        "https://i.ibb.co/LnxYfW3/Screenshot-2026-01-13-201542.png?w=800&q=80",
+      iconColor: "text-indigo-600",
+      iconBg: "bg-indigo-100",
+      previewBg: "bg-indigo-50",
     },
+
   ];
 
   return (
@@ -259,6 +250,11 @@ function PreviewSection() {
                         <h3
                           className={`text-lg font-bold ${isActive ? "text-gray-900" : "text-gray-400 group-hover:text-gray-600"} transition-colors`}>
                           {feature.title}
+                          {feature.id === "originality-map" && (
+                            <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200 uppercase tracking-tighter">
+                              Under Dev
+                            </span>
+                          )}
                         </h3>
                         {/* Smooth expand/collapse using grid */}
                         <div
@@ -282,17 +278,15 @@ function PreviewSection() {
             {features.map((feature, index) => (
               <div
                 key={feature.id}
-                className={`absolute inset-0 transition-all duration-700 ease-in-out flex items-center justify-center p-8 lg:p-12 ${feature.previewBg} ${
-                  activeTab === index
-                    ? "opacity-100 z-10"
-                    : "opacity-0 z-0 pointer-events-none"
-                }`}>
-                <div
-                  className={`w-full h-full relative rounded-2xl overflow-hidden shadow-2xl border border-black/5 bg-white transition-all duration-700 ease-out transform ${
-                    activeTab === index
-                      ? "translate-y-0 scale-100 opacity-100 delay-100"
-                      : "translate-y-8 scale-95 opacity-0"
+                className={`absolute inset-0 transition-all duration-700 ease-in-out flex items-center justify-center p-8 lg:p-12 ${feature.previewBg} ${activeTab === index
+                  ? "opacity-100 z-10"
+                  : "opacity-0 z-0 pointer-events-none"
                   }`}>
+                <div
+                  className={`w-full h-full relative rounded-2xl overflow-hidden shadow-2xl border border-black/5 bg-white transition-all duration-700 ease-out transform ${activeTab === index
+                    ? "translate-y-0 scale-100 opacity-100 delay-100"
+                    : "translate-y-8 scale-95 opacity-0"
+                    }`}>
                   {/* MacOS like window header */}
                   <div className="h-10 bg-gray-50/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-4 gap-2 absolute top-0 w-full z-10">
                     <div className="w-3 h-3 rounded-full bg-red-400"></div>
@@ -392,9 +386,9 @@ function FeaturesGrid() {
     {
       id: "team-workspaces",
       icon: LayoutDashboard,
-      title: "Unified Team Workspaces",
+      title: "Collaborative Workspaces",
       description:
-        "Centralize your team's research. Organize projects, delegate responsibilities, and monitor activities seamlessly.",
+        "Centralize your team's research. Real-time co-authoring with individual contribution logs for full team transparency.",
       image:
         "https://image2url.com/r2/default/gifs/1772349529885-091865dd-d9dc-40c6-bbc4-92dff5ccc409.gif?w=800&q=80",
       iconColor: "text-rose-600",
@@ -408,7 +402,7 @@ function FeaturesGrid() {
       description:
         "Write together seamlessly. Edit continuously with peers and experience conflict-free live co-authoring.",
       image:
-        "https://image2url.com/r2/default/images/1772350833155-2a078749-5ed1-4b43-9b87-12532fe0d025.png?w=800&q=80",
+        "https://i.ibb.co/LnxYfW3/Screenshot-2026-01-13-201542.png?w=800&q=80",
       iconColor: "text-indigo-600",
       iconBg: "bg-indigo-100",
       previewBg: "bg-indigo-50",
@@ -425,24 +419,13 @@ function FeaturesGrid() {
       iconBg: "bg-cyan-100",
       previewBg: "bg-cyan-50",
     },
-    {
-      id: "originality-map",
-      icon: Map,
-      title: "Explainable Originality Map",
-      description:
-        "Color-coded heatmap shows exactly which parts of your document need attention, with clear safety classifications (Green/Yellow/Red).",
-      image:
-        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-      iconColor: "text-purple-600",
-      iconBg: "bg-purple-100",
-      previewBg: "bg-purple-50",
-    },
+
     {
       id: "citation-auditor",
       icon: SearchCheck,
-      title: "Citation Confidence Auditor",
+      title: "Citation Auditor",
       description:
-        "Get confidence scores for each section and warnings about outdated or unsupported claims with suggestions for missing links.",
+        "Advanced auditing that scores every claim in your document against credible research databases with suggestions for missing links.",
       image:
         "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80",
       iconColor: "text-green-600",
@@ -461,18 +444,7 @@ function FeaturesGrid() {
       iconBg: "bg-blue-100",
       previewBg: "bg-blue-50",
     },
-    {
-      id: "defensibility-log",
-      icon: History,
-      title: "Defensibility Log",
-      description:
-        "Generate authorship certificates proving your work is original with time tracking and manual effort verification.",
-      image:
-        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80",
-      iconColor: "text-amber-600",
-      iconBg: "bg-amber-100",
-      previewBg: "bg-amber-50",
-    },
+
   ];
 
   return (
@@ -504,28 +476,30 @@ function FeaturesGrid() {
                       onClick={() => setActiveTab(index)}
                       className="w-full text-left py-4 flex items-center gap-4 group transition-all outline-none">
                       <div
-                        className={`p-2.5 rounded-xl ${feature.iconBg} transition-transform duration-300 shrink-0 ${
-                          isActive
-                            ? "scale-110 shadow-sm"
-                            : "group-hover:scale-105"
-                        }`}>
+                        className={`p-2.5 rounded-xl ${feature.iconBg} transition-transform duration-300 shrink-0 ${isActive
+                          ? "scale-110 shadow-sm"
+                          : "group-hover:scale-105"
+                          }`}>
                         <Icon className={`w-5 h-5 ${feature.iconColor}`} />
                       </div>
                       <div className="flex-1">
                         <h4
-                          className={`text-base font-bold ${
-                            isActive
-                              ? "text-gray-900"
-                              : "text-gray-400 group-hover:text-gray-600"
-                          } transition-colors tracking-tight`}>
+                          className={`text-base font-bold ${isActive
+                            ? "text-gray-900"
+                            : "text-gray-400 group-hover:text-gray-600"
+                            } transition-colors tracking-tight`}>
                           {feature.title}
+                          {feature.id === "originality-map" && (
+                            <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200 uppercase tracking-tighter">
+                              Under Dev
+                            </span>
+                          )}
                         </h4>
                         <div
-                          className={`grid transition-all duration-300 ease-in-out ${
-                            isActive
-                              ? "grid-rows-[1fr] opacity-100 mt-1"
-                              : "grid-rows-[0fr] opacity-0"
-                          }`}>
+                          className={`grid transition-all duration-300 ease-in-out ${isActive
+                            ? "grid-rows-[1fr] opacity-100 mt-1"
+                            : "grid-rows-[0fr] opacity-0"
+                            }`}>
                           <div className="overflow-hidden">
                             <p className="text-gray-500 text-sm leading-relaxed pr-2 font-medium">
                               {feature.description}
@@ -545,19 +519,16 @@ function FeaturesGrid() {
             {features.map((feature, index) => (
               <div
                 key={feature.id}
-                className={`absolute inset-0 transition-opacity duration-500 ease-in-out flex flex-col ${
-                  feature.previewBg
-                } ${
-                  activeTab === index
+                className={`absolute inset-0 transition-opacity duration-500 ease-in-out flex flex-col ${feature.previewBg
+                  } ${activeTab === index
                     ? "opacity-100 z-10"
                     : "opacity-0 z-0 pointer-events-none"
-                }`}>
+                  }`}>
                 <img
                   src={feature.image}
                   alt={feature.title}
-                  className={`w-full h-full object-cover object-left-top transition-transform duration-700 ease-out flex-1 ${
-                    activeTab === index ? "scale-100" : "scale-105"
-                  }`}
+                  className={`w-full h-full object-cover object-left-top transition-transform duration-700 ease-out flex-1 ${activeTab === index ? "scale-100" : "scale-105"
+                    }`}
                 />
 
                 {/* Decorative fade at the bottom to blend */}

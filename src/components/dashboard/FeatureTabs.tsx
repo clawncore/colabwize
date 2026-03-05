@@ -7,10 +7,10 @@ interface FeatureTabsProps {
 
 export const FeatureTabs: React.FC<FeatureTabsProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { id: "originality" as const, label: "🔍 Originality Map", icon: "🔍" },
+
+    { id: "originality" as const, label: "🗺️ Originality Map", icon: "🗺️" },
     { id: "citations" as const, label: "📚 Citations", icon: "📚" },
     { id: "ai-detection" as const, label: "🤖 AI Detection", icon: "🤖" },
-    { id: "authorship" as const, label: "📜 Certificate", icon: "📜" },
   ];
 
   return (
@@ -22,10 +22,9 @@ export const FeatureTabs: React.FC<FeatureTabsProps> = ({ activeTab, onTabChange
             onClick={() => onTabChange(tab.id)}
             className={`
               py-4 px-1 border-b-2 font-medium text-sm transition-colors
-              ${
-                activeTab === tab.id
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              ${activeTab === tab.id
+                ? "border-indigo-500 text-indigo-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }
             `}
           >

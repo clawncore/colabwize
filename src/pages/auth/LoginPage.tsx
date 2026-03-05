@@ -140,6 +140,17 @@ const LoginPage: React.FC = () => {
     }
   }, [searchParams]);
 
+  // Prevent indexing of login page
+  React.useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.getElementsByTagName("head")[0].appendChild(meta);
+    return () => {
+      document.getElementsByTagName("head")[0].removeChild(meta);
+    };
+  }, []);
+
   const handleGoogleLogin = async () => {
     setSocialLoading(true);
     try {

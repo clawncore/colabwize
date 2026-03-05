@@ -5,6 +5,8 @@ import Layout from "../../components/Layout";
 import { Button } from "../../components/ui/button";
 import { blogPosts } from "../../data/blogPosts";
 
+import { Helmet } from "react-helmet-async";
+
 export default function BlogPostPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -30,8 +32,37 @@ export default function BlogPostPage() {
     );
   }
 
+  // Create article schema JSON
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt,
+    author: {
+      "@type": "Organization",
+      name: "ColabWize",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "ColabWize",
+    },
+    datePublished: post.date,
+    mainEntityOfPage: `https://colabwize.com/resources/blogs/${post.id}`,
+  };
+
   return (
     <Layout>
+      <Helmet>
+        <title>{post.title} | ColabWize Blog</title>
+        <meta name="description" content={post.excerpt} />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.excerpt} />
+        <meta property="og:type" content="article" />
+        <link rel="canonical" href={`https://colabwize.com/resources/blogs/${post.id}`} />
+        <script type="application/ld+json">
+          {JSON.stringify(articleSchema)}
+        </script>
+      </Helmet>
       <article className="min-h-screen bg-white">
         {/* Header / Hero */}
         <div className="relative h-[400px] w-full bg-gray-900">
@@ -42,8 +73,8 @@ export default function BlogPostPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
           <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 text-white container-custom">
-            <Link 
-              to="/resources/blogs" 
+            <Link
+              to="/resources/blogs"
               className="inline-flex items-center text-gray-300 hover:text-white mb-6 transition-colors"
             >
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Blogs
@@ -76,7 +107,7 @@ export default function BlogPostPage() {
 
         {/* Content */}
         <div className="container-custom max-w-3xl py-12 md:py-16">
-          <div 
+          <div
             className="prose prose-lg prose-indigo max-w-none text-gray-700 leading-relaxed"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />

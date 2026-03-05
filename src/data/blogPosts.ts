@@ -84,7 +84,7 @@ export const blogPosts: BlogPost[] = [
       <p>The best defense is a paper trail. Use Google Docs or Word with "Track Changes" enabled. This records your version history, showing the evolution of your document from a blank page to the final draft. AI generates text in massive chunks instantly; humans write, delete, and rewrite over hours.</p>
 
       <h3>2. Use Tools like ColabWize</h3>
-      <p>ColabWize offers an "Authorship Certificate" features. By writing within the platform or using the plugin, it tracks your active writing time, keystrokes, and editing sessions. If a professor questions your authorship, you can produce a verified certificate showing exactly how long you spent writing the paper.</p>
+      <p>ColabWize offers an <a href="/solutions/authorship-certificate" style="color: #16a34a; text-decoration: underline;">Authorship Certificate</a> feature. By writing within the platform or using the plugin, it tracks your active writing time, keystrokes, and editing sessions. If a professor questions your authorship, you can produce a verified certificate showing exactly how long you spent writing the paper.</p>
 
       <h3>3. Develop Your Voice</h3>
       <p>Don't try to sound like a textbook. Use your own voice, your own analogies, and specific class examples. The more specific and personal your writing is, the less likely it is to trigger an AI detector (and the better your grade will likely be).</p>
@@ -162,7 +162,7 @@ export const blogPosts: BlogPost[] = [
 
       <h2>The Authorship Certificate Solution</h2>
       <p>Manually saving every version of your file is tedious. This is why "Authorship Assurance" tools are becoming standard.</p>
-      <p>ColabWize's <strong>Authorship Certificate</strong> solves this by passively recording your writing metadata. It does not record your screen or webcam (preserving privacy), but it tracks:</p>
+      <p>ColabWize's <a href="/solutions/authorship-certificate" style="color: #16a34a; text-decoration: underline; font-weight: bold;">Authorship Certificate</a> solves this by passively recording your writing metadata. It does not record your screen or webcam (preserving privacy), but it tracks:</p>
       <ul>
         <li><strong>Total Editing Time:</strong> Did you spend 10 hours or 10 minutes?</li>
         <li><strong>Paste Events:</strong> Did you type the essay, or paste it in a giant block from ChatGPT?</li>
@@ -560,7 +560,7 @@ export const blogPosts: BlogPost[] = [
       <p>Checking 50 citations manually is tedious. Checking the <em>status</em> of those citations (e.g., have they been retracted?) is almost impossible for a student to do quickly. Retraction Watch estimates that thousands of retracted papers continue to be cited simply because researchers don't know they were pulled.</p>
 
       <h2>The Citation Auditor Solution</h2>
-      <p>This is where technology serves integrity. ColabWize's <strong>Citation Auditor</strong> performs a health check on your bibliography.</p>
+      <p>This is where technology serves integrity. ColabWize's <a href="/citation-auditor" style="color: #16a34a; text-decoration: underline; font-weight: bold;">Citation Auditor</a> performs a health check on your bibliography.</p>
       <ul>
         <li><strong>Verification:</strong> It pings databases like CrossRef and PubMed to ensure the DOI actually resolves to the claimed title.</li>
         <li><strong>Retraction Alert:</strong> It checks against retraction databases. If you are citing a study that was debunked two years ago, it warns you *before* you embarrass yourself.</li>

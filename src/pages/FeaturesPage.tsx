@@ -8,9 +8,9 @@ import {
   Zap,
   Shield,
   Clock,
-
   ArrowRight,
   Bot,
+  Users,
 } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -136,19 +136,7 @@ function FeatureDetail({
 // Features Presentation Flow
 function FeaturesPresentationFlow() {
   const coreFeatures = [
-    {
-      icon: Map,
-      title: "Originality Map",
-      description:
-        "Visual heatmap showing exactly where your content matches other sources",
-      benefits: [
-        "Color-coded highlighting",
-        "Source detection",
-        "Smart rephrase suggestions",
-      ],
-      imageUrl: "https://i.ibb.co/sdHVBb82/editor.png?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
-    },
+
     {
       icon: BookOpen,
       title: "Citation Confidence",
@@ -161,25 +149,15 @@ function FeaturesPresentationFlow() {
       reverse: true,
     },
     {
-      icon: FileText,
-      title: "Draft Comparison",
-      description: "Compare your draft with original content",
-      benefits: ["Text comparison", "File comparison", "Smart rephrasing"],
-      imageUrl:
-        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
+      icon: Users,
+      title: "Real-Time Collaboration",
+      description: "Write together seamlessly with peers and experience conflict-free live co-authoring.",
+      benefits: ["Live editing", "Individual logs", "Conflict-free"],
+      imageUrl: "https://image2url.com/r2/default/images/1772350833155-2a078749-5ed1-4b43-9b87-12532fe0d025.png?w=800&h=600&fit=crop",
+      color: "from-indigo-600 to-indigo-800",
       reverse: false,
     },
-    {
-      icon: Award,
-      title: "Authorship Certificate",
-      description: "Generate professional certificates proving your authorship",
-      benefits: ["Time tracking", "Manual edits counter", "QR verification"],
-      imageUrl:
-        "https://i.ibb.co/Pv7B5kmy/Screenshot-2026-01-14-092154.png?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
-      reverse: true,
-    },
+
   ];
 
   const additionalFeatures = [

@@ -30,6 +30,18 @@ const footerLinks = {
       href: "/solutions/authorship-certificate",
     },
   ],
+  integrity: [
+    { name: "Academic Integrity Hub", href: "/academic-integrity" },
+    { name: "Prove Authorship", href: "/prove-authorship" },
+    { name: "Citation Verification", href: "/citation-verification" },
+    { name: "AI False Positives", href: "/ai-false-positive-problem" },
+  ],
+  guides: [
+    { name: "Proven Not AI Guide", href: "/how-to-prove-your-writing-is-not-ai" },
+    { name: "Check Credibility", href: "/how-to-check-citation-credibility" },
+    { name: "Ethical Collaboration", href: "/how-to-collaborate-on-academic-papers" },
+    { name: "The AI Crisis Report", href: "/false-ai-detection-in-academia" },
+  ],
   company: [
     { name: "About Us", href: "/company/about" },
     { name: "Careers", href: "/company/careers" },
@@ -56,20 +68,19 @@ export default function Footer() {
     <footer className="bg-[#F3F0EC] border-t border-white">
       <div className="container-custom">
         {/* Main Footer Content */}
-        <div className="py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-5">
+        <div className="py-16 border-b border-gray-100">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10">
             {/* Logo and Description */}
-            <div className="lg:col-span-1">
-              <Link to="/" className="flex items-center space-x-2 mb-4">
+            <div className="col-span-2 md:col-span-3 lg:col-span-2">
+              <Link to="/" className="flex items-center space-x-2 mb-6">
                 <img
                   src="/images/Colabwize-logo.png"
                   alt="ColabWize Logo"
                   className="h-8 w-auto"
                 />
-                <span className="text-xl font-bold text-black">ColabWize</span>{" "}
-                {/* Changed from text-white to text-black */}
+                <span className="text-xl font-bold text-black font-primary">ColabWize</span>
               </Link>
-              <p className="text-gray-400 text-sm mb-6 max-w-xs">
+              <p className="text-gray-500 text-sm mb-8 max-w-sm leading-relaxed">
                 Your Academic Success, Defended. A platform designed to
                 transform anxiety into confidence through academic integrity and
                 defensibility.
@@ -79,10 +90,10 @@ export default function Footer() {
                   <a
                     key={social.name}
                     href={social.href}
-                    className="p-2 rounded-lg bg-gray-800 border border-gray-700 hover:border-blue-500 hover:shadow-sm transition-all duration-200 group"
+                    className="p-2.5 rounded-xl bg-white border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-200 group"
                     target="_blank"
                     rel="noopener noreferrer">
-                    <social.icon className="h-4 w-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
+                    <social.icon className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
                     <span className="sr-only">{social.name}</span>
                   </a>
                 ))}
@@ -91,15 +102,15 @@ export default function Footer() {
 
             {/* Product Links */}
             <div>
-              <h3 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
+              <h3 className="text-xs font-bold text-black mb-6 uppercase tracking-[0.2em] font-primary">
                 Product
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-4">
                 {footerLinks.product.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-gray-400 hover:text-blue-400 transition-colors duration-200 text-sm">
+                      className="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-sm font-medium">
                       {link.name}
                     </Link>
                   </li>
@@ -107,45 +118,35 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* Resources Links */}
+            {/* Integrity Hub Links */}
             <div>
-              <h3 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
-                Resources
+              <h3 className="text-xs font-bold text-black mb-6 uppercase tracking-[0.2em] font-primary">
+                Integrity
               </h3>
-              <ul className="space-y-3">
-                {footerLinks.resources.map((link: any) => (
+              <ul className="space-y-4">
+                {footerLinks.integrity.map((link) => (
                   <li key={link.name}>
-                    {link.external ? (
-                      <a
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-400 hover:text-blue-400 transition-colors duration-200 text-sm">
-                        {link.name}
-                      </a>
-                    ) : (
-                      <Link
-                        to={link.href}
-                        className="text-gray-400 hover:text-blue-400 transition-colors duration-200 text-sm">
-                        {link.name}
-                      </Link>
-                    )}
+                    <Link
+                      to={link.href}
+                      className="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-sm font-medium">
+                      {link.name}
+                    </Link>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Solutions Links */}
+            {/* Guides Links */}
             <div>
-              <h3 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
-                Solutions
+              <h3 className="text-xs font-bold text-black mb-6 uppercase tracking-[0.2em] font-primary">
+                Guides
               </h3>
-              <ul className="space-y-3">
-                {footerLinks.solutions.map((link) => (
+              <ul className="space-y-4">
+                {footerLinks.guides.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-gray-400 hover:text-blue-400 transition-colors duration-200 text-sm">
+                      className="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-sm font-medium">
                       {link.name}
                     </Link>
                   </li>
@@ -155,33 +156,15 @@ export default function Footer() {
 
             {/* Company Links */}
             <div>
-              <h3 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
+              <h3 className="text-xs font-bold text-black mb-6 uppercase tracking-[0.2em] font-primary">
                 Company
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-4">
                 {footerLinks.company.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-gray-400 hover:text-blue-400 transition-colors duration-200 text-sm">
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Legal Links */}
-            <div>
-              <h3 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
-                Legal
-              </h3>
-              <ul className="space-y-3">
-                {footerLinks.legal.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      to={link.href}
-                      className="text-gray-400 hover:text-blue-400 transition-colors duration-200 text-sm">
+                      className="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-sm font-medium">
                       {link.name}
                     </Link>
                   </li>
