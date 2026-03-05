@@ -1610,8 +1610,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               Find Papers
             </button>
 
-            {/* Originality Scan Pipeline (Plagiarism Detection) */}
-            <OriginalityMapAdapter
+            {/* Originality Scan Pipeline (Plagiarism Detection) — temporarily hidden */}
+            {/* <OriginalityMapAdapter
               projectId={project.id}
               editor={editor}
               onScanComplete={(results) => {
@@ -1619,7 +1619,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   onOpenPanel("originality-results", results);
                 }
               }}
-            />
+            /> */}
 
             <button
               onClick={handleCompareClick}
