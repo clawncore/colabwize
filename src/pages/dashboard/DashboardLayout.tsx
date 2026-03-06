@@ -300,6 +300,32 @@ export default function DashboardLayout({
 
   const userPlan = getPlanDisplayName(plan);
 
+  // Collaboration usage limits based on plan
+  const collaborationLimits = (() => {
+    const p = userPlan.toLowerCase();
+    if (
+      p.includes("premium") ||
+      p.includes("pro") ||
+      p.includes("researcher")
+    ) {
+      return {
+        workspaces: "unlimited" as const,
+        collaborators: "unlimited" as const,
+      };
+    }
+    if (p.includes("plus") || p.includes("student")) {
+      return { workspaces: 5, collaborators: 10 };
+    }
+    return { workspaces: 1, collaborators: 2 };
+  })();
+
+  // Current workspace status
+  const currentWorkspace = workspaces.find(
+    (ws) => ws.id === currentWorkspaceId,
+  );
+  const currentWorkspaceMemberCount =
+    currentWorkspace?._count?.members || currentWorkspace?.members?.length || 0;
+
   const handleSignOut = async () => {
     try {
       await logout();
@@ -516,10 +542,11 @@ export default function DashboardLayout({
                       <span
                         className={`
                       ml-0.5 px-2 py-1 text-xs font-bold rounded-full shadow-sm
-                      ${userPlan.includes("Plus") || userPlan.includes("Pro")
-                            ? "bg-blue-600 text-white"
-                            : "bg-purple-600 text-white"
-                          }
+                      ${
+                        userPlan.includes("Plus") || userPlan.includes("Pro")
+                          ? "bg-blue-600 text-white"
+                          : "bg-purple-600 text-white"
+                      }
                     `}>
                         {userPlan.includes("Plus") || userPlan.includes("Pro")
                           ? "PLUS"
@@ -599,12 +626,13 @@ export default function DashboardLayout({
                   <div
                     className={`
                     relative w-8 h-8 rounded-full flex items-center justify-center
-                    ${userPlan === "Free Plan" || !userPlan
+                    ${
+                      userPlan === "Free Plan" || !userPlan
                         ? "bg-gradient-to-br from-gray-400 to-gray-600"
                         : userPlan.includes("Plus") || userPlan.includes("Pro")
                           ? "bg-gradient-to-br from-blue-500 to-blue-700"
                           : "bg-gradient-to-br from-purple-500 to-purple-700"
-                      }
+                    }
                   `}>
                     {user?.user_metadata?.avatar_url ? (
                       <img
@@ -625,10 +653,11 @@ export default function DashboardLayout({
                         <div
                           className={`
                         absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center shadow-sm
-                        ${userPlan.includes("Plus") || userPlan.includes("Pro")
-                              ? "bg-blue-500 border-2 border-white"
-                              : "bg-purple-500 border-2 border-white"
-                            }
+                        ${
+                          userPlan.includes("Plus") || userPlan.includes("Pro")
+                            ? "bg-blue-500 border-2 border-white"
+                            : "bg-purple-500 border-2 border-white"
+                        }
                       `}>
                           <Crown className="w-2 h-2 text-white" />
                         </div>
@@ -646,13 +675,14 @@ export default function DashboardLayout({
                         <div
                           className={`
                           relative w-10 h-10 rounded-full flex items-center justify-center
-                          ${userPlan === "Free Plan" || !userPlan
+                          ${
+                            userPlan === "Free Plan" || !userPlan
                               ? "bg-gradient-to-br from-gray-400 to-gray-600"
                               : userPlan.includes("Plus") ||
-                                userPlan.includes("Pro")
+                                  userPlan.includes("Pro")
                                 ? "bg-gradient-to-br from-blue-500 to-blue-700"
                                 : "bg-gradient-to-br from-purple-500 to-purple-700"
-                            }
+                          }
                         `}>
                           {user?.user_metadata?.avatar_url ? (
                             <img
@@ -664,8 +694,8 @@ export default function DashboardLayout({
                             <span className="text-white font-medium">
                               {user?.user_metadata?.full_name
                                 ? user.user_metadata.full_name
-                                  .charAt(0)
-                                  .toUpperCase()
+                                    .charAt(0)
+                                    .toUpperCase()
                                 : user?.email?.charAt(0).toUpperCase() || "U"}
                             </span>
                           )}
@@ -675,11 +705,12 @@ export default function DashboardLayout({
                               <div
                                 className={`
                               absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-sm
-                              ${userPlan.includes("Plus") ||
-                                    userPlan.includes("Pro")
-                                    ? "bg-blue-500 border-2 border-white"
-                                    : "bg-purple-500 border-2 border-white"
-                                  }
+                              ${
+                                userPlan.includes("Plus") ||
+                                userPlan.includes("Pro")
+                                  ? "bg-blue-500 border-2 border-white"
+                                  : "bg-purple-500 border-2 border-white"
+                              }
                             `}>
                                 <Crown className="w-2.5 h-2.5 text-white" />
                               </div>
@@ -770,9 +801,10 @@ export default function DashboardLayout({
                     to={item.href}
                     className={`
                       flex items-center px-3 py-2 rounded-lg text-sm font-medium ${transitionClasses}
-                      ${currentActiveTab === item.id
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
-                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                      ${
+                        currentActiveTab === item.id
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
+                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                       }
                       ${sidebarCollapsed ? "justify-center" : ""}
                     `}>
@@ -813,9 +845,10 @@ export default function DashboardLayout({
                         <div
                           className={`
                             flex items-center px-3 py-2 rounded-lg text-sm font-medium ${transitionClasses} group
-                            ${isActive
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
+                            ${
+                              isActive
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
                             }
                             ${sidebarCollapsed ? "justify-center" : "justify-between"}
                           `}
@@ -829,10 +862,11 @@ export default function DashboardLayout({
                               </span>
                             ) : (
                               <Hash
-                                className={`w-4 h-4 flex-shrink-0 ${isActive
-                                  ? "text-emerald-500"
-                                  : "text-slate-300"
-                                  }`}
+                                className={`w-4 h-4 flex-shrink-0 ${
+                                  isActive
+                                    ? "text-emerald-500"
+                                    : "text-slate-300"
+                                }`}
                               />
                             )}
                             {!sidebarCollapsed && (
@@ -842,8 +876,9 @@ export default function DashboardLayout({
 
                           {!sidebarCollapsed && (
                             <ChevronRight
-                              className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""
-                                }`}
+                              className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                                isExpanded ? "rotate-90" : ""
+                              }`}
                             />
                           )}
                         </div>
@@ -855,10 +890,11 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/overview`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname ===
+                                ${
+                                  pathname ===
                                   `/dashboard/workspace/${ws.id}/overview`
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
                               `}>
                               <LayoutDashboard className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
@@ -868,11 +904,12 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/projects`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(
-                                `/workspace/${ws.id}/projects`,
-                              )
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/projects`,
+                                  )
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
                               `}>
                               <Briefcase className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
@@ -882,11 +919,12 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/templates`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(
-                                `/workspace/${ws.id}/templates`,
-                              )
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/templates`,
+                                  )
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
                               `}>
                               <Layout className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
@@ -896,9 +934,10 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/files`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(`/workspace/${ws.id}/files`)
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(`/workspace/${ws.id}/files`)
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
                               `}>
                               <FileText className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
@@ -908,11 +947,12 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/kanban`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(
-                                `/workspace/${ws.id}/kanban`,
-                              ) && !searchParams.get("view")
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/kanban`,
+                                  ) && !searchParams.get("view")
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
                               `}>
                               <Trello className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
@@ -922,11 +962,12 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/kanban?view=calendar`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(
-                                `/workspace/${ws.id}/kanban`,
-                              ) && searchParams.get("view") === "calendar"
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/kanban`,
+                                  ) && searchParams.get("view") === "calendar"
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
                               `}>
                               <Calendar className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
@@ -936,11 +977,12 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/analytics`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(
-                                `/workspace/${ws.id}/analytics`,
-                              )
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/analytics`,
+                                  )
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
                               `}>
                               <BarChart2 className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
@@ -950,9 +992,10 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/chat`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(`/workspace/${ws.id}/chat`)
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(`/workspace/${ws.id}/chat`)
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
                               `}>
                               <MessageSquare className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
@@ -962,11 +1005,12 @@ export default function DashboardLayout({
                               to={`/dashboard/workspace/${ws.id}/notifications`}
                               className={`
                                 flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                ${pathname.includes(
-                                `/workspace/${ws.id}/notifications`,
-                              )
-                                  ? "text-emerald-600 bg-emerald-50/50"
-                                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                ${
+                                  pathname.includes(
+                                    `/workspace/${ws.id}/notifications`,
+                                  )
+                                    ? "text-emerald-600 bg-emerald-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                                 }
                               `}>
                               <Bell className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
@@ -1005,9 +1049,10 @@ export default function DashboardLayout({
                           }
                           className={`
                             flex items-center px-3 py-2 rounded-lg text-sm font-medium ${transitionClasses} cursor-pointer
-                            ${currentActiveTab === item.id
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
-                              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                            ${
+                              currentActiveTab === item.id
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
+                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                             }
                             ${sidebarCollapsed ? "justify-center" : "justify-between"}
                           `}>
@@ -1021,8 +1066,9 @@ export default function DashboardLayout({
                           </div>
                           {!sidebarCollapsed && (
                             <ChevronRight
-                              className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isAdminExpanded ? "rotate-90" : ""
-                                }`}
+                              className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                                isAdminExpanded ? "rotate-90" : ""
+                              }`}
                             />
                           )}
                         </div>
@@ -1052,77 +1098,82 @@ export default function DashboardLayout({
                                       </span>
                                     </div>
                                     <ChevronRight
-                                      className={`w-3 h-3 transition-transform duration-200 ${expandedWorkspaces.includes(
-                                        `admin-${ws.id}`,
-                                      )
-                                        ? "rotate-90"
-                                        : ""
-                                        }`}
+                                      className={`w-3 h-3 transition-transform duration-200 ${
+                                        expandedWorkspaces.includes(
+                                          `admin-${ws.id}`,
+                                        )
+                                          ? "rotate-90"
+                                          : ""
+                                      }`}
                                     />
                                   </div>
 
                                   {expandedWorkspaces.includes(
                                     `admin-${ws.id}`,
                                   ) && (
-                                      <div className="ml-2 pl-2 border-l border-slate-200 mt-1 space-y-1">
-                                        <Link
-                                          to={`/dashboard/admin/${ws.id}/members`}
-                                          className={`
+                                    <div className="ml-2 pl-2 border-l border-slate-200 mt-1 space-y-1">
+                                      <Link
+                                        to={`/dashboard/admin/${ws.id}/members`}
+                                        className={`
                                         flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                        ${pathname.includes(
+                                        ${
+                                          pathname.includes(
                                             `/admin/${ws.id}/members`,
                                           )
-                                              ? "text-emerald-600 bg-emerald-50/50"
-                                              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                                            }
+                                            ? "text-emerald-600 bg-emerald-50/50"
+                                            : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                        }
                                       `}>
-                                          <Users className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
-                                          Members
-                                        </Link>
-                                        <Link
-                                          to={`/dashboard/admin/${ws.id}/settings`}
-                                          className={`
+                                        <Users className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
+                                        Members
+                                      </Link>
+                                      <Link
+                                        to={`/dashboard/admin/${ws.id}/settings`}
+                                        className={`
                                         flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                        ${pathname.includes(
+                                        ${
+                                          pathname.includes(
                                             `/admin/${ws.id}/settings`,
                                           )
-                                              ? "text-emerald-600 bg-emerald-50/50"
-                                              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                                            }
+                                            ? "text-emerald-600 bg-emerald-50/50"
+                                            : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                        }
                                       `}>
-                                          <Settings className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
-                                          Settings
-                                        </Link>
-                                        <Link
-                                          to={`/dashboard/admin/${ws.id}/activity`}
-                                          className={`
+                                        <Settings className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
+                                        Settings
+                                      </Link>
+                                      <Link
+                                        to={`/dashboard/admin/${ws.id}/activity`}
+                                        className={`
                                         flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                        ${pathname.includes(
+                                        ${
+                                          pathname.includes(
                                             `/admin/${ws.id}/activity`,
                                           )
-                                              ? "text-emerald-600 bg-emerald-50/50"
-                                              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                                            }
+                                            ? "text-emerald-600 bg-emerald-50/50"
+                                            : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                        }
                                       `}>
-                                          <List className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
-                                          Activity Log
-                                        </Link>
-                                        <Link
-                                          to={`/dashboard/admin/${ws.id}/notifications`}
-                                          className={`
+                                        <List className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
+                                        Activity Log
+                                      </Link>
+                                      <Link
+                                        to={`/dashboard/admin/${ws.id}/notifications`}
+                                        className={`
                                         flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses}
-                                        ${pathname.includes(
+                                        ${
+                                          pathname.includes(
                                             `/admin/${ws.id}/notifications`,
                                           )
-                                              ? "text-emerald-600 bg-emerald-50/50"
-                                              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                                            }
+                                            ? "text-emerald-600 bg-emerald-50/50"
+                                            : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                        }
                                       `}>
-                                          <Bell className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
-                                          Notifications
-                                        </Link>
-                                      </div>
-                                    )}
+                                        <Bell className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
+                                        Notifications
+                                      </Link>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                           </div>
@@ -1137,9 +1188,10 @@ export default function DashboardLayout({
                       to={item.href}
                       className={`
                         flex items-center px-3 py-2 rounded-lg text-sm font-medium ${transitionClasses}
-                        ${currentActiveTab === item.id
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
-                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                        ${
+                          currentActiveTab === item.id
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100 shadow-sm"
+                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                         }
                         ${sidebarCollapsed ? "justify-center" : ""}
                       `}>
@@ -1219,14 +1271,6 @@ export default function DashboardLayout({
                         featureName="searches"
                       />
 
-                      {/* Originality Meter */}
-                      <UsageMeter
-                        current={planUsage?.originality_scan || 0}
-                        limit={planLimits?.originality_scan ?? 3}
-                        planName={userPlan}
-                        featureName="originality"
-                      />
-
                       {/* Citations Meter */}
                       <UsageMeter
                         current={
@@ -1254,6 +1298,24 @@ export default function DashboardLayout({
                         planName={userPlan}
                         featureName="rephrase"
                       />
+
+                      {/* Workspaces Meter */}
+                      <UsageMeter
+                        current={workspaces.length}
+                        limit={collaborationLimits.workspaces}
+                        planName={userPlan}
+                        featureName="workspaces"
+                      />
+
+                      {/* Collaborators Meter (Only show when in a workspace) */}
+                      {currentWorkspaceId && (
+                        <UsageMeter
+                          current={currentWorkspaceMemberCount}
+                          limit={collaborationLimits.collaborators}
+                          planName={userPlan}
+                          featureName="collaborators"
+                        />
+                      )}
                     </div>
                   </div>
 
@@ -1261,15 +1323,15 @@ export default function DashboardLayout({
                     (() => {
                       const derivedCurrent =
                         ((planUsage?.originality_scan || 0) >=
-                          (planLimits?.originality_scan ?? 3)
+                        (planLimits?.originality_scan ?? 3)
                           ? 1
                           : 0) +
                         ((planUsage?.citation_check ||
                           planUsage?.citation_audit ||
                           0) >=
-                          (planLimits?.citation_audit ??
-                            planLimits?.citation_check ??
-                            0)
+                        (planLimits?.citation_audit ??
+                          planLimits?.citation_check ??
+                          0)
                           ? 1
                           : 0) +
                         ((planUsage?.rephrase ||
