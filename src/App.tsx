@@ -138,194 +138,6 @@ function App() {
   }
 
   return (
-<<<<<<< HEAD
-    <ThemeProvider>
-      <TimeTrackingProvider>
-        <BillingProvider>
-          <TooltipProvider>
-            <BrowserRouter>
-              <AuthProvider>
-                <AuthInitializer>
-                  <Routes>
-                    {/* Default Route - Public */}
-                    <Route path="/" element={<HomePage />} />
-                    {/* Solutions Routes - Marketing Pages - Public */}
-                    <Route
-                      path="/solutions/chat-with-pdfs"
-                      element={<ChatWithPdfsPage />}
-                    />
-                    <Route
-                      path="/solutions/citation-confidence"
-                      element={<CitationConfidencePage />}
-                    />
-                    <Route
-                      path="/solutions/authorship-certificate"
-                      element={<AuthorshipCertificatePage />}
-                    />
-                    <Route
-                      path="/solutions/unified-dashboard"
-                      element={<UnifiedDashboardPage />}
-                    />
-                    <Route
-                      path="/solutions/analytics-metrics"
-                      element={<AnalyticsMetricsPage />}
-                    />
-                    <Route
-                      path="/solutions/draft-comparison"
-                      element={<DraftComparisonPage />}
-                    />
-                    <Route
-                      path="/solutions/collaboration"
-                      element={<CollaborationPage />}
-                    />
-                    <Route
-                      path="/solutions/team-workspace"
-                      element={<TeamWorkspacePage />}
-                    />
-                    {/* Product Routes - Public */}
-                    <Route path="/features" element={<FeaturesPage />} />
-                    <Route
-                      path="/integrations"
-                      element={<IntegrationsPage />}
-                    />
-                    <Route path="/changelog" element={<ChangelogPage />} />
-                    <Route path="/roadmap" element={<RoadmapPage />} />
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route
-                      path="/workspaces/accept/:token"
-                      element={<AcceptInvitationPage />}
-                    />
-                    {/* Resources Routes - Public */}
-                    <Route path="/resources/blogs" element={<BlogsPage />} />
-                    <Route
-                      path="/resources/blogs/:id"
-                      element={<BlogPostPage />}
-                    />
-                    <Route
-                      path="/verify/:id"
-                      element={<VerifyCertificatePage />}
-                    />
-                    <Route
-                      path="/resources/case-studies"
-                      element={<CaseStudiesPage />}
-                    />
-                    <Route
-                      path="/resources/case-studies/:id"
-                      element={<CaseStudyPage />}
-                    />
-                    <Route
-                      path="/resources/help-center"
-                      element={<HelpCenterPage />}
-                    />
-                    <Route
-                      path="/resources/documentation"
-                      element={<DocumentationPage />}
-                    />
-                    <Route
-                      path="/resources/schedule-demo"
-                      element={<ScheduleDemoPage />}
-                    />
-                    {/* Company Routes - Public */}
-                    <Route path="/company/about" element={<AboutPage />} />
-                    <Route path="/company/careers" element={<CareersPage />} />
-                    <Route
-                      path="/company/partners"
-                      element={<PartnersPage />}
-                    />
-                    <Route path="/company/faq" element={<FAQPage />} />
-                    {/* Legal Routes - Public */}
-                    <Route
-                      path="/legal/cookies"
-                      element={<CookiePolicyPage />}
-                    />
-                    <Route path="/legal/gdpr" element={<GDPRPage />} />
-                    <Route path="/legal/security" element={<SecurityPage />} />
-                    <Route
-                      path="/legal/privacy"
-                      element={<PrivacyPolicyPage />}
-                    />
-                    <Route
-                      path="/legal/terms"
-                      element={<TermsOfServicePage />}
-                    />
-                    <Route
-                      path="/docs/refund-policy"
-                      element={<RefundPolicyPage />}
-                    />
-                    <Route
-                      path="/legal/refund-policy"
-                      element={<RefundPolicyPage />}
-                    />{" "}
-                    {/* Alias for SEO */}
-                    {/* Other Routes - Public */}
-                    <Route path="/contact" element={<ContactPage />} />
-                    <Route
-                      path="/schedule-demo"
-                      element={<ScheduleDemoPage />}
-                    />
-                    {/* Guest Only Routes - Accessible only when not signed in */}
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
-                    <Route
-                      path="/forgot-password"
-                      element={
-                        <GuestRoute>
-                          <ForgotPasswordPage />
-                        </GuestRoute>
-                      }
-                    />
-                    <Route
-                      path="/verify-email"
-                      element={
-                        <GuestRoute>
-                          <VerifyEmailPage />
-                        </GuestRoute>
-                      }
-                    />
-                    <Route
-                      path="/reset-password"
-                      element={
-                        <GuestRoute>
-                          <ResetPasswordPage />
-                        </GuestRoute>
-                      }
-                    />
-                    {/* Callback page handles auth state exchange, keeping it unrestricted or GuestRoute depending on logic. 
-                      Safest is unrestricted or GuestRoute if it redirects. */}
-                    <Route path="/auth/callback" element={<CallbackPage />} />
-                    {/* Protected Dashboard Routes <ProtectedRoute> */}
-                    <Route
-                      path="/dashboard"
-                      element={
-                        <ProtectedRoute>
-                          <DashboardLayout />
-                        </ProtectedRoute>
-                      }>
-                      <Route index element={<Dashboard />} />
-                      <Route
-                        path="documents"
-                        element={<DocumentManagementPage />}
-                      />
-                      <Route
-                        path="billing/subscription"
-                        element={<BillingDashboard />}
-                      />
-                      <Route path="pdf-upload" element={<PdfUploadPage />} />
-                      <Route
-                        path="pdf-chat/:pdfId"
-                        element={<PdfChatViewerPage />}
-                      />
-                      <Route path="billing/credits" element={<CreditsPage />} />
-                      <Route
-                        path="analytics"
-                        element={<DocumentAnalyticsPage />}
-                      />
-                      <Route
-                        path="citation-audit"
-                        element={<CitationAuditReportPage />}
-                      />
-                      <Route path="recycle-bin" element={<RecycleBinPage />} />
-=======
     <HelmetProvider>
       <ThemeProvider>
         <TimeTrackingProvider>
@@ -337,32 +149,83 @@ function App() {
                     <Routes>
                       {/* Default Route - Public */}
                       <Route path="/" element={<HomePage />} />
->>>>>>> 4045c969e811d5a608de1930dbb487a4f6b7b954
-
                       {/* SEO Definition & Category Pages */}
-                      <Route path="/academic-integrity" element={<AcademicIntegrityHub />} />
-                      <Route path="/academic-integrity-guide" element={<AcademicIntegrityGuide />} />
-                      <Route path="/prove-authorship" element={<ProveAuthorshipSEO />} />
-                      <Route path="/citation-verification" element={<CitationVerificationSEO />} />
-                      <Route path="/ai-false-positive-problem" element={<AIFalsePositiveSEO />} />
-                      <Route path="/how-to-prove-your-writing-is-not-ai" element={<ProvenNotAiSEO />} />
-                      <Route path="/how-to-check-citation-credibility" element={<CheckCredibilitySEO />} />
-                      <Route path="/how-to-collaborate-on-academic-papers" element={<CollaborateAcademicSEO />} />
-                      <Route path="/false-ai-detection-in-academia" element={<FalseAiAcademiaSEO />} />
-                      <Route path="/what-is-academic-integrity" element={<WhatIsAcademicIntegrity />} />
-                      <Route path="/what-is-citation-verification" element={<WhatIsCitationVerification />} />
-                      <Route path="/what-is-authorship-verification" element={<WhatIsAuthorshipVerification />} />
-                      <Route path="/compare/:competitor" element={<ComparePage />} />
-
-                      <Route path="/what-is-colabwize" element={<WhatIsColabWize />} />
-                      <Route path="/academic-integrity-platform" element={<AcademicIntegrityPlatform />} />
-                      <Route path="/citation-auditor" element={<CitationAuditorSEO />} />
-                      <Route path="/proof-of-authorship" element={<ProofOfAuthorshipSEO />} />
-                      <Route path="/academic-collaboration" element={<AcademicCollaborationSEO />} />
+                      <Route
+                        path="/academic-integrity"
+                        element={<AcademicIntegrityHub />}
+                      />
+                      <Route
+                        path="/academic-integrity-guide"
+                        element={<AcademicIntegrityGuide />}
+                      />
+                      <Route
+                        path="/prove-authorship"
+                        element={<ProveAuthorshipSEO />}
+                      />
+                      <Route
+                        path="/citation-verification"
+                        element={<CitationVerificationSEO />}
+                      />
+                      <Route
+                        path="/ai-false-positive-problem"
+                        element={<AIFalsePositiveSEO />}
+                      />
+                      <Route
+                        path="/how-to-prove-your-writing-is-not-ai"
+                        element={<ProvenNotAiSEO />}
+                      />
+                      <Route
+                        path="/how-to-check-citation-credibility"
+                        element={<CheckCredibilitySEO />}
+                      />
+                      <Route
+                        path="/how-to-collaborate-on-academic-papers"
+                        element={<CollaborateAcademicSEO />}
+                      />
+                      <Route
+                        path="/false-ai-detection-in-academia"
+                        element={<FalseAiAcademiaSEO />}
+                      />
+                      <Route
+                        path="/what-is-academic-integrity"
+                        element={<WhatIsAcademicIntegrity />}
+                      />
+                      <Route
+                        path="/what-is-citation-verification"
+                        element={<WhatIsCitationVerification />}
+                      />
+                      <Route
+                        path="/what-is-authorship-verification"
+                        element={<WhatIsAuthorshipVerification />}
+                      />
+                      <Route
+                        path="/compare/:competitor"
+                        element={<ComparePage />}
+                      />
+                      <Route
+                        path="/what-is-colabwize"
+                        element={<WhatIsColabWize />}
+                      />
+                      <Route
+                        path="/academic-integrity-platform"
+                        element={<AcademicIntegrityPlatform />}
+                      />
+                      <Route
+                        path="/citation-auditor"
+                        element={<CitationAuditorSEO />}
+                      />
+                      <Route
+                        path="/proof-of-authorship"
+                        element={<ProofOfAuthorshipSEO />}
+                      />
+                      <Route
+                        path="/academic-collaboration"
+                        element={<AcademicCollaborationSEO />}
+                      />
                       {/* Solutions Routes - Marketing Pages - Public */}
                       <Route
-                        path="/solutions/originality-map"
-                        element={<OriginalityMapPage />}
+                        path="/solutions/chat-with-pdfs"
+                        element={<ChatWithPdfsPage />}
                       />
                       <Route
                         path="/solutions/citation-confidence"
@@ -437,7 +300,10 @@ function App() {
                       />
                       {/* Company Routes - Public */}
                       <Route path="/company/about" element={<AboutPage />} />
-                      <Route path="/company/careers" element={<CareersPage />} />
+                      <Route
+                        path="/company/careers"
+                        element={<CareersPage />}
+                      />
                       <Route
                         path="/company/partners"
                         element={<PartnersPage />}
@@ -445,11 +311,14 @@ function App() {
                       <Route path="/company/faq" element={<FAQPage />} />
                       {/* Legal Routes - Public */}
                       <Route
-                        path="/ legal/cookies"
+                        path="/legal/cookies"
                         element={<CookiePolicyPage />}
                       />
                       <Route path="/legal/gdpr" element={<GDPRPage />} />
-                      <Route path="/legal/security" element={<SecurityPage />} />
+                      <Route
+                        path="/legal/security"
+                        element={<SecurityPage />}
+                      />
                       <Route
                         path="/legal/privacy"
                         element={<PrivacyPolicyPage />}
@@ -500,8 +369,6 @@ function App() {
                           </GuestRoute>
                         }
                       />
-                      {/* Callback page handles auth state exchange, keeping it unrestricted or GuestRoute depending on logic. 
-                        Safest is unrestricted or GuestRoute if it redirects. */}
                       <Route path="/auth/callback" element={<CallbackPage />} />
                       {/* Protected Dashboard Routes <ProtectedRoute> */}
                       <Route
@@ -525,7 +392,10 @@ function App() {
                           path="pdf-chat/:pdfId"
                           element={<PdfChatViewerPage />}
                         />
-                        <Route path="billing/credits" element={<CreditsPage />} />
+                        <Route
+                          path="billing/credits"
+                          element={<CreditsPage />}
+                        />
                         <Route
                           path="analytics"
                           element={<DocumentAnalyticsPage />}
@@ -534,7 +404,10 @@ function App() {
                           path="citation-audit"
                           element={<CitationAuditReportPage />}
                         />
-                        <Route path="recycle-bin" element={<RecycleBinPage />} />
+                        <Route
+                          path="recycle-bin"
+                          element={<RecycleBinPage />}
+                        />
 
                         <Route path="admin" element={<AdminDashboard />} />
                         {/* Admin routes with layout <AdminRoute> */}
@@ -588,7 +461,10 @@ function App() {
                           path="workspace/:id/projects"
                           element={<WorkspaceProjectsPage />}
                         />
-                        <Route path="workspace/:id/chat" element={<TeamChat />} />
+                        <Route
+                          path="workspace/:id/chat"
+                          element={<TeamChat />}
+                        />
                         <Route
                           path="workspace/:id/analytics"
                           element={<WorkspaceAnalytics />}
