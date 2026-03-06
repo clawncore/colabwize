@@ -11,6 +11,10 @@ import {
   SearchCheck,
   History,
   LayoutDashboard,
+  Database,
+  PenTool,
+  ShieldCheck,
+  TrendingUp,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -712,6 +716,86 @@ function TestimonialsSection() {
   );
 }
 
+// Workflow Section Component
+function WorkflowSection() {
+  const steps = [
+    {
+      title: "01. Curate & Connect",
+      description:
+        "Centralize your research by importing PDF libraries and syncing team assets into a unified environment.",
+      icon: Database,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      title: "02. Author & Verify",
+      description:
+        "Write with the surgical precision of the Citation Auditor and real-time insights from your AI Research Assistant.",
+      icon: PenTool,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+    },
+    {
+      title: "03. Certify & Defend",
+      description:
+        "Generate verifiable Authorship Certificates and irrefutable audit logs to prove the integrity of your work.",
+      icon: ShieldCheck,
+      color: "text-green-600",
+      bg: "bg-green-50",
+    },
+  ];
+
+  return (
+    <section className="section-padding bg-slate-900 text-white overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500 rounded-full blur-[120px]"></div>
+      </div>
+
+      <div className="container-custom relative z-10">
+        <div className="text-center mb-20">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">
+            How ColabWize Works
+          </h2>
+          <p className="text-gray-400 text-xl max-w-2xl mx-auto">
+            A seamless three-step lifecycle designed for modern scholarly
+            excellence.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+          {/* Connector Line (Desktop) */}
+          <div className="hidden md:block absolute top-1/4 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500/0 via-gray-700 to-purple-500/0 -z-0"></div>
+
+          {steps.map((step, index) => (
+            <div key={index} className="relative z-10 group">
+              <div
+                className={`w-20 h-20 rounded-3xl ${step.bg} flex items-center justify-center mb-8 mx-auto md:mx-0 transform transition-transform group-hover:scale-110 duration-300 ring-4 ring-slate-800 shadow-2xl shadow-black/40`}>
+                <step.icon className={`w-10 h-10 ${step.color}`} />
+              </div>
+              <div className="text-center md:text-left">
+                <h3 className="text-2xl font-bold mb-4 tracking-tight">
+                  {step.title}
+                </h3>
+                <p className="text-gray-400 leading-relaxed font-medium">
+                  {step.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-20 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-full border border-slate-700 text-blue-400 text-sm font-bold animate-bounce">
+            <TrendingUp className="w-4 h-4" />
+            <span>Built for Institutional Standards</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // CTA Section Component
 function CTASection() {
   return (
@@ -803,6 +887,7 @@ export default function HomePage() {
       <HeroSection />
       <FeaturesGrid />
       <ComparisonSection />
+      <WorkflowSection />
       <PreviewSection />
       <TestimonialsSection />
       <LogoTicker />

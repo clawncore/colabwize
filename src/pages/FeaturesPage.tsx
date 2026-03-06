@@ -9,6 +9,7 @@ import {
   Shield,
   Clock,
   ArrowRight,
+  Bot,
   Sparkles,
   Check,
 } from "lucide-react";
