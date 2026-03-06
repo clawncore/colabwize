@@ -43,7 +43,7 @@ function FeaturesPresentationFlow() {
   // Simplified loading logic as plans are now static-ish
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">(
-    "monthly",
+    "yearly",
   );
   const [currentPlanId, setCurrentPlanId] = useState<string>("free");
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
