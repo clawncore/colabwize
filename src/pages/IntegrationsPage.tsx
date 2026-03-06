@@ -39,8 +39,9 @@ function IntroHero() {
           </h1>
 
           <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
-            ColabWize integrates seamlessly with the tools you already use. From
-            Google Docs to reference managers, we've got you covered.
+            ColabWize connects with the global research infrastructure. From
+            massive academic databases to your favorite reference managers,
+            we've built the bridges you need for a defensible workflow.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -133,107 +134,107 @@ function FeatureDetail({
 function FeaturesPresentationFlow() {
   const integrations = [
     {
-      icon: Plug,
-      title: "Google Docs Integration",
+      icon: Database,
+      title: "Global Research Databases",
       description:
-        "Scan your Google Docs directly without downloading. Real-time sync and analysis.",
+        "Directly query millions of papers across CrossRef, PubMed, ArXiv, and OpenAlex. No crawling or scraping—just pure, verified academic data.",
       benefits: [
-        "Direct integration with Google Workspace",
-        "Real-time document analysis",
-        "Automatic updates and sync",
-        "No need to download files",
+        "Real-time access to CrossRef and PubMed",
+        "ArXiv preprint integration",
+        "OpenAlex semantic search",
+        "Factual verification against peer-reviewed sources",
       ],
       imageUrl:
-        "https://images.unsplash.com/photo-1587330979470-3595ac045ab0?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
+        "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800&h=600&fit=crop",
+      color: "from-blue-600 to-blue-800",
     },
     {
       icon: Cloud,
-      title: "Microsoft Word Online",
+      title: "Google Drive & Workspace",
       description:
-        "Connect your Microsoft account and analyze Word documents in the cloud.",
+        "Import your existing PDF libraries and research documents directly from Google Drive for immediate analysis and co-authoring.",
       benefits: [
-        "Seamless Office 365 integration",
-        "Cloud-based document analysis",
-        "Real-time collaboration support",
-        "Cross-platform compatibility",
+        "Seamless document import and export",
+        "Direct PDF library synchronization",
+        "Collaborative research environments",
+        "Cloud-native storage and version control",
       ],
       imageUrl:
-        "https://images.unsplash.com/photo-1587330979470-3595ac045ab0?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
+        "https://images.unsplash.com/photo-1544391682-177c4d8ce3a9?w=800&h=600&fit=crop",
+      color: "from-green-600 to-emerald-700",
       reverse: true,
     },
     {
       icon: FileText,
-      title: "PDF & DOCX Support",
+      title: "Advanced File Support",
       description:
-        "Upload any PDF or DOCX file for instant analysis. Supports all major formats.",
+        "Upload and analyze PDF and DOCX files with high-fidelity preservation. Our engine extracts deep metadata for precise citation building.",
       benefits: [
-        "Support for all major document formats",
-        "Instant upload and analysis",
-        "High-fidelity document preservation",
-        "Batch processing capabilities",
+        "High-fidelity PDF & DOCX parsing",
+        "Fuzzy-match metadata extraction",
+        "Automatic DOI and URL discovery",
+        "Batch processing of research material",
       ],
       imageUrl:
-        "https://images.unsplash.com/photo-1587330979470-3595ac045ab0?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
+        "https://images.unsplash.com/photo-1568667256549-094345857637?w=800&h=600&fit=crop",
+      color: "from-rose-600 to-rose-800",
     },
     {
-      icon: Database,
-      title: "Reference Managers",
+      icon: Plug,
+      title: "Reference Management",
       description:
-        "Integrate with Zotero, Mendeley, and EndNote for seamless citation management.",
+        "Import your existing bibliographies from Zotero, Mendeley, and EndNote via standard BibTeX and RIS formats.",
       benefits: [
-        "Direct integration with major reference managers",
-        "Citation confidence validation",
-        "Automatic bibliography generation",
-        "Cross-platform sync support",
+        "Zotero & Mendeley compatibility",
+        "BibTeX and RIS format support",
+        "Intelligent citation normalization",
+        "Literature matrix generation",
       ],
       imageUrl:
-        "https://images.unsplash.com/photo-1587330979470-3595ac045ab0?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
+        "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&h=600&fit=crop",
+      color: "from-indigo-600 to-indigo-800",
       reverse: true,
     },
     {
-      icon: Link2,
-      title: "API Access",
+      icon: Zap,
+      title: "Authorship Engine",
       description:
-        "Build custom integrations with our RESTful API. Full documentation included.",
+        "Integrate your writing process with our proprietary Citation Auditor and Authorship Certificate system.",
       benefits: [
-        "Comprehensive RESTful API",
-        "Full developer documentation",
-        "SDKs for major programming languages",
-        "Enterprise-grade security",
+        "Real-time citation integrity checks",
+        "Immutable authorship audit logs",
+        "Manual effort verification",
+        "Verifiable submission-safety certificates",
       ],
       imageUrl:
-        "https://images.unsplash.com/photo-1587330979470-3595ac045ab0?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
+        "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop",
+      color: "from-cyan-600 to-cyan-800",
     },
     {
-      icon: Zap,
-      title: "Zapier & Webhooks",
+      icon: Link2,
+      title: "RESTful API Access",
       description:
-        "Automate workflows with Zapier integration and custom webhooks.",
+        "Build institutional compliance tools and custom dashboards with our comprehensive REST API for research data control.",
       benefits: [
-        "Zapier integration for workflow automation",
-        "Custom webhook support",
-        "Real-time event notifications",
-        "Custom integration possibilities",
+        "Enterprise-grade security and uptime",
+        "Full documentation for developers",
+        "Secure OAuth2 authentication",
+        "Advanced citation analysis endpoints",
       ],
       imageUrl:
-        "https://images.unsplash.com/photo-1587330979470-3595ac045ab0?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
+        "https://images.unsplash.com/photo-1558494949-ef01095d978a?w=800&h=600&fit=crop",
+      color: "from-amber-600 to-amber-700",
       reverse: true,
     },
   ];
 
   const benefits = [
-    "Work with your existing tools and workflows",
-    "No need to change how you write",
-    "Seamless data sync across platforms",
-    "Build custom integrations for your institution",
+    "Native connectivity with major academic databases",
+    "Verified sources through CrossRef and PubMed APIs",
+    "Standardized import/export via BibTeX and RIS",
+    "Secure document handling with Google Drive",
     "Enterprise-grade API with 99.9% uptime",
-    "Comprehensive developer documentation",
+    "Designed for institutional and personal research workflows",
   ];
 
   return (
@@ -328,8 +329,7 @@ function ClosingCTA() {
                 href="https://docs.colabwize.com/quickstart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center"
-              >
+                className="flex items-center">
                 See How It Works
               </a>
             </Button>
