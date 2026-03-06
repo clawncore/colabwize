@@ -1,4 +1,4 @@
-import { Check, Calendar, Sparkles } from "lucide-react";
+import { Check, Calendar, Sparkles, Users } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import Layout from "../components/Layout";
@@ -54,9 +54,6 @@ function IntroHero() {
     </section>
   );
 }
-
-// Feature Detail Component
-
 
 // Features Presentation Flow
 function FeaturesPresentationFlow() {
@@ -160,10 +157,11 @@ function FeaturesPresentationFlow() {
                   {quarter.quarter}
                 </h2>
                 <span
-                  className={`px-4 py-2 rounded-full text-sm font-semibold ${quarter.status === "In Progress"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
-                    }`}>
+                  className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                    quarter.status === "In Progress"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  }`}>
                   {quarter.status}
                 </span>
               </div>
@@ -208,7 +206,7 @@ function FeaturesPresentationFlow() {
                 We actively gather feedback from our users to prioritize
                 features that matter most to the academic community.
               </p>
-              <ul className="space-y-3">
+              <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-600 to-green-800 mt-2.5 flex-shrink-0"></div>
                   <span className="text-gray-600">
@@ -224,6 +222,18 @@ function FeaturesPresentationFlow() {
                   <span className="text-gray-600">Beta testing programs</span>
                 </li>
               </ul>
+              <Button
+                asChild
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold shadow-lg hover:shadow-green-500/20 transition-all duration-300">
+                <a
+                  href="https://discord.gg/2MMSdX3Uee"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center">
+                  <Users className="mr-2 h-5 w-5" />
+                  Join Our Community
+                </a>
+              </Button>
             </div>
 
             <div className="bg-white border border-gray-300 rounded-xl p-8">
@@ -304,8 +314,7 @@ function ClosingCTA() {
                 href="https://docs.colabwize.com/quickstart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center"
-              >
+                className="flex items-center">
                 See How It Works
               </a>
             </Button>
