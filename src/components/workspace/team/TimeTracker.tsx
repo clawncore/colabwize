@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Play, Square, Clock, Trash2 } from "lucide-react";
 import { Button } from "../../ui/button";
@@ -38,7 +38,6 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
   const { user } = useUser();
   const { activeTimer, elapsedTime, startTimer, stopTimer: globalStopTimer } = useTimeTracking();
   const [entries, setEntries] = useState<TimeEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 
   // Manual entry form
@@ -50,17 +49,15 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
 
   useEffect(() => {
     fetchTimeData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId]);
 
   const fetchTimeData = async () => {
-    setIsLoading(true);
     try {
       const data = await timeTrackingService.getTaskTimeEntries(taskId);
       setEntries(data);
     } catch (error) {
       console.error("Failed to fetch time entries", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 

@@ -33,7 +33,7 @@ function HeroSection() {
       },
       {
         text: "A Platform for Original, Credible, and Human Work.",
-        gradientWord: "Human Work.",
+        gradientWord: "Work.",
       },
     ],
     [],
@@ -75,11 +75,11 @@ function HeroSection() {
   const currentPhrase = phrases[loopNum % phrases.length];
 
   return (
-    <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-white">
+    <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-white font-primary">
       {/* Content */}
       <div className="relative z-10 container-custom text-center mt-12">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-500 mb-6 leading-tight">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-800 mb-6 leading-tight">
             {typedText.includes(currentPhrase.gradientWord)
               ? typedText.replace(currentPhrase.gradientWord, "")
               : typedText}
@@ -93,7 +93,7 @@ function HeroSection() {
             )}
           </h1>
 
-          <p className="text-lg md:text-xl text-gray-500 font-semibold mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-500 font-medium mb-8 max-w-2xl mx-auto leading-relaxed">
             A comprehensive academic integrity and defensibility platform
             designed to transform the writing process from a source of anxiety
             into a source of confidence.
@@ -166,22 +166,11 @@ function PreviewSection() {
 
   const features = [
     {
-      id: "originality-map",
-      icon: Map,
-      title: "Explainable Originality Map",
-      description:
-        "Color-coded heatmap shows exactly which parts of your document need attention.",
-      image: "https://i.ibb.co/sdHVBb82/editor.png?w=800&q=80",
-      iconColor: "text-purple-600",
-      iconBg: "bg-purple-100",
-      previewBg: "bg-purple-50",
-    },
-    {
       id: "citation-auditor",
       icon: SearchCheck,
-      title: "Citation Confidence Auditor",
+      title: "Citation Auditor",
       description:
-        "Get confidence scores for each section and warnings about outdated or unsupported claims.",
+        "Advanced auditing that scores every claim in your document against credible research databases.",
       image:
         "https://i.ibb.co/sY9F6B3/Screenshot-2026-01-13-203136.png?w=800&q=80",
       iconColor: "text-green-600",
@@ -201,16 +190,16 @@ function PreviewSection() {
       previewBg: "bg-blue-50",
     },
     {
-      id: "defensibility-log",
-      icon: History,
-      title: "Defensibility Log",
+      id: "real-time-collaboration",
+      icon: Users,
+      title: "Real-Time Collaboration",
       description:
-        "Generate authorship certificates proving your work is original with time tracking.",
+        "Write together seamlessly. Edit continuously with peers and experience conflict-free live co-authoring.",
       image:
-        "https://i.ibb.co/Pv7B5kmy/Screenshot-2026-01-14-092154.png?w=800&q=80",
-      iconColor: "text-amber-600",
-      iconBg: "bg-amber-100",
-      previewBg: "bg-amber-50",
+        "https://i.ibb.co/LnxYfW3/Screenshot-2026-01-13-201542.png?w=800&q=80",
+      iconColor: "text-indigo-600",
+      iconBg: "bg-indigo-100",
+      previewBg: "bg-indigo-50",
     },
   ];
 
@@ -259,6 +248,11 @@ function PreviewSection() {
                         <h3
                           className={`text-lg font-bold ${isActive ? "text-gray-900" : "text-gray-400 group-hover:text-gray-600"} transition-colors`}>
                           {feature.title}
+                          {feature.id === "originality-map" && (
+                            <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200 uppercase tracking-tighter">
+                              Under Dev
+                            </span>
+                          )}
                         </h3>
                         {/* Smooth expand/collapse using grid */}
                         <div
@@ -392,9 +386,9 @@ function FeaturesGrid() {
     {
       id: "team-workspaces",
       icon: LayoutDashboard,
-      title: "Unified Team Workspaces",
+      title: "Collaborative Workspaces",
       description:
-        "Centralize your team's research. Organize projects, delegate responsibilities, and monitor activities seamlessly.",
+        "Centralize your team's research. Real-time co-authoring with individual contribution logs for full team transparency.",
       image:
         "https://image2url.com/r2/default/gifs/1772349529885-091865dd-d9dc-40c6-bbc4-92dff5ccc409.gif?w=800&q=80",
       iconColor: "text-rose-600",
@@ -408,7 +402,7 @@ function FeaturesGrid() {
       description:
         "Write together seamlessly. Edit continuously with peers and experience conflict-free live co-authoring.",
       image:
-        "https://image2url.com/r2/default/images/1772350833155-2a078749-5ed1-4b43-9b87-12532fe0d025.png?w=800&q=80",
+        "https://i.ibb.co/LnxYfW3/Screenshot-2026-01-13-201542.png?w=800&q=80",
       iconColor: "text-indigo-600",
       iconBg: "bg-indigo-100",
       previewBg: "bg-indigo-50",
@@ -428,9 +422,9 @@ function FeaturesGrid() {
     {
       id: "citation-auditor",
       icon: SearchCheck,
-      title: "Citation Confidence Auditor",
+      title: "Citation Auditor",
       description:
-        "Get confidence scores for each section and warnings about outdated or unsupported claims with suggestions for missing links.",
+        "Advanced auditing that scores every claim in your document against credible research databases with suggestions for missing links.",
       image:
         "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80",
       iconColor: "text-green-600",
@@ -507,6 +501,11 @@ function FeaturesGrid() {
                               : "text-gray-400 group-hover:text-gray-600"
                           } transition-colors tracking-tight`}>
                           {feature.title}
+                          {feature.id === "originality-map" && (
+                            <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200 uppercase tracking-tighter">
+                              Under Dev
+                            </span>
+                          )}
                         </h4>
                         <div
                           className={`grid transition-all duration-300 ease-in-out ${

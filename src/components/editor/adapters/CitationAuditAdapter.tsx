@@ -40,7 +40,7 @@ export const CitationAuditAdapter: React.FC<CitationAuditAdapterProps> = ({
         try {
             setIsScanning(true);
             const rawResult = await BibliographyManager.auditDocument(
-                editor?.state.doc as any, // Pass Tiptap document Node
+                editor?.getJSON() as any, // Pass Tiptap document JSON
                 projectId
             );
 

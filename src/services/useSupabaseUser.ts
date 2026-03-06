@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { supabase } from "../lib/supabase/client";
-import { getIdToken } from "./supabaseAuth";
 
 /**
  * Supabase User Hook

@@ -29,6 +29,7 @@ const AcceptInvitationPage: React.FC = () => {
             setStatus("error");
             setErrorMessage("No invitation token provided.");
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, authLoading, token]);
 
     const acceptInvite = async () => {

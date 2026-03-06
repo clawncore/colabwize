@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AlertCircle,
   ArrowUpCircle,
   ArrowDownCircle,
   MinusCircle,

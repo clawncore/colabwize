@@ -5,7 +5,6 @@ import { CSS } from "@dnd-kit/utilities";
 import { WorkspaceTask } from "../../../services/workspaceTaskService";
 import { Avatar, AvatarFallback } from "../../ui/avatar";
 import {
-  Calendar,
   Trash2,
   GripVertical,
   CheckSquare,
@@ -13,7 +12,7 @@ import {
   Lock,
   Repeat,
 } from "lucide-react";
-import { format } from "date-fns";
+
 
 interface SortableTaskProps {
   task: WorkspaceTask;
@@ -50,15 +49,6 @@ export function SortableTask({
     medium: "bg-amber-50 text-amber-700 border-amber-100",
     high: "bg-red-50 text-red-700 border-red-100",
   };
-
-  const now = new Date();
-  const isOverdue =
-    task.due_date && new Date(task.due_date) < now && task.status !== "done";
-  const isDueSoon =
-    task.due_date &&
-    new Date(task.due_date) > now &&
-    new Date(task.due_date).getTime() < now.getTime() + 24 * 60 * 60 * 1000 &&
-    task.status !== "done";
 
   const isBlocked =
     task.dependencies &&

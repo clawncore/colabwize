@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import WorkspaceService, { Workspace } from "../services/workspaceService";
+import WorkspaceService from "../services/workspaceService";
 import { useUser } from "../services/useUser";
 
 export interface WorkspacePermissions {

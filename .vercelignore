@@ -1,0 +1,34 @@
+# Vercel Ignore File
+# Prevent massive directories from being uploaded during deployment
+
+# Backend logic (not needed for frontend deployment)
+backend/
+backend_backup/
+
+# Documentation
+docs/
+
+# Node modules (Vercel installs these on build)
+node_modules/
+*/node_modules/
+
+# Build artifacts
+build/
+dist/
+.vercel/
+
+# Version control
+.git/
+.gitignore
+.vercelignore
+
+# Editor and system files
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Large data/uploads
+uploads/
+temp/
+tmp/
+*.log

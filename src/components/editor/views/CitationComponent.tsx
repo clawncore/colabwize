@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NodeViewWrapper, NodeViewProps } from "@tiptap/react";
 import { CitationRegistryService, RegistryEntry } from "../../../services/CitationRegistryService";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../../ui/hover-card";
-import { ExternalLink, Edit2, BookOpen, FileText, RefreshCw, FileText as FileTextIcon } from "lucide-react";
+import { Edit2, RefreshCw, FileText as FileTextIcon } from "lucide-react";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
 
@@ -10,6 +10,7 @@ export const CitationComponent = (props: NodeViewProps) => {
     const { node, editor } = props;
     const { citationId, text } = node.attrs;
     const [metadata, setMetadata] = useState<RegistryEntry | null>(null);
+    const [citationCount, setCitationCount] = useState<number | undefined>(undefined);
 
     useEffect(() => {
         if (citationId) {
@@ -21,12 +22,32 @@ export const CitationComponent = (props: NodeViewProps) => {
         }
     }, [citationId]);
 
+    const handleOpenChange = (open: boolean) => {
+        if (open && editor && citationId) {
+            // Priority 1: Check registry cache for backend-synced count
+            const meta = (CitationRegistryService as any).cache?.get(citationId);
+            if (meta?.metadata?.citationCount !== undefined) {
+                setCitationCount(meta.metadata.citationCount);
+                return;
+            }
+
+            // Priority 2: In-document scan for real-time count
+            let count = 0;
+            editor.state.doc.descendants((n) => {
+                if (n.type.name === 'citation' && n.attrs.citationId === citationId) {
+                    count++;
+                }
+            });
+            setCitationCount(count);
+        }
+    };
+
     const displayText = text || "[citation]";
 
     const handleEdit = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        // Trigger whatever edit modal or panel is standard
+        // Trigger edit flow
         console.log("Edit citation", citationId);
     };
 
@@ -38,14 +59,51 @@ export const CitationComponent = (props: NodeViewProps) => {
         }
     };
 
+    const handleToggleNarrative = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!editor || !citationId) return;
+
+        let newText = displayText;
+        const parentheticalMatch = displayText.match(/^\((.+),\s*(\d{4}[a-z]?)\)$/);
+        if (parentheticalMatch) {
+            newText = `${parentheticalMatch[1].trim()} (${parentheticalMatch[2]})`;
+        } else {
+            const narrativeMatch = displayText.match(/^(.+?)\s*\((\d{4}[a-z]?)\)$/);
+            if (narrativeMatch) {
+                newText = `(${narrativeMatch[1].trim()}, ${narrativeMatch[2]})`;
+            }
+        }
+
+        if (newText !== displayText) {
+            const { state, dispatch } = editor.view;
+            const tr = state.tr;
+
+            // Find our specific node position
+            let pos = -1;
+            state.doc.descendants((child, childPos) => {
+                if (child.type.name === 'citation' && child.attrs.citationId === citationId && child === node) {
+                    pos = childPos;
+                    return false;
+                }
+            });
+
+            if (pos !== -1) {
+                tr.setNodeMarkup(pos, null, { ...node.attrs, text: newText });
+                dispatch(tr);
+            }
+        }
+    };
+
     return (
         <NodeViewWrapper className="inline-block" as="span">
-            <HoverCard openDelay={200} closeDelay={200}>
+            <HoverCard openDelay={200} closeDelay={200} onOpenChange={handleOpenChange}>
                 <HoverCardTrigger asChild>
                     <a
                         className="citation-node citation-pill"
                         data-citation-id={citationId}
-                        style={{ color: "#2563eb", fontWeight: 500, cursor: "pointer", textDecoration: "none" }}
+                        href="#"
                         onClick={(e) => {
                             e.preventDefault();
                             // If there's an active selection or click logic in editor, let it happen
@@ -55,61 +113,61 @@ export const CitationComponent = (props: NodeViewProps) => {
                     </a>
                 </HoverCardTrigger>
                 <HoverCardContent
-                    className="w-[340px] p-3 bg-white shadow-xl rounded-xl border border-gray-200 z-50 flex flex-col gap-2"
+                    className="w-[500px] p-3 bg-white shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] rounded-xl border border-gray-100 z-50 flex flex-col gap-2.5"
                     side="bottom"
                     align="start"
                 >
-                    {/* Header Tags */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge variant="secondary" className="px-[6px] py-[2px] text-[10px] bg-gray-100/80 text-gray-500 hover:bg-gray-100/80 font-medium border-0 shadow-none">Review</Badge>
-                        {(metadata?.metadata as any)?.metrics?.citedBy && (
-                            <Badge variant="outline" className="px-[6px] py-[2px] text-[10px] text-gray-600 font-medium bg-gray-50/50 border-gray-100 shadow-none">
-                                <span className="text-[9px] text-gray-400 mr-1 uppercase">CITED BY</span> <span className="font-bold text-gray-900">{(metadata?.metadata as any).metrics.citedBy}</span>
+                    {/* Top Header Section */}
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                            <h4 className="text-[15px] font-bold text-gray-900 leading-tight line-clamp-2">
+                                {metadata?.sourceTitle || "Reference Title Unavailable"}
+                            </h4>
+                            <p className="text-[12px] text-gray-500 font-medium truncate mt-0.5">
+                                {metadata?.authors?.join(", ") || "No Authors Found"}
+                            </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                            {(citationCount !== undefined && citationCount > 0) && (
+                                <Badge variant="outline" className="px-1.5 py-0 text-[9px] text-blue-600 bg-blue-50/50 border-blue-100 shadow-none font-bold">
+                                    {citationCount} CITES
+                                </Badge>
+                            )}
+                            <Badge variant="secondary" className="px-1.5 py-0 text-[9px] bg-gray-50 text-gray-400 border-0 flex items-center gap-1 font-bold">
+                                REVIEW
                             </Badge>
-                        )}
-                        {(metadata?.metadata as any)?.metrics?.impactFactor && (
-                            <Badge variant="outline" className="px-[6px] py-[2px] text-[10px] text-gray-600 font-medium bg-gray-50/50 border-gray-100 shadow-none">
-                                <span className="text-[9px] text-gray-400 mr-1 uppercase">IF</span> <span className="font-bold text-gray-900">{(metadata?.metadata as any).metrics.impactFactor}</span>
-                            </Badge>
-                        )}
-                        <Badge variant="outline" className="px-[6px] py-[2px] text-[10px] text-gray-900 border-orange-100 bg-orange-50/30 font-medium flex items-center gap-1 shadow-none">
-                            <span className="w-[10px] h-[10px] rounded border border-orange-500 bg-transparent flex items-center justify-center text-[6px] font-bold text-orange-500">🔓</span>
-                            OPEN ACCESS
-                        </Badge>
+                        </div>
                     </div>
 
-                    {/* Content Section */}
-                    <div>
-                        <h4 className="text-[15px] font-bold text-gray-900 leading-snug mb-1">
-                            {metadata?.sourceTitle || "Unknown Title"}
-                        </h4>
-                        <p className="text-[13px] text-gray-500 line-clamp-1">
-                            {metadata?.authors?.join(", ") || "Unknown Authors"}
-                        </p>
-                        <p className="text-[13px] text-emerald-600 font-medium mt-1">
-                            {(metadata?.metadata as any)?.journal || "Journal of Unknown"} · {metadata?.year || "N/A"}
-                        </p>
+                    {/* Compact Meta Row */}
+                    <div className="flex items-center justify-between text-[11px] py-1.5 border-y border-gray-50">
+                        <div className="flex items-center gap-4 text-gray-500 font-medium">
+                            <span className="flex items-center gap-1">
+                                <span className="text-[9px] text-gray-300 font-black uppercase tracking-tighter">Pub</span>
+                                <span className="text-gray-700 truncate max-w-[150px]">{(metadata?.metadata as any)?.journal || (metadata?.metadata as any)?.publisher || "Academic Publication"}</span>
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <span className="text-[9px] text-gray-300 font-black uppercase tracking-tighter">Year</span>
+                                <span className="text-gray-700">{metadata?.year || "N/A"}</span>
+                            </span>
+                        </div>
+                        <Badge variant="outline" className="text-[9px] font-black text-orange-600 border-orange-100 bg-orange-50/50 px-1.5 py-0 h-4 uppercase">Open Access</Badge>
                     </div>
 
-                    {/* Action Bar */}
-                    <div className="flex items-center justify-between mt-1">
-                        <div className="flex items-center gap-1.5">
-                            <Button variant="ghost" size="sm" className="h-6 px-1.5 font-bold text-[11px] text-gray-900 hover:bg-gray-100" onClick={handleEdit}>
-                                <Edit2 className="w-3.5 h-3.5 mr-1" strokeWidth={2.5} />
-                                Edit
+                    {/* Compact Action Footer */}
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg font-bold text-[11px] text-gray-900 hover:bg-gray-50 border-gray-200" onClick={handleOpenPdf} disabled={!metadata?.url}>
+                            <FileTextIcon className="w-3.5 h-3.5 mr-1.5 text-red-500" strokeWidth={2.5} />
+                            Read Article
+                        </Button>
+                        <div className="flex gap-1 shrink-0">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50" onClick={handleEdit}>
+                                <Edit2 className="w-3.5 h-3.5" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="h-6 px-1.5 font-bold text-[11px] text-gray-900 hover:bg-gray-100">
-                                <RefreshCw className="w-3.5 h-3.5 mr-1" strokeWidth={2.5} />
-                                Narrative
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-6 px-1.5 font-bold text-[11px] text-gray-900 hover:bg-gray-100" onClick={handleOpenPdf} disabled={!metadata?.url}>
-                                <FileTextIcon className="w-3.5 h-3.5 mr-1" strokeWidth={2.5} />
-                                Open PDF
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50" onClick={handleToggleNarrative}>
+                                <RefreshCw className="w-3.5 h-3.5" />
                             </Button>
                         </div>
-                        <span className="text-[11px] font-medium text-gray-400">
-                            {metadata?.url ? "Library Source" : "Auto-Imported"}
-                        </span>
                     </div>
                 </HoverCardContent>
             </HoverCard>

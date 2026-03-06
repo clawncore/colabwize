@@ -5,7 +5,6 @@ import {
   CheckSquare,
   Plus,
   Trash2,
-  GripVertical,
   CheckCircle2,
   Circle,
 } from "lucide-react";
@@ -110,8 +109,8 @@ export const SubtaskSection: React.FC<SubtaskSectionProps> = ({
               </button>
               <span
                 className={`flex-1 text-sm ${subtask.is_done
-                    ? "text-slate-400 line-through"
-                    : "text-slate-700"
+                  ? "text-slate-400 line-through"
+                  : "text-slate-700"
                   }`}
               >
                 {subtask.title}

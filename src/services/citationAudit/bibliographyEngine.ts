@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { JSONContent } from "@tiptap/core";
 
 export interface SimplifiedAuditResult {

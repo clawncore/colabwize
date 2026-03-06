@@ -1,6 +1,5 @@
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import { CitationRegistryService } from "../services/CitationRegistryService";
 
 export const CitationLifecycleExtension = Extension.create({
     name: "citationLifecycle",
@@ -33,24 +32,29 @@ export const CitationLifecycleExtension = Extension.create({
                     });
 
                     const deletePositions: { from: number; to: number }[] = [];
-                    const idsToRemoveFromRegistry = new Set<string>();
 
-                    // 2. Identify violations of the linking rules
+                    // 2. Identify violations of the linking rules (DISABLED AGGRESSIVE AUTO-DELETE)
+                    // The Citation Audit Tool is responsible for warning users about uncited references
+                    // or missing citations. Auto-deleting them immediately breaks user expectations when
+                    // pasting reference lists or typing out bibliographies prior to citing them.
+
+                    /*
                     newState.doc.descendants((node, pos) => {
                         const id = node.attrs.citationId;
                         if (!id) return;
 
                         // Rule 1: Delete Bibliography if no in-text Citations exist
-                        // DISABLING THIS RULE to prevent unexpected data loss
                         if (node.type.name === "bibliographyEntry" && !citationIds.has(id)) {
-                            // deletePositions.push({ from: pos, to: pos + node.nodeSize });
-                            // idsToRemoveFromRegistry.add(id);
+                            // IGNORE PROVISIONAL NODES added by fast-sync normalization
+                            if (id && (id.startsWith("temp-") || id.startsWith("temp_"))) return;
+                            deletePositions.push({ from: pos, to: pos + node.nodeSize });
+                            idsToRemoveFromRegistry.add(id);
                         }
 
                         // Rule 2: Delete Citations if their Bibliography entry was deleted
-                        // DISABLING THIS RULE to prevent new in-text citations from vanishing instantly
                         if (node.type.name === "citation" && !bibliographyIds.has(id)) {
-                            // deletePositions.push({ from: pos, to: pos + node.nodeSize });
+                            if (id.startsWith("temp-")) return;
+                            deletePositions.push({ from: pos, to: pos + node.nodeSize });
                         }
                     });
 
@@ -60,6 +64,7 @@ export const CitationLifecycleExtension = Extension.create({
                             CitationRegistryService.removeCitation(id);
                         });
                     }
+                    */
 
                     // 4. Append deterministic deletion transaction
                     if (deletePositions.length > 0) {
@@ -82,6 +87,7 @@ export const CitationLifecycleExtension = Extension.create({
                     return null;
                 },
             }),
+
         ];
     },
 });
