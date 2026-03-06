@@ -58,9 +58,9 @@ export default function NotFoundPage() {
               Features
             </Link>
             <Link
-              to="/solutions/originality-map"
+              to="/solutions/chat-with-pdfs"
               className="text-blue-600 hover:text-blue-700 hover:underline">
-              Originality Map
+              Chat with PDFs
             </Link>
             <Link
               to="/contact"

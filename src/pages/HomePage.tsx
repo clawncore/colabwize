@@ -420,22 +420,10 @@ function FeaturesGrid() {
       description:
         "Extract crucial insights immediately. Engage in a conversational dialogue directly with your academic materials.",
       image:
-        "https://images.unsplash.com/photo-1614064641913-6b714041d1eb?w=800&q=80",
+        "https://image2url.com/r2/default/images/1772735474020-d9c7d34e-7639-4013-a694-1ea2ee785d20.png?w=800&q=80",
       iconColor: "text-cyan-600",
       iconBg: "bg-cyan-100",
       previewBg: "bg-cyan-50",
-    },
-    {
-      id: "originality-map",
-      icon: Map,
-      title: "Explainable Originality Map",
-      description:
-        "Color-coded heatmap shows exactly which parts of your document need attention, with clear safety classifications (Green/Yellow/Red).",
-      image:
-        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-      iconColor: "text-purple-600",
-      iconBg: "bg-purple-100",
-      previewBg: "bg-purple-50",
     },
     {
       id: "citation-auditor",
@@ -456,7 +444,7 @@ function FeaturesGrid() {
       description:
         "Instantly find credible sources and add accurate citations without leaving your workflow.",
       image:
-        "https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=800&q=80",
+        "https://www.vaslou.com/wp-content/uploads/2024/03/what-is-a-citation-audit-in-SEO-1600x900-featured.webp?w=800&q=80",
       iconColor: "text-blue-600",
       iconBg: "bg-blue-100",
       previewBg: "bg-blue-50",
@@ -468,7 +456,7 @@ function FeaturesGrid() {
       description:
         "Generate authorship certificates proving your work is original with time tracking and manual effort verification.",
       image:
-        "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80",
+        "https://i.ibb.co/Pv7B5kmy/Screenshot-2026-01-14-092154.png?w=800&q=80",
       iconColor: "text-amber-600",
       iconBg: "bg-amber-100",
       previewBg: "bg-amber-50",

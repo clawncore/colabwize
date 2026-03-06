@@ -14,7 +14,13 @@ interface UpgradePromptDialogProps {
     | "originality_scan"
     | "citation_check"
     | "certificate"
-    | "rephrase_suggestions";
+    | "rephrase_suggestions"
+    | "workspace"
+    | "collaborator"
+    | "pdf_limit"
+    | "pdf_size_limit"
+    | "attachment_limit"
+    | "attachment_size_limit";
   limit?: number;
 }
 
@@ -61,6 +67,76 @@ const FEATURE_MESSAGES = {
       "50 suggestions/month on Plus plan",
       "Unlimited suggestions on Premium plan",
       "Advanced AI paraphrasing",
+    ],
+  },
+  workspace: {
+    title: "Workspace Limit Reached",
+    description:
+      "You've reached the maximum number of workspaces for your plan.",
+    featureName: "Workspaces",
+    benefits: [
+      "Create up to 5 workspaces with Plus plan",
+      "Unlimited workspaces with Premium plan",
+      "Advanced project management",
+      "Dedicated team environments",
+    ],
+  },
+  collaborator: {
+    title: "Collaborator Limit Reached",
+    description:
+      "You've reached the maximum number of collaborators per workspace.",
+    featureName: "Collaborators",
+    benefits: [
+      "Up to 10 collaborators per workspace with Plus plan",
+      "Unlimited collaborators with Premium plan",
+      "Real-time team collaboration",
+      "Advanced role-based permissions",
+    ],
+  },
+  pdf_limit: {
+    title: "PDF Upload Limit Reached",
+    description:
+      "You've reached the maximum number of PDFs allowed on your plan.",
+    featureName: "PDF Uploads",
+    benefits: [
+      "Upload up to 10 PDFs with Plus plan",
+      "Upload up to 30 PDFs with Premium plan",
+      "Unlimited chats with your documents",
+      "Deep context-aware analysis",
+    ],
+  },
+  pdf_size_limit: {
+    title: "File Size Limit Reached",
+    description: "This file exceeds the size limit for your current plan.",
+    featureName: "Large File Uploads",
+    benefits: [
+      "Upload files up to 50MB with Plus plan",
+      "Upload files up to 100MB with Premium plan",
+      "Analyze comprehensive reports and books",
+      "Support for high-resolution documents",
+    ],
+  },
+  attachment_limit: {
+    title: "Attachment Limit Reached",
+    description:
+      "You've reached the maximum number of attachments for this workspace.",
+    featureName: "File Attachments",
+    benefits: [
+      "Up to 50 attachments per workspace with Plus plan",
+      "Unlimited attachments with Premium plan",
+      "Centralized project resource management",
+      "Higher team collaboration capacity",
+    ],
+  },
+  attachment_size_limit: {
+    title: "File Size Limit Reached",
+    description: "This file exceeds the size limit for your current plan.",
+    featureName: "Large File Attachments",
+    benefits: [
+      "Upload files up to 50MB with Plus plan",
+      "Upload files up to 100MB with Premium plan",
+      "Share high-resolution assets and logs",
+      "Professional-grade project storage",
     ],
   },
 };

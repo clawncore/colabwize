@@ -37,7 +37,7 @@ import { useToast } from "../../hooks/use-toast";
 import { TableBubbleMenu } from "./TableBubbleMenu";
 import {
   // AIDetectionAdapter,
-  OriginalityMapAdapter,
+  // OriginalityMapAdapter,
   // CitationConfidenceAdapter, // Removed/Replaced
   AuthorshipCertificateAdapter,
   RephraseAdapter,
@@ -470,24 +470,24 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           link: false, // Prevent duplicate extension names error if StarterKit includes it
         } as any),
         ...(isCollaborative &&
-          collabReady &&
-          providerRef.current &&
-          ydocRef.current
+        collabReady &&
+        providerRef.current &&
+        ydocRef.current
           ? [
-            Collaboration.configure({
-              document: ydocRef.current, // Bind directly to the stable Y.Doc (ref)
-            }),
-            CollaborationCursor.configure({
-              provider: providerRef.current, // Bind directly to the Hocuspocus provider (ref)
-              user: {
-                name:
-                  user?.user_metadata?.full_name ||
-                  user?.email ||
-                  "Anonymous",
-                color: cursorColor,
-              },
-            }),
-          ]
+              Collaboration.configure({
+                document: ydocRef.current, // Bind directly to the stable Y.Doc (ref)
+              }),
+              CollaborationCursor.configure({
+                provider: providerRef.current, // Bind directly to the Hocuspocus provider (ref)
+                user: {
+                  name:
+                    user?.user_metadata?.full_name ||
+                    user?.email ||
+                    "Anonymous",
+                  color: cursorColor,
+                },
+              }),
+            ]
           : []),
         HighlightExtension,
         CharacterCount,
@@ -725,7 +725,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             // Use timeout to ensure editor is stable and we don't conflict with initial render transactions
             setTimeout(async () => {
               if (editor && !editor.isDestroyed) {
-                await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+                await detectAndNormalizeCitations(
+                  editor,
+                  project.id,
+                  project.citations || [],
+                );
               }
             }, 500);
           } catch (error) {
@@ -771,7 +775,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           await CitationRegistryService.initializeFromBackend(project.id);
           (window as any).__currentProjectId__ = project.id;
 
-          await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+          await detectAndNormalizeCitations(
+            editor,
+            project.id,
+            project.citations || [],
+          );
         } catch (e) {
           console.error("Collab Normalization Failed:", e);
         }
@@ -789,13 +797,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     const timer = setTimeout(async () => {
       console.log("ðŸ“  Running debounced normalization (post-edit)...");
-      await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+      await detectAndNormalizeCitations(
+        editor,
+        project.id,
+        project.citations || [],
+      );
     }, 4500); // 4.5s debounce: long enough to not be annoying while typing
 
     return () => clearTimeout(timer);
   }, [editor, editCount, isEditorMounted, project.id, project.citations]);
-
-
 
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -908,7 +918,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) { } // Dispatch clear
+          } catch (e) {} // Dispatch clear
           console.log("âœ… No grammar issues in block.");
           return;
         }
@@ -946,7 +956,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (matchCount > 0 || errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) { }
+          } catch (e) {}
           console.log(`âœ… Applied ${matchCount} grammar highlights to block.`);
         }
       } catch (error) {
@@ -1398,10 +1408,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               <div className="flex items-center space-x-2 flex-wrap">
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isPreviewMode
                       ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
+                  }`}
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1417,10 +1428,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isFocusMode
                       ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
+                  }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />
@@ -1706,7 +1718,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               Find Papers
             </button>
 
-            {/* Originality Scan Pipeline (Plagiarism Detection) */}
+            {/* Originality Scan Pipeline (Plagiarism Detection) 
             <OriginalityMapAdapter
               projectId={project.id}
               editor={editor}
@@ -1715,7 +1727,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   onOpenPanel("originality-results", results);
                 }
               }}
-            />
+            />*/}
 
             <button
               onClick={handleCompareClick}

@@ -15,6 +15,7 @@ import {
   Shield,
   Calendar,
   LayoutDashboard,
+  MessageSquareText,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "../hooks/useAuth";
@@ -100,10 +101,10 @@ export default function Navigation() {
 
   const solutionsItems: DropdownItem[] = [
     {
-      name: "Originality Map",
-      href: "/solutions/originality-map",
-      icon: <BarChart3 className="h-5 w-5" />,
-      description: "Track your writing and research progress",
+      name: "Chat with PDFs",
+      href: "/solutions/chat-with-pdfs",
+      icon: <MessageSquareText className="h-5 w-5" />,
+      description: "Interact with your research documents using AI",
     },
     {
       name: "Citation Confidence",
@@ -384,7 +385,7 @@ export default function Navigation() {
                         }}>
                         <div className="absolute inset-0 z-0">
                           <img
-                            src="https://yt3.googleusercontent.com/Yd66oMdzg4iIcu32yB6rEe90aoFKhBizf3R2p6jdF5ECXegal0XFU881XkDOobZ398m90ugp=s900-c-k-c0x00ffffff-no-rj?w=600&q=80"
+                            src="https://randomill.com/wp-content/uploads/version-release-220.jpg?w=600&q=80"
                             alt="New Version"
                             className="w-full h-full object-cover opacity-30 group-hover/promo:scale-105 transition-transform duration-700 block"
                           />

@@ -22,9 +22,16 @@ const footerLinks = {
     { name: "Schedule Demo", href: "/resources/schedule-demo" },
   ],
   solutions: [
-    { name: "Originality Map", href: "/solutions/originality-map" },
+    {
+      name: "Collaboration",
+      href: "/solutions/collaboration",
+    },
+    {
+      name: "Team Workspace",
+      href: "/solutions/team-workspace",
+    },
+    { name: "Chat with PDFs", href: "/solutions/chat-with-pdfs" },
     { name: "Citation Confidence", href: "/solutions/citation-confidence" },
-    { name: "Draft Comparison", href: "/solutions/draft-comparison" },
     {
       name: "Authorship Certificate",
       href: "/solutions/authorship-certificate",

@@ -9,7 +9,7 @@ import { Toaster } from "./components/ui/toaster";
 import { CookieConsent } from "./components/common/CookieConsent";
 
 // Solutions Pages (Marketing)
-import OriginalityMapPage from "./pages/solutions/OriginalityMapPage";
+import ChatWithPdfsPage from "./pages/solutions/ChatWithPdfsPage";
 import CitationConfidencePage from "./pages/solutions/CitationConfidencePage";
 import AuthorshipCertificatePage from "./pages/solutions/AuthorshipCertificatePage";
 import UnifiedDashboardPage from "./pages/solutions/UnifiedDashboardPage";
@@ -129,8 +129,8 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     {/* Solutions Routes - Marketing Pages - Public */}
                     <Route
-                      path="/solutions/originality-map"
-                      element={<OriginalityMapPage />}
+                      path="/solutions/chat-with-pdfs"
+                      element={<ChatWithPdfsPage />}
                     />
                     <Route
                       path="/solutions/citation-confidence"

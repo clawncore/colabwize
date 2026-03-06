@@ -23,6 +23,7 @@ import { Plus, Users, Zap, Briefcase, Loader2 } from "lucide-react";
 import WorkspaceService from "../../../services/workspaceService";
 import { usePresence } from "../../../hooks/usePresence";
 import { toast } from "../../../hooks/use-toast";
+import { UpgradePromptDialog } from "../../subscription/UpgradePromptDialog";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -43,6 +44,7 @@ export default function AdminDashboard() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [workspaceTemplates, setWorkspaceTemplates] = useState<any[]>([]);
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const { activeUsers } = usePresence(
     workspace?.id ? `workspace-${workspace.id}` : "",
   );
@@ -106,10 +108,24 @@ export default function AdminDashboard() {
       setNewWorkspaceDesc("");
       setNewWorkspaceIcon("💼");
       setSelectedTemplateId("");
-    } catch (error) {
+    } catch (error: any) {
+      if (
+        error.error === "WORKSPACE_LIMIT_REACHED" ||
+        error.message?.includes("Workspace limit reached")
+      ) {
+        setShowUpgradeDialog(true);
+        setShowCreateWorkspaceModal(false);
+        return;
+      }
+      // Assuming 'logger' is defined elsewhere or this is a placeholder for console.error
+      // If 'logger' is not defined, this line will cause a runtime error.
+      // For now, I'll assume it's a valid global or imported object.
+      // If not, it should be replaced with console.error or similar.
+      // logger.error("Error creating workspace", error);
+      console.error("Error creating workspace", error); // Using console.error as a fallback
       toast({
         title: "Error",
-        description: "Failed to create workspace",
+        description: error.message || "Failed to create workspace",
         variant: "destructive",
       });
     } finally {
@@ -165,114 +181,121 @@ export default function AdminDashboard() {
 
   if (!workspace) {
     return (
-      <div className="p-8 text-center max-w-md mx-auto mt-20">
-        <div className="bg-muted h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Users className="h-10 w-10 text-muted-foreground" />
-        </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          No Team Workspace Found
-        </h2>
-        <p className="text-muted-foreground mb-8">
-          Create a workspace to start collaborating with your team.
-        </p>
-        <Button
-          onClick={() => setShowCreateWorkspaceModal(true)}
-          className="w-full bg-teal-500 hover:bg-teal-600 text-primary-foreground cursor-pointer">
-          Create Workspace
-        </Button>
+      <>
+        <UpgradePromptDialog
+          open={showUpgradeDialog}
+          onOpenChange={setShowUpgradeDialog}
+          feature="workspace"
+        />
+        <div className="p-8 text-center max-w-md mx-auto mt-20">
+          <div className="bg-muted h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Users className="h-10 w-10 text-muted-foreground" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">
+            No Team Workspace Found
+          </h2>
+          <p className="text-muted-foreground mb-8">
+            Create a workspace to start collaborating with your team.
+          </p>
+          <Button
+            onClick={() => setShowCreateWorkspaceModal(true)}
+            className="w-full bg-teal-500 hover:bg-teal-600 text-primary-foreground cursor-pointer">
+            Create Workspace
+          </Button>
 
-        {/* Create Workspace Modal */}
-        <Dialog
-          open={showCreateWorkspaceModal}
-          onOpenChange={setShowCreateWorkspaceModal}>
-          <DialogContent className="sm:max-w-[425px] bg-white border-border">
-            <DialogHeader>
-              <DialogTitle>Create Workspace</DialogTitle>
-              <DialogDescription>
-                Create a new collaborative space for your team.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Workspace Name</Label>
-                <Input
-                  id="name"
-                  placeholder="e.g. Engineering Team"
-                  className="bg-background border-border"
-                  value={newWorkspaceName}
-                  onChange={(e) => setNewWorkspaceName(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="icon">Icon (Emoji)</Label>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-md border bg-muted text-xl">
-                    {newWorkspaceIcon}
-                  </div>
+          {/* Create Workspace Modal */}
+          <Dialog
+            open={showCreateWorkspaceModal}
+            onOpenChange={setShowCreateWorkspaceModal}>
+            <DialogContent className="sm:max-w-[425px] bg-white border-border">
+              <DialogHeader>
+                <DialogTitle>Create Workspace</DialogTitle>
+                <DialogDescription>
+                  Create a new collaborative space for your team.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Workspace Name</Label>
                   <Input
-                    id="icon"
-                    className="max-w-[100px] bg-background border-border"
-                    placeholder="💼"
-                    maxLength={2}
-                    value={newWorkspaceIcon}
-                    onChange={(e) => setNewWorkspaceIcon(e.target.value)}
+                    id="name"
+                    placeholder="e.g. Engineering Team"
+                    className="bg-background border-border"
+                    value={newWorkspaceName}
+                    onChange={(e) => setNewWorkspaceName(e.target.value)}
                   />
-                  <span className="text-xs text-muted-foreground">
-                    Type an emoji
-                  </span>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="icon">Icon (Emoji)</Label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-md border bg-muted text-xl">
+                      {newWorkspaceIcon}
+                    </div>
+                    <Input
+                      id="icon"
+                      className="max-w-[100px] bg-background border-border"
+                      placeholder="💼"
+                      maxLength={2}
+                      value={newWorkspaceIcon}
+                      onChange={(e) => setNewWorkspaceIcon(e.target.value)}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      Type an emoji
+                    </span>
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="What is this workspace for?"
+                    className="bg-background border-border"
+                    value={newWorkspaceDesc}
+                    onChange={(e) => setNewWorkspaceDesc(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="template">Template (Optional)</Label>
+                  <select
+                    id="template"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
+                    value={selectedTemplateId}
+                    onChange={(e) => setSelectedTemplateId(e.target.value)}>
+                    <option value="">No Template (Blank)</option>
+                    {workspaceTemplates.map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.icon} {template.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Choosing a template will pre-configure labels and custom
+                    fields.
+                  </p>
                 </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="What is this workspace for?"
-                  className="bg-background border-border"
-                  value={newWorkspaceDesc}
-                  onChange={(e) => setNewWorkspaceDesc(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="template">Template (Optional)</Label>
-                <select
-                  id="template"
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
-                  value={selectedTemplateId}
-                  onChange={(e) => setSelectedTemplateId(e.target.value)}>
-                  <option value="">No Template (Blank)</option>
-                  {workspaceTemplates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.icon} {template.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Choosing a template will pre-configure labels and custom
-                  fields.
-                </p>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                className="bg-muted hover:bg-muted/80 border-border"
-                onClick={() => setShowCreateWorkspaceModal(false)}
-                disabled={isCreatingWorkspace}>
-                Cancel
-              </Button>
-              <Button
-                className="bg-teal-500 border-teal-200 hover:bg-teal-600"
-                onClick={handleCreateWorkspace}
-                disabled={isCreatingWorkspace}>
-                {isCreatingWorkspace && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                )}
-                Create Workspace
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  className="bg-muted hover:bg-muted/80 border-border"
+                  onClick={() => setShowCreateWorkspaceModal(false)}
+                  disabled={isCreatingWorkspace}>
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-teal-500 border-teal-200 hover:bg-teal-600"
+                  onClick={handleCreateWorkspace}
+                  disabled={isCreatingWorkspace}>
+                  {isCreatingWorkspace && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
+                  Create Workspace
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </>
     );
   }
 
@@ -301,6 +324,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background p-6 space-y-8">
+      <UpgradePromptDialog
+        open={showUpgradeDialog}
+        onOpenChange={setShowUpgradeDialog}
+        feature="workspace"
+      />
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

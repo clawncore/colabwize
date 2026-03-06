@@ -218,15 +218,15 @@ function FeaturesPresentationFlow() {
               price: "$0",
               billingText: "Forever free",
               included: [
-                "3 basic citation audits / mo",
-                "Max 20,000 characters (~3k words)",
+                "1 Team Workspace",
+                "2 Collaborators per workspace",
                 "3 rephrases / mo (1 variant)",
                 "Preview certificate (watermarked)",
               ],
               locked: [
+                "Chat with PDF & My Projects",
                 "Full citation analysis",
                 "Large academic papers",
-                "Submission-ready reports",
               ],
               buttonText: "Start Free",
               buttonVariant: "outline" as const,
@@ -239,14 +239,16 @@ function FeaturesPresentationFlow() {
               price: PLUS_PRICE,
               popular: true,
               included: [
-                "25 verified citation audits / mo",
-                "Max 80,000 characters (~12k words)",
+                "Chat with PDF",
+                "5 Team Workspaces",
+                "10 Collaborators per workspace",
                 "25 rephrases (up to 3 variants)",
+                "File Size Limit: 50MB",
+                "Unlimited Chats with PDFs",
                 "Citation confidence analysis",
-                "Verified academic certificate",
               ],
               locked: [
-                "Priority scanning",
+                "Chat with My Projects",
                 "Draft comparison",
                 "Advanced analytics",
               ],
@@ -264,15 +266,16 @@ function FeaturesPresentationFlow() {
               subtitle: "Institutional-grade institutional power",
               price: PREMIUM_PRICE,
               included: [
+                "Advanced analytics",
                 {
                   text: "100 citation audits / month",
                   subtext: "(Max 200,000 chars/doc)",
                 },
-                "Research Gaps & Insight Map",
-                "100 rephrases / month (Advanced)",
-                "Priority scanning (Queue Jump)",
-                "Draft comparison",
-                "Certified institutional-grade reports",
+                "Chat with My Projects",
+                "Unlimited Chats with My Projects",
+                "Advanced Research",
+                "Insight Map & Research Gaps",
+                "Search Alerts",
               ],
               note: "Designed for rigorous academic standards and frequent analysis.",
               buttonText:
@@ -526,24 +529,6 @@ function FeaturesPresentationFlow() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {[
-                  {
-                    name: "Document Scans",
-                    free: "3/month",
-                    plus: "25/month",
-                    premium: "100/month",
-                  },
-                  {
-                    name: "Max Scan Size",
-                    free: "20k chars",
-                    plus: "80k chars",
-                    premium: "200k chars",
-                  },
-                  {
-                    name: "Rephrase Suggestions",
-                    free: "3/month",
-                    plus: "25/month",
-                    premium: "100/month",
-                  },
                   { isHeader: true, name: "Collaboration & Teamwork" },
                   {
                     name: "Team Workspaces",
@@ -576,6 +561,12 @@ function FeaturesPresentationFlow() {
                     premium: true,
                   },
                   {
+                    name: "File Attachments",
+                    free: "5 Attachments",
+                    plus: "50 Attachments",
+                    premium: "Unlimited",
+                  },
+                  {
                     name: "Calendar View",
                     free: true,
                     plus: true,
@@ -592,12 +583,6 @@ function FeaturesPresentationFlow() {
                     free: true,
                     plus: true,
                     premium: true,
-                  },
-                  {
-                    name: "File Size Limit",
-                    free: "10MB",
-                    plus: "50MB",
-                    premium: "100MB",
                   },
                   {
                     name: "PDF Annotator",
@@ -617,16 +602,23 @@ function FeaturesPresentationFlow() {
                     plus: "-",
                     premium: true,
                   },
-                  { isHeader: true, name: "Integrity & AI Assistant" },
+                  { isHeader: true, name: "Uploads" },
                   {
-                    name: "Originality Check",
-                    free: true,
-                    plus: true,
-                    premium: true,
+                    name: "File Size Limit",
+                    free: "5MB",
+                    plus: "50MB",
+                    premium: "100MB",
                   },
                   {
+                    name: "Chat with PDFs",
+                    free: "❌",
+                    plus: "10 pdfs",
+                    premium: "30 pdfs",
+                  },
+                  { isHeader: true, name: "Integrity & AI Assistant" },
+                  {
                     name: "Safe AI Integrity Assistant",
-                    free: "-",
+                    free: true,
                     plus: true,
                     premium: true,
                   },
@@ -637,10 +629,29 @@ function FeaturesPresentationFlow() {
                     premium: true,
                   },
                   {
-                    name: "Research Assistant",
+                    name: "Chat with My Projects",
                     free: "-",
                     plus: "-",
                     premium: true,
+                  },
+                  { isHeader: true, name: "Citations Audit" },
+                  {
+                    name: "Document Scans",
+                    free: "3/month",
+                    plus: "25/month",
+                    premium: "100/month",
+                  },
+                  {
+                    name: "Max Scan Size",
+                    free: "20k chars",
+                    plus: "80k chars",
+                    premium: "200k chars",
+                  },
+                  {
+                    name: "Rephrase Suggestions",
+                    free: "3/month",
+                    plus: "25/month",
+                    premium: "100/month",
                   },
                   { isHeader: true, name: "Advanced Research" },
                   {

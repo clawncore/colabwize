@@ -1,16 +1,17 @@
 import {
-  BookOpen,
-  Check,
-  Map,
-  FileText,
+  MessageSquareText,
+  SearchCheck,
   Award,
-  BarChart3,
+  FileText,
+  Users,
+  LayoutDashboard,
   Zap,
   Shield,
   Clock,
-
   ArrowRight,
   Bot,
+  Sparkles,
+  Check,
 } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../components/ui/button";
@@ -44,9 +45,9 @@ function IntroHero() {
           </h1>
 
           <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
-            Four powerful features working together to transform academic
-            anxiety into career confidence. Upload once, scan everything, submit
-            with peace of mind.
+            Six powerful features working together to transform academic anxiety
+            into career confidence. From AI-powered synthesis to real-time team
+            coordination, we've got you covered.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -137,61 +138,106 @@ function FeatureDetail({
 function FeaturesPresentationFlow() {
   const coreFeatures = [
     {
-      icon: Map,
-      title: "Originality Map",
+      icon: MessageSquareText,
+      title: "Chat with PDFs",
       description:
-        "Visual heatmap showing exactly where your content matches other sources",
+        "Interact with your research documents using AI to extract crucial insights immediately and synthesize knowledge.",
       benefits: [
-        "Color-coded highlighting",
-        "Source detection",
-        "Smart rephrase suggestions",
+        "Natural language queries",
+        "Direct source citations",
+        "Multi-document synthesis",
       ],
-      imageUrl: "https://i.ibb.co/sdHVBb82/editor.png?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
+      imageUrl:
+        "https://image2url.com/r2/default/images/1772735474020-d9c7d34e-7639-4013-a694-1ea2ee785d20.png?w=800&q=80",
+      color: "from-blue-600 to-indigo-800",
     },
     {
-      icon: BookOpen,
-      title: "Citation Confidence",
+      icon: Users,
+      title: "Real-Time Collaboration",
       description:
-        "Audit citations and discover missing links to strengthen your arguments",
-      benefits: ["Quality scoring", "Find missing papers", "Auto-formatting"],
+        "Co-author flawlessly with your team. Experience smooth, conflict-free editing and live communication.",
+      benefits: [
+        "Live cursor visibility",
+        "Integrated team chat",
+        "Permission-based access",
+      ],
       imageUrl:
-        "https://i.ibb.co/ZpVJP6QY/Screenshot-2026-01-13-190525.png?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
+        "https://image2url.com/r2/default/images/1772350833155-2a078749-5ed1-4b43-9b87-12532fe0d025.png?w=800&q=80",
+      color: "from-cyan-600 to-blue-800",
       reverse: true,
     },
     {
-      icon: FileText,
-      title: "Draft Comparison",
-      description: "Compare your draft with original content",
-      benefits: ["Text comparison", "File comparison", "Smart rephrasing"],
+      icon: LayoutDashboard,
+      title: "Team Workspace",
+      description:
+        "The central nervous system for your academic group. Organize projects, tasks, and deadlines in one hub.",
+      benefits: [
+        "Unified research library",
+        "Task management & Kanban",
+        "Activity log & oversight",
+      ],
       imageUrl:
-        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
+        "https://image2url.com/r2/default/gifs/1772349529885-091865dd-d9dc-40c6-bbc4-92dff5ccc409.gif?w=800&q=80",
+      color: "from-indigo-600 to-blue-900",
       reverse: false,
+    },
+    {
+      icon: SearchCheck,
+      title: "Citation Confidence",
+      description:
+        "Audit every claim in your document and discover missing or outdated links to strengthen your academic arguments.",
+      benefits: [
+        "Automated audit reports",
+        "Missing paper discovery",
+        "Semantic support verification",
+      ],
+      imageUrl:
+        "https://www.vaslou.com/wp-content/uploads/2024/03/what-is-a-citation-audit-in-SEO-1600x900-featured.webp?w=800&h=600&fit=crop",
+      color: "from-green-600 to-emerald-800",
+      reverse: true,
     },
     {
       icon: Award,
       title: "Authorship Certificate",
-      description: "Generate professional certificates proving your authorship",
-      benefits: ["Time tracking", "Manual edits counter", "QR verification"],
+      description:
+        "Generate verifiable proof of your writing process, silencing any doubt about the human origin of your work.",
+      benefits: [
+        "Time-stamped edit history",
+        "Manual effort verification",
+        "Shareable QR-coded certificates",
+      ],
       imageUrl:
         "https://i.ibb.co/Pv7B5kmy/Screenshot-2026-01-14-092154.png?w=800&h=600&fit=crop",
-      color: "from-green-600 to-green-800",
+      color: "from-purple-600 to-violet-800",
+      reverse: false,
+    },
+    {
+      icon: FileText,
+      title: "Draft Comparison",
+      description:
+        "Track the evolution of your research over time. Compare versions to see exactly what changed and why.",
+      benefits: [
+        "Heatmap of changes",
+        "Semantic drift detection",
+        "One-click restoration",
+      ],
+      imageUrl:
+        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop",
+      color: "from-orange-600 to-red-800",
       reverse: true,
     },
   ];
 
   const additionalFeatures = [
     {
-      icon: BarChart3,
+      icon: LayoutDashboard,
       title: "Unified Dashboard",
       description: "All features in one place",
     },
     {
-      icon: BarChart3,
-      title: "Analytics & Metrics",
-      description: "Track your progress",
+      icon: Sparkles,
+      title: "AI Integrity Guard",
+      description: "Safe suggestions that preserve your voice",
     },
     {
       icon: Zap,
@@ -310,8 +356,7 @@ function ClosingCTA() {
                 href="https://docs.colabwize.com/quickstart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center"
-              >
+                className="flex items-center">
                 See How It Works
               </a>
             </Button>

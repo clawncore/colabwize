@@ -15,6 +15,8 @@ import { WorkspaceAttachment } from "../../../services/workspaceTaskService";
 import { Button } from "../../ui/button";
 import workspaceTaskService from "../../../services/workspaceTaskService";
 import { toast } from "../../../hooks/use-toast";
+import { useSubscriptionStore } from "../../../stores/useSubscriptionStore";
+import { UpgradePromptDialog } from "../../subscription/UpgradePromptDialog";
 
 interface AttachmentSectionProps {
   taskId: string;
@@ -31,6 +33,16 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Upgrade Dialog state
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [upgradeFeature, setUpgradeFeature] = useState<
+    "attachment_limit" | "attachment_size_limit"
+  >("attachment_limit");
+
+  // Subscription data
+  const { plan: rawPlan } = useSubscriptionStore();
+  const plan = rawPlan?.toLowerCase() || "free";
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
@@ -50,13 +62,15 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 10MB limit
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Maximum file size is 10MB.",
-        variant: "destructive",
-      });
+    // Client-side size validation based on plan
+    const sizeMB = file.size / (1024 * 1024);
+    let sizeLimit = 100;
+    if (plan === "free") sizeLimit = 5;
+    else if (plan === "plus") sizeLimit = 50;
+
+    if (sizeMB > sizeLimit) {
+      setUpgradeFeature("attachment_size_limit");
+      setShowUpgradeDialog(true);
       return;
     }
 
@@ -71,11 +85,25 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
         title: "Success",
         description: "File uploaded successfully.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload failed", error);
+
+      // Handle backend limit errors
+      const errorMessage = error.response?.data?.error || error.message || "";
+      if (errorMessage === "ATTACHMENT_LIMIT_REACHED") {
+        setUpgradeFeature("attachment_limit");
+        setShowUpgradeDialog(true);
+        return;
+      }
+      if (errorMessage === "FILE_SIZE_EXCEEDED") {
+        setUpgradeFeature("attachment_size_limit");
+        setShowUpgradeDialog(true);
+        return;
+      }
+
       toast({
         title: "Upload failed",
-        description: "Could not upload the file.",
+        description: error.message || "Could not upload the file.",
         variant: "destructive",
       });
     } finally {
@@ -104,6 +132,11 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
 
   return (
     <div className="space-y-3">
+      <UpgradePromptDialog
+        open={showUpgradeDialog}
+        onOpenChange={setShowUpgradeDialog}
+        feature={upgradeFeature}
+      />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <Paperclip className="w-4 h-4 text-slate-500" />
