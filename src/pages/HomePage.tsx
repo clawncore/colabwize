@@ -28,12 +28,16 @@ function HeroSection() {
   const phrases = React.useMemo(
     () => [
       {
-        text: "Your Academic Success, Defended.",
-        gradientWord: "Defended.",
+        text: "The Ultimate Fortress for Academic Integrity.",
+        gradientWord: "Integrity.",
       },
       {
-        text: "A Platform for Original, Credible, and Human Work.",
-        gradientWord: "Work.",
+        text: "Write with Authority. Defend with Proof.",
+        gradientWord: "Proof.",
+      },
+      {
+        text: "Master Your Research. Secure Your Success.",
+        gradientWord: "Success.",
       },
     ],
     [],
@@ -94,9 +98,9 @@ function HeroSection() {
           </h1>
 
           <p className="text-lg md:text-xl text-gray-500 font-medium mb-8 max-w-2xl mx-auto leading-relaxed">
-            A comprehensive academic integrity and defensibility platform
-            designed to transform the writing process from a source of anxiety
-            into a source of confidence.
+            Empowering scholars with advanced AI-driven verification and a
+            unified research ecosystem. Collaborate seamlessly, cite with
+            precision, and prove the authenticity of your work with ColabWize.
           </p>
 
           {/* CTAs */}
@@ -168,9 +172,9 @@ function PreviewSection() {
     {
       id: "citation-auditor",
       icon: SearchCheck,
-      title: "Citation Auditor",
+      title: "Scientific Citation Auditor",
       description:
-        "Advanced auditing that scores every claim in your document against credible research databases.",
+        "Protect your academic reputation. Our advanced engine cross-references every claim against millions of peer-reviewed sources to ensure 100% factual accuracy.",
       image:
         "https://i.ibb.co/sY9F6B3/Screenshot-2026-01-13-203136.png?w=800&q=80",
       iconColor: "text-green-600",
@@ -180,9 +184,9 @@ function PreviewSection() {
     {
       id: "smart-citations",
       icon: Sparkles,
-      title: "Smart Citation Builder",
+      title: "Intelligent Citation Engine",
       description:
-        "Instantly find credible sources and add accurate citations without leaving your workflow.",
+        "Source with confidence. Instantly discover authoritative research and generate perfect citations in any format (APA, MLA, Chicago) without ever breaking your focus.",
       image:
         "https://i.ibb.co/7djtzT8g/Screenshot-2026-01-13-193634.png?w=800&q=80",
       iconColor: "text-blue-600",
@@ -190,13 +194,13 @@ function PreviewSection() {
       previewBg: "bg-blue-50",
     },
     {
-      id: "real-time-collaboration",
+      id: "unified-workspace",
       icon: Users,
-      title: "Real-Time Collaboration",
+      title: "Unified Research Workspace",
       description:
-        "Write together seamlessly. Edit continuously with peers and experience conflict-free live co-authoring.",
+        "The ultimate hub for academic teams. Experience seamless co-authoring with real-time sync, deep authorship verification, and intuitive version control for complex papers.",
       image:
-        "https://i.ibb.co/LnxYfW3/Screenshot-2026-01-13-201542.png?w=800&q=80",
+        "https://cdn.prod.website-files.com/5faba41eb4068c069dd32804/67d0731a50881146d37ac482_Real-Time%20Collaboration%20Tools%20for%20Design%20Teams.png?w=800&q=80",
       iconColor: "text-indigo-600",
       iconBg: "bg-indigo-100",
       previewBg: "bg-indigo-50",
@@ -211,18 +215,18 @@ function PreviewSection() {
           <div className="w-full lg:w-[40%] flex flex-col justify-center py-8">
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-4">
-                <span className="text-gray-900 font-semibold">
-                  Core Features
+                <span className="text-gray-900 font-semibold uppercase tracking-wider text-xs">
+                  Next-Gen Research Infrastructure
                 </span>
-                <span className="bg-blue-100 text-blue-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">
+                <span className="bg-blue-600 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">
                   New
                 </span>
               </div>
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight mb-6">
-                Streamline your academic workflow.
+              <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 leading-tight mb-6">
+                Master the art of integrity and impact.
               </h2>
-              <button className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg">
-                <ArrowRight className="w-5 h-5" />
+              <button className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-all shadow-xl hover:scale-110">
+                <ArrowRight className="w-6 h-6" />
               </button>
             </div>
 
@@ -236,9 +240,13 @@ function PreviewSection() {
                     className="border-b border-gray-100 last:border-0">
                     <button
                       onClick={() => setActiveTab(index)}
-                      className="w-full text-left py-5 flex items-start gap-4 group transition-all outline-none">
+                      className="w-full text-left py-6 flex items-start gap-5 group transition-all outline-none">
                       <div
-                        className={`mt-0.5 p-2 rounded-full ${feature.iconBg} transition-transform duration-300 ${isActive ? "scale-110 shadow-sm" : "group-hover:scale-110"}`}>
+                        className={`mt-1 p-2.5 rounded-xl ${feature.iconBg} transition-all duration-300 ${
+                          isActive
+                            ? "scale-110 shadow-md ring-2 ring-white"
+                            : "group-hover:scale-105"
+                        }`}>
                         <Icon
                           strokeWidth={2.5}
                           className={`w-5 h-5 ${feature.iconColor}`}
@@ -246,19 +254,22 @@ function PreviewSection() {
                       </div>
                       <div className="flex-1">
                         <h3
-                          className={`text-lg font-bold ${isActive ? "text-gray-900" : "text-gray-400 group-hover:text-gray-600"} transition-colors`}>
+                          className={`text-xl font-bold ${
+                            isActive
+                              ? "text-gray-900"
+                              : "text-gray-400 group-hover:text-gray-600"
+                          } transition-colors`}>
                           {feature.title}
-                          {feature.id === "originality-map" && (
-                            <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded border border-amber-200 uppercase tracking-tighter">
-                              Under Dev
-                            </span>
-                          )}
                         </h3>
                         {/* Smooth expand/collapse using grid */}
                         <div
-                          className={`grid transition-all duration-300 ease-in-out ${isActive ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0"}`}>
+                          className={`grid transition-all duration-300 ease-in-out ${
+                            isActive
+                              ? "grid-rows-[1fr] opacity-100 mt-3"
+                              : "grid-rows-[0fr] opacity-0"
+                          }`}>
                           <div className="overflow-hidden">
-                            <p className="text-gray-500 text-sm leading-relaxed pr-4 font-medium">
+                            <p className="text-gray-500 text-sm leading-relaxed pr-6 font-medium">
                               {feature.description}
                             </p>
                           </div>
@@ -272,11 +283,13 @@ function PreviewSection() {
           </div>
 
           {/* Right Column - Preview Area */}
-          <div className="w-full lg:w-[60%] relative min-h-[400px] lg:min-h-[600px] rounded-3xl overflow-hidden shadow-2xl shadow-gray-200/50">
+          <div className="w-full lg:w-[60%] relative min-h-[450px] lg:min-h-[650px] rounded-[2.5rem] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-gray-100">
             {features.map((feature, index) => (
               <div
                 key={feature.id}
-                className={`absolute inset-0 transition-all duration-700 ease-in-out flex items-center justify-center p-8 lg:p-12 ${feature.previewBg} ${
+                className={`absolute inset-0 transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) flex items-center justify-center p-8 lg:p-16 ${
+                  feature.previewBg
+                } ${
                   activeTab === index
                     ? "opacity-100 z-10"
                     : "opacity-0 z-0 pointer-events-none"
@@ -284,17 +297,17 @@ function PreviewSection() {
                 <div
                   className={`w-full h-full relative rounded-2xl overflow-hidden shadow-2xl border border-black/5 bg-white transition-all duration-700 ease-out transform ${
                     activeTab === index
-                      ? "translate-y-0 scale-100 opacity-100 delay-100"
-                      : "translate-y-8 scale-95 opacity-0"
+                      ? "translate-y-0 scale-100 opacity-100 delay-200"
+                      : "translate-y-12 scale-95 opacity-0"
                   }`}>
                   {/* MacOS like window header */}
-                  <div className="h-10 bg-gray-50/80 backdrop-blur-sm border-b border-gray-100 flex items-center px-4 gap-2 absolute top-0 w-full z-10">
-                    <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                    <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                  <div className="h-12 bg-gray-50/90 backdrop-blur-md border-b border-gray-100 flex items-center px-5 gap-2.5 absolute top-0 w-full z-10">
+                    <div className="w-3 h-3 rounded-full bg-[#FF5F57]"></div>
+                    <div className="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                    <div className="w-3 h-3 rounded-full bg-[#28C840]"></div>
                   </div>
                   {/* The image should cover the rest of the window */}
-                  <div className="absolute inset-0 pt-10">
+                  <div className="absolute inset-0 pt-12">
                     <img
                       src={feature.image}
                       alt={feature.title}
@@ -386,9 +399,9 @@ function FeaturesGrid() {
     {
       id: "team-workspaces",
       icon: LayoutDashboard,
-      title: "Collaborative Workspaces",
+      title: "Unified Team Environments",
       description:
-        "Centralize your team's research. Real-time co-authoring with individual contribution logs for full team transparency.",
+        "Centralize research materials and co-author complex papers with granular contribution tracking and role-based permissions.",
       image:
         "https://image2url.com/r2/default/gifs/1772349529885-091865dd-d9dc-40c6-bbc4-92dff5ccc409.gif?w=800&q=80",
       iconColor: "text-rose-600",
@@ -398,11 +411,11 @@ function FeaturesGrid() {
     {
       id: "real-time-collaboration",
       icon: Users,
-      title: "Real-Time Collaboration",
+      title: "Live Sync & Authorship",
       description:
-        "Write together seamlessly. Edit continuously with peers and experience conflict-free live co-authoring.",
+        "Write together seamlessly with conflict-free co-editing and real-time visualization of peer contributions.",
       image:
-        "https://i.ibb.co/LnxYfW3/Screenshot-2026-01-13-201542.png?w=800&q=80",
+        "https://cdn.prod.website-files.com/5faba41eb4068c069dd32804/67d0731a50881146d37ac482_Real-Time%20Collaboration%20Tools%20for%20Design%20Teams.png?w=800&q=80",
       iconColor: "text-indigo-600",
       iconBg: "bg-indigo-100",
       previewBg: "bg-indigo-50",
@@ -410,9 +423,9 @@ function FeaturesGrid() {
     {
       id: "chat-with-pdf",
       icon: Bot,
-      title: "Chat with PDF",
+      title: "AI Research Assistant",
       description:
-        "Extract crucial insights immediately. Engage in a conversational dialogue directly with your academic materials.",
+        "Extract deep insights from dense academic materials through interactive, context-aware dialogues with your PDF library.",
       image:
         "https://image2url.com/r2/default/images/1772735474020-d9c7d34e-7639-4013-a694-1ea2ee785d20.png?w=800&q=80",
       iconColor: "text-cyan-600",
@@ -422,9 +435,9 @@ function FeaturesGrid() {
     {
       id: "citation-auditor",
       icon: SearchCheck,
-      title: "Citation Auditor",
+      title: "Scientific Integrity Audit",
       description:
-        "Advanced auditing that scores every claim in your document against credible research databases with suggestions for missing links.",
+        "Score every claim against millions of peer-reviewed sources to identify missing links and ensure total factual defensibility.",
       image:
         "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80",
       iconColor: "text-green-600",
@@ -434,9 +447,9 @@ function FeaturesGrid() {
     {
       id: "smart-citations",
       icon: Sparkles,
-      title: "Smart Citation Builder",
+      title: "Intelligent Sourcing Engine",
       description:
-        "Instantly find credible sources and add accurate citations without leaving your workflow.",
+        "Discover high-impact references and generate flawless citations in any academic style without ever leaving the editor.",
       image:
         "https://www.vaslou.com/wp-content/uploads/2024/03/what-is-a-citation-audit-in-SEO-1600x900-featured.webp?w=800&q=80",
       iconColor: "text-blue-600",
@@ -444,11 +457,11 @@ function FeaturesGrid() {
       previewBg: "bg-blue-50",
     },
     {
-      id: "defensibility-log",
+      id: "authorship-certification",
       icon: History,
-      title: "Defensibility Log",
+      title: "Authorship Certification",
       description:
-        "Generate authorship certificates proving your work is original with time tracking and manual effort verification.",
+        "Generate irrefutable proof of your writing process with time tracking and manual effort verification for complete academic defensibility.",
       image:
         "https://i.ibb.co/Pv7B5kmy/Screenshot-2026-01-14-092154.png?w=800&q=80",
       iconColor: "text-amber-600",
@@ -463,11 +476,11 @@ function FeaturesGrid() {
       <div className="container-custom max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
-            The Complete Academic Command Hub
+            The Future of Academic Infrastructure
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            From proof of authorship to perfect collaboration, execute complex
-            workflows instantly right within the editor.
+            From discovery to defense. Experience a unified ecosystem designed
+            to eliminate research friction and maximize academic impact.
           </p>
         </div>
 
@@ -571,21 +584,21 @@ function ComparisonSection() {
   const highlights = [
     {
       icon: Bot,
-      title: "End the AI Paradox",
+      title: "Neutralize the AI Paradox",
       description:
-        "Stop choosing between falling behind or risking expulsion. Use AI tools responsibly without the constant fear of false flags.",
+        "Eliminate the conflict between leveraging AI and risking academic integrity. ColabWize provides the guardrails to use modern tools responsibly.",
     },
     {
       icon: Shield,
-      title: "Defensibility-First",
+      title: "Architected for Defensibility",
       description:
-        "We don't just help you write better—we prove your work is original, properly cited, and authentically human-created.",
+        "We go beyond stylistic assistance. Our platform generates an audit trail that proves your work is original, meticulously cited, and authentically your own.",
     },
     {
       icon: CheckCircle,
-      title: "Eliminate Submission Anxiety",
+      title: "Submit with Absolute Certainty",
       description:
-        "Stop asking 'Will Turnitin flag me?'. Get irrefutable proof of authorship and silence the uncertainty before you submit.",
+        "Silencing the fear of false positives. Obtain an Authorship Certificate before submission to pre-emptively defend your work against any automated detection.",
     },
   ];
 
@@ -598,7 +611,7 @@ function ComparisonSection() {
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             We don't just help you write better—we prove your work is original.
-            Say goodbye to the fear of false positives and career uncertainty.
+            Say goodbye to the fear of false flags and career uncertainty.
           </p>
         </div>
 
@@ -631,7 +644,7 @@ function TestimonialsSection() {
   const testimonials = [
     {
       quote:
-        "The Originality Map gave me peace of mind. I could finally submit my thesis knowing exactly where every similarity came from and why it was safe.",
+        "The Citation Auditor gave me total peace of mind. I could finally submit my thesis knowing exactly where every similarity came from and why it was safe.",
       author: "Dr. Sarah Johnson",
       role: "PhD Candidate, MIT",
       avatar:
@@ -639,7 +652,7 @@ function TestimonialsSection() {
     },
     {
       quote:
-        "The Authorship Certificate feature is a game-changer. My students can now prove their work is original with a verifiable paper trail of their writing process.",
+        "The Authorship Certificate is a complete game-changer. My students can now prove their work is original with a verifiable paper trail of their writing process.",
       author: "Prof. Michael Chen",
       role: "Department of Literature, Stanford University",
       avatar:
@@ -647,7 +660,7 @@ function TestimonialsSection() {
     },
     {
       quote:
-        "I used to be terrified of AI detectors flagging my work. The Submission-Safe Writing Mode helped me maintain my voice while staying completely safe.",
+        "I used to be terrified of AI detectors flagging my work. The Scientific Integrity Audit helped me maintain my voice while staying completely safe.",
       author: "Alex Rivera",
       role: "Graduate Student, UC Berkeley",
       avatar:
@@ -715,11 +728,11 @@ function CTASection() {
       <div className="container-custom relative z-10">
         <div className="text-center max-w-3xl mx-auto">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-            Ready to Upgrade Your Academic Life?
+            Ready to Master Your Research?
           </h2>
           <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
-            Stop worrying about false positives. Start building your
-            defensibility log today and submit with 100% confidence.
+            Silence the fear of false flags. Build your Authorship Certificate
+            today and submit your research with absolute confidence.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
