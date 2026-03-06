@@ -160,20 +160,24 @@ function FeaturesPresentationFlow() {
   const PLUS_PRICE = billingPeriod === "yearly" ? 57.5 : 5.99;
   const PREMIUM_PRICE = billingPeriod === "yearly" ? 124.7 : 12.99;
 
-  const PriceDisplay = ({ price }: { price: number }) => (
-    <div className="flex items-baseline justify-center gap-1 mb-1">
-      <span className="text-4xl font-bold text-gray-900">${price}</span>
-      <span className="text-gray-500">
-        {billingPeriod === "yearly" ? "/year" : "/mo"}
-      </span>
-    </div>
-  );
+  const PriceDisplay = ({ price }: { price: number }) => {
+    const isYearly = billingPeriod === "yearly";
+    const mainPrice = isYearly ? (price / 12).toFixed(2) : price;
+    const subPrice = isYearly ? `$${price}/year billed annually` : null;
 
-  const EffectiveMonthly = ({ price }: { price: number }) => {
-    if (billingPeriod !== "yearly") return null;
     return (
-      <div className="text-sm text-gray-500 mb-4">
-        ${(price / 12).toFixed(2)}/mo effective
+      <div className="flex flex-col items-center">
+        <div className="flex items-baseline justify-center gap-1">
+          <span className="text-4xl font-bold text-gray-900">${mainPrice}</span>
+          <span className="text-gray-500 font-medium">
+            {isYearly ? "/mo effective" : "/mo"}
+          </span>
+        </div>
+        {subPrice && (
+          <div className="text-sm text-gray-500 mt-2 font-medium">
+            {subPrice}
+          </div>
+        )}
       </div>
     );
   };
@@ -319,12 +323,10 @@ function FeaturesPresentationFlow() {
                 ) : (
                   <PriceDisplay price={plan.price as number} />
                 )}
-                {plan.billingText ? (
-                  <p className="text-xs text-gray-400 mt-2">
+                {plan.billingText && (
+                  <p className="text-xs text-gray-400 mt-2 text-center w-full">
                     {plan.billingText}
                   </p>
-                ) : (
-                  <EffectiveMonthly price={plan.price as number} />
                 )}
               </div>
 

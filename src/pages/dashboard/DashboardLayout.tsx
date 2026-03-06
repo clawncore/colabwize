@@ -5,7 +5,6 @@ import { useUser } from "../../services/useUser";
 import { documentService } from "../../services/documentService";
 import certificateService from "../../services/certificateService";
 import WorkspaceService, { Workspace } from "../../services/workspaceService";
-import { SubscriptionService } from "../../services/subscriptionService";
 import { usePresence } from "../../hooks/usePresence";
 import PendingInvitationsBanner from "../../components/workspace/PendingInvitationsBanner";
 import { ReactNode } from "react";
@@ -617,7 +616,8 @@ export default function DashboardLayout({
             {/* Right side */}
             <div className="flex items-center space-x-4">
               {/* Notifications */}
-              <NotificationBell />
+              {workspaces.length > 0 && <NotificationBell />}
+
               {/* Profile dropdown */}
               <div className="relative profile-dropdown">
                 <button
