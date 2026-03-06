@@ -160,7 +160,7 @@ function FeaturesPresentationFlow() {
         "Cloud-native storage and version control",
       ],
       imageUrl:
-        "https://images.unsplash.com/photo-1544391682-177c4d8ce3a9?w=800&h=600&fit=crop",
+        "https://lh3.googleusercontent.com/2erv0vmuBi-qH6eLd9nOvjeHTR8eupRBL55dHf1hWc4myVSATZnk-Cfg15I7dRv7LxHFZ1LjLuTeNPg9THsuZRD2eCLYsSYGc3AY=e365-pa-nu-rw-w527?w=800&h=600&fit=crop",
       color: "from-green-600 to-emerald-700",
       reverse: true,
     },
@@ -222,7 +222,7 @@ function FeaturesPresentationFlow() {
         "Advanced citation analysis endpoints",
       ],
       imageUrl:
-        "https://images.unsplash.com/photo-1558494949-ef01095d978a?w=800&h=600&fit=crop",
+        "https://cdn.prod.website-files.com/63eab091d2e4cb36843a37be/654a6f699c023825f78a627d_Just-in-time-access-Rest%20API-logo.jpeg?w=800&h=600&fit=crop",
       color: "from-amber-600 to-amber-700",
       reverse: true,
     },

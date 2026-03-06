@@ -15,11 +15,8 @@ import {
   Shield,
   Calendar,
   LayoutDashboard,
-<<<<<<< HEAD
   MessageSquareText,
-=======
   Map as MapIcon,
->>>>>>> 4045c969e811d5a608de1930dbb487a4f6b7b954
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "../hooks/useAuth";
@@ -104,16 +101,12 @@ export default function Navigation() {
   ];
 
   const solutionsItems: DropdownItem[] = [
-<<<<<<< HEAD
     {
       name: "Chat with PDFs",
       href: "/solutions/chat-with-pdfs",
       icon: <MessageSquareText className="h-5 w-5" />,
       description: "Interact with your research documents using AI",
     },
-=======
-
->>>>>>> 4045c969e811d5a608de1930dbb487a4f6b7b954
     {
       name: "Citation Confidence",
       href: "/solutions/citation-confidence",
@@ -121,10 +114,10 @@ export default function Navigation() {
       description: "Ensure originality with advanced checking",
     },
     {
-      name: "Originality Map",
-      href: "/solutions/originality-map",
+      name: "Analytics Metrics",
+      href: "/solutions/analytics-metrics",
       icon: <MapIcon className="h-5 w-5" />,
-      description: "Visualize your work's integrity",
+      description: "Visualize your work's metrics",
     },
     {
       name: "Draft Comparison",
@@ -199,8 +192,9 @@ export default function Navigation() {
               <div className="text-[15px] font-medium transition-colors duration-200 text-gray-800 hover:text-blue-600 flex items-center gap-1 cursor-pointer focus:outline-none py-4">
                 Solutions
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${solutionsOpen ? "rotate-180" : ""
-                    }`}
+                  className={`h-4 w-4 transition-transform duration-200 ${
+                    solutionsOpen ? "rotate-180" : ""
+                  }`}
                 />
               </div>
               {solutionsOpen && (
@@ -317,8 +311,9 @@ export default function Navigation() {
               <div className="text-[15px] font-medium transition-colors duration-200 text-gray-800 hover:text-blue-600 flex items-center gap-1 cursor-pointer focus:outline-none py-4">
                 Product
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${productOpen ? "rotate-180" : ""
-                    }`}
+                  className={`h-4 w-4 transition-transform duration-200 ${
+                    productOpen ? "rotate-180" : ""
+                  }`}
                 />
               </div>
               {productOpen && (
@@ -440,8 +435,9 @@ export default function Navigation() {
               <div className="text-[15px] font-medium transition-colors duration-200 text-gray-800 hover:text-blue-600 flex items-center gap-1 cursor-pointer focus:outline-none py-4">
                 Resources
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform duration-200 ${resourcesOpen ? "rotate-180" : ""
-                    }`}
+                  className={`h-4 w-4 transition-transform duration-200 ${
+                    resourcesOpen ? "rotate-180" : ""
+                  }`}
                 />
               </div>
               {resourcesOpen && (
@@ -654,10 +650,11 @@ export default function Navigation() {
           onClick={() => setIsOpen(false)}></div>
       )}
       <div
-        className={`md:hidden fixed top-16 right-0 left-0 bg-[#F3F0EC] z-40 transition-all duration-300 ease-in-out ${isOpen
-          ? "opacity-100 translate-y-0 pointer-events-auto max-h-screen overflow-y-auto"
-          : "opacity-0 -translate-y-full pointer-events-none max-h-0 overflow-hidden"
-          }`}>
+        className={`md:hidden fixed top-16 right-0 left-0 bg-[#F3F0EC] z-40 transition-all duration-300 ease-in-out ${
+          isOpen
+            ? "opacity-100 translate-y-0 pointer-events-auto max-h-screen overflow-y-auto"
+            : "opacity-0 -translate-y-full pointer-events-none max-h-0 overflow-hidden"
+        }`}>
         <div className="container-custom pt-6 pb-8">
           <div className="flex flex-col space-y-6">
             {/* Mobile Navigation Items */}
@@ -673,8 +670,9 @@ export default function Navigation() {
                   className="flex justify-between items-center w-full text-left font-medium text-gray-800 py-2">
                   <span>Solutions</span>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${solutionsOpen ? "rotate-180" : ""
-                      }`}
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      solutionsOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
                 {solutionsOpen && (
@@ -707,8 +705,9 @@ export default function Navigation() {
                   className="flex justify-between items-center w-full text-left font-medium text-gray-800 py-2">
                   <span>Product</span>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${productOpen ? "rotate-180" : ""
-                      }`}
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      productOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
                 {productOpen && (
@@ -751,8 +750,9 @@ export default function Navigation() {
                   className="flex justify-between items-center w-full text-left font-medium text-gray-800 py-2">
                   <span>Resources</span>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${resourcesOpen ? "rotate-180" : ""
-                      }`}
+                    className={`h-4 w-4 transition-transform duration-200 ${
+                      resourcesOpen ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
                 {resourcesOpen && (

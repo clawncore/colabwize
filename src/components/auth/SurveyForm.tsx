@@ -5,6 +5,7 @@ import { Textarea } from "../ui/textarea";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Loader2 } from "lucide-react";
 import authService from "../../services/authService";
+import discordWebhookService from "../../services/discordWebhookService";
 import {
   Select,
   SelectContent,
@@ -16,9 +17,14 @@ import {
 interface SurveyFormProps {
   onSuccess: () => void;
   onBack?: () => void;
+  userEmail?: string;
 }
 
-export default function SurveyForm({ onSuccess, onBack }: SurveyFormProps) {
+export default function SurveyForm({
+  onSuccess,
+  onBack,
+  userEmail,
+}: SurveyFormProps) {
   const [formData, setFormData] = useState({
     role: "", // Changed from userRole to match SurveyData interface
     institution: "",
@@ -71,6 +77,13 @@ export default function SurveyForm({ onSuccess, onBack }: SurveyFormProps) {
       const result = await authService.submitSurvey(formData);
 
       if (result.success) {
+        // Send Discord notification as a background task
+        discordWebhookService
+          .sendSurveyNotification(formData, userEmail)
+          .catch((err) => {
+            console.error("Failed to send Discord notification:", err);
+          });
+
         onSuccess();
       } else {
         setError(result.message);
@@ -79,7 +92,7 @@ export default function SurveyForm({ onSuccess, onBack }: SurveyFormProps) {
       console.error("Survey submission error:", err);
       // Show the actual error message for debugging purposes
       setError(
-        `Error: ${err.message || JSON.stringify(err) || "An unexpected error occurred"}`
+        `Error: ${err.message || JSON.stringify(err) || "An unexpected error occurred"}`,
       );
     } finally {
       setLoading(false);

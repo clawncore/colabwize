@@ -1,5 +1,3 @@
-/* eslint-disable */
-// BOM_FIX_FORCE
 import * as React from "react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -359,8 +357,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   // Scored matching function for bibliography navigation was removed here as it was unused.
 
-
-
   // Initialize editor with project content or create empty content
   // Since we created 'ydoc' and 'provider' synchronously on initial render via useState,
   // we can safely add the Collaboration extensions immediately without crashing.
@@ -628,25 +624,27 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             // Convert plain text citations to blue interactive nodes
             setTimeout(async () => {
               if (editor && !editor.isDestroyed) {
-<<<<<<< HEAD
                 await detectAndNormalizeCitations(
                   editor,
                   project.id,
                   project.citations || [],
                 );
-=======
                 try {
-                  // MUST BE STRICTLY SEQUENTIAL! 
-                  // If run concurrently, they cache positions, transaction #1 shifts the document, 
+                  // MUST BE STRICTLY SEQUENTIAL!
+                  // If run concurrently, they cache positions, transaction #1 shifts the document,
                   // and transaction #2 overwrites/deletes wrong text based on stale positions.
-                  await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+                  await detectAndNormalizeCitations(
+                    editor,
+                    project.id,
+                    project.citations || [],
+                  );
 
-                  const { detectAndNormalizeBibliography } = await import("./utils/normalization");
+                  const { detectAndNormalizeBibliography } =
+                    await import("./utils/normalization");
                   await detectAndNormalizeBibliography(editor, project.id);
                 } catch (e) {
                   console.error("Normalization error:", e);
                 }
->>>>>>> 4045c969e811d5a608de1930dbb487a4f6b7b954
               }
             }, 500);
           } catch (error) {
@@ -692,20 +690,23 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           await CitationRegistryService.initializeFromBackend(project.id);
           (window as any).__currentProjectId__ = project.id;
 
-<<<<<<< HEAD
           await detectAndNormalizeCitations(
             editor,
             project.id,
             project.citations || [],
           );
-=======
-          import("./utils/normalization").then(({ detectAndNormalizeBibliography }) => {
-            Promise.all([
-              detectAndNormalizeCitations(editor, project.id, project.citations || []),
-              detectAndNormalizeBibliography(editor, project.id)
-            ]).catch(e => console.error("Collab Normalization Failed:", e));
-          });
->>>>>>> 4045c969e811d5a608de1930dbb487a4f6b7b954
+          import("./utils/normalization").then(
+            ({ detectAndNormalizeBibliography }) => {
+              Promise.all([
+                detectAndNormalizeCitations(
+                  editor,
+                  project.id,
+                  project.citations || [],
+                ),
+                detectAndNormalizeBibliography(editor, project.id),
+              ]).catch((e) => console.error("Collab Normalization Failed:", e));
+            },
+          );
         } catch (e) {
           console.error("Collab init registry failed:", e);
         }
@@ -715,8 +716,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }
   }, [isCollaborative, editor, isSynced, project.id, project.citations]);
 
-<<<<<<< HEAD
-  // --- Background Normalization (Debounced Loop) ---
   // Periodically scans for new plain text citations to convert them to pills
   useEffect(() => {
     if (!editor || !isEditorMounted || !isViewReady(editor)) return;
@@ -733,9 +732,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     return () => clearTimeout(timer);
   }, [editor, editCount, isEditorMounted, project.id, project.citations]);
-=======
-
->>>>>>> 4045c969e811d5a608de1930dbb487a4f6b7b954
 
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -1338,18 +1334,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               <div className="flex items-center space-x-2 flex-wrap">
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-<<<<<<< HEAD
                   className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
                     isPreviewMode
                       ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
-=======
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
-                    ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
->>>>>>> 4045c969e811d5a608de1930dbb487a4f6b7b954
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1365,18 +1354,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-<<<<<<< HEAD
                   className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
                     isFocusMode
                       ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
-=======
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
-                    ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
->>>>>>> 4045c969e811d5a608de1930dbb487a4f6b7b954
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />
@@ -1662,13 +1644,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               Find Papers
             </button>
 
-<<<<<<< HEAD
-            {/* Originality Scan Pipeline (Plagiarism Detection) 
-            <OriginalityMapAdapter
-=======
             {/* Originality Scan Pipeline (Plagiarism Detection) — temporarily hidden */}
             {/* <OriginalityMapAdapter
->>>>>>> 4045c969e811d5a608de1930dbb487a4f6b7b954
               projectId={project.id}
               editor={editor}
               onScanComplete={(results) => {
@@ -1676,11 +1653,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   onOpenPanel("originality-results", results);
                 }
               }}
-<<<<<<< HEAD
             />*/}
-=======
-            /> */}
->>>>>>> 4045c969e811d5a608de1930dbb487a4f6b7b954
 
             <button
               onClick={handleCompareClick}

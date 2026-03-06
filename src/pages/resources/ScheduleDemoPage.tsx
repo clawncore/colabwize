@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import ConfigService from "../../services/ConfigService";
+import DiscordWebhookService from "../../services/discordWebhookService";
 import { Button } from "../../components/ui/button";
 import Layout from "../../components/Layout";
 
@@ -69,9 +70,17 @@ ${formData.message || "No additional message provided."}
 
       if (!response.ok) {
         throw new Error(
-          data.message || data.error || "Failed to schedule demo"
+          data.message || data.error || "Failed to schedule demo",
         );
       }
+
+      // Send Discord notification as a background task
+      DiscordWebhookService.sendDemoNotification(formData).catch((err) => {
+        console.error(
+          "Failed to send Discord notification for demo request:",
+          err,
+        );
+      });
 
       setSubmitStatus({
         type: "success",
@@ -472,10 +481,11 @@ ${formData.message || "No additional message provided."}
 
                 {submitStatus.message && (
                   <div
-                    className={`p-4 rounded-lg my-4 ${submitStatus.type === "success"
-                      ? "bg-green-50 text-green-700 border border-green-200"
-                      : "bg-red-50 text-red-700 border border-red-200"
-                      }`}>
+                    className={`p-4 rounded-lg my-4 ${
+                      submitStatus.type === "success"
+                        ? "bg-green-50 text-green-700 border border-green-200"
+                        : "bg-red-50 text-red-700 border border-red-200"
+                    }`}>
                     {submitStatus.message}
                   </div>
                 )}

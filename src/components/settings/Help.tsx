@@ -18,6 +18,8 @@ import apiClient from "../../services/apiClient";
 import WaitlistService from "../../services/waitlistService";
 import { SubscriptionService } from "../../services/subscriptionService";
 import ConfigService from "../../services/ConfigService";
+import DiscordWebhookService from "../../services/discordWebhookService";
+import { useUser } from "../../services/useUser";
 import { VideoTutorial, videoTutorials } from "../../data/helpData";
 
 interface HelpArticle {
@@ -29,6 +31,7 @@ interface HelpArticle {
 
 const HelpSettingsPage: React.FC = () => {
   const { toast } = useToast();
+  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackComment, setFeedbackComment] = useState("");
@@ -122,6 +125,21 @@ const HelpSettingsPage: React.FC = () => {
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
+          // Send Discord notification as a background task
+          DiscordWebhookService.sendFeedbackNotification({
+            type: "feedback",
+            priority: "medium",
+            title: `User Feedback - ${feedbackRating} stars`,
+            description: feedbackComment,
+            userEmail: user?.email,
+            rating: feedbackRating,
+          }).catch((err) => {
+            console.error(
+              "Failed to send Discord notification for feedback:",
+              err,
+            );
+          });
+
           setFeedbackSubmitted(true);
           setFeedbackRating(0);
           setFeedbackComment("");
@@ -227,6 +245,21 @@ const HelpSettingsPage: React.FC = () => {
       const response = await apiClient.post("/api/support-ticket", ticketData);
 
       if (response.success) {
+        // Send Discord notification as a background task
+        DiscordWebhookService.sendSupportTicketNotification({
+          subject: ticketSubject,
+          message: ticketMessage,
+          priority: ticketPriority,
+          userEmail: user?.email,
+          userName: user?.full_name || user?.email?.split("@")[0],
+          attachmentName: ticketAttachment?.name,
+        }).catch((err) => {
+          console.error(
+            "Failed to send Discord notification for support ticket:",
+            err,
+          );
+        });
+
         setTicketSubmitted(true);
         setTicketMessage("");
         setTicketAttachment(null);
@@ -358,6 +391,19 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
       const result = await response.json();
 
       if (result.message && result.featureRequestId) {
+        // Send Discord notification as a background task
+        DiscordWebhookService.sendFeatureRequestNotification({
+          title: newFeatureTitle,
+          description: newFeatureDescription,
+          userEmail: user?.email,
+          userName: user?.full_name || user?.email?.split("@")[0],
+        }).catch((err) => {
+          console.error(
+            "Failed to send Discord notification for feature request:",
+            err,
+          );
+        });
+
         setFeatureSubmitted(true);
         setNewFeatureTitle("");
         setNewFeatureDescription("");
@@ -711,7 +757,7 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600 ">Version:</span>
-                    <span className="font-medium text-gray-900 ">v1.2.3</span>
+                    <span className="font-medium text-gray-900 ">v2.2.0</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 ">Platform:</span>
@@ -726,7 +772,7 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                   <div className="flex justify-between">
                     <span className="text-gray-600 ">Last Updated:</span>
                     <span className="font-medium text-gray-900 ">
-                      Oct 1, 2024
+                      Oct 1, 2025
                     </span>
                   </div>
                 </div>

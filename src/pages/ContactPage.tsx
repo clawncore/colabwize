@@ -4,6 +4,7 @@ import { Mail, Building, Newspaper, Send, Check } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import Layout from "../components/Layout";
+import DiscordWebhookService from "../services/discordWebhookService";
 import { useNavigate } from "react-router-dom";
 
 // Contact Hero Section
@@ -166,6 +167,14 @@ function ContactForm() {
         throw new Error(data.message || data.error || "Failed to send message");
       }
 
+      // Send Discord notification as a background task
+      DiscordWebhookService.sendContactNotification(formData).catch((err) => {
+        console.error(
+          "Failed to send Discord notification for contact form:",
+          err,
+        );
+      });
+
       setSubmitStatus({
         type: "success",
         message:
@@ -263,10 +272,11 @@ function ContactForm() {
 
         {submitStatus.message && (
           <div
-            className={`p-4 rounded-lg ${submitStatus.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-              }`}>
+            className={`p-4 rounded-lg ${
+              submitStatus.type === "success"
+                ? "bg-green-50 text-green-700 border border-green-200"
+                : "bg-red-50 text-red-700 border border-red-200"
+            }`}>
             {submitStatus.message}
           </div>
         )}
@@ -357,8 +367,7 @@ function ClosingCTA() {
                 href="https://docs.colabwize.com/quickstart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center"
-              >
+                className="flex items-center">
                 See How It Works
               </a>
             </Button>

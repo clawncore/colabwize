@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Twitter, Github, Linkedin, Mail } from "lucide-react";
+import { MessageSquare, Mail, Youtube } from "lucide-react";
 import ConfigService from "../services/ConfigService";
 
 const footerLinks = {
@@ -44,9 +44,15 @@ const footerLinks = {
     { name: "AI False Positives", href: "/ai-false-positive-problem" },
   ],
   guides: [
-    { name: "Proven Not AI Guide", href: "/how-to-prove-your-writing-is-not-ai" },
+    {
+      name: "Proven Not AI Guide",
+      href: "/how-to-prove-your-writing-is-not-ai",
+    },
     { name: "Check Credibility", href: "/how-to-check-citation-credibility" },
-    { name: "Ethical Collaboration", href: "/how-to-collaborate-on-academic-papers" },
+    {
+      name: "Ethical Collaboration",
+      href: "/how-to-collaborate-on-academic-papers",
+    },
     { name: "The AI Crisis Report", href: "/false-ai-detection-in-academia" },
   ],
   company: [
@@ -64,9 +70,16 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { name: "Twitter", href: "#", icon: Twitter },
-  { name: "Github", href: "#", icon: Github },
-  { name: "LinkedIn", href: "#", icon: Linkedin },
+  {
+    name: "Discord",
+    href: "https://discord.com/invite/2MMSdX3Uee",
+    icon: MessageSquare,
+  },
+  {
+    name: "Youtube",
+    href: "https://www.youtube.com/@colabwize",
+    icon: Youtube,
+  },
   { name: "Email", href: "mailto:hello@colabwize.com", icon: Mail },
 ];
 
@@ -85,7 +98,9 @@ export default function Footer() {
                   alt="ColabWize Logo"
                   className="h-8 w-auto"
                 />
-                <span className="text-xl font-bold text-black font-primary">ColabWize</span>
+                <span className="text-xl font-bold text-black font-primary">
+                  ColabWize
+                </span>
               </Link>
               <p className="text-gray-500 text-sm mb-8 max-w-sm leading-relaxed">
                 Your Academic Success, Defended. A platform designed to

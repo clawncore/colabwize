@@ -102,8 +102,9 @@ function HeroSection() {
           </h1>
 
           <p className="text-lg md:text-xl text-gray-500 font-medium mb-8 max-w-2xl mx-auto leading-relaxed">
-            Empowering scholars with advanced AI-driven verification and a
-            unified research ecosystem. Collaborate seamlessly, cite with
+            A comprehensive academic integrity and defensibility platform
+            designed to transform the writing process from a source of anxiety
+            into a source of confidence. Collaborate seamlessly, cite with
             precision, and prove the authenticity of your work with ColabWize.
           </p>
 

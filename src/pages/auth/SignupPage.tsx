@@ -60,15 +60,15 @@ const ALLOWED_DOMAINS = [
 const fetchWithTimeout = (
   url: string,
   options: RequestInit = {},
-  timeout = 60000
+  timeout = 60000,
 ): Promise<Response> => {
   return Promise.race([
     fetch(url, options),
     new Promise<Response>((_, reject) =>
       setTimeout(
         () => reject(new Error("Request timeout after " + timeout + "ms")),
-        timeout
-      )
+        timeout,
+      ),
     ),
   ]) as Promise<Response>;
 };
@@ -82,7 +82,7 @@ const isValidEmailDomain = (email: string): boolean => {
     // Check if domain is in allowed list
     return ALLOWED_DOMAINS.some(
       (allowedDomain) =>
-        domain === allowedDomain || domain.endsWith("." + allowedDomain)
+        domain === allowedDomain || domain.endsWith("." + allowedDomain),
     );
   } catch (error) {
     console.error("Error validating email domain:", error);
@@ -104,7 +104,7 @@ const signupSchema = z
       .regex(/\d/, "Password must contain at least one number")
       .regex(
         /[!@#$%^&*(),.?":{}|<>]/,
-        "Password must contain at least one special character"
+        "Password must contain at least one special character",
       ), // Add this line for special characters (adjust as needed)
     confirmPassword: z.string(),
     fieldOfStudy: z.string().optional(),
@@ -134,7 +134,7 @@ const signupSchema = z
       message:
         "Please use a valid email domain (gmail.com, outlook.com, yahoo.com, etc.)",
       path: ["email"],
-    }
+    },
   );
 
 type SignupFormData = z.infer<typeof signupSchema>;
@@ -150,7 +150,6 @@ const SignupPage: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = React.useState<string | null>(null);
   const [affiliateRef, setAffiliateRef] = React.useState<string | null>(null);
   const [redirectPath, setRedirectPath] = React.useState<string | null>(null);
-
 
   // Add state for validation errors
   const [validationErrors, setValidationErrors] = React.useState<{
@@ -220,7 +219,7 @@ const SignupPage: React.FC = () => {
                   fullName: oauthUserData.fullName,
                   provider: oauthUserData.provider,
                 }),
-              }
+              },
             );
 
             const result = await response.json();
@@ -233,7 +232,7 @@ const SignupPage: React.FC = () => {
               setShowSurveyStep(true);
             } else {
               throw new Error(
-                result.message || "Failed to register OAuth user"
+                result.message || "Failed to register OAuth user",
               );
             }
           } catch (error: any) {
@@ -278,7 +277,7 @@ const SignupPage: React.FC = () => {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email: session.user.email }),
-            }
+            },
           );
 
           const result = await response.json();
@@ -341,11 +340,9 @@ const SignupPage: React.FC = () => {
     // For Supabase, phone authentication is not directly supported
     // We'll skip recaptcha verifier initialization
     console.log(
-      "Supabase does not support phone authentication directly, skipping recaptcha verifier initialization"
+      "Supabase does not support phone authentication directly, skipping recaptcha verifier initialization",
     );
   }, []);
-
-
 
   // Custom register function that clears validation errors when field changes
   const registerWithValidationClear = (name: any) => {
@@ -402,7 +399,7 @@ const SignupPage: React.FC = () => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify(validationData),
-          }
+          },
         );
 
         const result = await response.json();
@@ -437,7 +434,9 @@ const SignupPage: React.FC = () => {
           // Handle specific HTTP errors
           if (response.status === 429) {
             // Rate limit error - don't clear validation, just log it
-            console.warn("Rate limit reached for validation API. Please wait before retrying.");
+            console.warn(
+              "Rate limit reached for validation API. Please wait before retrying.",
+            );
             // Don't update validation errors - maintain current state
             return;
           }
@@ -467,7 +466,7 @@ const SignupPage: React.FC = () => {
         setValidating((prev) => ({ ...prev, [field]: false }));
       }
     },
-    []
+    [],
   ); // Remove API_BASE_URL as it's a constant
 
   // Debounced validation effect
@@ -497,11 +496,7 @@ const SignupPage: React.FC = () => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    fullName,
-    email,
-    validateUserDetails,
-  ]);
+  }, [fullName, email, validateUserDetails]);
 
   const passwordValue = watch("password");
   const otpMethod = watch("otpMethod");
@@ -534,7 +529,7 @@ const SignupPage: React.FC = () => {
         // For checkout flow, first create a checkout session
         try {
           const checkoutUrl = await SubscriptionService.createCheckout(
-            selectedPlan as string
+            selectedPlan as string,
           );
 
           if (checkoutUrl) {
@@ -546,7 +541,7 @@ const SignupPage: React.FC = () => {
                 fullName: data.fullName,
                 otpMethod: data.otpMethod,
                 selectedPlan: selectedPlan,
-              })
+              }),
             );
 
             // Redirect to checkout
@@ -558,7 +553,7 @@ const SignupPage: React.FC = () => {
         } catch (checkoutError: any) {
           console.error("Checkout creation failed:", checkoutError);
           throw new Error(
-            `Checkout failed: ${checkoutError.message || "Unknown error"}`
+            `Checkout failed: ${checkoutError.message || "Unknown error"}`,
           );
         }
       }
@@ -676,7 +671,7 @@ const SignupPage: React.FC = () => {
         // Always go to OTP verification step if OTP was sent or if verification is needed
         if (otpAlreadySent || needsVerification) {
           console.log(
-            "OTP sent or verification needed, moving to OTP verification step"
+            "OTP sent or verification needed, moving to OTP verification step",
           );
           setShowOtpStep(true);
         } else {
@@ -734,12 +729,16 @@ const SignupPage: React.FC = () => {
           console.log("User signed in successfully");
 
           // Wait a moment for the session to be fully established
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
 
           // Verify the session was established
-          const { data: { session } } = await supabase.auth.getSession();
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
           if (!session) {
-            throw new Error("Failed to establish authenticated session. Please try signing in manually.");
+            throw new Error(
+              "Failed to establish authenticated session. Please try signing in manually.",
+            );
           }
           console.log("Session verified, user is authenticated");
         } catch (loginError: any) {
@@ -747,7 +746,7 @@ const SignupPage: React.FC = () => {
           // Don't continue to survey if login fails - this will cause survey submission to fail
           throw new Error(
             loginError.message ||
-            "Failed to sign you in after verification. Please try signing in manually from the login page."
+              "Failed to sign you in after verification. Please try signing in manually from the login page.",
           );
         }
 
@@ -812,7 +811,7 @@ const SignupPage: React.FC = () => {
       // Make sure we have a userId
       if (!userId) {
         throw new Error(
-          "User ID not available. Please restart the signup process."
+          "User ID not available. Please restart the signup process.",
         );
       }
 
@@ -821,7 +820,7 @@ const SignupPage: React.FC = () => {
           ...currentData,
           phoneNumber: fullPhoneNumber,
         } as SignupFormData,
-        userId
+        userId,
       );
       console.log("OTP resent successfully");
     } catch (error: unknown) {
@@ -848,7 +847,7 @@ const SignupPage: React.FC = () => {
       const result = await resendVerificationEmail(
         data.email,
         currentUserId,
-        data.fullName
+        data.fullName,
       );
 
       if (result.success) {
@@ -921,8 +920,6 @@ const SignupPage: React.FC = () => {
       setSocialLoading(false);
     }
   };
-
-
 
   return (
     <AuthLayout
@@ -1021,7 +1018,7 @@ const SignupPage: React.FC = () => {
                 leftIcon={<User className="h-4 w-4" />}
                 error={
                   watchedFields.fullName !== undefined &&
-                    watchedFields.fullName !== ""
+                  watchedFields.fullName !== ""
                     ? errors.fullName?.message || validationErrors.fullName
                     : undefined
                 }
@@ -1043,7 +1040,7 @@ const SignupPage: React.FC = () => {
                 leftIcon={<Mail className="h-4 w-4" />}
                 error={
                   watchedFields.email !== undefined &&
-                    watchedFields.email !== ""
+                  watchedFields.email !== ""
                     ? errors.email?.message || validationErrors.email
                     : undefined
                 }
@@ -1067,7 +1064,7 @@ const SignupPage: React.FC = () => {
                   showPasswordToggle
                   error={
                     watchedFields.password !== undefined &&
-                      watchedFields.password !== ""
+                    watchedFields.password !== ""
                       ? errors.password?.message
                       : undefined
                   }
@@ -1089,7 +1086,7 @@ const SignupPage: React.FC = () => {
                 showPasswordToggle
                 error={
                   watchedFields.confirmPassword !== undefined &&
-                    watchedFields.confirmPassword !== ""
+                  watchedFields.confirmPassword !== ""
                     ? errors.confirmPassword?.message
                     : undefined
                 }
@@ -1241,7 +1238,11 @@ const SignupPage: React.FC = () => {
       {/* Survey Step - MOVED OUTSIDE THE MAIN FORM */}
       {showSurveyStep && (
         <div className="space-y-4">
-          <SurveyForm onSuccess={handleSurveyComplete} onBack={handleBackToSignup} />
+          <SurveyForm
+            onSuccess={handleSurveyComplete}
+            onBack={handleBackToSignup}
+            userEmail={watchedFields.email}
+          />
         </div>
       )}
 
