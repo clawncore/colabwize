@@ -42,6 +42,9 @@ export const CitationComponent = (props: NodeViewProps) => {
         }
     };
 
+    const worldCitationCount = metadata?.metadata?.citationCount;
+    const abstract = metadata?.metadata?.abstract;
+
     const displayText = text || "[citation]";
 
     const handleEdit = (e: React.MouseEvent) => {
@@ -96,6 +99,30 @@ export const CitationComponent = (props: NodeViewProps) => {
         }
     };
 
+    const scrollToRef = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!citationId) return;
+
+        // Try to find the bibliography entry with this ID
+        const element = document.getElementById(`bib-${citationId}`);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Subtle highlight effect
+            element.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+            setTimeout(() => {
+                element.style.backgroundColor = 'transparent';
+            }, 2000);
+        } else {
+            // Fallback: search for data-citation-id
+            const dataEl = document.querySelector(`[data-citation-id="${citationId}"]`);
+            if (dataEl) {
+                dataEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    };
+
     return (
         <NodeViewWrapper className="inline-block" as="span">
             <HoverCard openDelay={200} closeDelay={200} onOpenChange={handleOpenChange}>
@@ -103,11 +130,8 @@ export const CitationComponent = (props: NodeViewProps) => {
                     <a
                         className="citation-node citation-pill"
                         data-citation-id={citationId}
-                        href="#"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            // If there's an active selection or click logic in editor, let it happen
-                        }}
+                        href={`#bib-${citationId}`}
+                        onClick={scrollToRef}
                     >
                         {displayText}
                     </a>
@@ -128,9 +152,14 @@ export const CitationComponent = (props: NodeViewProps) => {
                             </p>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">
+                            {(worldCitationCount !== undefined) && (
+                                <Badge variant="outline" className="px-1.5 py-0 text-[9px] text-green-600 bg-green-50/50 border-green-100 shadow-none font-bold">
+                                    {worldCitationCount} WORLD CITES
+                                </Badge>
+                            )}
                             {(citationCount !== undefined && citationCount > 0) && (
                                 <Badge variant="outline" className="px-1.5 py-0 text-[9px] text-blue-600 bg-blue-50/50 border-blue-100 shadow-none font-bold">
-                                    {citationCount} CITES
+                                    {citationCount} DOC CITES
                                 </Badge>
                             )}
                             <Badge variant="secondary" className="px-1.5 py-0 text-[9px] bg-gray-50 text-gray-400 border-0 flex items-center gap-1 font-bold">
@@ -138,6 +167,13 @@ export const CitationComponent = (props: NodeViewProps) => {
                             </Badge>
                         </div>
                     </div>
+
+                    {/* Abstract Section */}
+                    {abstract && (
+                        <p className="text-[12px] text-gray-600 leading-snug line-clamp-3 mt-1 italic border-l-2 border-gray-200 pl-2">
+                            "{abstract}"
+                        </p>
+                    )}
 
                     {/* Compact Meta Row */}
                     <div className="flex items-center justify-between text-[11px] py-1.5 border-y border-gray-50">

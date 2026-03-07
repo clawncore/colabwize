@@ -11,6 +11,7 @@ import { SourcesLibraryPanel } from "../citations/SourcesLibraryPanel";
 import { AIChatPanel } from "../aichat/AIChatPanel";
 import { TeamChat } from "../workspace/team/TeamChat";
 import { SourceDetailPanel } from "../citations/SourceDetailPanel";
+import { CitationAuditReportPanel } from "../audit/CitationAuditReportPanel";
 import { Project, documentService } from "../../services/documentService";
 import { formatCitation } from "../../utils/citationFormatter";
 // Custom hook usage instead of direct service
@@ -58,6 +59,7 @@ import workspaceService, {
   WorkspaceMember,
 } from "../../services/workspaceService";
 import { useWorkspacePermissions } from "../../hooks/useWorkspacePermissions";
+import { useToast } from "../../hooks/use-toast";
 
 // Define panel types
 export type RightPanelType =
@@ -77,6 +79,7 @@ export type RightPanelType =
 const EditorWorkspacePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isEditorLoading, setIsEditorLoading] = useState(false);
   // const [projects, setProjects] = useState<Project[]>([]);
@@ -145,6 +148,8 @@ const EditorWorkspacePage: React.FC = () => {
 
   // Source Library selection state for full-page view
   const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
+  const [selectedAuditReport, setSelectedAuditReport] = useState<any>(null);
+  const [lastAuditReport, setLastAuditReport] = useState<any>(null);
 
   // Editor onboarding tour state
   const [showEditorTour, setShowEditorTour] = useState(false);
@@ -1096,6 +1101,8 @@ const EditorWorkspacePage: React.FC = () => {
                       projectId={selectedProject?.id || ""}
                       editor={editorInstance}
                       onClose={() => setActiveLeftPanel("documents")}
+                      onViewFullReport={(report) => setSelectedAuditReport(report)}
+                      onAuditComplete={(report) => setLastAuditReport(report)}
                       onFindPapers={(keywords) => {
                         openPanel("citations", { contextKeywords: keywords });
                       }}
@@ -1241,134 +1248,192 @@ const EditorWorkspacePage: React.FC = () => {
 
       {/* Center Panel - Document Editor OR Full-Page Matrix OR Full-Page Source Details OR Research Gaps OR Visual Map */}
       <div className="flex-1 h-full overflow-hidden min-w-0">
-        {selectedLibrarySource ? (
-          <SourceDetailPanel
-            source={selectedLibrarySource}
-            projectId={selectedProject?.id || ""}
-            onBack={() => setSelectedLibrarySource(null)}
-            onUpdate={handleSourceUpdate}
-            isPremium={userPlan === "Premium"}
-          />
-        ) : activeLeftPanel === "sources" && activeSourceTab === "matrix" ? (
-          <LiteratureMatrix
-            sources={selectedProject?.citations || []}
-            projectId={selectedProject?.id}
-            onUpdateCitations={handleBatchSourceUpdate}
-            userPlan={userPlan}
-          />
-        ) : activeLeftPanel === "visual-map" && selectedProject ? (
-          visualMapMode === "split" ? (
-            <div className="flex h-full w-full">
-              <div className="w-1/4 border-r border-gray-200">
-                <CitationGraph
-                  projectId={selectedProject.id}
-                  project={selectedProject}
-                  onTopicSelect={(topic) => {
-                    openPanel("citations", { contextKeywords: [topic] });
-                  }}
-                  onAskAI={(topic) => {
-                    const prompt = `Discuss what these sources say about "${topic}", in the larger context of "${selectedProject.title}". (Note: Provide a direct response only, without conversational filler or introductory text.)`;
-                    openPanel("ai-chat", { initialInput: prompt });
-                  }}
-                  viewMode="split"
-                  onToggleViewMode={() => setVisualMapMode("full")}
-                  width={
-                    (typeof window !== "undefined" ? window.innerWidth : 1920) /
-                    3
-                  }
-                  height={
-                    typeof window !== "undefined" ? window.innerHeight : 1080
-                  }
-                />
-              </div>
-              <div className="flex-1 h-full">
-                <DocumentEditor
-                  key={selectedProject.id}
-                  project={selectedProject}
-                  onProjectUpdate={handleProjectUpdate}
-                  onOpenPanel={openPanel}
-                  onOpenLeftPanel={(panel, data) => {
-                    setLeftPanelData(data);
-                    setActiveLeftPanel(panel);
-                    if (!isLeftSidebarOpen) setIsLeftSidebarOpen(true);
-                  }}
-                  onEditorReady={setEditorInstance}
-                  isFocusMode={isFocusMode}
-                  onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
-                />
-              </div>
-            </div>
-          ) : (
-            <CitationGraph
-              projectId={selectedProject.id}
+        {/* PERSISTENT EDITOR LAYER - Always mounted to preserve instance and collaboration state */}
+        <div className={`h-full w-full ${(selectedAuditReport || selectedLibrarySource || (activeLeftPanel === "sources" && activeSourceTab === "matrix") || (activeLeftPanel === "visual-map") || isEditorLoading) ? 'hidden' : 'block'}`}>
+          {selectedProject && (
+            <DocumentEditor
+              key={selectedProject.id}
               project={selectedProject}
-              onTopicSelect={(topic) => {
-                openPanel("citations", { contextKeywords: [topic] });
+              lastAuditReport={lastAuditReport}
+              onProjectUpdate={handleProjectUpdate}
+              onOpenPanel={openPanel}
+              onOpenLeftPanel={(panel, data) => {
+                setLeftPanelData(data);
+                setActiveLeftPanel(panel);
+                if (!isLeftSidebarOpen) setIsLeftSidebarOpen(true);
               }}
-              onAskAI={(topic) => {
-                const prompt = `Discuss what these sources say about "${topic}", in the larger context of "${selectedProject.title}".`;
-                const hiddenInstruction =
-                  "(Note: Provide a direct response only, without conversational filler or introductory text.)";
-                openPanel("ai-chat", {
-                  initialInput: prompt,
-                  initialHiddenInstruction: hiddenInstruction,
-                });
-              }}
-              viewMode="full"
-              onToggleViewMode={() => setVisualMapMode("split")}
-              width={typeof window !== "undefined" ? window.innerWidth : 1920}
-              height={typeof window !== "undefined" ? window.innerHeight : 1080}
+              onEditorReady={setEditorInstance}
+              isFocusMode={isFocusMode}
+              onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
+              isCollaborative={!!selectedProject.workspace_id}
+              isReadOnly={!!selectedProject.workspace_id && !canEditWorkspace}
             />
-          )
-        ) : isEditorLoading ? (
-          <div className="h-full flex flex-col items-center justify-center bg-gray-50">
+          )}
+        </div>
+
+        {/* LOADING OVERLAY */}
+        {isEditorLoading && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gray-50">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
             <p className="text-gray-500 font-medium">Loading Document...</p>
             <p className="text-gray-400 text-sm mt-2">
               This may take up to a minute, please wait...
             </p>
           </div>
-        ) : selectedProject ? (
-          <DocumentEditor
-            key={selectedProject.id}
-            project={selectedProject}
-            onProjectUpdate={handleProjectUpdate}
-            onOpenPanel={openPanel}
-            onOpenLeftPanel={(panel, data) => {
-              setLeftPanelData(data);
-              setActiveLeftPanel(panel);
-              if (!isLeftSidebarOpen) setIsLeftSidebarOpen(true);
-            }}
-            onEditorReady={setEditorInstance}
-            isFocusMode={isFocusMode}
-            onToggleFocusMode={() => setIsFocusMode(!isFocusMode)}
-            isCollaborative={!!selectedProject.workspace_id}
-            isReadOnly={!!selectedProject.workspace_id && !canEditWorkspace}
-          />
-        ) : (
+        )}
+
+        {/* AUDIT REPORT OVERLAY */}
+        {selectedAuditReport && (
+          <div className="absolute inset-0 z-40 bg-white">
+            <CitationAuditReportPanel
+              report={selectedAuditReport}
+              onBack={() => setSelectedAuditReport(null)}
+              onNavigateToIssue={(location) => {
+                setSelectedAuditReport(null);
+                // No longer need a large delay as editor is already mounted
+                setTimeout(() => {
+                  if (editorInstance) {
+                    editorInstance.commands.focus();
+                    editorInstance.commands.clearAllHighlights?.();
+                    editorInstance.commands.setTextSelection({
+                      from: location.startPos,
+                      to: location.endPos
+                    });
+                    editorInstance.commands.highlightRange?.(location.startPos, location.endPos, {
+                      color: "rgba(59, 130, 246, 0.2)",
+                      message: "Issue Location",
+                    });
+                    editorInstance.commands.scrollIntoView();
+                  }
+                }, 50);
+              }}
+              onExecuteFix={(issue) => {
+                if (editorInstance) {
+                  if (issue.action === 'REMOVE' && issue.location) {
+                    editorInstance.commands.focus();
+                    editorInstance.commands.deleteRange({
+                      from: issue.location.startPos,
+                      to: issue.location.endPos
+                    });
+                    toast({
+                      title: "Citation Removed",
+                      description: `The redundant or broken citation has been removed from the document.`,
+                    });
+                  } else if (issue.action === 'RESOLVE') {
+                    toast({
+                      title: "Source Linked",
+                      description: `"${issue.selectedSource?.title}" has been successfully added.`,
+                    });
+                  } else if (issue.action === 'SEARCH') {
+                    openPanel("citations", {
+                      contextKeywords: [issue.citationText || issue.message],
+                      autoSearch: true
+                    });
+                    toast({
+                      title: "Researching Source",
+                      description: `Searching academic databases for matches...`,
+                    });
+                  }
+                  setSelectedAuditReport(null);
+                } else {
+                  toast({
+                    title: "Fix Unavailable",
+                    description: "This issue cannot be automatically fixed yet.",
+                    variant: "destructive"
+                  });
+                }
+              }}
+            />
+          </div>)}
+
+        {/* SOURCE DETAIL OVERLAY */}
+        {selectedLibrarySource && (
+          <div className="absolute inset-0 z-30 bg-white">
+            <SourceDetailPanel
+              source={selectedLibrarySource}
+              projectId={selectedProject?.id || ""}
+              onBack={() => setSelectedLibrarySource(null)}
+              onUpdate={handleSourceUpdate}
+              isPremium={userPlan === "Premium"}
+            />
+          </div>
+        )}
+
+        {/* LITERATURE MATRIX OVERLAY */}
+        {activeLeftPanel === "sources" && activeSourceTab === "matrix" && (
+          <div className="absolute inset-0 z-20 bg-white">
+            <LiteratureMatrix
+              sources={selectedProject?.citations || []}
+              projectId={selectedProject?.id}
+              onUpdateCitations={handleBatchSourceUpdate}
+              userPlan={userPlan}
+            />
+          </div>
+        )}
+
+        {/* VISUAL MAP OVERLAY */}
+        {activeLeftPanel === "visual-map" && selectedProject && (
+          <div className="absolute inset-0 z-10 bg-white">
+            {visualMapMode === "split" ? (
+              <div className="flex h-full w-full">
+                <div className="w-1/4 border-r border-gray-200">
+                  <CitationGraph
+                    projectId={selectedProject.id}
+                    project={selectedProject}
+                    onTopicSelect={(topic) => {
+                      openPanel("citations", { contextKeywords: [topic] });
+                    }}
+                    onAskAI={(topic) => {
+                      const prompt = `Discuss what these sources say about "${topic}", in the larger context of "${selectedProject.title}". (Note: Provide a direct response only, without conversational filler or introductory text.)`;
+                      openPanel("ai-chat", { initialInput: prompt });
+                    }}
+                    viewMode="split"
+                    onToggleViewMode={() => setVisualMapMode("full")}
+                    width={(typeof window !== "undefined" ? window.innerWidth : 1920) / 3}
+                    height={typeof window !== "undefined" ? window.innerHeight : 1080}
+                  />
+                </div>
+                <div className="flex-1 h-full relative">
+                  <div className="h-full w-full flex items-center justify-center bg-gray-50">
+                    <p className="text-gray-400">Editor is active in Full View mode. Switch back to synchronize.</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <CitationGraph
+                projectId={selectedProject.id}
+                project={selectedProject}
+                onTopicSelect={(topic) => {
+                  openPanel("citations", { contextKeywords: [topic] });
+                }}
+                onAskAI={(topic) => {
+                  const prompt = `Discuss what these sources say about "${topic}", in the larger context of "${selectedProject.title}".`;
+                  const hiddenInstruction = "(Note: Provide a direct response only, without conversational filler or introductory text.)";
+                  openPanel("ai-chat", {
+                    initialInput: prompt,
+                    initialHiddenInstruction: hiddenInstruction,
+                  });
+                }}
+                viewMode="full"
+                onToggleViewMode={() => setVisualMapMode("split")}
+                width={typeof window !== "undefined" ? window.innerWidth : 1920}
+                height={typeof window !== "undefined" ? window.innerHeight : 1080}
+              />
+            )}
+          </div>
+        )}
+
+        {/* EMPTY STATE */}
+        {!selectedProject && !isEditorLoading && (
           <div className="h-full flex flex-col items-center justify-center bg-gray-50">
             <div className="text-center px-8 max-w-md">
               <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-10 h-10 text-purple-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
+                <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                No Document Selected
-              </h2>
-              <p className="text-gray-500 mb-6">
-                Select a document from the sidebar or upload a new one to start
-                scanning.
-              </p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">No Document Selected</h2>
+              <p className="text-gray-500 mb-6">Select a document from the sidebar or upload a new one to start scanning.</p>
             </div>
           </div>
         )}

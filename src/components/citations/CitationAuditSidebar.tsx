@@ -16,6 +16,8 @@ interface CitationAuditSidebarProps {
   citationStyle?: string | null;
   citationLibrary?: any[];
   onUpgrade?: () => void;
+  onViewFullReport?: (report: any) => void;
+  onAuditComplete?: (report: any) => void;
 }
 
 type AuditStatus = "IDLE" | "RUNNING" | "COMPLETED" | "FAILED";
@@ -45,6 +47,9 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
   onClose,
   citationStyle,
   onUpgrade,
+  onViewFullReport,
+  onAuditComplete,
+  initialResults,
 }) => {
   const { toast } = useToast();
 
@@ -55,6 +60,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
   const [auditReport, setAuditReport] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const sseRef = useRef<EventSource | null>(null);
+
 
   // Cleanup SSE on unmount
   useEffect(() => {
@@ -93,10 +99,13 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
       }).run();
     });
   }, [editor]);
-
   // ── Start the async backend audit ─────────────────────────────────────────
   const handleRunAudit = useCallback(async () => {
-    if (!editor) return;
+    console.log("handleRunAudit triggered!");
+    if (!editor) {
+      console.error("handleRunAudit: editor is null or undefined!");
+      return;
+    }
 
     // Close any old SSE stream
     if (sseRef.current) {
@@ -115,15 +124,19 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
       // 1. Get the document's Prosemirror JSON
       const docState = editor.state.doc.toJSON();
       const documentId = (editor.state.doc as any).attrs?.id || projectId;
+      console.log(`Starting audit for documentId: ${documentId}, projectId: ${projectId}`);
 
       // 2. POST to /api/audit/start → get auditId back immediately
-      const auditId = await CitationService.startAudit(documentId, projectId, docState);
+      console.log("Calling CitationService.startAudit...");
+      const auditId = await CitationService.startAudit(documentId, projectId, docState, citationStyle || "APA");
+      console.log(`Received auditId: ${auditId}`);
 
       // 3. Open SSE stream — token from Supabase session (EventSource doesn't support headers)
       const baseUrl = ConfigService.getApiUrl();
       const sessionResult = await supabase.auth.getSession();
       const token = sessionResult.data.session?.access_token ?? "";
       const sseUrl = `${baseUrl}/api/audit/progress/${auditId}`;
+      console.log(`Connecting to SSE stream at: ${sseUrl}`);
 
       const sse = new EventSource(`${sseUrl}?token=${encodeURIComponent(token)}`);
       sseRef.current = sse;
@@ -133,6 +146,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
 
         try {
           const payload = JSON.parse(event.data);
+          console.log("SSE Message Received:", payload);
 
           if (payload.error) {
             setAuditStatus("FAILED");
@@ -148,6 +162,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
             setAuditStatus("COMPLETED");
             setAuditReport(payload.report);
             applyHighlights(payload.report);
+            onAuditComplete?.(payload.report);
             sse.close();
           } else if (payload.status === "FAILED") {
             setAuditStatus("FAILED");
@@ -174,6 +189,17 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     }
   }, [editor, projectId, applyHighlights, toast, setAuditStatus]);
 
+  // Auto-start if triggered from footer adapter (must be after handleRunAudit declaration)
+  useEffect(() => {
+    if (initialResults === "AUTO_START" && auditStatus === "IDLE") {
+      const timer = setTimeout(() => {
+        handleRunAudit();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialResults]); // Only run once on mount
+
   // ── Derived values ─────────────────────────────────────────────────────────
   const criticalCount = auditReport?.issues?.filter((i: any) => i.severity === "CRITICAL").length ?? 0;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -192,7 +218,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
   const scoreColor = score === null ? "text-slate-400"
     : score >= 85 ? "text-emerald-600"
       : score >= 65 ? "text-orange-500"
-        : "text-red-600";
+        : "text-red-700";
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -275,92 +301,85 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
           <div className="space-y-4">
 
             {/* Score Card */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1">
-                  Compliance Score
-                </p>
-                <span className={`text-4xl font-black ${scoreColor}`}>{score}</span>
-                <span className="text-slate-400 text-lg font-semibold">/100</span>
-              </div>
-              <div className="text-right">
-                {isExportBlocked ? (
-                  <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">
-                    <XCircle className="w-3 h-3" /> Export Blocked
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">
-                    <CheckCircle className="w-3 h-3" /> Ready to Export
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Summary Metrics */}
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: "In-Text Citations", value: auditReport.summary.totalInTextCitations },
-                { label: "Bibliography Entries", value: auditReport.summary.uniqueBibliographyEntries },
-                { label: "Broken Citations", value: auditReport.summary.brokenCitations, danger: auditReport.summary.brokenCitations > 0 },
-                { label: "Uncited References", value: auditReport.summary.uncitedReferences },
-                { label: "Duplicate Entries", value: auditReport.summary.duplicatesDetected, danger: auditReport.summary.duplicatesDetected > 0 },
-                { label: "Invalid / HTTP URLs", value: auditReport.summary.invalidUrls, danger: auditReport.summary.invalidUrls > 0 },
-              ].map(({ label, value, danger }) => (
-                <div key={label} className={`bg-white border rounded-lg p-3 ${danger ? "border-red-200" : "border-slate-200"}`}>
-                  <p className={`text-xl font-black ${danger ? "text-red-600" : "text-slate-800"}`}>{value}</p>
-                  <p className="text-[10px] text-slate-400 leading-tight mt-0.5">{label}</p>
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-[#8ba5c4] mb-1 leading-tight">
+                    COMPLIANCE<br />SCORE
+                  </p>
+                  <div className="flex items-baseline mt-2">
+                    <span className={`text-[42px] leading-none font-black ${scoreColor}`}>{score}</span>
+                    <span className="text-slate-400 text-xl font-bold ml-1">/100</span>
+                  </div>
                 </div>
-              ))}
+                <div className="mt-1">
+                  {isExportBlocked ? (
+                    <div className="inline-flex items-center justify-center gap-1.5 bg-[#fce8e8] text-[#c92a2a] text-[11px] font-bold px-3 py-1.5 rounded-full text-center">
+                      <XCircle className="w-3.5 h-3.5" />
+                      <span className="leading-tight">Export<br />Blocked</span>
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center justify-center gap-1.5 bg-emerald-100 text-emerald-700 text-[11px] font-bold px-3 py-1.5 rounded-full text-center">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      <span className="leading-tight">Ready to<br />Export</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Issues List */}
-            {auditReport.issues && auditReport.issues.length > 0 ? (
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Issues</h4>
-                {(["CRITICAL", "MAJOR", "MINOR", "INFO"] as IssueSeverity[]).map(sev => {
-                  const sevIssues = auditReport.issues.filter((i: any) => i.severity === sev);
-                  if (!sevIssues.length) return null;
-                  const cfg = SEVERITY_CONFIG[sev];
-                  const Icon = cfg.icon;
-                  return (
-                    <div key={sev}>
-                      <p className={`text-[10px] uppercase font-bold tracking-widest mb-1 ${cfg.color}`}>
-                        {cfg.label} ({sevIssues.length})
-                      </p>
-                      <div className="space-y-1.5">
-                        {sevIssues.map((issue: any) => (
-                          <div key={issue.id} className={`flex gap-2 p-2.5 rounded-lg border text-xs ${cfg.bg}`}>
-                            <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${cfg.color}`} />
-                            <div className="flex-1 min-w-0">
-                              <p className={`font-semibold ${cfg.color} truncate`}>{issue.type.replace(/_/g, " ")}</p>
-                              <p className="text-slate-600 mt-0.5 leading-snug">{issue.message}</p>
-                              {issue.suggestedFix && (
-                                <p className="mt-1.5 text-slate-500 italic leading-snug">
-                                  💡 {issue.suggestedFix}
-                                </p>
-                              )}
-                              {issue.autoFixAvailable && (
-                                <span className="mt-1.5 inline-block text-[10px] bg-white border border-emerald-200 text-emerald-700 font-semibold px-1.5 py-0.5 rounded-full">
-                                  Auto-fixable
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+            {/* Compact Summary Metrics */}
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+              <div className="grid grid-cols-3 divide-x divide-slate-100">
+                {[
+                  { label: "Citations", value: auditReport.summary?.totalInTextCitations ?? 0 },
+                  { label: "Bibliography", value: auditReport.summary?.uniqueBibliographyEntries ?? 0 },
+                  { label: "Broken", value: auditReport.summary?.brokenCitations ?? 0, danger: (auditReport.summary?.brokenCitations ?? 0) > 0 },
+                ].map(({ label, value, danger }, i) => (
+                  <div key={i} className={`p-3 text-center ${danger ? "bg-red-50/50" : ""}`}>
+                    <p className={`text-xl font-black leading-tight ${danger ? "text-red-600" : "text-slate-800"}`}>{value}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{label}</p>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <div className="text-center py-8 text-slate-500 text-sm">
-                <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
-                No issues found. Citations look good!
+              <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100">
+                {[
+                  { label: "Uncited", value: auditReport.summary?.uncitedReferences ?? 0 },
+                  { label: "Duplicates", value: auditReport.summary?.duplicatesDetected ?? 0 },
+                  { label: "Invalid URLs", value: auditReport.summary?.invalidUrls ?? 0 },
+                ].map(({ label, value }, i) => (
+                  <div key={i} className="p-2 text-center">
+                    <p className="text-sm font-bold text-slate-700">{value}</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Read Full Report Button */}
+            <div className="pt-2 pb-2">
+              <button
+                onClick={() => auditReport && onViewFullReport?.(auditReport)}
+                className="w-full py-3 px-4 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                Read Full Report
+              </button>
+            </div>
+
+            {auditReport.isCached && (
+              <div className="px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest leading-none">
+                  Cached Result
+                </span>
               </div>
             )}
           </div>
         )}
       </div>
+
+
     </div>
   );
 };

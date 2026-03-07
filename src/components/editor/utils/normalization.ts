@@ -167,12 +167,13 @@ export async function detectAndNormalizeCitations(
   editor.state.doc.descendants((node) => {
     if (stopScanningPhase1) return false;
 
-    if (node.type.name === "heading" || node.type.name === "bibliographyEntry") {
+    if (node.type.name === "heading" || node.type.name === "paragraph" || node.type.name === "bibliographyEntry") {
       const text = node.textContent.toLowerCase().trim();
-      if (
-        node.type.name === "bibliographyEntry" ||
-        ["references", "works cited", "bibliography", "reference list"].includes(text)
-      ) {
+      const isRefBoundary = 
+        node.type.name === "bibliographyEntry" || 
+        /references|bibliography|works cited|reference list/i.test(text);
+
+      if (isRefBoundary) {
         stopScanningPhase1 = true;
         return false;
       }
@@ -181,6 +182,10 @@ export async function detectAndNormalizeCitations(
     if (node.isText) {
       if (!node.text) return true;
       if (!node.text.includes("(") && !node.text.includes("[")) return true;
+
+      // SKIP leading IEEE markers in scan phase as well
+      const cleanText = node.text.trim();
+      if (/^\[\d+\]/.test(cleanText)) return true;
 
       const matches = extractPatterns(node.text, 0, "structural");
       matches.forEach((match) => uniqueCitationTexts.add(match.text));
@@ -218,12 +223,13 @@ export async function detectAndNormalizeCitations(
   currentDoc.descendants((node, pos) => {
     if (stopScanningPhase3) return false;
 
-    if (node.type.name === "heading" || node.type.name === "bibliographyEntry") {
+    if (node.type.name === "heading" || node.type.name === "paragraph" || node.type.name === "bibliographyEntry") {
       const text = node.textContent.toLowerCase().trim();
-      if (
-        node.type.name === "bibliographyEntry" ||
-        ["references", "works cited", "bibliography", "reference list"].includes(text)
-      ) {
+      const isRefBoundary = 
+        node.type.name === "bibliographyEntry" || 
+        /references|bibliography|works cited|reference list/i.test(text);
+
+      if (isRefBoundary) {
         stopScanningPhase3 = true;
         return false;
       }
@@ -233,8 +239,16 @@ export async function detectAndNormalizeCitations(
       if (!node.text) return true;
       if (!node.text.includes("(") && !node.text.includes("[")) return true;
 
-      const matches = extractPatterns(node.text, 0, "structural");
+      // CRITICAL: Skip leading IEEE markers like [1] at the start of a paragraph
+      // These are reference definitions, not in-text citations.
+      const isParaStart = pos === 0 || currentDoc.resolve(pos).parentOffset === 0;
+      const text = node.text;
+      
+      const matches = extractPatterns(text, 0, "structural");
       matches.forEach((match) => {
+        // Special Case: If it's the very first thing in the paragraph and matches [1], skip it
+        if (isParaStart && match.start === 0 && match.text.match(/^\[\d+\]/)) return;
+
         if (match.text.match(/^\[\d+(?:-\d+)?\]/)) ieeeCount++;
         else if (match.text.match(/^\(.*\d{4}.*\)/)) apaCount++;
 
@@ -568,8 +582,8 @@ export async function detectAndNormalizeBibliography(
 
     doc.descendants((node, pos) => {
       if (node.type.name === "heading" || node.type.name === "paragraph") {
-        const t = node.textContent.toLowerCase().trim().replace(/[:.]$/, "");
-        if (["references", "works cited", "bibliography", "reference list", "refrences"].includes(t)) {
+        const t = node.textContent.toLowerCase().trim();
+        if (/references|bibliography|works cited|reference list/i.test(t)) {
           inRefSection = true;
           return;
         } else if (inRefSection && node.type.name === "heading") {

@@ -27,52 +27,8 @@ export const CitationAuditAdapter: React.FC<CitationAuditAdapterProps> = ({
 
 
     const handleScan = async () => {
-        const content = editor?.getText() || "";
-        if (!content.trim()) {
-            toast({
-                title: "Empty Document",
-                description: "Please enter some text to scan.",
-                variant: "destructive"
-            });
-            return;
-        }
-
-        try {
-            setIsScanning(true);
-            const rawResult = await BibliographyManager.auditDocument(
-                editor?.getJSON() as any, // Pass Tiptap document JSON
-                projectId
-            );
-
-            // Map simplified audit to legacy format
-            const result = {
-                state: "COMPLETED_SUCCESS",
-                violations: rawResult.flags,
-                verificationResults: rawResult.verificationResults,
-                integrityIndex: rawResult.integrityIndex,
-                tierMetadata: {}
-            };
-
-            onScanComplete(result);
-
-        } catch (error: any) {
-            console.error("Audit failed", error);
-
-            // Check for specific limit error
-            if (error.message && error.message.includes("limit reached")) {
-                // Use default message in modal
-                setShowUpgradeModal(true);
-                return;
-            }
-
-            toast({
-                title: "Audit Failed",
-                description: "Could not complete citation scan.",
-                variant: "destructive",
-            });
-        } finally {
-            setIsScanning(false);
-        }
+        // Pass "AUTO_START" to let the Sidebar know it should bypass the IDLE screen.
+        onScanComplete("AUTO_START");
     };
 
     return (

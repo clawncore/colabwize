@@ -587,14 +587,17 @@ export class CitationService {
    * Starts an asynchronous background citation audit.
    * Returns an auditId that can be tracked via SSE.
    */
-  static async startAudit(documentId: string, projectId: string, docState: any): Promise<string> {
+  static async startAudit(documentId: string, projectId: string, docState: any, style: string = "APA"): Promise<string> {
     try {
       const response = await apiClient.post("/api/audit/start", {
         documentId,
         projectId,
         docState,
+        style,
       });
-      return response.data.auditId;
+      // Backend returns { success, data: { auditId }, message }
+      // axios wraps as response.data = that object, so auditId is at response.data.data.auditId
+      return response.data?.data?.auditId || response.data?.auditId;
     } catch (error: any) {
       console.error("Error starting audit:", error);
       throw new Error(error.response?.data?.error || "Failed to start audit job");

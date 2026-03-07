@@ -27,6 +27,7 @@ interface ExportWorkflowModalProps {
     currentHtmlContent?: string;
     editor?: Editor | null;
     onProjectUpdate?: (updates: Partial<Project>) => void;
+    initialAuditReport?: any;
 }
 
 type Step = "audit" | "details" | "format" | "mode" | "review";
@@ -42,6 +43,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     currentHtmlContent,
     editor,
     onProjectUpdate,
+    initialAuditReport,
 }) => {
     const [currentStep, setCurrentStep] = useState<Step>("audit");
     const [auditStarted, setAuditStarted] = useState(false);
@@ -88,8 +90,25 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             setCourse("");
             setInstructor("");
             setRunningHead("");
+
+            // Synchronize with pre-existing audit if available
+            if (initialAuditReport) {
+                setAuditResult({
+                    violations: (initialAuditReport.issues || []).map((i: any) => ({
+                        ruleId: i.type || 'BACKEND',
+                        message: i.message,
+                        context: i.suggestedFix || i.context,
+                        severity: i.severity
+                    })),
+                    score: initialAuditReport.summary?.complianceScore
+                });
+                setAuditStarted(true);
+            } else {
+                setAuditResult(null);
+                setAuditStarted(false);
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, initialAuditReport]);
 
     // --- Step 1: Compliance Logic (formerly Audit) ---
     // (Checklist logic removed)
@@ -383,7 +402,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                                     className={`${riskLevel === "High" ? "text-red-500" : riskLevel === "Moderate" ? "text-amber-500" : "text-green-500"} transition-all duration-1000 ease-out`}
                                     strokeWidth="8"
                                     strokeDasharray={226}
-                                    strokeDashoffset={226 - (226 * (100 - (violations.length * 10))) / 100}
+                                    strokeDashoffset={226 - (226 * (auditResult?.score !== undefined ? auditResult.score : Math.max(0, 100 - (violations.length * 10)))) / 100}
                                     strokeLinecap="round"
                                     stroke="currentColor"
                                     fill="transparent"
@@ -394,7 +413,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                             </svg>
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
                                 <span className={`text-xl font-bold ${riskLevel === "High" ? "text-red-700" : riskLevel === "Moderate" ? "text-amber-700" : "text-green-700"}`}>
-                                    {Math.max(0, 100 - (violations.length * 10))}%
+                                    {auditResult?.score !== undefined ? auditResult.score : Math.max(0, 100 - (violations.length * 10))}%
                                 </span>
                             </div>
                         </div>

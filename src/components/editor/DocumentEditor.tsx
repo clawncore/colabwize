@@ -60,6 +60,7 @@ import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import { TextStyle } from "@tiptap/extension-text-style";
 import FontFamily from "@tiptap/extension-font-family";
+import { CitationScannerExtension } from "../../extensions/CitationScannerExtension";
 import { formatContentForTiptap } from "../../utils/editorUtils";
 import { detectAndNormalizeCitations } from "./utils/normalization";
 import { GrammarExtension } from "../../extensions/GrammarExtension";
@@ -115,6 +116,7 @@ interface DocumentEditorProps {
   onToggleFocusMode?: () => void;
   isCollaborative?: boolean;
   isReadOnly?: boolean;
+  lastAuditReport?: any;
 }
 
 export const DocumentEditor: React.FC<DocumentEditorProps> = ({
@@ -127,6 +129,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   onToggleFocusMode,
   isCollaborative = false,
   isReadOnly = false,
+  lastAuditReport,
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -436,6 +439,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         CitationLifecycleExtension,
         AutoNumbering, // Enable automatic figure and table numbering
         GrammarExtension, // AI Grammar Checker
+        CitationScannerExtension,
       ],
       // Only load initial content if NOT collaborative (Collab loads from Yjs)
       content: isCollaborative
@@ -633,6 +637,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   // MUST BE STRICTLY SEQUENTIAL!
                   // If run concurrently, they cache positions, transaction #1 shifts the document,
                   // and transaction #2 overwrites/deletes wrong text based on stale positions.
+<<<<<<< Updated upstream
                   await detectAndNormalizeCitations(
                     editor,
                     project.id,
@@ -641,7 +646,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                   const { detectAndNormalizeBibliography } =
                     await import("./utils/normalization");
+=======
+                  const { detectAndNormalizeBibliography } = await import("./utils/normalization");
+>>>>>>> Stashed changes
                   await detectAndNormalizeBibliography(editor, project.id);
+                  await detectAndNormalizeCitations(editor, project.id, project.citations || []);
                 } catch (e) {
                   console.error("Normalization error:", e);
                 }
@@ -690,6 +699,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           await CitationRegistryService.initializeFromBackend(project.id);
           (window as any).__currentProjectId__ = project.id;
 
+<<<<<<< Updated upstream
           await detectAndNormalizeCitations(
             editor,
             project.id,
@@ -707,6 +717,17 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               ]).catch((e) => console.error("Collab Normalization Failed:", e));
             },
           );
+=======
+          import("./utils/normalization").then(async ({ detectAndNormalizeBibliography }) => {
+            try {
+              // Await sequentially instead of Promise.all to avoid conflicting offset math
+              await detectAndNormalizeBibliography(editor, project.id);
+              await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+            } catch (e) {
+              console.error("Collab Normalization Failed:", e);
+            }
+          });
+>>>>>>> Stashed changes
         } catch (e) {
           console.error("Collab init registry failed:", e);
         }
@@ -751,15 +772,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   useEffect(() => {
     if (!editor || !isEditorMounted || !isViewReady(editor)) return;
 
-    // Don't check strictly empty or very short docs
-    let text = "";
-    try {
-      text = editor.getText();
-    } catch (e) {
-      return; // editor view not available yet
-    }
-    if (text.length < 10) return;
-
     const checkGrammar = async () => {
       try {
         if (!editor || editor.isDestroyed) return;
@@ -803,7 +815,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         const end = $from.end();
 
         // Get text of the current block
-        // We use textBetween to ensure we get clean text for the node
         const textToCheck = state.doc.textBetween(start, end, " ", " ");
 
         // Don't check strictly empty or very short blocks
@@ -819,12 +830,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (!editor || editor.isDestroyed) return;
 
         // --- STALENESS CHECK ---
-        // Verify if the text at this range is still the same.
-        // If the user typed while we were checking, abort to prevent applying marks to wrong offsets.
         const currentText = editor.state.doc.textBetween(start, end, " ", " ");
         if (currentText !== textToCheck) {
           console.log(
-            "⚠️ Text changed during check, aborting grammar highlight.",
+            "âš ï¸  Text changed during check, aborting grammar highlight.",
           );
           return;
         }
@@ -893,6 +902,32 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     const timeoutId = setTimeout(checkGrammar, 2000); // 2s debounce
     return () => clearTimeout(timeoutId);
   }, [editCount, editor, isEditorMounted]); // Re-run on editCount change
+
+  // --- Automatic Citation Style Detection ---
+  useEffect(() => {
+    if (!editor || !isEditorMounted) return;
+
+    const interval = setInterval(() => {
+      try {
+        const citationPlugin = editor.state.plugins.find(p => (p as any).key?.startsWith("citationScanner"));
+        const state = citationPlugin?.getState(editor.state);
+
+        if (state?.stats?.majorityStyle && state.stats.majorityStyle !== project.citation_style) {
+          console.log(`[AutoStyle] Detected style change: ${state.stats.majorityStyle}`);
+          onProjectUpdate?.({
+            ...project,
+            citation_style: state.stats.majorityStyle
+          });
+          toast({
+            title: "Style Detected",
+            description: `We've detected you're using ${state.stats.majorityStyle} formatting and updated your settings.`,
+          });
+        }
+      } catch (err) {}
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [editor, isEditorMounted, project.citation_style, onProjectUpdate, toast]);
 
   const statsRef = useRef({
     timeSpent: 0,
@@ -1713,6 +1748,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           currentHtmlContent={editor?.getHTML()}
           editor={editor} // Pass editor instance for live normalization
           onProjectUpdate={onProjectUpdate}
+          initialAuditReport={lastAuditReport}
         />
 
         <VersionHistoryModal

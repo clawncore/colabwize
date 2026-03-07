@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -1297,3 +1297,55 @@ mark.citation-highlight[data-type="violation"] {
   color: #2563eb;
   cursor: pointer;
 }
+
+/* --- Citation Scanner Highlighting Styles --- */
+.citation-scan-linked {
+  background-color: rgba(34, 197, 94, 0.08); /* light green bg */
+  border-bottom: 1.5px solid rgba(34, 197, 94, 0.5); /* green underline */
+  color: #15803d;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.citation-scan-linked:hover {
+  background-color: rgba(34, 197, 94, 0.15);
+}
+
+.citation-scan-orphan {
+  background-color: rgba(239, 68, 68, 0.08); /* light red bg */
+  border-bottom: 1.5px solid rgba(239, 68, 68, 0.5); /* red underline */
+  color: #b91c1c;
+  cursor: help;
+  transition: background-color 0.2s;
+}
+
+.citation-scan-orphan:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+.citation-scan-url {
+  color: #2563eb !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s;
+}
+
+.citation-scan-url:hover {
+  opacity: 0.8;
+}
+
+.citation-scan-doi {
+  color: #7c3aed !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s;
+}
+
+.citation-scan-doi:hover {
+  opacity: 0.8;
+}
+
+/* Ensure data attributes can be used for style-specific styling if needed */
+[data-citation-style="ieee"].citation-scan-linked {
+  font-family: inherit;
+}
