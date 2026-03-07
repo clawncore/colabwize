@@ -624,15 +624,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             hasInitializedContentRef.current = true;
             currentProjectIdRef.current = project.id;
 
-            // --- Silent Normalization on Load ---
-            // Convert plain text citations to blue interactive nodes
             setTimeout(async () => {
               if (editor && !editor.isDestroyed) {
-                await detectAndNormalizeCitations(
-                  editor,
-                  project.id,
-                  project.citations || [],
-                );
                 try {
                   // MUST BE STRICTLY SEQUENTIAL!
                   // If run concurrently, they cache positions, transaction #1 shifts the document,
