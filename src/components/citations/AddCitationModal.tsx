@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { X, Search, FileText, Plus, Quote, BookOpen } from "lucide-react";
 import { CitationService } from "../../services/citationService";
 import { ManualCitationForm, CitationData } from "./ManualCitationForm";
@@ -91,7 +91,7 @@ const AddCitationModal: React.FC<AddCitationModalProps> = ({
   }, [isOpen, initialData]);
 
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
 
     setSearching(true);
@@ -109,9 +109,9 @@ const AddCitationModal: React.FC<AddCitationModalProps> = ({
     } finally {
       setSearching(false);
     }
-  };
+  }, [searchQuery]);
 
-  const handleImportDOI = async () => {
+  const handleImportDOI = useCallback(async () => {
     if (!importData.doi.trim()) {
       setError("Please enter a DOI");
       return;
@@ -129,9 +129,9 @@ const AddCitationModal: React.FC<AddCitationModalProps> = ({
     } finally {
       setImporting(false);
     }
-  };
+  }, [importData.doi]);
 
-  const handleImportURL = async () => {
+  const handleImportURL = useCallback(async () => {
     if (!importData.url.trim()) {
       setError("Please enter a URL");
       return;
@@ -149,9 +149,9 @@ const AddCitationModal: React.FC<AddCitationModalProps> = ({
     } finally {
       setImporting(false);
     }
-  };
+  }, [importData.url]);
 
-  const handleSaveCitation = async () => {
+  const handleSaveCitation = useCallback(async () => {
     try {
       setError(null);
 
@@ -173,7 +173,7 @@ const AddCitationModal: React.FC<AddCitationModalProps> = ({
     } catch (err: any) {
       setError(err.message || "Failed to save citation");
     }
-  };
+  }, [importResult, citationData, projectId, onCitationAdded, onClose]);
 
   const handleAddAuthor = () => {
     setCitationData({

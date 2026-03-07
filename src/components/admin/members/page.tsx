@@ -95,7 +95,7 @@ export default function WorkspaceMembersPage() {
   );
   const canManageMembers = isOwner || currentUserMember?.role === "admin";
 
-  const loadWorkspace = async () => {
+  const loadWorkspace = React.useCallback(async () => {
     setIsLoading(true);
     try {
       const [workspaceData, invitationsData] = await Promise.all([
@@ -117,13 +117,13 @@ export default function WorkspaceMembersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [workspaceId]);
 
   useEffect(() => {
     if (workspaceId) {
       loadWorkspace();
     }
-  }, [workspaceId]);
+  }, [workspaceId, loadWorkspace]);
 
   const handleInvite = async () => {
     if (!workspace || !inviteEmail) return;

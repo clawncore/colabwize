@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Quote,
   Search,
@@ -72,12 +72,12 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
     useState<StoredCitation | null>(null);
 
   // Sync local citations when prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     setLocalCitations(citations);
   }, [citations]);
 
   // Helper to generate unique key
-  const getCitationKey = (c: StoredCitation) => {
+  const getCitationKey = useCallback((c: StoredCitation) => {
     if (c.id) return c.id;
     if (c.doi) return c.doi;
     const titlePart = c.title?.toLowerCase().trim() || "";
@@ -88,7 +88,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
       .toLowerCase()
       .trim();
     return `${titlePart}-${yearPart}-${authorPart}`;
-  };
+  }, []);
 
   // Deduplicate and process citations
   const processedCitations = useMemo(() => {
@@ -103,7 +103,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
     });
 
     return Array.from(uniqueMap.values());
-  }, [citations]);
+  }, [citations, getCitationKey]);
 
   // Filter
   const filteredCitations = useMemo(() => {
@@ -128,9 +128,9 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
         (Array.isArray(c.authors) &&
           c.authors.some((a: string) => a.toLowerCase().includes(q))),
     );
-  }, [processedCitations, filterQuery, activeTab, collectionSet]);
+  }, [processedCitations, filterQuery, activeTab, collectionSet, getCitationKey]);
 
-  const handleToggleCollection = (source: StoredCitation) => {
+  const handleToggleCollection = useCallback((source: StoredCitation) => {
     const key = getCitationKey(source);
     const newSet = new Set(collectionSet);
     if (newSet.has(key)) {
@@ -139,9 +139,9 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
       newSet.add(key);
     }
     setCollectionSet(newSet);
-  };
+  }, [collectionSet, getCitationKey]);
 
-  const handleOpenViewer = async (source: StoredCitation) => {
+  const handleOpenViewer = useCallback(async (source: StoredCitation) => {
     setViewerSource(source);
     const id = source.doi || source.title;
     try {
@@ -150,9 +150,9 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
     } catch (err) {
       setViewerAnnotations([]);
     }
-  };
+  }, []);
 
-  const handleStyleConfirm = async (style: CitationStyle) => {
+  const handleStyleConfirm = useCallback(async (style: CitationStyle) => {
     if (!projectId) return;
     setIsSavingStyle(true);
     try {
@@ -183,7 +183,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
     } finally {
       setIsSavingStyle(false);
     }
-  };
+  }, [projectId, onStyleSet, pendingCiteSource, onInsertCitation]);
 
   return (
     <>

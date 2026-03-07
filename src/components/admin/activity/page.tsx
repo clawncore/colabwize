@@ -11,15 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import {
   Loader2,
-  ShieldAlert,
-  UserPlus,
-  Settings,
   FileText,
   Trash2,
   Logs,
-  PlusCircle,
-  CheckCircle2,
-  History,
 } from "lucide-react";
 import WorkspaceService from "../../../services/workspaceService";
 import { toast } from "sonner";
@@ -62,34 +56,6 @@ export const WorkspaceActivityPage = () => {
 
     fetchActivity();
   }, [id]);
-
-  const getActionIcon = (action: string) => {
-    switch (action) {
-      case "WORKSPACE_CREATED":
-        return <ShieldAlert className="h-4 w-4 text-blue-500" />;
-      case "SETTINGS_UPDATED":
-        return <Settings className="h-4 w-4 text-orange-500" />;
-      case "INVITATION_SENT":
-      case "MEMBER_JOINED":
-        return <UserPlus className="h-4 w-4 text-green-500" />;
-      case "MEMBER_REMOVED":
-        return <Trash2 className="h-4 w-4 text-red-500" />;
-      case "MEMBER_ROLE_UPDATED":
-        return <ShieldAlert className="h-4 w-4 text-purple-500" />;
-      case "PROJECT_CREATED":
-        return <FileText className="h-4 w-4 text-blue-500" />;
-      case "TASK_CREATED":
-        return <PlusCircle className="h-4 w-4 text-green-500" />;
-      case "TASK_UPDATED":
-        return <CheckCircle2 className="h-4 w-4 text-amber-500" />;
-      case "TASK_DELETED":
-        return <Trash2 className="h-4 w-4 text-red-500" />;
-      case "VERSION_SAVED":
-        return <History className="h-4 w-4 text-indigo-500" />;
-      default:
-        return <FileText className="h-4 w-4 text-gray-500" />;
-    }
-  };
 
   const formatDetails = (action: string, details: any) => {
     if (!details) return "";

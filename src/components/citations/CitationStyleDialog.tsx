@@ -25,11 +25,6 @@ export const CitationStyleDialog: React.FC<CitationStyleDialogProps> = ({
 }) => {
     const [selectedStyle, setSelectedStyle] = useState<string>(currentStyle || "APA");
 
-    const handleConfirm = () => {
-        onSave(selectedStyle);
-        onOpenChange(false);
-    };
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px] bg-white">

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { DocumentList } from "../documents/DocumentList";
 import { DocumentEditor } from "./DocumentEditor";
 import { PaperSuggestionsPanel } from "../citations/PaperSuggestionsPanel";
 import { RephraseSuggestionsPanel } from "../originality/RephraseSuggestionsPanel";
@@ -10,41 +9,44 @@ import { CitationConfidencePanel } from "../citations/CitationConfidencePanel";
 import { SourcesLibraryPanel } from "../citations/SourcesLibraryPanel";
 import { AIChatPanel } from "../aichat/AIChatPanel";
 import { TeamChat } from "../workspace/team/TeamChat";
-import { SourceDetailPanel } from "../citations/SourceDetailPanel";
 import { CitationAuditReportPanel } from "../audit/CitationAuditReportPanel";
 import { Project, documentService } from "../../services/documentService";
-import { formatCitation } from "../../utils/citationFormatter";
 // Custom hook usage instead of direct service
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import { UsageMeter } from "../../components/subscription/UsageMeter";
 import { useAuth } from "../../hooks/useAuth";
 import {
-  FileText,
-  BookOpen,
-  PenTool,
   ChevronLeft,
-  ChevronRight,
   ArrowLeft,
   Lightbulb,
   Bell,
+  HelpCircle,
+  Video,
+  Microscope,
+  PlusSquare,
+  ChevronRight,
   History,
   Map,
+  FileText,
+  BookOpen,
+  PenTool,
+  Search,
+  Database,
+  BarChart2,
+  GitBranch,
+  Layers,
+  Layout,
+  Table as TableIcon,
 } from "lucide-react";
 import { SearchAlertsPanel } from "./SearchAlertsPanel";
 import { AIProbabilityHeatmap } from "../originality/AIProbabilityHeatmap";
 import { OutlineBuilder } from "./OutlineBuilder";
-import { LiteratureMatrix } from "../citations/LiteratureMatrix";
-import { CitationAuditSidebar } from "../citations/CitationAuditSidebar";
-import { CitationGraph } from "../citations/CitationGraph";
-import { ResearchGapsPanel } from "../citations/ResearchGapsPanel";
 import { useNavigate } from "react-router-dom";
 import { EditorOnboardingTour } from "../onboarding/EditorOnboardingTour";
 import { OnboardingService } from "../../services/onboardingService";
-import { HelpCircle, Video } from "lucide-react";
 import { OriginalityMapSidebar } from "../originality/OriginalityMapSidebar";
 import AIResearchAssistant from "./ResearchAssistant";
 import AddCitationModal from "../citations/AddCitationModal";
-import { Microscope, PlusSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,6 +61,13 @@ import workspaceService, {
 } from "../../services/workspaceService";
 import { useWorkspacePermissions } from "../../hooks/useWorkspacePermissions";
 import { useToast } from "../../hooks/use-toast";
+import { formatCitation } from "../../utils/citationFormatter";
+import { DocumentList } from "../documents/DocumentList";
+import { CitationAuditSidebar } from "../citations/CitationAuditSidebar";
+import { ResearchGapsPanel } from "../citations/ResearchGapsPanel";
+import { CitationGraph } from "../citations/CitationGraph";
+import { SourceDetailPanel } from "../citations/SourceDetailPanel";
+import { LiteratureMatrix } from "../citations/LiteratureMatrix";
 
 // Define panel types
 export type RightPanelType =
@@ -100,10 +109,6 @@ const EditorWorkspacePage: React.FC = () => {
   >(null);
   const [leftPanelData, setLeftPanelData] = useState<any>(null);
 
-  // Visual Map & Matrix View Modes
-  const [visualMapMode, setVisualMapMode] = useState<"split" | "full">("split");
-  const [matrixMode, setMatrixMode] = useState<"split" | "full">("split");
-
   // Right panel type state
   const [activePanelType, setActivePanelType] = useState<RightPanelType>(null);
   const [panelData, setPanelData] = useState<any>(null);
@@ -140,14 +145,6 @@ const EditorWorkspacePage: React.FC = () => {
   // Navigation Rail state (independently toggleable)
   const [isNavRailOpen, setIsNavRailOpen] = useState(true);
 
-  // Source Library sub-tab state
-  const [activeSourceTab, setActiveSourceTab] = useState<
-    "sources" | "collections" | "matrix"
-  >("sources");
-
-  // Source Library selection state for full-page view
-  const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
-  const [selectedAuditReport, setSelectedAuditReport] = useState<any>(null);
   const [lastAuditReport, setLastAuditReport] = useState<any>(null);
 
   // Editor onboarding tour state
@@ -158,6 +155,15 @@ const EditorWorkspacePage: React.FC = () => {
   const [isResizingRight, setIsResizingRight] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Source & Research State
+  const [activeSourceTab, setActiveSourceTab] = useState<"sources" | "matrix" | "collections" | "library" | string>("library");
+  const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
+  const [matrixMode, setMatrixMode] = useState<"split" | "full" | string | boolean>("split");
+  const [visualMapMode, setVisualMapMode] = useState<"graph" | "heatmap" | "full" | "split" | string>("graph");
+
+  // Audit State
+  const [selectedAuditReport, setSelectedAuditReport] = useState<any>(null);
 
   const handleProjectSelect = async (project: Project) => {
     // 1. Set loading state to true immediately to clear content
@@ -218,11 +224,11 @@ const EditorWorkspacePage: React.FC = () => {
     }
   };
 
-  const handleProjectUpdate = (updatedProject: Project) => {
+  const handleProjectUpdate = React.useCallback((updatedProject: Project) => {
     setSelectedProject(updatedProject);
-  };
+  }, []);
 
-  const reloadProjectCitations = async () => {
+  const reloadProjectCitations = React.useCallback(async () => {
     if (!selectedProject) return;
     try {
       const result = await documentService.getProjectById(selectedProject.id);
@@ -238,7 +244,7 @@ const EditorWorkspacePage: React.FC = () => {
     } catch (error) {
       console.error("Failed to reload project citations:", error);
     }
-  };
+  }, [selectedProject?.id]);
 
   const handleStyleSet = async (style: string) => {
     if (!selectedProject) return;
@@ -533,7 +539,7 @@ const EditorWorkspacePage: React.FC = () => {
   );
   const [isMembersLoading, setIsMembersLoading] = useState(false);
 
-  const handleInsertCitation = async (text: string, trackingInfo?: any) => {
+  const handleInsertCitation = React.useCallback(async (text: string, trackingInfo?: any) => {
     if (editorInstance) {
       const sourceId = trackingInfo?.sourceId;
       const source = trackingInfo?.fullReferenceEntry;
@@ -693,7 +699,7 @@ const EditorWorkspacePage: React.FC = () => {
         }, 500);
       }
     }
-  };
+  }, [editorInstance, selectedProject]);
 
   const handleSyncOutlineToEditor = (outline: any[]) => {
     if (!editorInstance) return;

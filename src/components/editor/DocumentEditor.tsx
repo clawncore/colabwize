@@ -34,9 +34,8 @@ import "../../styles/image-styles.css";
 import "../../styles/column-styles.css";
 import { useToast } from "../../hooks/use-toast";
 import { TableBubbleMenu } from "./TableBubbleMenu";
-import { AuthorshipCertificateAdapter, RephraseAdapter } from "./adapters";
+import { AuthorshipCertificateAdapter, RephraseAdapter, CitationAuditAdapter } from "./adapters";
 import { CitationNode } from "../../extensions/CitationNode";
-import { CitationAuditAdapter } from "./adapters/CitationAuditAdapter";
 import { UpgradeModal } from "../subscription/UpgradeModal";
 import { CitationStyleDialog } from "../citations/CitationStyleDialog";
 import { SubscriptionService } from "../../services/subscriptionService";
@@ -55,7 +54,6 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import FontFamily from "@tiptap/extension-font-family";
 import { CitationScannerExtension } from "../../extensions/CitationScannerExtension";
 import { formatContentForTiptap } from "../../utils/editorUtils";
-import { detectAndNormalizeCitations } from "./utils/normalization";
 import { GrammarExtension } from "../../extensions/GrammarExtension";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
@@ -68,21 +66,21 @@ import { EditorToolbar } from "./editor-toolbar";
 import { ExportWorkflowModal } from "../export/ExportWorkflowModal";
 import { VersionHistoryModal } from "./VersionHistoryModal";
 import {
-  Download,
-  GitCompare,
-  Eraser,
   BookOpen,
-  ShieldAlert,
-  Bot,
-  ShieldCheck,
-  Maximize2,
-  Minimize2,
   Eye,
   Save,
   PenTool,
   Loader2,
   History,
+  ShieldAlert,
+  ShieldCheck,
+  Minimize2,
+  Maximize2,
   MessageSquare,
+  Eraser,
+  Download,
+  Bot,
+  GitCompare,
 } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -124,12 +122,16 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const { user } = useAuth();
   const ydocRef = useRef<Y.Doc | null>(null);
   const providerRef = useRef<HocuspocusProvider | null>(null);
-  const [collabReady, setCollabReady] = useState(false);
+  const [collabReady, setCollabReady] = useState(false); // Collaboration State
   const [isEditorMounted, setIsEditorMounted] = useState(false);
-
   const [collabStatus, setCollabStatus] = useState<string>("disconnected");
   const [isSynced, setIsSynced] = useState(false);
   const [collabError, setCollabError] = useState<string | null>(null);
+  // Source & Research State
+  const [activeSourceTab, setActiveSourceTab] = useState<"sources" | "matrix" | "collections" | "library">("library");
+  const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
+  const [matrixMode, setMatrixMode] = useState<"split" | "full">("split");
+  const [visualMapMode, setVisualMapMode] = useState<"graph" | "heatmap" | "full" | "split">("graph");
   const isSyncedRef = useRef(false);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -307,20 +309,22 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [title, setTitle] = useState(project.title);
   const [description, setDescription] = useState(project.description || "");
 
-  // Dialog States
-  const [isComparisonSelectorOpen, setIsComparisonSelectorOpen] =
-    useState(false);
-  const [isExportWorkflowOpen, setIsExportWorkflowOpen] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isStyleDialogOpen, setIsStyleDialogOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
-  const [lastScanResult] = useState<OriginalityScan | null>(null);
+  // Stats and usage tracking
+  const [timeSpent, setTimeSpent] = useState((project as any).time_spent || 0);
+  const startTimeRef = useRef<Date>(new Date());
 
-  const [citationSuggestions] = useState<any>(null);
+  // Pipeline results state
+  const [lastScanResult, setLastScanResult] = useState<any>(lastAuditReport || null);
+  const [citationSuggestions, setCitationSuggestions] = useState<any[]>([]);
+
+  // Dialog / Modal States
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isComparisonSelectorOpen, setIsComparisonSelectorOpen] = useState(false);
+  const [isExportWorkflowOpen, setIsExportWorkflowOpen] = useState(false);
   const [editCount, setEditCount] = useState(0);
-  const [timeSpent, setTimeSpent] = useState(0); // in seconds
-  const startTimeRef = useRef<Date | null>(null);
   const hasInitializedContentRef = useRef(false);
   const currentProjectIdRef = useRef<string | null>(null);
 
@@ -391,13 +395,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         CalloutBlockExtension,
         CoverPageExtension,
         CustomCodeBlockExtension,
-        AuthorshipExtension.configure({
-          user: {
-            id: user?.id,
-            name: user?.user_metadata?.full_name || user?.email || "Anonymous",
-            color: cursorColor,
-          },
-        } as any),
         EnhancedFigureNode,
         KeywordsExtension,
         AITrackingExtension,
@@ -569,7 +566,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             setTimeout(async () => {
               if (editor && !editor.isDestroyed) {
                 try {
-                  const { detectAndNormalizeBibliography } =
+                  const { detectAndNormalizeBibliography, detectAndNormalizeCitations } =
                     await import("./utils/normalization");
                   await detectAndNormalizeBibliography(editor, project.id);
                   await detectAndNormalizeCitations(
@@ -595,7 +592,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       }
     }
   }, [
-    project,
+    project.id,
+    project.content,
+    project.citations,
     editor,
     isEditorMounted,
     onEditorReady,
@@ -626,7 +625,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           (window as any).__currentProjectId__ = project.id;
 
           import("./utils/normalization").then(
-            async ({ detectAndNormalizeBibliography }) => {
+            async ({ detectAndNormalizeBibliography, detectAndNormalizeCitations }) => {
               try {
                 // Await sequentially instead of Promise.all to avoid conflicting offset math
                 await detectAndNormalizeBibliography(editor, project.id);
@@ -657,7 +656,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     const timer = setTimeout(async () => {
       console.log("ðŸ“  Running debounced normalization (post-edit)...");
       try {
-        const { detectAndNormalizeBibliography } = await import("./utils/normalization");
+        const { detectAndNormalizeBibliography, detectAndNormalizeCitations } = await import("./utils/normalization");
         await Promise.all([
           detectAndNormalizeCitations(editor, project.id, project.citations || []),
           detectAndNormalizeBibliography(editor, project.id)
