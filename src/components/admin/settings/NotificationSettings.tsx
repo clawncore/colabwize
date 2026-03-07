@@ -34,6 +34,7 @@ import { useToast } from "../../../hooks/use-toast";
 const NotificationSettings: React.FC = () => {
     const [settings, setSettings] = useState<Settings | null>(null);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
