@@ -36,13 +36,11 @@ export default function Navigation() {
   const [productOpen, setProductOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
   const [solutionsOpen, setSolutionsOpen] = useState(false);
-  // const [pricingOpen, setPricingOpen] = useState(false);
 
   // Refs for timeout management
   const productTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const resourcesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const solutionsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // const pricingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Define dropdown items with icons and descriptions based on footer navigation
   const productItems: DropdownItem[] = [
@@ -626,8 +624,21 @@ export default function Navigation() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
+          {/* Mobile menu and auth button */}
+          <div className="md:hidden flex items-center space-x-3">
+            {!user ? (
+              <Button
+                asChild
+                className="bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-bold py-1.5 px-4 rounded-lg h-auto shadow-md shadow-blue-500/20">
+                <Link to="/signup">Sign up</Link>
+              </Button>
+            ) : (
+              <Button
+                asChild
+                className="bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-bold py-1.5 px-4 rounded-lg h-auto shadow-md shadow-blue-500/20">
+                <Link to="/login">Sign In</Link>
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -793,13 +804,6 @@ export default function Navigation() {
 
             {/* Mobile Auth Buttons */}
             <div className="flex flex-col space-y-3 pt-4">
-              <Button
-                asChild
-                variant="ghost"
-                className="w-full py-6 text-blue-600 bg-blue-600 hover:bg-blue-700 hover:text-white font-semibold"
-                onClick={() => setIsOpen(false)}>
-                <Link to="/login">Sign In</Link>
-              </Button>
               <Button
                 asChild
                 variant="outline"

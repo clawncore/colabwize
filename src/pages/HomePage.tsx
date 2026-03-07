@@ -109,24 +109,24 @@ function HeroSection() {
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+          <div className="flex flex-row gap-3 justify-center items-center mb-8 px-2 max-w-[100vw]">
             <Button
               asChild
               size="lg"
-              className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
+              className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-4 py-4 md:px-8 md:py-6 text-sm md:text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300 whitespace-nowrap">
               <Link to="/signup" className="flex items-center">
-                Start Writing Free
-                <ArrowRight className="ml-2 h-5 w-5" />
+                Start Free
+                <ArrowRight className="ml-1 h-4 w-4 md:ml-2 md:h-5 md:w-5" />
               </Link>
             </Button>
 
             <Button
               asChild
               size="lg"
-              className="bg-gradient-to-r from-green-600 to-blue-700 text-white hover:from-green-700 hover:to-blue-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-green-500/20 transition-all duration-300">
+              className="bg-gradient-to-r from-green-600 to-blue-700 text-white hover:from-green-700 hover:to-blue-800 font-semibold px-4 py-4 md:px-8 md:py-6 text-sm md:text-lg shadow-lg hover:shadow-green-500/20 transition-all duration-300 whitespace-nowrap">
               <Link to="/schedule-demo#demo-form" className="flex items-center">
-                Request a demo
-                <ArrowRight className="ml-2 h-5 w-5" />
+                Request demo
+                <ArrowRight className="ml-1 h-4 w-4 md:ml-2 md:h-5 md:w-5" />
               </Link>
             </Button>
           </div>

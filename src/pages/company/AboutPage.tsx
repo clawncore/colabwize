@@ -1,9 +1,4 @@
-import {
-  Check,
-  Users,
-  Target,
-  Heart,
-} from "lucide-react";
+import { Check, Users, Target, Heart } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import Layout from "../../components/Layout";
@@ -29,16 +24,16 @@ function IntroHero() {
       <div className="container-custom relative z-10">
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-            About{" "}
+            Powering the Future of{" "}
             <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-              ColabWize
+              Collaborative Research
             </span>
           </h1>
 
           <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
-            We're on a mission to transform academic anxiety into career
-            confidence by helping students and researchers defend their work
-            with integrity.
+            We're on a mission to unify academic team efforts, transforming
+            fragmented research into a seamless, intelligent, and
+            integrity-first collaborative experience.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -61,31 +56,29 @@ function IntroHero() {
   );
 }
 
-// Feature Detail Component
-
-
 // Features Presentation Flow
 function FeaturesPresentationFlow() {
   return (
     <section className="section-padding bg-white">
       <div className="container-custom">
         <div className="space-y-24">
-          {/* Mission and Values Section */}
           <div className="grid md:grid-cols-2 gap-12">
             <div className="bg-white border border-gray-300 rounded-2xl p-8">
               <Target className="h-12 w-12 text-green-500 mb-6" />
               <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                Our Mission
+                Our Mission: Unified Intelligence
               </h3>
               <p className="text-gray-600 mb-4 leading-relaxed">
-                In an age of AI-generated content, students and researchers face
-                a high-stakes academic paradox: use AI tools and risk getting flagged,
-                or don't use them and fall behind peers who do.
+                In an increasingly complex academic landscape, the greatest
+                breakthroughs happen through collaboration. However, team-based
+                research often suffers from data silos, attribution confusion,
+                and integrity risks.
               </p>
               <p className="text-gray-600 leading-relaxed">
-                ColabWize solves this by providing a defensibility-first
-                platform that doesn't just help you write better—it proves your
-                work is original, properly cited, and authentically authored.
+                ColabWize solves this by providing a unified workspace where
+                real-time collaboration meets intelligent research
+                protection—ensuring every contribution is tracked, every
+                citation is verified, and every team succeeds together.
               </p>
             </div>
 
@@ -98,29 +91,29 @@ function FeaturesPresentationFlow() {
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-600 to-green-800 mt-2.5 flex-shrink-0"></div>
                   <span>
-                    <strong>Integrity First:</strong> Academic honesty is
-                    non-negotiable
+                    <strong>Collaboration First:</strong> We believe teamwork is
+                    the ultimate multiplier of individual genius.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-600 to-green-800 mt-2.5 flex-shrink-0"></div>
                   <span>
-                    <strong>Student-Centric:</strong> Built for students, by
-                    people who care
+                    <strong>Unwavering Integrity:</strong> Every word is backed
+                    by transparent authorship and verified research.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-600 to-green-800 mt-2.5 flex-shrink-0"></div>
                   <span>
-                    <strong>Transparency:</strong> Clear pricing, no hidden
-                    fees, honest communication
+                    <strong>Academic Empowerment:</strong> Built specifically to
+                    help students and researchers reach their highest potential.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-600 to-green-800 mt-2.5 flex-shrink-0"></div>
                   <span>
-                    <strong>Innovation:</strong> Constantly improving to serve
-                    you better
+                    <strong>Radical Transparency:</strong> Clear workflows,
+                    honest communication, and open research practices.
                   </span>
                 </li>
               </ul>
@@ -130,46 +123,143 @@ function FeaturesPresentationFlow() {
           {/* Stats Section */}
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12">
-              Built for Academia
+              Empowering Teams Everywhere
             </h2>
             <div className="grid md:grid-cols-4 gap-8 mb-16">
               <div className="bg-white border border-gray-300 rounded-2xl p-6">
                 <div className="text-xl font-bold text-green-500 mb-2">
-                  Global Reach
+                  Global Teams
                 </div>
-                <div className="text-gray-600">Used by students across multiple institutions</div>
+                <div className="text-gray-600">
+                  Thousands of research squads collaborating worldwide.
+                </div>
               </div>
               <div className="bg-white border border-gray-300 rounded-2xl p-6">
                 <div className="text-xl font-bold text-green-500 mb-2">
-                  Proven Scale
+                  Active Workspaces
                 </div>
-                <div className="text-gray-600">Thousands of documents processed</div>
+                <div className="text-gray-600">
+                  Seamlessly organized projects at every scale.
+                </div>
               </div>
               <div className="bg-white border border-gray-300 rounded-2xl p-6">
                 <div className="text-xl font-bold text-green-500 mb-2">
-                  Accuracy First
+                  Real-time Sync
                 </div>
-                <div className="text-gray-600">Designed for precision and explainability</div>
+                <div className="text-gray-600">
+                  Million+ collaborative interactions recorded.
+                </div>
               </div>
               <div className="bg-white border border-gray-300 rounded-2xl p-6">
                 <div className="text-xl font-bold text-green-500 mb-2">
-                  Real-Time
+                  Verified Integrity
                 </div>
-                <div className="text-gray-600">Instant analysis and feedback</div>
+                <div className="text-gray-600">
+                  Ensuring confidence in every shared document.
+                </div>
               </div>
             </div>
           </div>
 
           {/* Team Section */}
-          <div className="bg-white border border-gray-300 rounded-2xl p-8">
-            <div className="text-center mb-8">
-              <Users className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                The People Behind ColabWize
+          <div className="bg-white border border-gray-300 rounded-3xl p-12">
+            <div className="text-center mb-16">
+              <Users className="h-14 w-14 text-green-500 mx-auto mb-6" />
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                The Architects of ColabWize
               </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-                ColabWize is built and maintained by a small, technically focused team committed to academic integrity and transparency.
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                ColabWize is built by a specialized team of engineers and
+                research veterans dedicated to redefining the infrastructure of
+                academic collaboration.
               </p>
+            </div>
+          </div>
+
+          {/* The ColabWize Difference */}
+          <div className="mt-24 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12">
+              The ColabWize Difference
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  title: "Team Workspaces",
+                  desc: "Shared environments where permissions, assets, and discussions are consolidated.",
+                  icon: "TeamIcon",
+                },
+                {
+                  title: "Real-time Sync",
+                  desc: "Engineered for zero-latency editing across continents, ensuring teams stay aligned.",
+                  icon: "SyncIcon",
+                },
+                {
+                  title: "Verified Attribution",
+                  desc: "Deep tracking of every contribution, providing clear proof of individual and collective effort.",
+                  icon: "VerifyIcon",
+                },
+              ].map((feature, i) => (
+                <div
+                  key={i}
+                  className="p-8 bg-gray-50 rounded-2xl hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-200 text-left">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6 text-green-600">
+                    <Check className="h-6 w-6" />
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-900 mb-3">
+                    {feature.title}
+                  </h4>
+                  <p className="text-gray-600 leading-relaxed">
+                    {feature.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Our Culture Section */}
+          <div className="mt-32">
+            <div className="text-center mb-16">
+              <Heart className="h-14 w-14 text-green-500 mx-auto mb-6" />
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                Our Culture
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                At ColabWize, we believe that the way we work together is just
+                as important as the product we build. Our culture is the engine
+                that drives our innovation.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {[
+                {
+                  title: "Radical Transparency",
+                  desc: "We believe in open communication and sharing information broadly. Transparency builds trust and empowers everyone to make better decisions.",
+                },
+                {
+                  title: "Collaborative Spirit",
+                  desc: "We are better together. We foster an environment where diverse perspectives are valued and teamwork is the standard, not the exception.",
+                },
+                {
+                  title: "Continuous Learning",
+                  desc: "The world is always changing, and so are we. We embrace curiosity, encourage experimentation, and view every challenge as an opportunity to grow.",
+                },
+                {
+                  title: "User-Obsessed",
+                  desc: "Everything we do starts and ends with our users. We are dedicated to solving real problems for students and researchers around the globe.",
+                },
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="p-10 bg-white border border-gray-200 rounded-3xl hover:border-green-500/50 hover:shadow-2xl hover:shadow-green-500/5 transition-all duration-300">
+                  <h4 className="text-2xl font-bold text-gray-900 mb-4">
+                    {item.title}
+                  </h4>
+                  <p className="text-gray-600 text-lg leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -199,19 +289,20 @@ function ClosingCTA() {
 
       <div className="container-custom relative z-10">
         <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-            Join Us on Our Mission
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 transition-all duration-300 hover:scale-105">
+            Ready to Empower Your Research Team?
           </h2>
           <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-            Whether you're a student, researcher, or institution, we're here to
-            help you succeed with integrity.
+            Whether you're a small study group or a global research institution,
+            ColabWize provides the tools you need to collaborate with absolute
+            confidence and integrity.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Button
               size="lg"
-              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-xl hover:shadow-green-500/30 transition-all duration-300 text-lg rounded-xl"
               onClick={handleGetStarted}>
-              Start Your Free Trial
+              Launch Your Workspace
             </Button>
             <Button
               asChild
@@ -222,8 +313,7 @@ function ClosingCTA() {
                 href="https://docs.colabwize.com/quickstart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center"
-              >
+                className="flex items-center">
                 See How It Works
               </a>
             </Button>

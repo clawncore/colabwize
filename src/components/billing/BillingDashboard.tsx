@@ -809,11 +809,11 @@ const BillingSettingsPage: React.FC = () => {
                       Payment Methods
                     </h3>
                   </div>
-                  <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                  <div className="text-xs text-gray-500 flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-green-500"></div>
                     Your payment details are securely stored and processed by
                     Lemon Squeezy. We never store card information.
-                  </p>
+                  </div>
                 </div>
 
                 <div className="p-6">
