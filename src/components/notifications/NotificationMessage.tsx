@@ -12,8 +12,7 @@ export const NotificationMessage: React.FC<NotificationMessageProps> = ({
   className = "",
 }) => {
   const [displayText, setDisplayText] = useState(notification.message);
-  const [isDecrypting, setIsDecrypting] = useState(false);
-
+ 
   useEffect(() => {
     const decryptContent = async () => {
       // Only attempt decryption for chat-related notifications with encrypted content
@@ -27,7 +26,6 @@ export const NotificationMessage: React.FC<NotificationMessageProps> = ({
         encryptedContent &&
         (notification.type === "mention" || notification.type === "comment")
       ) {
-        setIsDecrypting(true);
         try {
           const decrypted = await encryptionService.decrypt(
             encryptedContent,
@@ -46,8 +44,6 @@ export const NotificationMessage: React.FC<NotificationMessageProps> = ({
         } catch (err) {
           console.error("Failed to decrypt notification message:", err);
           // Fallback to original message is already handled by initial state
-        } finally {
-          setIsDecrypting(false);
         }
       } else {
         // Not a chat notification or no encrypted content available

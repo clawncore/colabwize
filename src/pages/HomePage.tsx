@@ -7,7 +7,6 @@ import {
   BookOpen,
   ArrowRight,
   Sparkles,
-  Map,
   SearchCheck,
   History,
   LayoutDashboard,

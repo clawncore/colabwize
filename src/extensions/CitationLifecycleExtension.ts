@@ -8,7 +8,7 @@ export const CitationLifecycleExtension = Extension.create({
         return [
             new Plugin({
                 key: new PluginKey("citationLifecycle"),
-                appendTransaction(transactions, oldState, newState) {
+                appendTransaction(transactions, _, newState) {
                     // Only append a transaction if the document actually changed
                     const docChanged = transactions.some((tr) => tr.docChanged);
                     if (!docChanged) return;
@@ -19,20 +19,15 @@ export const CitationLifecycleExtension = Extension.create({
                     }
 
                     const citationIds = new Set<string>();
-                    const bibliographyIds = new Set<string>();
 
                     // 1. Collect all current IDs
                     newState.doc.descendants((node) => {
                         if (node.type.name === "citation" && node.attrs.citationId) {
                             citationIds.add(node.attrs.citationId);
                         }
-                        if (node.type.name === "bibliographyEntry" && node.attrs.citationId) {
-                            bibliographyIds.add(node.attrs.citationId);
-                        }
                     });
 
                     const deletePositions: { from: number; to: number }[] = [];
-                    const idsToRemoveFromRegistry = new Set<string>();
 
                     // 2. Identify violations of the linking rules
                     newState.doc.descendants((node, pos) => {

@@ -4,7 +4,6 @@ import { Editor } from "@tiptap/react";
 import { Loader2, BarChart } from "lucide-react";
 import { useToast } from "../../../hooks/use-toast";
 import { UpgradeModal } from "../../subscription/UpgradeModal";
-import { BibliographyManager } from "../../../services/citationAudit/bibliographyEngine";
 
 interface CitationAuditAdapterProps {
     projectId: string;
@@ -21,8 +20,8 @@ export const CitationAuditAdapter: React.FC<CitationAuditAdapterProps> = ({
     citationLibrary,
     onScanComplete,
 }) => {
-    const [isScanning, setIsScanning] = useState(false);
-    const { toast } = useToast();
+    const isScanning = false;
+    // const { toast } = useToast();
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
 

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback } from "../../ui/avatar";
 import { Button } from "../../ui/button";
-import { Textarea } from "../../ui/textarea";
 import { MentionInput, MentionUser } from "../../ui/mention-input";
 import { MessageSquare, Send, Trash2, Loader2 } from "lucide-react";
 import apiClient from "../../../services/apiClient";

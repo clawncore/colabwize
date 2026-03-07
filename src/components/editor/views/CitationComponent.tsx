@@ -10,7 +10,6 @@ export const CitationComponent = (props: NodeViewProps) => {
     const { node, editor } = props;
     const { citationId, text } = node.attrs;
     const [metadata, setMetadata] = useState<RegistryEntry | null>(null);
-    const [citationCount, setCitationCount] = useState<number | undefined>(undefined);
 
     useEffect(() => {
         const updateMetadata = () => {
@@ -28,26 +27,6 @@ export const CitationComponent = (props: NodeViewProps) => {
             CitationRegistryService.removeListener(updateMetadata);
         };
     }, [citationId]);
-
-    const handleOpenChange = (open: boolean) => {
-        if (open && editor && citationId) {
-            // Priority 1: Check registry cache for backend-synced count
-            const meta = (CitationRegistryService as any).cache?.get(citationId);
-            if (meta?.metadata?.citationCount !== undefined) {
-                setCitationCount(meta.metadata.citationCount);
-                return;
-            }
-
-            // Priority 2: In-document scan for real-time count
-            let count = 0;
-            editor.state.doc.descendants((n) => {
-                if (n.type.name === 'citation' && n.attrs.citationId === citationId) {
-                    count++;
-                }
-            });
-            setCitationCount(count);
-        }
-    };
 
     const worldCitationCount = metadata?.metadata?.citationCount;
     const abstract = metadata?.metadata?.abstract;
@@ -132,7 +111,7 @@ export const CitationComponent = (props: NodeViewProps) => {
 
     return (
         <NodeViewWrapper className="inline-block" as="span">
-            <HoverCard openDelay={200} closeDelay={200} onOpenChange={handleOpenChange}>
+            <HoverCard openDelay={200} closeDelay={200}>
                 <HoverCardTrigger asChild>
                     <a
                         className={`citation-node citation-pill ${props.selected ? 'ProseMirror-selectednode' : ''}`}

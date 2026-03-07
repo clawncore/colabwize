@@ -36,20 +36,13 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   const [projectToRename, setProjectToRename] = useState<Project | null>(null);
 
   const { user } = useUser();
-
-  useEffect(() => {
-    // Basic fetch on mount, no auto-retries if failed
-    if (status === "idle" && user) {
-      fetchProjects();
-    }
-  }, [status, user]);
-
-  const fetchProjects = async () => {
+ 
+  const fetchProjects = React.useCallback(async () => {
     if (!user) return;
     try {
       setStatus("loading");
       setError(null);
-
+ 
       let result;
       if (workspaceId) {
         // Fetch projects for the specific workspace
@@ -58,7 +51,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
         // Only fetch personal projects (not in any workspace)
         result = await documentService.getUserPersonalProjects(user.id);
       }
-
+ 
       // getUserPersonalProjects returns the projects array directly
       if (Array.isArray(result)) {
         setProjects(result);
@@ -72,8 +65,15 @@ export const DocumentList: React.FC<DocumentListProps> = ({
       setError("An error occurred while fetching projects");
       console.error("Fetch projects error:", err);
     }
-  };
+  }, [user, workspaceId]);
 
+  useEffect(() => {
+    // Basic fetch on mount, no auto-retries if failed
+    if (status === "idle" && user) {
+      fetchProjects();
+    }
+  }, [status, user, fetchProjects]);
+ 
   const handleRetry = () => {
     setStatus("idle"); // This will trigger the effect to fetch again
   };

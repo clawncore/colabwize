@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "./command";
+import { Command, CommandGroup, CommandItem, CommandList } from "./command";
 import { cn } from "../../lib/utils";
 
 export interface MentionUser {

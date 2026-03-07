@@ -23,7 +23,7 @@ export const CitationStyleFloatingPanel: React.FC<CitationStyleFloatingPanelProp
     onClose,
     isSaving = false,
 }) => {
-    const [selectedStyle, setSelectedStyle] = useState<CitationStyle | null>(null);
+    const selectedStyle = null; // Setter was unused, using constant to fix build
     const [showCustomEditor, setShowCustomEditor] = useState(false);
     const [customCitation, setCustomCitation] = useState<CustomCitationData>({
         authors: [""],

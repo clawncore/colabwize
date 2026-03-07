@@ -106,9 +106,9 @@ export const CitationScannerExtension = Extension.create({
                         });
 
                         // ── 2. Pass 2: Decorate In-Text Citations ───────────────────────────
-                        const apaRegex = /\(([A-Z][a-zA-Z\s\-']+)(?: et al\.?)?,?\s*(19|20)\d{2}[a-z]?\)/g;
+                        const apaRegex = /\(([A-Z][a-zA-Z\s\-']+)(?: et al\.)?,?\s*(19|20)\d{2}[a-z]?\)/g;
                         const ieeeRegex = /\[(\d+(?:\s*[,\-]\s*\d+)*)\]/g;
-                        const narrativeRegex = /\b([A-Z][a-zA-Z\-']+(?:\s+(?:and|&)\s+[A-Z][a-zA-Z\-']+)*(?:\s+et\s+al\.?)?)\s*\((19|20)\d{2}[a-z]?\)/g;
+                        const narrativeRegex = /\b([A-Z][a-zA-Z\-']+(?:\s+(?:and|&)\s+[A-Z][a-zA-Z\-']+)*(?:\s+et\s+al\.)?)\s*\((19|20)\d{2}[a-z]?\)/g;
 
                         doc.descendants((node, pos) => {
                             // SKIP scanning bibliography section for citations decoration

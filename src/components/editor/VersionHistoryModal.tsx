@@ -34,7 +34,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
   const [isRestoring, setIsRestoring] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchVersions = async () => {
+  const fetchVersions = React.useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await documentService.getDocumentVersions(projectId);
@@ -49,13 +49,13 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [projectId, toast]);
 
   useEffect(() => {
     if (isOpen) {
       fetchVersions();
     }
-  }, [isOpen, projectId]);
+  }, [isOpen, fetchVersions]);
 
   const handleRestore = async (version: Version) => {
     setIsRestoring(version.id);

@@ -25,18 +25,9 @@ import {
   Microscope,
   PlusSquare,
   ChevronRight,
-  AlertTriangle,
-  Shield,
-  Search,
-  FileWarning,
-  ShieldCheck,
-  Scale,
   FileText,
   BookOpen,
   PenTool,
-  Settings,
-  Trash2,
-  Users,
   History,
   Map
 } from "lucide-react";
@@ -228,7 +219,7 @@ const EditorWorkspacePage: React.FC = () => {
 
   const handleProjectUpdate = React.useCallback((updatedProject: Project) => {
     setSelectedProject(updatedProject);
-  }, [selectedProject]);
+  }, []); // selectedProject was unnecessary here
 
   const reloadProjectCitations = React.useCallback(async () => {
     if (!selectedProject) return;
@@ -246,7 +237,8 @@ const EditorWorkspacePage: React.FC = () => {
     } catch (error) {
       console.error("Failed to reload project citations:", error);
     }
-  }, [selectedProject?.id]);
+  }, [selectedProject]); // Added full selectedProject to deps
+
 
   const handleStyleSet = async (style: string) => {
     if (!selectedProject) return;

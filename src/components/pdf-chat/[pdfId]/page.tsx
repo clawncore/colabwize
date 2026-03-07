@@ -39,7 +39,6 @@ export default function PdfChatViewerPage() {
     null,
   );
   const [selectionQuery, setSelectionQuery] = useState<string | null>(null);
-  const contentAreaRef = useRef<HTMLDivElement>(null);
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     // Small delay so selection is finalised
@@ -150,7 +149,7 @@ export default function PdfChatViewerPage() {
     return () => {
       if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
     };
-  }, [pdfId]);
+  }, [pdfId, pdfBlobUrl, sourceType]);
 
   // Fetch summary when tab is active
   React.useEffect(() => {
@@ -176,7 +175,7 @@ export default function PdfChatViewerPage() {
       };
       fetchSummary();
     }
-  }, [activeTab, pdfId, summary]);
+  }, [activeTab, pdfId, summary, loadingSummary, sourceType]);
 
   // Fetch related papers when tab is active
   React.useEffect(() => {
@@ -219,7 +218,7 @@ export default function PdfChatViewerPage() {
       };
       fetchRelated();
     }
-  }, [activeTab, pdfId, relatedPapers.length]);
+  }, [activeTab, pdfId, relatedPapers.length, loadingRelated, sourceType]);
 
   const filename =
     (sourceType === "project" ? pdfData?.title : pdfData?.filename) ||

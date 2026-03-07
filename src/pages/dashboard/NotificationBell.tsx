@@ -214,7 +214,7 @@ const NotificationBell: React.FC = () => {
       NotificationService.off("notification", handleNotification);
       NotificationService.off("notification_count", handleUnreadCount);
     };
-  }, [fetchNotifications]);
+  }, [fetchNotifications, filter, searchQuery]);
 
   // Fetch notifications when dropdown opens
   useEffect(() => {

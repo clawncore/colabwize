@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { Check, Zap } from "lucide-react";
+import { Check } from "lucide-react";
 import { SubscriptionService } from "../services/subscriptionService";
 import { useToast } from "../hooks/use-toast";
 import Layout from "../components/Layout";

@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   Send,
   X,
-  Bot,
   User,
   Loader2,
   Sparkles,
@@ -197,7 +196,7 @@ export function ResearchChatSidebar({
     };
 
     fetch();
-  }, [isOpen, documentId]);
+  }, [isOpen, documentId, isPdfOrProjectChat, isProjectChat, questionsFetched]);
 
   const handleSend = async (messageText?: string) => {
     const text = messageText ?? input;
@@ -286,13 +285,13 @@ export function ResearchChatSidebar({
 
   // Auto-send when a pendingMessage arrives (e.g. text selected in the doc)
   // Must be placed AFTER handleSend is defined (const is not hoisted)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (pendingMessage && pendingMessage.trim() && !isTyping) {
       handleSend(pendingMessage);
       onQueryConsumed?.();
     }
-  }, [pendingMessage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingMessage, isTyping, handleSend, onQueryConsumed]);
 
   if (!isOpen) return null;
 

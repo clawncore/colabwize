@@ -124,7 +124,7 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
   const [exportProgress, setExportProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFullscreen] = useState(false);
   const [pendingNotePos, setPendingNotePos] = useState<StickyNoteMarker | null>(
     null,
   );

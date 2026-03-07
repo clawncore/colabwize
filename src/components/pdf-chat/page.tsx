@@ -52,7 +52,6 @@ export default function PdfUploadPage() {
   const { plan: rawPlan } = useSubscriptionStore();
   const plan = rawPlan?.toLowerCase() || "free";
 
-  const isFree = plan === "free";
   const isPlus = plan === "plus" || plan === "student";
   const isPremium = plan === "premium" || plan === "researcher";
 

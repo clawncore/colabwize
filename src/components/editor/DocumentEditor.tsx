@@ -127,7 +127,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [isSynced, setIsSynced] = useState(false);
   const [collabError, setCollabError] = useState<string | null>(null);
   // Source & Research State
-  const [activeSourceTab] = useState<"sources" | "matrix" | "collections" | "library">("library");
   // const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
   // const [matrixMode, setMatrixMode] = useState<"split" | "full">("split");
   // const [visualMapMode, setVisualMapMode] = useState<"graph" | "heatmap" | "full" | "split">("graph");
@@ -317,7 +316,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   // Pipeline results state
   const [lastScanResult, setLastScanResult] = useState<any>(lastAuditReport || null);
-  const [citationSuggestions, setCitationSuggestions] = useState<any[]>([]);
+  const [citationSuggestions] = useState<any[]>([]);
 
   // Dialog / Modal States
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -852,7 +851,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [editor, isEditorMounted, project.citation_style, onProjectUpdate, toast]);
+  }, [editor, isEditorMounted, project.citation_style, onProjectUpdate, toast, project]);
 
   const statsRef = useRef({
     timeSpent: 0,
@@ -942,7 +941,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         }).catch(console.error);
       }
     };
-  }, [project.id]);
+  }, [project.id, editor?.storage]);
 
   // Function to clear all highlights
   const clearHighlights = () => {
