@@ -157,10 +157,10 @@ const EditorWorkspacePage: React.FC = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Source & Research State
-  const [activeSourceTab, setActiveSourceTab] = useState<"sources" | "matrix" | "collections" | "library" | string>("library");
+  const [activeSourceTab, setActiveSourceTab] = useState<"sources" | "matrix" | "collections">("sources");
   const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
-  const [matrixMode, setMatrixMode] = useState<"split" | "full" | string | boolean>("split");
-  const [visualMapMode, setVisualMapMode] = useState<"graph" | "heatmap" | "full" | "split" | string>("graph");
+  const [matrixMode, setMatrixMode] = useState<"split" | "full">("split");
+  const [visualMapMode, setVisualMapMode] = useState<"graph" | "heatmap" | "full" | "split">("graph");
 
   // Audit State
   const [selectedAuditReport, setSelectedAuditReport] = useState<any>(null);
