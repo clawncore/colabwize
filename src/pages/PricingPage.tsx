@@ -506,8 +506,8 @@ function FeaturesPresentationFlow() {
           </div>
         </div>*/}
 
-        {/* Comparison Table */}
-        <div className="mt-24">
+        {/* Comparison Table - Hidden on Mobile */}
+        <div className="mt-24 hidden md:block">
           <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
             Plan Comparison
           </h2>

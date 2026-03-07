@@ -9,6 +9,8 @@ import {
   Search,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { useIsMobile } from "../../hooks/useIsMobile";
+import MobileRestrictedPage from "../../pages/MobileRestrictedPage";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -23,6 +25,12 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
   subtitle,
   showSidebar = true,
 }) => {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return <MobileRestrictedPage />;
+  }
+
   return (
     <div className="min-h-screen bg-[#FFFFFF]">
       <div className="flex min-h-screen">
@@ -55,11 +63,11 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
               <div className="space-y-8">
                 <div className="space-y-4">
                   <h1 className="text-4xl font-bold leading-tight text-white">
-                    Your Academic Success, Defended.
+                    Seamless Collaboration, Powered by Intelligence.
                   </h1>
                   <p className="text-xl text-blue-200">
-                    Transform anxiety into confidence with a platform designed
-                    for academic integrity and defensibility.
+                    A unified workspace for real-time collaboration, research
+                    management, and academic team success.
                   </p>
                 </div>
 
@@ -68,37 +76,37 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
                   <div className="flex items-center space-x-3">
                     <Users className="h-5 w-5 text-green-400" />
                     <span className="text-lg text-gray-200">
-                      Empowering academic excellence
+                      Unified Team Workspaces
                     </span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Shield className="h-5 w-5 text-green-400" />
                     <span className="text-lg text-gray-200">
-                      Academic integrity guaranteed
+                      Secure Academic Collaboration
                     </span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Sparkles className="h-5 w-5 text-green-400" />
                     <span className="text-lg text-gray-200">
-                      Prove your work is original
+                      Real-time Multi-user Editing
                     </span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <FileText className="h-5 w-5 text-green-400" />
                     <span className="text-lg text-gray-200">
-                      Citation confidence auditing
+                      Intelligent Research Management
                     </span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Search className="h-5 w-5 text-green-400" />
                     <span className="text-lg text-gray-200">
-                      AI detection protection
+                      Project-wide Intelligence
                     </span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="h-5 w-5 text-green-400" />
                     <span className="text-lg text-gray-200">
-                      Authorship certificates
+                      Verified Team Authorship
                     </span>
                   </div>
                 </div>
@@ -118,7 +126,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
         <div
           className={cn(
             "flex-1 flex items-center justify-center p-8",
-            showSidebar ? "lg:w-3/5 xl:w-1/2" : "w-full"
+            showSidebar ? "lg:w-3/5 xl:w-1/2" : "w-full",
           )}>
           <div className="w-full max-w-md space-y-8">
             {/* Mobile Logo */}

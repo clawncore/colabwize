@@ -105,8 +105,6 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 import CallbackPage from "./pages/auth/CallbackPage";
 import AuthInitializer from "./components/auth/AuthInitializer";
-import { useIsMobile } from "./hooks/useIsMobile";
-import MobileRestrictedPage from "./pages/MobileRestrictedPage";
 
 // Add imports for workspace pages or members components here
 import WorkspaceAnalytics from "./components/workspace/analytics/page";
@@ -131,12 +129,6 @@ import NotificationSettings from "./components/admin/settings/NotificationSettin
 import { TimeTrackingProvider } from "./contexts/TimeTrackingContext";
 
 function App() {
-  const isMobile = useIsMobile();
-
-  if (isMobile) {
-    return <MobileRestrictedPage />;
-  }
-
   return (
     <HelmetProvider>
       <ThemeProvider>

@@ -34,13 +34,7 @@ import "../../styles/image-styles.css";
 import "../../styles/column-styles.css";
 import { useToast } from "../../hooks/use-toast";
 import { TableBubbleMenu } from "./TableBubbleMenu";
-import {
-  // AIDetectionAdapter,
-  // OriginalityMapAdapter,
-  // CitationConfidenceAdapter, // Removed/Replaced
-  AuthorshipCertificateAdapter,
-  RephraseAdapter,
-} from "./adapters";
+import { AuthorshipCertificateAdapter, RephraseAdapter } from "./adapters";
 import { CitationNode } from "../../extensions/CitationNode";
 import { CitationAuditAdapter } from "./adapters/CitationAuditAdapter";
 import { UpgradeModal } from "../subscription/UpgradeModal";
@@ -49,7 +43,6 @@ import { SubscriptionService } from "../../services/subscriptionService";
 import { DraftComparisonSelector } from "../originality/DraftComparisonSelector";
 import { RightPanelType } from "./EditorWorkspacePage";
 import BehavioralTracker from "./BehavioralTracker";
-// import Image from "@tiptap/extension-image"; // Replaced
 import { Table } from "@tiptap/extension-table";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
@@ -93,10 +86,6 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 
-// Synchronous helper: safely check if editor's view is mounted.
-// This is CRITICAL for collaborative mode where isEditorMounted state can be
-// STALE after editor recreation. React batches state updates, so effects may
-// run with isEditorMounted=true against a new unmounted editor.
 function isViewReady(ed: any): boolean {
   if (!ed) return false;
   try {
@@ -133,11 +122,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  // --- FIX: Use refs for provider/ydoc to prevent useEditor re-creation ---
-  // Storing these as refs ensures the editor is only created ONCE per project
-  // in collab mode, after the Y.Doc is synced. Previously, using useState caused
-  // useEditor to re-fire when provider/ydoc went from null → initialized,
-  // which duplicated the document content.
   const ydocRef = useRef<Y.Doc | null>(null);
   const providerRef = useRef<HocuspocusProvider | null>(null);
   const [collabReady, setCollabReady] = useState(false);
@@ -201,13 +185,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     isSyncedRef.current = false;
     setCollabError(null);
 
-    // Fetch the token directly from local storage or supabase session
     const getSupabaseToken = () => {
-      // First try standard auth token
       const auth_token = localStorage.getItem("auth_token");
       if (auth_token) return auth_token;
 
-      // Try to extract from Supabase session if auth_token is missing
       const supabaseKey = Object.keys(localStorage).find(
         (k) => k.startsWith("sb-") && k.endsWith("-auth-token"),
       );
@@ -229,7 +210,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       `[HP Auth] Initializing with token length: ${authToken.length}`,
     );
 
-    // Create a fresh Y.Doc for THIS project instance
     const freshYdoc = new Y.Doc();
     ydocRef.current = freshYdoc;
 
@@ -249,10 +229,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         console.log(`[HP Sync] Project ${project.id} ready`);
         setIsSynced(true);
         isSyncedRef.current = true;
-        // --- KEY FIX: Only flip collabReady ONCE after sync ---
-        // This is the single state change that triggers useEditor to create
-        // the editor with the Collaboration extension. The Y.Doc already has
-        // server content at this point, so no duplication occurs.
         setCollabReady(true);
         setCollabError(null);
         if (connectionTimeoutRef.current) {
@@ -296,7 +272,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     };
   }, [project.id, isCollaborative]);
 
-  // Handle Connection Timeout
   useEffect(() => {
     if (isCollaborative && !isSynced) {
       console.log("[HP Timeout] Starting 30-second safety timer");
@@ -341,7 +316,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   const [lastScanResult] = useState<OriginalityScan | null>(null);
-  // const [lastAIScanResult, setLastAIScanResult] = useState<AIScanResult | null>(null);
 
   const [citationSuggestions] = useState<any>(null);
   const [editCount, setEditCount] = useState(0);
@@ -358,19 +332,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     setDescription(project.description || "");
   }, [project.id, project.title, project.description]);
 
-  // Scored matching function for bibliography navigation was removed here as it was unused.
-
-  // Initialize editor with project content or create empty content
-  // Since we created 'ydoc' and 'provider' synchronously on initial render via useState,
-  // we can safely add the Collaboration extensions immediately without crashing.
   const editor = useEditor(
     {
-      immediatelyRender: false, // Defer view creation until EditorContent mounts the DOM
-      editable: !isReadOnly, // Lock editor for viewer-role collaborators
+      immediatelyRender: false,
+      editable: !isReadOnly,
       extensions: [
         StarterKit.configure({
-          history: !isCollaborative, // Disable history in collab mode (handled by Yjs)
-          link: false, // Prevent duplicate extension names error if StarterKit includes it
+          history: !isCollaborative,
+          link: false,
         } as any),
         ...(isCollaborative &&
         collabReady &&
@@ -378,10 +347,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         ydocRef.current
           ? [
               Collaboration.configure({
-                document: ydocRef.current, // Bind directly to the stable Y.Doc (ref)
+                document: ydocRef.current,
               }),
               CollaborationCursor.configure({
-                provider: providerRef.current, // Bind directly to the Hocuspocus provider (ref)
+                provider: providerRef.current,
                 user: {
                   name:
                     user?.user_metadata?.full_name ||
@@ -410,7 +379,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         }),
         TextStyle,
         FontFamily,
-        // Custom Extensions
         AuthorBlockExtension,
         AuthorExtension,
         CalloutBlockExtension,
@@ -423,9 +391,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             color: cursorColor,
           },
         } as any),
-        EnhancedFigureNode, // Replaces FigureExtension with auto-numbering
+        EnhancedFigureNode,
         KeywordsExtension,
-        AITrackingExtension, // Add Custom AI Tracking Extension
+        AITrackingExtension,
         PricingTableExtension,
         SectionExtension,
         VisualElementExtension,
@@ -437,17 +405,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         CitationNode,
         BibliographyEntry,
         CitationLifecycleExtension,
-        AutoNumbering, // Enable automatic figure and table numbering
-        GrammarExtension, // AI Grammar Checker
+        AutoNumbering,
+        GrammarExtension,
         CitationScannerExtension,
       ],
-      // Only load initial content if NOT collaborative (Collab loads from Yjs)
       content: isCollaborative
         ? undefined
         : formatContentForTiptap(project.content),
-      // NOTE: In collab mode, content is loaded from Yjs (Hocuspocus server) not here.
       onUpdate: ({ editor, transaction }) => {
-        // Prevent infinite loops from internal normalization/audit updates
         if (
           transaction.getMeta("normalization") ||
           transaction.getMeta("integrity-check")
@@ -455,7 +420,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           return;
         }
 
-        // Increment edit count when content changes
         setEditCount((prev) => prev + 1);
       },
       editorProps: {
@@ -463,11 +427,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           class: `focus:outline-none min-h-full prose-table:w-full prose-img:rounded-md prose-img:shadow-md`,
           spellcheck: "false",
         },
-        // Citation click handling (must be done in ProseMirror to prevent default navigation before React sees it)
         handleClick: (view, pos, event) => {
           const target = event.target as HTMLElement;
 
-          // --- Handle clicks on bibliography URL decorations (blue underlined URLs) ---
           const bibUrlLink = target.closest(
             ".bibliography-url-link",
           ) as HTMLElement;
@@ -479,7 +441,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             return true;
           }
 
-          // --- Handle clicks on in-text citation pills ---
           const citation = target.closest(
             "a.citation-node",
           ) as HTMLAnchorElement;
@@ -487,17 +448,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             event.preventDefault();
             event.stopPropagation();
 
-            // data-url = external source URL (DOI etc); href = internal #bib-xxx anchor
             const externalUrl = citation.getAttribute("data-url");
             const anchorHref = citation.getAttribute("href");
             const isModifierClick =
               event.ctrlKey || event.metaKey || event.shiftKey;
 
             if (isModifierClick && externalUrl) {
-              // Ctrl/Cmd+Click → open external source
               window.open(externalUrl, "_blank", "noopener,noreferrer");
             } else if (anchorHref && anchorHref.startsWith("#")) {
-              // Normal click → scroll to bibliography entry and flash it
               const targetId = anchorHref.substring(1);
               const targetElement = document.getElementById(targetId);
               if (targetElement) {
@@ -513,34 +471,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               }
             }
 
-            // Select the citation atom node so user can Backspace/Delete to remove it
             try {
               const sel = NodeSelection.create(view.state.doc, pos);
               view.dispatch(view.state.tr.setSelection(sel));
-            } catch (e) {
-              // pos might not resolve to a node — not a critical failure
-            }
+            } catch (e) {}
             return true;
           }
 
           return false;
         },
       },
-      // Dependencies check: since `ydoc` and `provider` are stable state objects initialized
-      // exactly once per component lifecycle, using them here is safe and effectively
-      // binds the editor to them persistently until the component unmounts.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    // --- FIX: Use collabReady (not provider/ydoc objects) to prevent double editor creation ---
-    // collabReady only becomes true ONCE after onSynced, so the editor is created exactly once
-    // per project with the Y.Doc already containing server content. No duplication.
     [project.id, isCollaborative, collabReady],
   );
 
-  // --- Sync read-only state reactively ---
-  // `editable` in useEditor options only applies at creation time.
-  // Since `isReadOnly` is derived from async permissions, we must call
-  // `setEditable` once permissions resolve so the editor reflects the true state.
   useEffect(() => {
     if (!editor) return;
     const shouldBeEditable = !isReadOnly;
@@ -549,16 +493,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }
   }, [editor, isReadOnly]);
 
-  // --- Detect when EditorContent has mounted the editor view into the DOM ---
-  // We can't use `onCreate` (fires in the Editor constructor before EditorContent renders).
-  // Instead, poll with requestAnimationFrame until editor.view.dom is available.
   useEffect(() => {
     if (!editor) {
       setIsEditorMounted(false);
       return;
     }
 
-    // Helper: check if view is truly mounted
     const checkView = (): boolean => {
       try {
         return !!(editor.view && editor.view.dom);
@@ -567,13 +507,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       }
     };
 
-    // Already mounted (e.g. non-collab mode where editor is reused)
     if (checkView()) {
       setIsEditorMounted(true);
       return;
     }
-
-    // Poll until EditorContent renders and mounts the view
     let rafId: number;
     const poll = () => {
       if (checkView()) {
@@ -587,7 +524,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     return () => cancelAnimationFrame(rafId);
   }, [editor]);
 
-  // Load project content only once per document (Non-Collaborative Mode)
   useEffect(() => {
     if (editor && isEditorMounted && isViewReady(editor)) {
       if (onEditorReady) {
@@ -599,7 +535,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       editor &&
       project.content &&
       currentProjectIdRef.current !== project.id &&
-      !isCollaborative // Skip manual setContent in collaborative mode
+      !isCollaborative
     ) {
       if (
         currentProjectIdRef.current &&
@@ -614,7 +550,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             const { CitationRegistryService } =
               await import("../../services/CitationRegistryService");
             await CitationRegistryService.initializeFromBackend(project.id);
-            // Expose current project ID globally so CitationNode can trigger async registry lookups
             (window as any).__currentProjectId__ = project.id;
             console.log(
               "✅ Citation registry initialized from backend successfully",
@@ -627,9 +562,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             setTimeout(async () => {
               if (editor && !editor.isDestroyed) {
                 try {
-                  // MUST BE STRICTLY SEQUENTIAL!
-                  // If run concurrently, they cache positions, transaction #1 shifts the document,
-                  // and transaction #2 overwrites/deletes wrong text based on stale positions.
                   const { detectAndNormalizeBibliography } =
                     await import("./utils/normalization");
                   await detectAndNormalizeBibliography(editor, project.id);
@@ -783,14 +715,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         }
         if (invalidContext) return;
 
-        // Get the current block (paragraph) range
         const start = $from.start();
         const end = $from.end();
 
-        // Get text of the current block
         const textToCheck = state.doc.textBetween(start, end, " ", " ");
 
-        // Don't check strictly empty or very short blocks
         if (!textToCheck || textToCheck.length < 5) return;
 
         console.log("ðŸ“  Background Grammar Check (Block Scoped)...");
@@ -930,25 +859,19 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     aiEditCount: 0,
   });
 
-  // Track time spent and periodically save activity
   useEffect(() => {
-    // Start timer when component mounts
     startTimeRef.current = new Date();
 
-    // Update time spent every second (UI only)
     const timeInterval = setInterval(() => {
       setTimeSpent((prev) => prev + 1);
     }, 1000);
 
-    // Save activity every 30 seconds (Backend sync)
     const activityInterval = setInterval(async () => {
-      const currentStats = statsRef.current; // Current cumulative
+      const currentStats = statsRef.current;
 
-      // Get AI stats from extension storage if available
       const currentAiEditCount =
         (editor?.storage as any)?.aiTracking?.aiEditCount || 0;
 
-      // Calculate Deltas
       const timeDelta =
         currentStats.timeSpent - lastSyncStatsRef.current.timeSpent;
       const editDelta =
@@ -956,10 +879,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       const aiEditDelta =
         currentAiEditCount - lastSyncStatsRef.current.aiEditCount;
 
-      // Only save if there's been NEW activity
       if (project.id && (timeDelta > 0 || editDelta > 0 || aiEditDelta > 0)) {
         try {
-          // Update sync ref immediately to avoid double sending
           lastSyncStatsRef.current = {
             timeSpent: currentStats.timeSpent,
             editCount: currentStats.editCount,
@@ -968,12 +889,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
           await AuthorshipService.recordActivity({
             projectId: project.id,
-            timeSpent: timeDelta, // SENDING DELTA
-            editCount: editDelta, // SENDING DELTA
-            wordCount: currentStats.wordCount, // Absolute is fine for word count (state)
-            manualEdits: editDelta, // SENDING DELTA
-            aiAssistedEdits: aiEditDelta, // SENDING DELTA
-            isDelta: true, // Flag for backend
+            timeSpent: timeDelta,
+            editCount: editDelta,
+            wordCount: currentStats.wordCount,
+            manualEdits: editDelta,
+            aiAssistedEdits: aiEditDelta,
+            isDelta: true,
           } as any);
 
           console.log("Activity delta recorded:", {
@@ -1005,79 +926,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         }).catch(console.error);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project.id]); // Only re-run if project ID changes
+  }, [project.id]);
 
   // Function to clear all highlights
   const clearHighlights = () => {
     if (editor) {
-      // Remove all highlight marks (Citation/Originality) AND Grammar errors
       editor.chain().focus().clearAllHighlights().clearAllGrammarErrors().run();
     }
   };
-
-  // Function to highlight AI detection results
-  /*
-  const highlightAIResults = (results: AIScanResult) => {
-    if (!editor || !results || !results.sentences) return;
-   
-    // Clear existing highlights
-    clearHighlights();
-   
-    const doc = editor.state.doc;
-    let searchPos = 0;
-   
-    // Sort sentences by position
-    const sortedSentences = [...results.sentences].sort(
-      (a, b) => a.positionStart - b.positionStart
-    );
-   
-    sortedSentences.forEach((sentence: AISentenceResult) => {
-      // Only highlight if AI or Likely AI
-      if (sentence.classification === "human" || sentence.classification === "likely_human") return;
-   
-    if (!sentence.text) return;
-   
-    const range = findTextRange(doc, sentence.text, searchPos);
-   
-    if (!range) {
-      console.warn("Could not find sentence text in document", sentence.text);
-    return;
-      }
-   
-    searchPos = range.to;
-   
-    let color = "purple"; // Default for AI
-    let message = "";
-   
-    switch (sentence.classification) {
-        case "ai":
-    color = "purple";
-    message = `ðŸ¤– High AI probability detected (${Math.round(sentence.score * 100)}%)`;
-    break;
-    case "likely_ai":
-    color = "yellow";
-    message = `âš ï¸  Possible AI content (${Math.round(sentence.score * 100)}%)`;
-    break;
-    default:
-    return;
-      }
-   
-    try {
-      editor.chain().highlightRange(range.from, range.to, {
-        color,
-        type: "ai_detection",
-        similarity: sentence.score * 100,
-        message: message,
-      }).run();
-      } catch (err) {
-      console.error("Failed to highlight AI match:", err);
-      }
-    });
-  };
-    */
-
-  // FIX 5: Remove duplicate timer effect — the timer above (line ~747) already handles this.
 
   // Add Escape key listener for Focus Mode
   useEffect(() => {
@@ -1098,14 +954,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         const { citationId, text, url } = e.detail;
 
         if (citationId) {
-          // Use semantic citation node — pass text + url so node doesn't fall back to raw registry title
           editor.commands.insertCitation({
             citationId,
             text: text || undefined,
             url: url || undefined,
           });
         } else {
-          // Fallback to text insertion if no ID (should not happen with new logic)
           editor.commands.insertContent(text);
         }
       }
@@ -1162,8 +1016,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   // Auto-save every 30 seconds if there are changes (non-collaborative mode)
   useEffect(() => {
     const autoSaveInterval = setInterval(() => {
-      // In non-collab mode: save everything (content + title + description)
-      // Hocuspocus onStoreDocument handles content persistence in collab mode
       if (editCount > 0 && !isCollaborative) {
         handleSave();
       }
@@ -1172,12 +1024,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     return () => clearInterval(autoSaveInterval);
   }, [editCount, handleSave, isCollaborative]);
 
-  // --- FIX 4: In collab mode, save title/description changes on a debounce ---
-  // Content is handled by Hocuspocus, but title & description are NOT synced via Yjs.
   const prevTitleRef = useRef(title);
   const prevDescriptionRef = useRef(description);
   useEffect(() => {
-    if (!isCollaborative) return; // Non-collab mode handled by handleSave above
+    if (!isCollaborative) return;
     if (
       title === prevTitleRef.current &&
       description === prevDescriptionRef.current
@@ -1186,12 +1036,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     const timeoutId = setTimeout(async () => {
       try {
-        // Save only title/description — pass the existing project.content to avoid overwriting
         await documentService.updateProject(
           project.id,
           title,
           description,
-          undefined, // IMPORTANT: Do not send content in collab mode to avoid overwriting real-time state
+          undefined,
           project.word_count,
           project.citation_style,
         );
@@ -1247,9 +1096,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   const [auditReport, setAuditReport] = useState<any>(null);
 
-  // --- FIX 2: Show loading until provider is synced (not just connected) ---
-  // isSynced becomes true only after onSynced fires, meaning the Yjs doc has
-  // arrived from the server. This prevents a blank editor flash.
   if (isCollaborative && (!isSynced || collabStatus === "connecting")) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-white p-8 text-center">
@@ -1558,14 +1404,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             <div
               className={`flex-1 overflow-auto transition-all duration-500 ${isReadOnly ? "cursor-default" : "cursor-text"} ${isFocusMode ? "p-12 md:p-24" : "p-8"}`}
               onClick={(e) => {
-                // Skip focus-on-click for read-only viewers
                 if (isReadOnly) return;
-                // When clicking the empty space around the editor (not the content itself),
-                // focus the editor at the end so the user can start typing immediately
                 if (editor && !editor.isDestroyed && isViewReady(editor)) {
                   const target = e.target as HTMLElement;
-                  // Only handle clicks on the wrapper itself or the EditorContent container,
-                  // NOT on actual editor content (ProseMirror handles those)
                   const isProseMirror = target.closest(".ProseMirror");
                   if (!isProseMirror) {
                     e.preventDefault();
@@ -1659,17 +1500,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               Find Papers
             </button>
 
-            {/* Originality Scan Pipeline (Plagiarism Detection) — temporarily hidden */}
-            {/* <OriginalityMapAdapter
-              projectId={project.id}
-              editor={editor}
-              onScanComplete={(results) => {
-                if (onOpenPanel) {
-                  onOpenPanel("originality-results", results);
-                }
-              }}
-            />*/}
-
             <button
               onClick={handleCompareClick}
               className="p-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
@@ -1726,7 +1556,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           project={{ ...project, title }}
           currentContent={editor?.getJSON()}
           currentHtmlContent={editor?.getHTML()}
-          editor={editor} // Pass editor instance for live normalization
+          editor={editor}
           onProjectUpdate={onProjectUpdate}
           initialAuditReport={lastAuditReport}
         />
