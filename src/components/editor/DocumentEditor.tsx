@@ -637,20 +637,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   // MUST BE STRICTLY SEQUENTIAL!
                   // If run concurrently, they cache positions, transaction #1 shifts the document,
                   // and transaction #2 overwrites/deletes wrong text based on stale positions.
-<<<<<<< Updated upstream
+                  const { detectAndNormalizeBibliography } =
+                    await import("./utils/normalization");
+                  await detectAndNormalizeBibliography(editor, project.id);
                   await detectAndNormalizeCitations(
                     editor,
                     project.id,
                     project.citations || [],
                   );
-
-                  const { detectAndNormalizeBibliography } =
-                    await import("./utils/normalization");
-=======
-                  const { detectAndNormalizeBibliography } = await import("./utils/normalization");
->>>>>>> Stashed changes
-                  await detectAndNormalizeBibliography(editor, project.id);
-                  await detectAndNormalizeCitations(editor, project.id, project.citations || []);
                 } catch (e) {
                   console.error("Normalization error:", e);
                 }
@@ -699,35 +693,21 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           await CitationRegistryService.initializeFromBackend(project.id);
           (window as any).__currentProjectId__ = project.id;
 
-<<<<<<< Updated upstream
-          await detectAndNormalizeCitations(
-            editor,
-            project.id,
-            project.citations || [],
-          );
           import("./utils/normalization").then(
-            ({ detectAndNormalizeBibliography }) => {
-              Promise.all([
-                detectAndNormalizeCitations(
+            async ({ detectAndNormalizeBibliography }) => {
+              try {
+                // Await sequentially instead of Promise.all to avoid conflicting offset math
+                await detectAndNormalizeBibliography(editor, project.id);
+                await detectAndNormalizeCitations(
                   editor,
                   project.id,
                   project.citations || [],
-                ),
-                detectAndNormalizeBibliography(editor, project.id),
-              ]).catch((e) => console.error("Collab Normalization Failed:", e));
+                );
+              } catch (e) {
+                console.error("Collab Normalization Failed:", e);
+              }
             },
           );
-=======
-          import("./utils/normalization").then(async ({ detectAndNormalizeBibliography }) => {
-            try {
-              // Await sequentially instead of Promise.all to avoid conflicting offset math
-              await detectAndNormalizeBibliography(editor, project.id);
-              await detectAndNormalizeCitations(editor, project.id, project.citations || []);
-            } catch (e) {
-              console.error("Collab Normalization Failed:", e);
-            }
-          });
->>>>>>> Stashed changes
         } catch (e) {
           console.error("Collab init registry failed:", e);
         }
@@ -909,14 +889,21 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     const interval = setInterval(() => {
       try {
-        const citationPlugin = editor.state.plugins.find(p => (p as any).key?.startsWith("citationScanner"));
+        const citationPlugin = editor.state.plugins.find((p) =>
+          (p as any).key?.startsWith("citationScanner"),
+        );
         const state = citationPlugin?.getState(editor.state);
 
-        if (state?.stats?.majorityStyle && state.stats.majorityStyle !== project.citation_style) {
-          console.log(`[AutoStyle] Detected style change: ${state.stats.majorityStyle}`);
+        if (
+          state?.stats?.majorityStyle &&
+          state.stats.majorityStyle !== project.citation_style
+        ) {
+          console.log(
+            `[AutoStyle] Detected style change: ${state.stats.majorityStyle}`,
+          );
           onProjectUpdate?.({
             ...project,
-            citation_style: state.stats.majorityStyle
+            citation_style: state.stats.majorityStyle,
           });
           toast({
             title: "Style Detected",

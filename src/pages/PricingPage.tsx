@@ -420,7 +420,7 @@ function FeaturesPresentationFlow() {
           ))}
         </div>
 
-        {/* SECTION 2: USAGE ADD-ONS */}
+        {/*
         <div className="max-w-4xl mx-auto mt-20 border-t border-gray-200 pt-16">
           <div className="text-center mb-10">
             <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -504,7 +504,7 @@ function FeaturesPresentationFlow() {
               </span>
             </div>
           </div>
-        </div>
+        </div>*/}
 
         {/* Comparison Table */}
         <div className="mt-24">
