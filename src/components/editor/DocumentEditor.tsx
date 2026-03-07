@@ -637,7 +637,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   // MUST BE STRICTLY SEQUENTIAL!
                   // If run concurrently, they cache positions, transaction #1 shifts the document,
                   // and transaction #2 overwrites/deletes wrong text based on stale positions.
-<<<<<<< Updated upstream
                   await detectAndNormalizeCitations(
                     editor,
                     project.id,
@@ -646,9 +645,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                   const { detectAndNormalizeBibliography } =
                     await import("./utils/normalization");
-=======
-                  const { detectAndNormalizeBibliography } = await import("./utils/normalization");
->>>>>>> Stashed changes
                   await detectAndNormalizeBibliography(editor, project.id);
                   await detectAndNormalizeCitations(editor, project.id, project.citations || []);
                 } catch (e) {
@@ -699,7 +695,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           await CitationRegistryService.initializeFromBackend(project.id);
           (window as any).__currentProjectId__ = project.id;
 
-<<<<<<< Updated upstream
           await detectAndNormalizeCitations(
             editor,
             project.id,
@@ -717,17 +712,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               ]).catch((e) => console.error("Collab Normalization Failed:", e));
             },
           );
-=======
-          import("./utils/normalization").then(async ({ detectAndNormalizeBibliography }) => {
-            try {
-              // Await sequentially instead of Promise.all to avoid conflicting offset math
-              await detectAndNormalizeBibliography(editor, project.id);
-              await detectAndNormalizeCitations(editor, project.id, project.citations || []);
-            } catch (e) {
-              console.error("Collab Normalization Failed:", e);
-            }
-          });
->>>>>>> Stashed changes
         } catch (e) {
           console.error("Collab init registry failed:", e);
         }
