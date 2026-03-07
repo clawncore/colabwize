@@ -69,6 +69,7 @@ export interface StoredCitation {
   themes?: string[];
   matrix_notes?: string;
   verified?: boolean;
+  database?: string; // Added to store source database (pubmed, crossref, etc)
 }
 
 export class CitationService {

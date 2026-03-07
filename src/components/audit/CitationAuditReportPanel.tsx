@@ -90,37 +90,51 @@ export const CitationAuditReportPanel: React.FC<CitationAuditReportPanelProps> =
     if (!report) return null;
 
     const severities = [
-        { id: 'CRITICAL', label: 'CRITICAL RISK', sub: 'IMMEDIATE ATTENTION REQUIRED', color: 'bg-red-500' },
-        { id: 'MAJOR', label: 'MAJOR RISK', sub: 'ACTION RECOMMENDED', color: 'bg-orange-500' },
-        { id: 'MINOR', label: 'MINOR NOTICE', sub: 'STRUCTURAL IMPROVEMENT', color: 'bg-yellow-500' }
+        { id: 'CRITICAL', label: 'VERIFICATION NOTICE', sub: 'EXTERNAL CONFIRMATION NEEDED', color: 'bg-red-500' },
+        { id: 'MAJOR', label: 'MAJOR DISCREPANCY', sub: 'ACTION RECOMMENDED', color: 'bg-orange-500' },
+        { id: 'MINOR', label: 'STRUCTURAL NOTICE', sub: 'IMPROVEMENT SUGGESTED', color: 'bg-yellow-500' }
     ];
 
     return (
         <div className="flex flex-col h-full bg-white font-sans">
             {/* Minimalist Header */}
-            <div className="flex items-center gap-4 p-8 border-b border-slate-50 bg-white flex-shrink-0">
-                <button
-                    onClick={onBack}
-                    className="p-2 hover:bg-slate-50 rounded-2xl text-slate-400 transition-all border border-transparent hover:border-slate-100"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                </button>
-                <div className="flex flex-col">
-                    <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase">Citation Audit Report</h1>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">Reference & Bibliography Analysis</p>
+            <div className="flex items-center justify-between p-8 border-b border-slate-50 bg-white flex-shrink-0">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={onBack}
+                        className="p-2 hover:bg-slate-50 rounded-2xl text-slate-400 transition-all border border-transparent hover:border-slate-100"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div className="flex flex-col">
+                        <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase">Citation Audit Report</h1>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">Reference & Bibliography Analysis</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-6">
+                    <div className="text-right">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Compliance Score</p>
+                        <div className="flex items-baseline justify-end">
+                            <span className={`text-3xl font-black ${report.integrityIndex >= 85 ? 'text-emerald-500' : report.integrityIndex >= 65 ? 'text-orange-500' : 'text-red-500'}`}>
+                                {typeof report.integrityIndex === 'number' ? report.integrityIndex.toFixed(2) : report.integrityIndex}
+                            </span>
+                            <span className="text-slate-300 text-sm font-bold ml-1">/100</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Simplest Results View */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30">
-                <div className="px-12 py-12 max-w-6xl mx-auto space-y-16">
+            {/* Compact Results View */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/20">
+                <div className="px-6 py-10 max-w-4xl mx-auto space-y-12">
+                    {/* Issues Sections (Critical, Major, Minor) */}
                     {severities.map(sev => {
                         const sevIssues = report.issues?.filter((i: any) => i.severity === sev.id) || [];
                         if (sevIssues.length === 0) return null;
 
                         return (
                             <div key={sev.id} className="space-y-8">
-                                {/* Severity Section Header */}
                                 <div className="flex items-center justify-between pb-4 border-b border-slate-200/60">
                                     <div className="flex items-center gap-4">
                                         <div className={`w-3 h-3 rounded-full ${sev.color} shadow-lg shadow-current/20 animate-pulse`} />
@@ -129,7 +143,6 @@ export const CitationAuditReportPanel: React.FC<CitationAuditReportPanelProps> =
                                     <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">{sev.sub}</span>
                                 </div>
 
-                                {/* Issue List */}
                                 <div className="grid grid-cols-1 gap-6">
                                     {sevIssues.map((issue: any, idx: number) => (
                                         <IssueCard
@@ -144,7 +157,54 @@ export const CitationAuditReportPanel: React.FC<CitationAuditReportPanelProps> =
                         );
                     })}
 
-                    {(!report.issues || report.issues.length === 0) && (
+                    {/* Verified Citations Section (GREEN) */}
+                    {report.verificationResults?.some((r: any) => r.status === 'VERIFIED') && (
+                        <div className="space-y-8">
+                            <div className="flex items-center justify-between pb-4 border-b border-emerald-200/60">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/20" />
+                                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">Verified Citations</h3>
+                                </div>
+                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">Confirmed Academic Sources</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {report.verificationResults.filter((r: any) => r.status === 'VERIFIED').map((res: any, idx: number) => (
+                                    <div key={idx} className="p-4 bg-white rounded-xl border border-emerald-50 shadow-sm hover:shadow-md transition-shadow">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <CheckCircle className="w-4 h-4 text-emerald-500" />
+                                                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{res.foundPaper?.database || 'Academic DB'}</span>
+                                            </div>
+                                            <span className="text-[11px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                                {Math.round(res.similarity * 100)}% Match
+                                            </span>
+                                        </div>
+                                        <h4 className="text-[13px] font-bold text-slate-800 line-clamp-2 leading-snug mb-1">
+                                            {res.foundPaper?.title}
+                                        </h4>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-[11px] font-medium text-slate-400 italic">
+                                                {res.foundPaper?.authors?.[0] || 'Unknown Author'} ({res.foundPaper?.year})
+                                            </p>
+                                            {res.foundPaper?.url && (
+                                                <a 
+                                                    href={res.foundPaper.url} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-slate-300 hover:text-blue-500 transition-colors"
+                                                >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {(!report.issues || report.issues.length === 0) && (!report.verificationResults || !report.verificationResults.some((r: any) => r.status === 'VERIFIED')) && (
                         <div className="flex flex-col items-center justify-center py-32 text-center">
                             <div className="w-20 h-20 bg-emerald-50 rounded-[40px] flex items-center justify-center mb-6">
                                 <CheckCircle className="w-10 h-10 text-emerald-500" />

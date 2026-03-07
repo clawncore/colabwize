@@ -390,6 +390,13 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   color: cursorColor,
                 },
               }),
+              AuthorshipExtension.configure({
+                user: {
+                  id: user?.id,
+                  name: user?.user_metadata?.full_name || user?.email || "Anonymous",
+                  color: cursorColor,
+                },
+              } as any),
             ]
           : []),
         HighlightExtension,
@@ -416,13 +423,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         CalloutBlockExtension,
         CoverPageExtension,
         CustomCodeBlockExtension,
-        AuthorshipExtension.configure({
-          user: {
-            id: user?.id,
-            name: user?.user_metadata?.full_name || user?.email || "Anonymous",
-            color: cursorColor,
-          },
-        } as any),
         EnhancedFigureNode, // Replaces FigureExtension with auto-numbering
         KeywordsExtension,
         AITrackingExtension, // Add Custom AI Tracking Extension
@@ -534,7 +534,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     // --- FIX: Use collabReady (not provider/ydoc objects) to prevent double editor creation ---
     // collabReady only becomes true ONCE after onSynced, so the editor is created exactly once
     // per project with the Y.Doc already containing server content. No duplication.
-    [project.id, isCollaborative, collabReady],
+    [project.id, isCollaborative, collabReady, user?.id],
   );
 
   // --- Sync read-only state reactively ---
@@ -728,11 +728,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     const timer = setTimeout(async () => {
       console.log("ðŸ“  Running debounced normalization (post-edit)...");
-      await detectAndNormalizeCitations(
-        editor,
-        project.id,
-        project.citations || [],
-      );
+      try {
+        const { detectAndNormalizeBibliography } = await import("./utils/normalization");
+        await Promise.all([
+          detectAndNormalizeCitations(editor, project.id, project.citations || []),
+          detectAndNormalizeBibliography(editor, project.id)
+        ]);
+      } catch (err) {
+        console.error("Debounced normalization failed", err);
+      }
     }, 4500); // 4.5s debounce: long enough to not be annoying while typing
 
     return () => clearTimeout(timer);

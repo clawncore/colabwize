@@ -14,8 +14,37 @@ export interface RegistryEntry {
 
 export class CitationRegistryService {
     private static cache: Map<string, RegistryEntry> = new Map();
+    private static listeners: Array<() => void> = [];
     private static currentProjectId: string | null = null;
     private static initPromise: Promise<void> | null = null;
+
+    static addListener(listener: () => void) {
+        this.listeners.push(listener);
+    }
+
+    static removeListener(listener: () => void) {
+        this.listeners = this.listeners.filter(l => l !== listener);
+    }
+
+    private static notifyListeners() {
+        this.listeners.forEach(l => l());
+    }
+
+    static updateCitationMetadata(citationId: string, metadata: Partial<RegistryEntry>) {
+        const existing = this.cache.get(citationId);
+        if (existing) {
+            this.cache.set(citationId, {
+                ...existing,
+                ...metadata,
+                metadata: {
+                    ...(existing.metadata || {}),
+                    ...(metadata.metadata || {})
+                }
+            });
+            this.notifyListeners();
+            console.log(`🔄 Updated citation metadata for ${citationId}`);
+        }
+    }
 
     static async initializeFromBackend(projectId: string): Promise<void> {
         if (this.currentProjectId === projectId && this.cache.size > 0) {

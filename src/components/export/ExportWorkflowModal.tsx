@@ -10,7 +10,8 @@ import {
     ChevronLeft,
     Loader2,
     AlertTriangle,
-    FileSearch
+    FileSearch,
+    Pencil
 } from "lucide-react";
 import { apiClient } from "../../services/apiClient";
 import { Project } from "../../services/documentService";
@@ -18,6 +19,7 @@ import { useToast } from "../../hooks/use-toast";
 import { BibliographyManager } from "../../services/citationAudit/bibliographyEngine";
 import { detectAndNormalizeCitations } from "../editor/utils/normalization";
 import { CitationStyleDialog } from "../citations/CitationStyleDialog";
+import { CitationRegistryService } from "../../services/CitationRegistryService";
 
 interface ExportWorkflowModalProps {
     isOpen: boolean;
@@ -63,6 +65,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
         excludeOrphanReferences: false,
         markUnsupportedClaims: true
     });
+    const [showAllIssues, setShowAllIssues] = useState(false);
 
     // Metadata State (Abstract removed per user request)
     const [author, setAuthor] = useState("");
@@ -70,12 +73,13 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     const [course, setCourse] = useState("");
     const [instructor, setInstructor] = useState("");
     const [runningHead, setRunningHead] = useState("");
+    const [date, setDate] = useState(new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
+    const [documentTitle, setDocumentTitle] = useState(project.title || "Untitled Document");
 
     // Removed hasCredit state usage for UI, but keeping logic internal if needed later
 
     const { toast } = useToast();
 
-    // Reset state on open
     // Reset state on open
     useEffect(() => {
         if (isOpen) {
@@ -83,22 +87,25 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             setSelectedFormat(null);
             setAuditResult(null); // Reset audit
             setAuditStarted(false);
+            setDocumentTitle(project.title || "Untitled Document");
 
-            // Auto-fill from user profile in localStorage
+            // Auto-fill from user profile if available, otherwise leave blank
             setAuthor(localStorage.getItem("user_full_name") || "");
             setAffiliation(localStorage.getItem("user_institution") || "");
-            setCourse("");
-            setInstructor("");
-            setRunningHead("");
+            setCourse(localStorage.getItem("user_course") || "");
+            setInstructor(localStorage.getItem("user_instructor") || "");
+            setRunningHead(project.title ? project.title.substring(0, 50).toUpperCase() : "");
 
             // Synchronize with pre-existing audit if available
             if (initialAuditReport) {
                 setAuditResult({
                     violations: (initialAuditReport.issues || []).map((i: any) => ({
+                        id: i.id,
                         ruleId: i.type || 'BACKEND',
                         message: i.message,
                         context: i.suggestedFix || i.context,
-                        severity: i.severity
+                        severity: i.severity,
+                        location: i.location || { startPos: i.location?.start, endPos: i.location?.end }
                     })),
                     score: initialAuditReport.summary?.complianceScore
                 });
@@ -111,7 +118,66 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     }, [isOpen, initialAuditReport]);
 
     // --- Step 1: Compliance Logic (formerly Audit) ---
-    // (Checklist logic removed)
+    
+    const healCitations = React.useCallback((results: any[]) => {
+        if (!editor || !results || results.length === 0) return;
+
+        console.log(`[HealCitations] Processing ${results.length} verification results...`);
+        
+        // 1. Update Registry with rich data
+        results.forEach(ver => {
+            if (ver.status === "VERIFIED" && ver.foundPaper) {
+                // Find existing entry by text matching to sync metadata
+                const allCitations = CitationRegistryService.getAllCitations();
+                const matchedEntry = allCitations.find(c => c.raw_reference_text === ver.inlineLocation.text);
+                
+                const citationId = ver.referenceId || matchedEntry?.ref_key;
+                
+                if (citationId) {
+                    CitationRegistryService.updateCitationMetadata(citationId, {
+                        sourceTitle: ver.foundPaper.title,
+                        authors: ver.foundPaper.authors,
+                        year: ver.foundPaper.year,
+                        url: ver.foundPaper.url,
+                        metadata: {
+                            ...ver.foundPaper,
+                            database: ver.foundPaper.database
+                        }
+                    });
+                }
+            }
+        });
+
+        // 2. Update Editor Nodes (Atomic Transaction)
+        editor.chain().command(({ tr, state }) => {
+            let hasChanges = false;
+            state.doc.descendants((node, pos) => {
+                if (node.type.name === "citation") {
+                    const mid = node.attrs.citationId;
+                    if (mid) {
+                        const meta = CitationRegistryService.getCitation(mid);
+                        if (meta && meta.authors && meta.authors.length > 0 && meta.year) {
+                            // Basic APA format correction
+                            const author = meta.authors[0].split(',')[0].split(' ').pop() || meta.authors[0];
+                            const newText = `(${author}, ${meta.year})`;
+                            
+                            if (node.attrs.text !== newText) {
+                                tr.setNodeMarkup(pos, undefined, {
+                                    ...node.attrs,
+                                    text: newText,
+                                    status: "resolved"
+                                });
+                                hasChanges = true;
+                            }
+                        }
+                    }
+                }
+                return true;
+            });
+            return hasChanges;
+        }).run();
+    }, [editor]);
+
     const performAudit = React.useCallback(async () => {
         if (auditResult) return; // Already audited
 
@@ -121,7 +187,15 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             // SILENT NORMALIZATION (User Request)
             // Ensure editor nodes are converted to Citation Nodes properly before auditing
             if (editor) {
-                await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+                try {
+                    const { detectAndNormalizeBibliography } = await import("../editor/utils/normalization");
+                    await Promise.all([
+                        detectAndNormalizeCitations(editor, project.id, project.citations || []),
+                        detectAndNormalizeBibliography(editor, project.id)
+                    ]);
+                } catch (e) {
+                    console.error("[ExportAudit] Silent normalization failed:", e);
+                }
             }
 
             // Get fresh content if editor is available (since normalization changed it)
@@ -136,23 +210,39 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                 contentToAudit as any,
                 project.id
             );
-            setAuditResult(result);
+            // Map flags to violations for UI consistency
+            const violations = (result.flags || []).map((f: any) => ({
+                id: f.id || Math.random().toString(36),
+                ruleId: f.ruleId,
+                message: f.message,
+                context: f.context || f.anchor?.text,
+                severity: f.ruleId?.includes("UNVERIFIED") ? "CRITICAL" : "MAJOR",
+                location: f.anchor || { startPos: f.start, endPos: f.end }
+            }));
+            
+            setAuditResult({
+                ...result,
+                violations
+            });
+
+            // HEAL CITATIONS: Update "Unknown" placeholders with real data from forensic audit
+            if (result.verificationResults && result.verificationResults.length > 0) {
+                healCitations(result.verificationResults);
+            }
         } catch (error) {
             console.error("Audit failed", error);
             // Non-blocking error for now
         } finally {
             setIsAuditing(false);
         }
-    }, [auditResult, editor, project.citations, project.citation_style, currentContent, project.id]);
+    }, [auditResult, editor, project.citations, project.citation_style, currentContent, project.id, healCitations]);
 
-    // Trigger audit when entering audit step
-    // Removed automatic trigger to allow manual skip
-    // useEffect(() => {
-    //     if (currentStep === "audit" && !auditResult && !isAuditing) {
-    //         performAudit();
-    //     }
-    // }, [currentStep, auditResult, isAuditing, performAudit]);
-
+    // Trigger audit automatically when entering audit step
+    useEffect(() => {
+        if (isOpen && currentStep === "audit" && !auditResult && !isAuditing) {
+            performAudit();
+        }
+    }, [isOpen, currentStep, auditResult, isAuditing, performAudit]);
 
     // --- Step 4: Format Logic ---
     const formats = [
@@ -173,6 +263,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             disabled: false,
         },
 
+        /*
         {
             id: "latex",
             label: "LaTeX Source (.tex)",
@@ -197,6 +288,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             color: "bg-gray-600",
             disabled: true,
         },
+        */
     ];
 
     // --- Actions ---
@@ -225,7 +317,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                 const response = await apiClient.download("/api/files", {
                     fileData: {
                         id: project.id,
-                        title: project.title,
+                        title: documentTitle,
                         content: currentContent,
                         htmlContent: currentHtmlContent || editor?.getHTML() || "",
                         citations: citationsToSend,
@@ -235,7 +327,8 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                             institution: affiliation,
                             course,
                             instructor,
-                            runningHead
+                            runningHead,
+                            date
                         },
                         citationPolicy: {
                             ...citationPolicy,
@@ -258,7 +351,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                 a.href = data.result.downloadUrl;
                 // No need to set download attribute as the URL itself enforces it, 
                 // but setting it doesn't hurt for fallback
-                a.download = `${project.title}.${selectedFormat}`;
+                a.download = `${documentTitle}.${selectedFormat}`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -282,12 +375,39 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
         }
     };
 
+    const handleNavigateToIssue = (v: any) => {
+        if (!editor || !v.location) return;
+
+        const start = v.location.startPos !== undefined ? v.location.startPos : v.location.start;
+        const end = v.location.endPos !== undefined ? v.location.endPos : v.location.end;
+
+        if (start === undefined) return;
+
+        // Severity mapping
+        let color = "rgba(234, 179, 8, 0.2)"; // yellow
+        if (v.severity === "CRITICAL") color = "rgba(239, 68, 68, 0.2)"; // red
+        if (v.severity === "MAJOR") color = "rgba(245, 158, 11, 0.2)"; // orange
+
+        onClose(); // Close modal
+
+        setTimeout(() => {
+            editor.commands.focus();
+            
+            // Highlight the range
+            editor.chain()
+                .setTextSelection({ from: start, to: end })
+                .setHighlight({ color: color, type: 'violation', message: v.message })
+                .scrollIntoView()
+                .run();
+        }, 200);
+    };
+
     // --- Navigation ---
     const goToNextStep = () => {
         if (currentStep === "audit") setCurrentStep("details");
         else if (currentStep === "details") setCurrentStep("format");
-        else if (currentStep === "format" && selectedFormat) setCurrentStep("mode");
-        else if (currentStep === "mode") setCurrentStep("review");
+        else if (currentStep === "format" && selectedFormat) setCurrentStep("review");
+        // else if (currentStep === "mode") setCurrentStep("review");
     };
 
     // Step 1: Compliance Content (Enhanced with Style Selector)
@@ -302,35 +422,14 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             );
         }
 
-        if (!auditStarted && !auditResult) {
+        if (!auditResult && !isAuditing) {
             return (
                 <div className="flex flex-col items-center justify-center h-full py-12 text-center">
-                    <div className="bg-indigo-50 p-4 rounded-full mb-6">
-                        <FileSearch className="w-10 h-10 text-indigo-600" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Compliance Check</h3>
-                    <p className="text-gray-500 max-w-md mx-auto mb-8">
-                        Would you like to run an automated check to verify your references and citation style formatting before exporting?
+                    <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Initializing Check...</h3>
+                    <p className="text-gray-500 max-w-md mx-auto">
+                        Preparing your document for a compliance scan.
                     </p>
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => {
-                                setAuditStarted(true);
-                                setAuditResult({ violations: [] }); // Set empty so we can skip
-                                goToNextStep();
-                            }}
-                            className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                        >
-                            Skip Check
-                        </button>
-                        <button
-                            onClick={performAudit}
-                            className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors flex items-center gap-2"
-                        >
-                            <FileSearch className="w-4 h-4" />
-                            Run Audit
-                        </button>
-                    </div>
                 </div>
             );
         }
@@ -431,21 +530,38 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                             {/* Detailed Violations List */}
                             {violations.length > 0 && (
                                 <div className="space-y-3 mt-4">
-                                    {violations.slice(0, 3).map((v: any, idx: number) => (
-                                        <div key={idx} className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-sm transition-all hover:shadow-md hover:border-indigo-100" style={{ animationDelay: `${idx * 100}ms` }}>
-                                            <div className="bg-amber-100 p-2 rounded-lg mt-0.5">
-                                                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                                    {(showAllIssues ? violations : violations.slice(0, 3)).map((v: any, idx: number) => (
+                                        <div 
+                                            key={idx} 
+                                            onClick={() => handleNavigateToIssue(v)}
+                                            className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-sm transition-all hover:shadow-md hover:border-indigo-300 hover:bg-white cursor-pointer group overflow-hidden" 
+                                            style={{ animationDelay: `${idx * 100}ms` }}
+                                        >
+                                            <div className={`p-1.5 rounded-md mt-0.5 ${v.severity === "CRITICAL" ? "bg-red-100" : v.severity === "MAJOR" ? "bg-orange-100" : "bg-amber-100"}`}>
+                                                <AlertTriangle className={`w-4 h-4 ${v.severity === "CRITICAL" ? "text-red-600" : v.severity === "MAJOR" ? "text-orange-600" : "text-amber-600"} flex-shrink-0`} />
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-gray-900 mb-1">{v.message || "Citation Format Warning"}</p>
-                                                <p className="text-sm text-gray-600 leading-relaxed">{v.context || "Check citation style guidelines."}</p>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-start justify-between gap-2 mb-0.5">
+                                                    <p className="text-xs font-bold text-gray-900 line-clamp-2 min-w-0 flex-1">{v.message || "Citation Warning"}</p>
+                                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase shrink-0 ${v.severity === "CRITICAL" ? "bg-red-100 text-red-700" : v.severity === "MAJOR" ? "bg-orange-100 text-orange-700" : "bg-amber-100 text-amber-700"}`}>
+                                                        {v.severity || "Notice"}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[11px] text-gray-600 leading-tight line-clamp-2 italic">{v.context || "Check citation style guidelines."}</p>
                                             </div>
+                                            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-indigo-400 self-center" />
                                         </div>
                                     ))}
                                     {violations.length > 3 && (
-                                        <div className="py-2 text-center border border-dashed border-gray-300 rounded-lg bg-gray-50">
-                                            <p className="text-sm font-medium text-gray-500">+ {violations.length - 3} additional issues detected</p>
-                                        </div>
+                                        <button 
+                                            onClick={() => setShowAllIssues(!showAllIssues)}
+                                            className="w-full py-2 text-center border border-dashed border-indigo-300 rounded-lg bg-indigo-50/50 hover:bg-indigo-100/50 transition-colors group"
+                                        >
+                                            <p className="text-[11px] font-bold text-indigo-600 flex items-center justify-center gap-1">
+                                                {showAllIssues ? "Show Less" : `See ${violations.length - 3} more issue${violations.length - 3 === 1 ? '' : 's'}`}
+                                                <ChevronRight className={`w-3 h-3 transition-transform ${showAllIssues ? "rotate-90" : ""}`} />
+                                            </p>
+                                        </button>
                                     )}
                                 </div>
                             )}
@@ -560,6 +676,17 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     />
                 </div>
 
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-900">Date</label>
+                    <input
+                        type="text"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        placeholder="e.g. March 7, 2026"
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                </div>
+
 
             </div>
         </div>
@@ -616,7 +743,8 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     );
 
 
-    // Step 3.5: Export Mode Selection  
+    // Step 3.5: Export Mode Selection (Commented out per user request)
+    /*
     const renderModeContent = () => (
         <div className="space-y-6">
             <div>
@@ -625,7 +753,6 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             </div>
 
             <div className="space-y-4">
-                {/* Standard Export Option */}
                 <button
                     onClick={() => setExportMode("standard")}
                     className={`w-full flex items-start gap-4 p-6 rounded-xl border-2 text-left transition-all ${exportMode === "standard" ? "border-indigo-600 bg-indigo-50 ring-2 ring-indigo-200" : "border-gray-200 bg-white hover:border-indigo-300"}`}>
@@ -644,7 +771,6 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     </div>
                 </button>
 
-                {/* Journal Submission Option (DISABLED) */}
                 <button
                     disabled={true}
                     onClick={() => {
@@ -657,7 +783,6 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     className="w-full flex items-start gap-4 p-6 rounded-xl border-2 text-left transition-all border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed">
                     <div className="flex-shrink-0 mt-1">
                         <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center border-gray-300 bg-white">
-                            {/* unchecked */}
                         </div>
                     </div>
                     <div className="flex-1">
@@ -676,6 +801,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             </div>
         </div>
     );
+    */
 
     // Step 4: Final Review (Merged Preview + Action)
     const renderReviewContent = () => (
@@ -685,29 +811,11 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     <h2 className="text-2xl font-bold text-gray-900 mb-1">Final Review</h2>
                     <p className="text-gray-500">Preview {selectedFormat?.toUpperCase()} output and export.</p>
                 </div>
-                <div className="text-right">
-                    <button
-                        onClick={handleDownload}
-                        disabled={downloading}
-                        className="bg-indigo-600 text-white rounded-lg px-8 py-3 font-bold hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-                        {downloading ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                Exporting...
-                            </>
-                        ) : (
-                            <>
-                                Export Document
-                                <ChevronRight className="w-5 h-5" />
-                            </>
-                        )}
-                    </button>
-                </div>
             </div>
 
-            <div className="flex-1 bg-gray-100 rounded-xl border border-gray-200 p-8 flex items-center justify-center overflow-hidden relative">
+            <div className="flex-1 export-preview-container relative overflow-y-auto bg-gray-100 p-8">
                 {/* Mini Overlay Stats */}
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur shadow-sm p-3 rounded-lg border border-gray-200 z-10 text-sm">
+                <div className="absolute top-4 right-8 bg-white/90 backdrop-blur shadow-sm p-3 rounded-lg border border-gray-200 z-10 text-sm">
                     <div className="flex items-center gap-2 mb-1">
                         <span className="font-semibold text-gray-700">Format:</span>
                         <span className="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-xs font-bold">{selectedFormat?.toUpperCase()}</span>
@@ -718,26 +826,101 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     </div>
                 </div>
 
-                <div className="bg-white shadow-2xl w-full max-w-2xl aspect-[8.5/11] rounded-sm overflow-hidden flex flex-col transform scale-95 sm:scale-100 transition-transform origin-center">
+                <div className={`export-paper ${project.citation_style?.toLowerCase() === 'ieee' ? 'ieee-preview' : 'apa-preview'}`}>
                     {/* Real Document Content Preview */}
-                    <div className="flex-1 p-8 sm:p-12 overflow-y-auto bg-white article-content scrollbar-thin scrollbar-thumb-gray-200">
+                    <div className="flex-1 bg-white article-content">
                         {currentHtmlContent ? (
-                            <div className="max-w-none">
-                                {/* Academic Header Preview */}
-                                <div className="text-center mb-10 pb-8 border-b border-gray-200">
-                                    <h1 className="text-3xl font-bold text-gray-900 mb-6 font-serif leading-tight">{project.title}</h1>
-                                    {author && <p className="text-lg text-gray-800 font-medium mb-1">{author}</p>}
-                                    {affiliation && <p className="text-sm text-gray-600 font-serif">{affiliation}</p>}
-                                    {(course || instructor) && (
-                                        <p className="text-xs text-gray-500 mt-4 uppercase tracking-wider font-semibold">
-                                            {course} {course && instructor && <span className="mx-2 text-gray-300">•</span>} {instructor}
-                                        </p>
-                                    )}
-                                </div>
+                            <div className="max-w-none font-serif">
+                                {project.citation_style?.toLowerCase() === 'apa' ? (
+                                    <>
+                                        {/* APA Running Head */}
+                                        <div className="apa-running-head">
+                                            <span>{runningHead ? `Running head: ${runningHead}` : ""}</span>
+                                            <span>1</span>
+                                        </div>
+
+                                        {/* APA Title Page Content */}
+                                        <div className="apa-metadata">
+                                            <h1 className="apa-title">{documentTitle}</h1>
+                                            <div className="space-y-0.5">
+                                                {author && <p className="font-medium">{author}</p>}
+                                                {affiliation && <p>{affiliation}</p>}
+                                                {course && <p>{course}</p>}
+                                                {instructor && <p>{instructor}</p>}
+                                                {date && <p>{date}</p>}
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : project.citation_style?.toLowerCase() === 'ieee' ? (
+                                    <div className="text-center mb-12">
+                                        <h1 className="text-xl font-bold mb-4">{documentTitle}</h1>
+                                        <div className="text-sm italic mb-8">
+                                            {author && <span>{author}</span>}
+                                            {affiliation && <span>, {affiliation}</span>}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <h1 className="text-2xl font-bold mb-8">{documentTitle}</h1>
+                                )}
+
                                 <div
-                                    className="prose prose-sm sm:prose-base max-w-none text-gray-800 prose-headings:font-serif prose-headings:text-gray-900 prose-a:text-indigo-600"
-                                    dangerouslySetInnerHTML={{ __html: currentHtmlContent }}
+                                    className="prose prose-sm sm:prose-base max-w-none text-gray-800 font-serif leading-loose export-html-preview"
+                                    dangerouslySetInnerHTML={{ 
+                                        __html: (() => {
+                                            let html = editor?.getHTML() || currentHtmlContent || "";
+                                            
+                                            // 1. Resolve Citation Tokens
+                                            const tokenRegex = /<span\s+data-cite="([^"]+)"[^>]*>(.*?)<\/span>/g;
+                                            html = html.replace(tokenRegex, (match, key, existingText) => {
+                                                const meta = CitationRegistryService.getCitation(key);
+                                                if (meta && meta.authors && meta.authors.length > 0 && meta.year) {
+                                                    const author = meta.authors[0].split(',')[0].split(' ').pop() || meta.authors[0];
+                                                    return `(${author}, ${meta.year})`;
+                                                }
+                                                return existingText;
+                                            });
+
+                                            return html;
+                                        })()
+                                    }}
                                 />
+
+                                {/* 2. References Section */}
+                                <div className="mt-12 pt-8 border-t border-gray-200">
+                                    <h2 className={`font-bold mb-6 ${project.citation_style?.toLowerCase() === 'apa' ? 'text-center text-lg' : 'text-left text-base uppercase'}`}>
+                                        {project.citation_style?.toLowerCase() === 'apa' ? 'References' : 'References'}
+                                    </h2>
+                                    <div className="space-y-4 text-sm">
+                                        {(project.citations || []).length > 0 ? (
+                                            project.citations.map((c: any, i: number) => {
+                                                const meta = CitationRegistryService.getCitation(c.id);
+                                                if (!meta) return null;
+
+                                                if (project.citation_style?.toLowerCase() === 'apa') {
+                                                    // Basic APA formatting
+                                                    const authors = meta.authors?.join(', ') || 'Unknown Author';
+                                                    const year = meta.year || 'n.d.';
+                                                    const title = meta.sourceTitle || 'Untitled';
+                                                    const journal = meta.metadata?.journal || '';
+                                                    return (
+                                                        <p key={c.id} className="pl-8 -indent-8 leading-relaxed">
+                                                            {authors} ({year}). <i>{title}</i>. {journal && <span>{journal}.</span>} {meta.doi && <span>https://doi.org/{meta.doi}</span>}
+                                                        </p>
+                                                    );
+                                                }
+                                                
+                                                // Default list format
+                                                return (
+                                                    <p key={c.id} className="leading-relaxed">
+                                                        [{i+1}] {meta.authors?.join(', ')}. "{meta.sourceTitle}". <i>{meta.metadata?.journal || 'Publication'}</i>, {meta.year}.
+                                                    </p>
+                                                );
+                                            })
+                                        ) : (
+                                            <p className="italic text-gray-400">No references cited in this document.</p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full text-gray-400">
@@ -765,10 +948,10 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     </button>
 
                     <div className="flex items-center gap-12">
-                        {["audit", "details", "format", "mode", "review"].map((step, idx) => {
-                            const stepNames = ["Compliance", "Details", "Format", "Mode", "Review"];
+                        {["audit", "details", "format", "review"].map((step, idx) => {
+                            const stepNames = ["Compliance", "Details", "Format", "Review"];
                             const isActive = currentStep === step;
-                            const isPast = ["audit", "details", "format", "mode", "review"].indexOf(currentStep) > idx;
+                            const isPast = ["audit", "details", "format", "review"].indexOf(currentStep) > idx;
 
                             return (
                                 <div key={step} className="flex flex-col items-center gap-2 relative">
@@ -782,7 +965,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                                         {stepNames[idx]}
                                     </span>
                                     {/* Connector Line */}
-                                    {idx < 4 && (
+                                    {idx < 3 && (
                                         <div className={`absolute top-4 left-1/2 w-full h-0.5 -z-0 ml-4 w-24 ${isPast ? "bg-indigo-600" : "bg-gray-200"
                                             }`} style={{ width: "4rem", transform: "translateX(50%)" }} />
                                     )}
@@ -801,7 +984,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                             {currentStep === "audit" && renderAuditContent()}
                             {currentStep === "details" && renderDetailsContent()}
                             {currentStep === "format" && renderFormatContent()}
-                            {currentStep === "mode" && renderModeContent()}
+                            {/* {currentStep === "mode" && renderModeContent()} */}
                             {currentStep === "review" && renderReviewContent()}
                         </div>
                     </div>
@@ -813,8 +996,17 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                         <div className="space-y-6">
                             {/* Project Info */}
                             <div className="pb-6 border-b border-gray-100">
-                                <p className="text-sm text-gray-500 mb-1">Document</p>
-                                <h4 className="font-semibold text-gray-900 line-clamp-2">{project.title}</h4>
+                                <p className="text-sm text-gray-500 mb-2 font-medium">Document Title</p>
+                                <div className="relative group">
+                                    <input 
+                                        type="text"
+                                        value={documentTitle}
+                                        onChange={(e) => setDocumentTitle(e.target.value)}
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all pr-8"
+                                        placeholder="Enter document title..."
+                                    />
+                                    <Pencil className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-focus-within:text-indigo-500 transition-colors" />
+                                </div>
                             </div>
 
                             {/* Format Selection */}
@@ -852,6 +1044,31 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
 
                             {/* Checklist Status REMOVED */}
                         </div>
+
+                        {/* Final Export Button (Sidebar) */}
+                        {currentStep === "review" && (
+                            <div className="pt-6">
+                                <button
+                                    onClick={handleDownload}
+                                    disabled={downloading}
+                                    className="w-full bg-indigo-600 text-white rounded-xl py-4 font-bold hover:bg-indigo-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3">
+                                    {downloading ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Preparing Files...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Export Document
+                                            <ChevronRight className="w-5 h-5" />
+                                        </>
+                                    )}
+                                </button>
+                                <p className="text-[10px] text-gray-400 text-center mt-3 px-4">
+                                    Citations and formatting will be finalized based on your selections.
+                                </p>
+                            </div>
+                        )}
 
                         <div className="mt-12">
                             {currentStep !== "review" && (

@@ -122,28 +122,28 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
       {/* Formatting Toolbar - Collapsible */}
       {!isCollapsed && (
-        <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 bg-gray-50">
+        <div className="flex items-center gap-1 px-3 py-2 bg-gray-50 border-t border-gray-100 overflow-x-auto scrollbar-hide min-h-[44px]">
           <Toggle
             size="sm"
             title="Undo"
-            className="h-8 w-8"
+            className="h-8 w-8 shrink-0"
             onClick={() => editor.chain().focus().undo().run()}>
-            <Undo className="h-4 w-4" />
+            <Undo className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Redo"
-            className="h-8 w-8"
+            className="h-8 w-8 shrink-0"
             onClick={() => editor.chain().focus().redo().run()}>
-            <Redo className="h-4 w-4" />
+            <Redo className="h-[15px] w-[15px]" />
           </Toggle>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Toggle size="sm" title="Heading" className="h-8 gap-1 px-2">
-                <Type className="h-4 w-4" />
+              <Toggle size="sm" title="Heading" className="h-8 gap-1.5 px-2.5 shrink-0">
+                <Type className="h-[15px] w-[15px]" />
                 <span className="text-xs">
                   {currentHeading?.label ?? "Paragraph"}
                 </span>
@@ -171,12 +171,12 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           {/* Font Family Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Toggle size="sm" title="Font Family" className="gap-1 px-2 h-8 w-24 justify-between">
+              <Toggle size="sm" title="Font Family" className="gap-1.5 px-2.5 h-8 w-[6.5rem] justify-between shrink-0">
                 <span className="text-xs truncate">
                   {editor.getAttributes('textStyle').fontFamily || "Default"}
                 </span>
@@ -202,61 +202,68 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           <Toggle
             size="sm"
             title="Bold"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive("bold")}
             onPressedChange={() => editor.chain().focus().toggleBold().run()}>
-            <Bold className="h-4 w-4" />
+            <Bold className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Italic"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive("italic")}
             onPressedChange={() => editor.chain().focus().toggleItalic().run()}>
-            <Italic className="h-4 w-4" />
+            <Italic className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Underline"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive("underline")}
             onPressedChange={() => editor.chain().focus().toggleUnderline().run()}>
-            <Underline className="h-4 w-4" />
+            <Underline className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Strikethrough"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive("strike")}
             onPressedChange={() => editor.chain().focus().toggleStrike().run()}>
-            <Strikethrough className="h-4 w-4" />
+            <Strikethrough className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Superscript"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive("superscript")}
             onPressedChange={() => editor.chain().focus().toggleSuperscript().run()}>
-            <Superscript className="h-4 w-4" />
+            <Superscript className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Subscript"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive("subscript")}
             onPressedChange={() => editor.chain().focus().toggleSubscript().run()}>
-            <Subscript className="h-4 w-4" />
+            <Subscript className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Code"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive("code")}
             onPressedChange={() => editor.chain().focus().toggleCode().run()}>
-            <Code className="h-4 w-4" />
+            <Code className="h-[15px] w-[15px]" />
           </Toggle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Toggle size="sm" title="Highlight" pressed={editor.isActive("highlight")} className="gap-1 px-2 h-8 w-12 justify-between">
-                <Highlighter className="h-4 w-4" />
+              <Toggle size="sm" title="Highlight" pressed={editor.isActive("highlight")} className="gap-1 px-2 h-8 w-12 justify-between shrink-0">
+                <Highlighter className="h-[15px] w-[15px]" />
                 <ChevronDown className="h-3 w-3 opacity-50" />
               </Toggle>
             </DropdownMenuTrigger>
@@ -288,88 +295,95 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             size="sm"
             title="Insert Logic / Math"
             pressed={editor.isActive("math")}
-            className="h-8 w-8 font-serif italic font-bold"
+            className="h-8 w-8 font-serif italic font-bold shrink-0 text-[13px]"
             onClick={() => setIsMathModalOpen(true)}
           >
             Tx
           </Toggle>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           <Toggle
             size="sm"
             title="Align Left"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive({ textAlign: "left" })}
             onPressedChange={() =>
               editor.chain().focus().setTextAlign("left").run()
             }>
-            <AlignLeft className="h-4 w-4" />
+            <AlignLeft className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Align Center"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive({ textAlign: "center" })}
             onPressedChange={() =>
               editor.chain().focus().setTextAlign("center").run()
             }>
-            <AlignCenter className="h-4 w-4" />
+            <AlignCenter className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Align Right"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive({ textAlign: "right" })}
             onPressedChange={() =>
               editor.chain().focus().setTextAlign("right").run()
             }>
-            <AlignRight className="h-4 w-4" />
+            <AlignRight className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Align Justify"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive({ textAlign: "justify" })}
             onPressedChange={() =>
               editor.chain().focus().setTextAlign("justify").run()
             }>
-            <AlignJustify className="h-4 w-4" />
+            <AlignJustify className="h-[15px] w-[15px]" />
           </Toggle>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           <Toggle
             size="sm"
             title="Bullet List"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive("bulletList")}
             onPressedChange={() => editor.chain().focus().toggleBulletList().run()}>
-            <List className="h-4 w-4" />
+            <List className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Ordered List"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive("orderedList")}
             onPressedChange={() =>
               editor.chain().focus().toggleOrderedList().run()
             }>
-            <ListOrdered className="h-4 w-4" />
+            <ListOrdered className="h-[15px] w-[15px]" />
           </Toggle>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           <Toggle
             size="sm"
             title="Blockquote"
+            className="h-8 w-8 shrink-0"
             pressed={editor.isActive("blockquote")}
             onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}>
-            <Quote className="h-4 w-4" />
+            <Quote className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
             size="sm"
             title="Horizontal Rule"
-            className="h-8 w-8"
+            className="h-8 w-8 shrink-0"
             onClick={() => editor.chain().focus().setHorizontalRule().run()}>
-            <Minus className="h-4 w-4" />
+            <Minus className="h-[15px] w-[15px]" />
           </Toggle>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           {/* Table Controls */}
           <DropdownMenu>
@@ -378,8 +392,8 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                 size="sm"
                 title="Table"
                 pressed={editor.isActive("table")}
-                className="gap-1 px-2 h-8">
-                <TableIcon className="h-4 w-4" />
+                className="gap-1 px-2 h-8 shrink-0">
+                <TableIcon className="h-[15px] w-[15px]" />
                 <ChevronDown className="h-3 w-3" />
               </Toggle>
             </DropdownMenuTrigger>
@@ -453,12 +467,12 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Separator orientation="vertical" className="mx-1 h-6" />
+          <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           <Popover>
             <PopoverTrigger asChild>
-              <Toggle size="sm" title="Link" pressed={editor.isActive("link")}>
-                <Link className="h-4 w-4" />
+              <Toggle size="sm" title="Link" pressed={editor.isActive("link")} className="h-8 w-8 shrink-0">
+                <Link className="h-[15px] w-[15px]" />
               </Toggle>
             </PopoverTrigger>
             <PopoverContent className="w-80 bg-white">
@@ -482,14 +496,14 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <Toggle
             size="sm"
             title="Insert Image"
-            className="h-8 w-8"
+            className="h-8 w-8 shrink-0"
             onClick={() => {
               // Store the full JSON selection state
               const selectionJSON = editor.state.selection.toJSON();
               setSavedSelection(selectionJSON);
               setIsImageModalOpen(true);
             }}>
-            <ImageIcon className="h-4 w-4" />
+            <ImageIcon className="h-[15px] w-[15px]" />
           </Toggle>
 
           {/* Image Insert Modal */}

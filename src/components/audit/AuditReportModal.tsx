@@ -73,7 +73,7 @@ export const AuditReportModal: React.FC<AuditReportModalProps> = ({ isOpen, onCl
                         </div>
                         <div className={`px-6 py-3 rounded-3xl border-2 border-current/5 flex flex-col items-center justify-center ${getIntegrityColor(report.integrityIndex || 0)}`}>
                             <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-0.5">Integrity Score</p>
-                            <p className="text-3xl font-black">{report.integrityIndex || 0}<span className="text-lg opacity-40 ml-0.5">/100</span></p>
+                            <p className="text-3xl font-black">{typeof (report.integrityIndex) === 'number' ? report.integrityIndex.toFixed(2) : (report.integrityIndex || 0)}<span className="text-lg opacity-40 ml-0.5">/100</span></p>
                         </div>
                     </div>
                 </div>

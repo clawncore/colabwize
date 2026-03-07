@@ -1325,8 +1325,17 @@ const EditorWorkspacePage: React.FC = () => {
                       description: `"${issue.selectedSource?.title}" has been successfully added.`,
                     });
                   } else if (issue.action === 'SEARCH') {
+                    // Extract title from "Closest paper: \"...\"" if citationText is missing
+                    let searchTerms = [issue.citationText || issue.message];
+                    if (!issue.citationText && issue.message.includes('Closest paper:')) {
+                      const match = issue.message.match(/Closest paper: "([^"]+)"/);
+                      if (match && match[1]) {
+                        searchTerms = [match[1]];
+                      }
+                    }
+
                     openPanel("citations", {
-                      contextKeywords: [issue.citationText || issue.message],
+                      contextKeywords: searchTerms,
                       autoSearch: true
                     });
                     toast({

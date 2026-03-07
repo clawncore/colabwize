@@ -81,6 +81,7 @@ export const CitationNode = Node.create<CitationNodeOptions>({
                 class: "citation-node",
                 "data-citation-id": citationId,
                 "data-text": displayText,
+                href: `#bib-${citationId}`,
                 style: `color:#2563eb; font-weight:500; cursor:pointer; text-decoration:none;`,
             }),
             displayText

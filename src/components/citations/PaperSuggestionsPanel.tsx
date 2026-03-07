@@ -73,6 +73,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     try {
       const papers = suggestedPapers.map(p => ({
         title: p.title,
+        author: p.authors && p.authors.length > 0 ? p.authors[0] : "Unknown",
         year: p.year,
         citationCount: p.citationCount,
         journal: p.journal,

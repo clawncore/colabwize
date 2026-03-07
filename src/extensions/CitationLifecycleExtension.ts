@@ -32,36 +32,46 @@ export const CitationLifecycleExtension = Extension.create({
                     });
 
                     const deletePositions: { from: number; to: number }[] = [];
+                    const idsToRemoveFromRegistry = new Set<string>();
 
-                    // 2. Identify violations of the linking rules (DISABLED AGGRESSIVE AUTO-DELETE)
-                    // The Citation Audit Tool is responsible for warning users about uncited references
-                    // or missing citations. Auto-deleting them immediately breaks user expectations when
-                    // pasting reference lists or typing out bibliographies prior to citing them.
-
-                    /*
+                    // 2. Identify violations of the linking rules
                     newState.doc.descendants((node, pos) => {
                         const id = node.attrs.citationId;
                         if (!id) return;
 
                         // Rule 1: Delete Bibliography if no in-text Citations exist
+                        // DISABLING AUTODELETE: This is too aggressive during normalization and causes data loss.
+                        // We will rely on the Compliance Audit to flag orphaned bibliography entries instead.
+                        /*
                         if (node.type.name === "bibliographyEntry" && !citationIds.has(id)) {
                             // IGNORE PROVISIONAL NODES added by fast-sync normalization
                             if (id && (id.startsWith("temp-") || id.startsWith("temp_"))) return;
+                            
                             deletePositions.push({ from: pos, to: pos + node.nodeSize });
                             idsToRemoveFromRegistry.add(id);
                         }
+                        */
 
                         // Rule 2: Delete Citations if their Bibliography entry was deleted
+                        // DISABLING AUTODELETE: Same logic. If the user deletes the references section, 
+                        // we shouldn't wipe out their entire document's in-text citations.
+                        /*
                         if (node.type.name === "citation" && !bibliographyIds.has(id)) {
                             if (id.startsWith("temp-")) return;
                             deletePositions.push({ from: pos, to: pos + node.nodeSize });
+                            idsToRemoveFromRegistry.add(id);
                         }
+                        */
                     });
 
                     // 3. Clear orphaned IDs from memory registry state safely
+                    // We DO keep this memory cleanup so the cache doesn't grow infinitely with deleted citations
+                    /* Temporarily disabled registry aggressive clear, handled via Audit now
                     if (idsToRemoveFromRegistry.size > 0) {
-                        idsToRemoveFromRegistry.forEach(id => {
-                            CitationRegistryService.removeCitation(id);
+                        import("../services/CitationRegistryService").then(({ CitationRegistryService }) => {
+                            idsToRemoveFromRegistry.forEach(id => {
+                                CitationRegistryService.removeCitation(id);
+                            });
                         });
                     }
                     */

@@ -113,7 +113,8 @@ export const BibliographyEntry = Node.create<BibliographyEntryOptions>({
                                     Decoration.inline(start, end, {
                                         class: 'bibliography-url-link',
                                         'data-url': url,
-                                        style: 'color:#2563eb;text-decoration:underline;font-style:italic;cursor:pointer;'
+                                        title: 'Visit source website',
+                                        style: 'color:#2563eb;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;transition:opacity 0.2s;'
                                     })
                                 );
                             }
@@ -142,11 +143,14 @@ export const BibliographyEntry = Node.create<BibliographyEntryOptions>({
                     },
                     handleClick(view, pos, event) {
                         const target = event.target as HTMLElement;
-                        if (target && target.classList.contains('bibliography-url-link')) {
-                            const url = target.getAttribute('data-url');
+                        const link = target.closest('.bibliography-url-link');
+                        if (link) {
+                            const url = link.getAttribute('data-url');
                             if (url) {
+                                event.preventDefault();
+                                event.stopPropagation();
                                 window.open(url, '_blank', 'noopener,noreferrer');
-                                return true; // Handled
+                                return true;
                             }
                         }
                         return false;

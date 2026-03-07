@@ -43,7 +43,7 @@ export const CitationScannerExtension = Extension.create({
                         // ── 1. Pass 1: Gather Bibliography Metadata & Detect Boundaries ─────
                         let inReferences = false;
                         const referenceSet = new Set<string>();
-                        const ieeeRefNumbers = new Set<string>();
+                        const ieeeMetadata = new Map<string, { text: string, url: string | null }>();
                         
                         let referenceSectionStart = Infinity;
 
@@ -71,8 +71,16 @@ export const CitationScannerExtension = Extension.create({
                                     const fullLineText = node.textContent.trim();
                                     // Match [1] or 1. at beginning of line
                                     const ieeeNumMatch = fullLineText.match(/^\[?(\d+)\]?[\.\s]/);
+                                    
+                                    // Extract URL/DOI for linking
+                                    const urlMatch = fullLineText.match(/(https?:\/\/[^\s<\]"]+)/);
+                                    const url = urlMatch ? urlMatch[1] : null;
+
                                     if (ieeeNumMatch) {
-                                        ieeeRefNumbers.add(ieeeNumMatch[1]);
+                                        ieeeMetadata.set(ieeeNumMatch[1], {
+                                            text: fullLineText,
+                                            url: url
+                                        });
                                     }
 
                                     // Author capture for APA
@@ -131,12 +139,22 @@ export const CitationScannerExtension = Extension.create({
 
                                 ieeeCount++;
                                 const nums = m[1].split(/[\s,\-]+/).map(n => n.trim()).filter(Boolean);
-                                const isLinked = ieeeRefNumbers.size === 0 || nums.some(n => ieeeRefNumbers.has(n));
+                                const metadataFound = nums.map(n => ieeeMetadata.get(n)).filter(Boolean);
+                                const isLinked = ieeeMetadata.size === 0 || metadataFound.length > 0;
+                                
+                                const tooltipText = metadataFound.length > 0 
+                                    ? metadataFound.map(m => m!.text).join('\n---\n')
+                                    : (isLinked ? `IEEE [${m[1]}] — Linked` : `IEEE [${m[1]}] — Orphan`);
+
+                                const firstUrl = metadataFound.find(m => m!.url)?.url || null;
+
                                 decorations.push(Decoration.inline(pos + m.index!, pos + m.index! + m[0].length, {
                                     class: isLinked ? "citation-scan-linked" : "citation-scan-orphan",
                                     "data-citation-status": isLinked ? "linked" : "orphan",
                                     "data-citation-style": "ieee",
-                                    title: isLinked ? `IEEE [${m[1]}] — Linked` : `IEEE [${m[1]}] — Orphan`
+                                    "data-url": firstUrl || "",
+                                    title: tooltipText,
+                                    onclick: firstUrl ? `window.open('${firstUrl}', '_blank')` : ""
                                 }));
                             }
 

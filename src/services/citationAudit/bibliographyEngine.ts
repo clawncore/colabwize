@@ -84,7 +84,9 @@ export class BibliographyManager {
                         end: startPos + 1
                     });
                 }
-                if (node.marks) {
+                
+                // TipTap uses marks array on text nodes
+                if (node.marks && Array.isArray(node.marks)) {
                     const citationMark = node.marks.find((m: any) => m.type === "citation");
                     if (citationMark && node.text) {
                         citations.push({
@@ -95,12 +97,16 @@ export class BibliographyManager {
                         });
                     }
                 }
+                
+                // Track position logically
                 if (node.text) {
                     currentPos += node.text.length;
+                } else if (node.content) {
+                    currentPos += 1; // Node start boundary
+                    node.content.forEach(walk);
+                    currentPos += 1; // Node end boundary
                 } else {
-                    currentPos += 1;
-                    if (node.content) node.content.forEach(walk);
-                    currentPos += 1;
+                    currentPos += 2; // Empty node boundary
                 }
             };
             doc.content.forEach(walk);
@@ -162,15 +168,20 @@ export class BibliographyManager {
                     }
                 }
 
+                // Track position logically
                 if (node.text) {
                     currentPos += node.text.length;
+                } else if (node.content) {
+                    currentPos += 1;
+                    node.content.forEach(walk);
+                    currentPos += 1;
                 } else {
-                    currentPos += 1;
-                    if (node.content) node.content.forEach(walk);
-                    currentPos += 1;
+                    currentPos += 2;
                 }
             };
-            doc.content.forEach(walk);
+            if (doc.content) {
+                doc.content.forEach(walk);
+            }
         }
 
         return references;
@@ -241,7 +252,7 @@ export class BibliographyManager {
         let score = 100;
         flags.forEach(f => {
             if (f.type === "STRUCTURAL") score -= 5;
-            if (f.ruleId?.includes("HALLUCINATION")) score -= 20;
+            if (f.ruleId?.includes("UNVERIFIED_SOURCE")) score -= 20;
             if (f.ruleId?.includes("UNSUPPORTED")) score -= 15;
             if (f.ruleId?.includes("MISMATCH")) score -= 10;
         });
