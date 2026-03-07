@@ -27,7 +27,6 @@ import Subscript from "@tiptap/extension-subscript";
 import { BibliographyEntry } from "../../extensions/BibliographyNode";
 import { NodeSelection } from "@tiptap/pm/state";
 import { documentService, Project } from "../../services/documentService";
-import { OriginalityScan } from "../../services/originalityService";
 import { AuthorshipService } from "../../services/authorshipService";
 import "../../styles/highlight-styles.css";
 import "../../styles/image-styles.css";
@@ -128,10 +127,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [isSynced, setIsSynced] = useState(false);
   const [collabError, setCollabError] = useState<string | null>(null);
   // Source & Research State
-  const [activeSourceTab, setActiveSourceTab] = useState<"sources" | "matrix" | "collections" | "library">("library");
-  const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
-  const [matrixMode, setMatrixMode] = useState<"split" | "full">("split");
-  const [visualMapMode, setVisualMapMode] = useState<"graph" | "heatmap" | "full" | "split">("graph");
+  const [activeSourceTab] = useState<"sources" | "matrix" | "collections" | "library">("library");
+  // const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
+  // const [matrixMode, setMatrixMode] = useState<"split" | "full">("split");
+  // const [visualMapMode, setVisualMapMode] = useState<"graph" | "heatmap" | "full" | "split">("graph");
   const isSyncedRef = useRef(false);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -335,6 +334,13 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     setTitle(project.title);
     setDescription(project.description || "");
   }, [project.id, project.title, project.description]);
+
+  // Sync scan results when prop changes
+  useEffect(() => {
+    if (lastAuditReport) {
+      setLastScanResult(lastAuditReport);
+    }
+  }, [lastAuditReport]);
 
   const editor = useEditor(
     {

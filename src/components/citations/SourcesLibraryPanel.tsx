@@ -425,7 +425,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                           if (extracted.length > 25) {
                             extracted = extracted
                               .split(" ")[0]
-                              .replace(/[^a-zA-Z\-]/g, "");
+                              .replace(/[^a-zA-Z-]/g, "");
                           }
                           return extracted || "Author";
                         };

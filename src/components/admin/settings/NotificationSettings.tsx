@@ -151,6 +151,7 @@ const NotificationSettings: React.FC = () => {
                             </div>
                         </div>
                         <Switch
+                            disabled={saving}
                             checked={settings.in_app_notifications_enabled}
                             onCheckedChange={(checked) => handleToggle("in_app_notifications_enabled", checked)}
                         />
@@ -167,6 +168,7 @@ const NotificationSettings: React.FC = () => {
                             </div>
                         </div>
                         <Switch
+                            disabled={saving}
                             checked={settings.push_notifications_enabled}
                             onCheckedChange={(checked) => handleToggle("push_notifications_enabled", checked)}
                         />
@@ -183,6 +185,7 @@ const NotificationSettings: React.FC = () => {
                             </div>
                         </div>
                         <Switch
+                            disabled={saving}
                             checked={settings.sms_notifications_enabled} // Reusing field if email field is missing or mapped
                             onCheckedChange={(checked) => handleToggle("sms_notifications_enabled", checked)}
                         />
@@ -210,6 +213,7 @@ const NotificationSettings: React.FC = () => {
                                 Project Activity
                             </h3>
                             <Switch
+                                disabled={saving}
                                 checked={settings.project_activity_enabled}
                                 onCheckedChange={(checked) => handleToggle("project_activity_enabled", checked)}
                             />
@@ -218,7 +222,7 @@ const NotificationSettings: React.FC = () => {
                             <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/30">
                                 <Label className="text-sm">Comments & Mentions</Label>
                                 <Switch
-
+                                    disabled={saving}
                                     checked={settings.project_activity_comments}
                                     onCheckedChange={(checked) => handleToggle("project_activity_comments", checked)}
                                 />
@@ -226,7 +230,7 @@ const NotificationSettings: React.FC = () => {
                             <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/30">
                                 <Label className="text-sm">Document Changes</Label>
                                 <Switch
-
+                                    disabled={saving}
                                     checked={settings.project_activity_changes}
                                     onCheckedChange={(checked) => handleToggle("project_activity_changes", checked)}
                                 />
@@ -242,6 +246,7 @@ const NotificationSettings: React.FC = () => {
                                 Collaboration
                             </h3>
                             <Switch
+                                disabled={saving}
                                 checked={settings.collaboration_enabled}
                                 onCheckedChange={(checked) => handleToggle("collaboration_enabled", checked)}
                             />
@@ -250,7 +255,7 @@ const NotificationSettings: React.FC = () => {
                             <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/30">
                                 <Label className="text-sm">New Collaborators</Label>
                                 <Switch
-
+                                    disabled={saving}
                                     checked={settings.collaboration_new_collaborator}
                                     onCheckedChange={(checked) => handleToggle("collaboration_new_collaborator", checked)}
                                 />
@@ -258,7 +263,7 @@ const NotificationSettings: React.FC = () => {
                             <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/30">
                                 <Label className="text-sm">Permission Updates</Label>
                                 <Switch
-
+                                    disabled={saving}
                                     checked={settings.collaboration_permission_changes}
                                     onCheckedChange={(checked) => handleToggle("collaboration_permission_changes", checked)}
                                 />
@@ -305,6 +310,7 @@ const NotificationSettings: React.FC = () => {
                                 <p className="text-xs text-blue-700">Silence notifications during specific times.</p>
                             </div>
                             <Switch
+                                disabled={saving}
                                 checked={settings.quiet_hours_enabled}
                                 onCheckedChange={(checked) => handleToggle("quiet_hours_enabled", checked)}
                                 className="data-[state=checked]:bg-blue-600"

@@ -23,7 +23,7 @@ export const CitationStyleDialog: React.FC<CitationStyleDialogProps> = ({
     currentStyle,
     onSave
 }) => {
-    const [selectedStyle, setSelectedStyle] = useState<string>(currentStyle || "APA");
+    const selectedStyle = currentStyle || "APA";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

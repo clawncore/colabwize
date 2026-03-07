@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, CheckCircle, AlertTriangle, XCircle, HelpCircle, FileText, ExternalLink, Target, Search } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertTriangle, XCircle, HelpCircle, ExternalLink, Target, Search } from "lucide-react";
 
 interface CitationAuditReportPanelProps {
     report: any; // AuditReport type

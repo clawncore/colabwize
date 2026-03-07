@@ -25,18 +25,20 @@ import {
   Microscope,
   PlusSquare,
   ChevronRight,
-  History,
-  Map,
+  AlertTriangle,
+  Shield,
+  Search,
+  FileWarning,
+  ShieldCheck,
+  Scale,
   FileText,
   BookOpen,
   PenTool,
-  Search,
-  Database,
-  BarChart2,
-  GitBranch,
-  Layers,
-  Layout,
-  Table as TableIcon,
+  Settings,
+  Trash2,
+  Users,
+  History,
+  Map
 } from "lucide-react";
 import { SearchAlertsPanel } from "./SearchAlertsPanel";
 import { AIProbabilityHeatmap } from "../originality/AIProbabilityHeatmap";
@@ -226,7 +228,7 @@ const EditorWorkspacePage: React.FC = () => {
 
   const handleProjectUpdate = React.useCallback((updatedProject: Project) => {
     setSelectedProject(updatedProject);
-  }, []);
+  }, [selectedProject]);
 
   const reloadProjectCitations = React.useCallback(async () => {
     if (!selectedProject) return;

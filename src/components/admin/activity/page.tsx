@@ -11,8 +11,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import {
   Loader2,
-  FileText,
-  Trash2,
   Logs,
 } from "lucide-react";
 import WorkspaceService from "../../../services/workspaceService";
