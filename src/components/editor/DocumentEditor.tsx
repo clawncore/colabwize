@@ -33,7 +33,11 @@ import "../../styles/image-styles.css";
 import "../../styles/column-styles.css";
 import { useToast } from "../../hooks/use-toast";
 import { TableBubbleMenu } from "./TableBubbleMenu";
-import { AuthorshipCertificateAdapter, RephraseAdapter, CitationAuditAdapter } from "./adapters";
+import {
+  AuthorshipCertificateAdapter,
+  RephraseAdapter,
+  CitationAuditAdapter,
+} from "./adapters";
 import { CitationNode } from "../../extensions/CitationNode";
 import { UpgradeModal } from "../subscription/UpgradeModal";
 import { CitationStyleDialog } from "../citations/CitationStyleDialog";
@@ -126,10 +130,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [collabStatus, setCollabStatus] = useState<string>("disconnected");
   const [isSynced, setIsSynced] = useState(false);
   const [collabError, setCollabError] = useState<string | null>(null);
-  // Source & Research State
-  // const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
-  // const [matrixMode, setMatrixMode] = useState<"split" | "full">("split");
-  // const [visualMapMode, setVisualMapMode] = useState<"graph" | "heatmap" | "full" | "split">("graph");
   const isSyncedRef = useRef(false);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -315,12 +315,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const startTimeRef = useRef<Date>(new Date());
 
   // Pipeline results state
-  const [lastScanResult, setLastScanResult] = useState<any>(lastAuditReport || null);
+  const [lastScanResult, setLastScanResult] = useState<any>(
+    lastAuditReport || null,
+  );
   const [citationSuggestions] = useState<any[]>([]);
 
   // Dialog / Modal States
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [isComparisonSelectorOpen, setIsComparisonSelectorOpen] = useState(false);
+  const [isComparisonSelectorOpen, setIsComparisonSelectorOpen] =
+    useState(false);
   const [isExportWorkflowOpen, setIsExportWorkflowOpen] = useState(false);
   const [editCount, setEditCount] = useState(0);
   const hasInitializedContentRef = useRef(false);
@@ -371,7 +374,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               AuthorshipExtension.configure({
                 user: {
                   id: user?.id,
-                  name: user?.user_metadata?.full_name || user?.email || "Anonymous",
+                  name:
+                    user?.user_metadata?.full_name ||
+                    user?.email ||
+                    "Anonymous",
                   color: cursorColor,
                 },
               } as any),
@@ -571,8 +577,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             setTimeout(async () => {
               if (editor && !editor.isDestroyed) {
                 try {
-                  const { detectAndNormalizeBibliography, detectAndNormalizeCitations } =
-                    await import("./utils/normalization");
+                  const {
+                    detectAndNormalizeBibliography,
+                    detectAndNormalizeCitations,
+                  } = await import("./utils/normalization");
                   await detectAndNormalizeBibliography(editor, project.id);
                   await detectAndNormalizeCitations(
                     editor,
@@ -630,7 +638,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           (window as any).__currentProjectId__ = project.id;
 
           import("./utils/normalization").then(
-            async ({ detectAndNormalizeBibliography, detectAndNormalizeCitations }) => {
+            async ({
+              detectAndNormalizeBibliography,
+              detectAndNormalizeCitations,
+            }) => {
               try {
                 // Await sequentially instead of Promise.all to avoid conflicting offset math
                 await detectAndNormalizeBibliography(editor, project.id);
@@ -661,10 +672,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     const timer = setTimeout(async () => {
       console.log("ðŸ“  Running debounced normalization (post-edit)...");
       try {
-        const { detectAndNormalizeBibliography, detectAndNormalizeCitations } = await import("./utils/normalization");
+        const { detectAndNormalizeBibliography, detectAndNormalizeCitations } =
+          await import("./utils/normalization");
         await Promise.all([
-          detectAndNormalizeCitations(editor, project.id, project.citations || []),
-          detectAndNormalizeBibliography(editor, project.id)
+          detectAndNormalizeCitations(
+            editor,
+            project.id,
+            project.citations || [],
+          ),
+          detectAndNormalizeBibliography(editor, project.id),
         ]);
       } catch (err) {
         console.error("Debounced normalization failed", err);
@@ -851,7 +867,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [editor, isEditorMounted, project.citation_style, onProjectUpdate, toast, project]);
+  }, [
+    editor,
+    isEditorMounted,
+    project.citation_style,
+    onProjectUpdate,
+    toast,
+    project,
+  ]);
 
   const statsRef = useRef({
     timeSpent: 0,
@@ -1339,7 +1362,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
-                  onClick={() => setIsExportWorkflowOpen(true)}>
+                  onClick={() => setIsExportWorkflowOpen(true)}
+                  data-tour="export-menu">
                   <Download className="w-4 h-4" />
                   Export
                 </button>
@@ -1423,7 +1447,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 if (editor && !editor.isDestroyed && isViewReady(editor)) {
                   const target = e.target as HTMLElement;
                   const isProseMirror = target.closest(".ProseMirror");
-                  if (!isProseMirror) {
+                  if (!isProseMirror && editor.isEmpty) {
                     e.preventDefault();
                     editor.commands.focus("end");
                   }
@@ -1502,7 +1526,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 })
               }
               className="px-4 py-2 border border-purple-200 bg-purple-50 text-purple-700 rounded-md text-sm font-medium hover:bg-purple-100 transition-colors flex items-center gap-2"
-              title="AI Integrity Assistant">
+              title="AI Integrity Assistant"
+              data-tour="ai-copilot">
               <Bot className="w-4 h-4" />
               Ask Integrity AI
             </button>
@@ -1532,22 +1557,16 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         )}
 
         {/* Reality Check Manual Trigger */}
-        {lastScanResult && (
+        {lastScanResult?.realityCheck && (
           <div className="fixed top-20 right-4 z-50">
             <button
               onClick={() => {
-                if (onOpenPanel) {
-                  const stats = lastScanResult.realityCheck || {
-                    referencePercent: 45,
-                    commonPhrasePercent: 12,
-                    trustScore: 85,
-                    message: "Good citation practice detected.",
-                  };
-                  onOpenPanel("reality-check", stats);
+                if (onOpenPanel && lastScanResult.realityCheck) {
+                  onOpenPanel("reality-check", lastScanResult.realityCheck);
                 }
               }}
               className="bg-white/90 backdrop-blur border border-indigo-100 shadow-sm px-3 py-1.5 rounded-full text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center gap-1.5">
-              <span>ðŸ›¡ï¸ Reality Check</span>
+              <span>Reality Check</span>
             </button>
           </div>
         )}

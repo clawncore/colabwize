@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 import { Download, Loader2, AlertTriangle } from "lucide-react";
 import { apiClient } from "../../services/apiClient";
 import { Project } from "../../services/documentService";
@@ -40,12 +46,12 @@ export const ExportFormatModal: React.FC<ExportFormatModalProps> = ({
       // Check if any results indicate potential self-plagiarism
       const hasSelfPlagiarismRisk = selfPlagiarismResults.some(
         (result) =>
-          result.isSelfPlagiarismInternal && result.similarityScore > 20
+          result.isSelfPlagiarismInternal && result.similarityScore > 20,
       );
 
       if (hasSelfPlagiarismRisk) {
         const confirmExport = window.confirm(
-          `Warning: Potential self-plagiarism detected. Some content matches your previous work. Are you sure you want to export this document?\n\nClick OK to continue with export, or Cancel to review.`
+          `Warning: Potential self-plagiarism detected. Some content matches your previous work. Are you sure you want to export this document?\n\nClick OK to continue with export, or Cancel to review.`,
         );
 
         if (!confirmExport) {
@@ -129,12 +135,12 @@ export const ExportFormatModal: React.FC<ExportFormatModalProps> = ({
 
       const results = await OriginalityService.checkSelfPlagiarism(
         contentText,
-        project.id
+        project.id,
       );
 
       if (results.length > 0) {
         const riskyMatches = results.filter(
-          (r) => r.isSelfPlagiarismInternal && r.similarityScore > 20
+          (r) => r.isSelfPlagiarismInternal && r.similarityScore > 20,
         );
         if (riskyMatches.length > 0) {
           toast({
@@ -207,6 +213,9 @@ export const ExportFormatModal: React.FC<ExportFormatModalProps> = ({
             <Download className="w-5 h-5" />
             Select Export Format
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Choose the file format for your document export.
+          </DialogDescription>
         </DialogHeader>
 
         {/* Self-Plagiarism Guard */}

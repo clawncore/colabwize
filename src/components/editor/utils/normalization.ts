@@ -9,7 +9,11 @@ export function isLikelyCitation(text: string): boolean {
   if (cleanText.length < 40) return false;
 
   // FAST BAILOUT: If it doesn't contain a citation year pattern or typical citation characters, skip it
-  if (!cleanText.includes("(") && !cleanText.includes("[") && !cleanText.match(/\d{4}/)) {
+  if (
+    !cleanText.includes("(") &&
+    !cleanText.includes("[") &&
+    !cleanText.match(/\d{4}/)
+  ) {
     return false;
   }
 
@@ -26,16 +30,17 @@ export function isLikelyCitation(text: string): boolean {
     }
   }
 
-  // IEEE style check: starts with [1]
-  if (/^\[\d+\]\s/.test(cleanText)) return true;
+  // Numbered list style: "1. Author" or "[1] Author"
+  if (/^(?:\[\d+\]|\d+\.)\s/.test(cleanText)) return true;
 
-  // APA/Harvard style check:
-  // Must be Author Name, Initials. (Year).
-  // e.g. Smith, J. (2020)
+  // APA/Harvard/Chicago style check:
+  // Must be Author Name, Initials. (Year). or Author (Year)
   if (
     /^[A-Z][a-zÀ-ÿ-]+,\s*(?:[A-Z]\.\s*)+(?:(?:&|and)\s*[A-Z][a-zÀ-ÿ-]+,\s*(?:[A-Z]\.\s*)+)*\(\d{4}[a-z]?\)/.test(
       cleanText.substring(0, 100),
-    )
+    ) ||
+    /^[A-Z][a-zÀ-ÿ-]+.*?\(\d{4}\)/.test(cleanText.substring(0, 100)) ||
+    /^[A-Z][a-zÀ-ÿ-]+.*?\([^0-9]+\)/.test(cleanText.substring(0, 100))
   )
     return true;
 
@@ -86,7 +91,6 @@ export function isLikelyCitation(text: string): boolean {
   return matches >= 2;
 }
 
-
 /**
  * Parse author and year from an in-text citation like "(Smith, 2023)" or "(Smith et al., 2023)".
  */
@@ -104,7 +108,10 @@ function parseInTextCitation(
     const year = match[2];
 
     // Extract first logical word of author part (handle "Smith et al" -> "Smith")
-    const surname = authorPart.split(/\s+/)[0].replace(/[.,]/g, "").toLowerCase();
+    const surname = authorPart
+      .split(/\s+/)[0]
+      .replace(/[.,]/g, "")
+      .toLowerCase();
 
     // Basic validation to avoid false positives (e.g. just a date range)
     if (surname.length >= 2 && isNaN(Number(surname))) {
@@ -133,14 +140,19 @@ function findRegistryMatchForInText(
       const entryTitle = (entry.sourceTitle || entry.title || "").toLowerCase();
 
       // Check year first
-      const yearMatch = entryYear === year || raw.includes(`(${year})`) || raw.includes(` ${year}`) || raw.endsWith(year);
+      const yearMatch =
+        entryYear === year ||
+        raw.includes(`(${year})`) ||
+        raw.includes(` ${year}`) ||
+        raw.endsWith(year);
       if (!yearMatch) return false;
 
       // Check author surname
       const authorMatch =
         raw.includes(author) ||
         entryTitle.includes(author) ||
-        (entry.authors && entry.authors.some((a: string) => a.toLowerCase().includes(author)));
+        (entry.authors &&
+          entry.authors.some((a: string) => a.toLowerCase().includes(author)));
 
       return authorMatch;
     }) || null
@@ -158,7 +170,8 @@ export async function detectAndNormalizeCitations(
 ) {
   if (!editor || !editor.isEditable) return;
 
-  const { CitationRegistryService } = await import("../../../services/CitationRegistryService");
+  const { CitationRegistryService } =
+    await import("../../../services/CitationRegistryService");
   CitationRegistryService.loadRegistry(projectId, availableCitations);
 
   // --- Phase 1: Collect unique citation texts (Allows document positions to shift while we wait) ---
@@ -167,10 +180,14 @@ export async function detectAndNormalizeCitations(
   editor.state.doc.descendants((node) => {
     if (stopScanningPhase1) return false;
 
-    if (node.type.name === "heading" || node.type.name === "paragraph" || node.type.name === "bibliographyEntry") {
+    if (
+      node.type.name === "heading" ||
+      node.type.name === "paragraph" ||
+      node.type.name === "bibliographyEntry"
+    ) {
       const text = node.textContent.toLowerCase().trim();
-      const isRefBoundary = 
-        node.type.name === "bibliographyEntry" || 
+      const isRefBoundary =
+        node.type.name === "bibliographyEntry" ||
         /references|bibliography|works cited|reference list/i.test(text);
 
       if (isRefBoundary) {
@@ -204,7 +221,10 @@ export async function detectAndNormalizeCitations(
       registrationMap.set(text, matched);
     } else {
       try {
-        const entry = await CitationRegistryService.registerCitation(projectId, text);
+        const entry = await CitationRegistryService.registerCitation(
+          projectId,
+          text,
+        );
         registrationMap.set(text, entry);
       } catch (err) {
         console.error(`Failed to register: ${text}`, err);
@@ -216,17 +236,25 @@ export async function detectAndNormalizeCitations(
   // Re-scan from the *freshest* state to get perfectly accurate positions that haven't shifted.
   let ieeeCount = 0;
   let apaCount = 0;
+  let mlaCount = 0;
+  let chicagoCount = 0;
+
   const currentDoc = editor.state.doc;
-  const citationsToReplace: Array<{ from: number; to: number; text: string }> = [];
+  const citationsToReplace: Array<{ from: number; to: number; text: string }> =
+    [];
 
   let stopScanningPhase3 = false;
   currentDoc.descendants((node, pos) => {
     if (stopScanningPhase3) return false;
 
-    if (node.type.name === "heading" || node.type.name === "paragraph" || node.type.name === "bibliographyEntry") {
+    if (
+      node.type.name === "heading" ||
+      node.type.name === "paragraph" ||
+      node.type.name === "bibliographyEntry"
+    ) {
       const text = node.textContent.toLowerCase().trim();
-      const isRefBoundary = 
-        node.type.name === "bibliographyEntry" || 
+      const isRefBoundary =
+        node.type.name === "bibliographyEntry" ||
         /references|bibliography|works cited|reference list/i.test(text);
 
       if (isRefBoundary) {
@@ -241,16 +269,21 @@ export async function detectAndNormalizeCitations(
 
       // CRITICAL: Skip leading IEEE markers like [1] at the start of a paragraph
       // These are reference definitions, not in-text citations.
-      const isParaStart = pos === 0 || currentDoc.resolve(pos).parentOffset === 0;
+      const isParaStart =
+        pos === 0 || currentDoc.resolve(pos).parentOffset === 0;
       const text = node.text;
-      
+
       const matches = extractPatterns(text, 0, "structural");
       matches.forEach((match) => {
         // Special Case: If it's the very first thing in the paragraph and matches [1], skip it
-        if (isParaStart && match.start === 0 && match.text.match(/^\[\d+\]/)) return;
+        if (isParaStart && match.start === 0 && match.text.match(/^\[\d+\]/))
+          return;
 
         if (match.text.match(/^\[\d+(?:-\d+)?\]/)) ieeeCount++;
-        else if (match.text.match(/^\(.*\d{4}.*\)/)) apaCount++;
+        else if (match.text.match(/^\(.*\d{4}[a-z]?.*\)/)) {
+          if (match.text.includes(",")) apaCount++;
+          else chicagoCount++;
+        } else if (match.text.match(/^\([^0-9]+\)$/)) mlaCount++;
 
         const absoluteFrom = pos + match.start;
         const absoluteTo = pos + match.end;
@@ -261,12 +294,20 @@ export async function detectAndNormalizeCitations(
         });
 
         // Prevent duplicate matching if multiple regex patterns caught the exact same string
-        const isOverlapping = citationsToReplace.some(c =>
-          Math.max(absoluteFrom, c.from) < Math.min(absoluteTo, c.to)
+        const isOverlapping = citationsToReplace.some(
+          (c) => Math.max(absoluteFrom, c.from) < Math.min(absoluteTo, c.to),
         );
 
-        if (!alreadyCited && !isOverlapping && registrationMap.has(match.text)) {
-          citationsToReplace.push({ from: absoluteFrom, to: absoluteTo, text: match.text });
+        if (
+          !alreadyCited &&
+          !isOverlapping &&
+          registrationMap.has(match.text)
+        ) {
+          citationsToReplace.push({
+            from: absoluteFrom,
+            to: absoluteTo,
+            text: match.text,
+          });
         }
       });
     }
@@ -296,14 +337,23 @@ export async function detectAndNormalizeCitations(
     try {
       if (editor.view && editor.view.dom) {
         editor.view.dispatch(tr);
-        console.log(`✅ Atomic Normalization: ${citationsToReplace.length} items.`);
+        console.log(
+          `✅ Atomic Normalization: ${citationsToReplace.length} items.`,
+        );
       }
     } catch (e) {
       console.error("Atomic transaction failed", e);
     }
   }
 
-  return { stats: { ieee: ieeeCount, apa: apaCount } };
+  return {
+    stats: {
+      ieee: ieeeCount,
+      apa: apaCount,
+      mla: mlaCount,
+      chicago: chicagoCount,
+    },
+  };
 }
 
 /**
@@ -393,15 +443,25 @@ export async function scanAndIngestReferences(
   // Removed headingsToConvert logic to prevent automatic heading distortion
 
   for (const text of refLines) {
-    // Better metadata detection for manual ingest
-    const authorMatch = text.match(/^([A-Z][a-zÀ-ÿ-]+(?:,\s*[A-Z]\.)*)/);
-    const roughYearMatch = text.match(/\((\d{4}[a-z]?)\)/);
-    const roughTitleMatch = text.match(/\)\.\s*(.+?)(?=\.\s*[A-Z]|\.\s*https?|$)/);
+    // Better metadata detection for manual ingest (IEEE and APA)
+    // IEEE: [1] Author, "Title", Journal, Year.
+    // APA: Author, A. A. (Year). Title. Journal.
+    const ieeeMatch = text.match(/^\[\d+\]\s+([^,"]+)/);
+    const apaMatch = text.match(/^([A-Z][a-zÀ-ÿ-]+(?:,\s*[A-Z]\.)*)/);
+
+    const authorMatch = ieeeMatch || apaMatch;
+    const roughYearMatch =
+      text.match(/\((\d{4}[a-z]?)\)/) ||
+      text.match(/,\s*(\d{4})\./) ||
+      text.match(/\s(\d{4})$/);
+    const roughTitleMatch =
+      text.match(/"([^"]+)"/) ||
+      text.match(/\)\.\s*(.+?)(?=\.\s*[A-Z]|\.\s*https?|$)/);
 
     const record = {
       id: `manual-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       title: roughTitleMatch
-        ? roughTitleMatch[1].trim().replace(/\.$/, '')
+        ? (roughTitleMatch[1] || roughTitleMatch[0]).trim().replace(/\.$/, "")
         : text.substring(0, 50),
       authors: authorMatch ? [authorMatch[1].trim()] : ["Unknown"],
       year: roughYearMatch
@@ -432,7 +492,7 @@ export async function scanAndIngestReferences(
         newCitations.push(newCitation);
         existingIds.add(record.id);
         if (roughTitle) existingTitles.add(roughTitle);
-      } catch (err) { }
+      } catch (err) {}
     } else {
       await CitationRegistryService.registerCitation(projectId, text);
     }
@@ -525,7 +585,7 @@ export async function synchronizeRegistryWithDocument(
     tr.setMeta("normalization", true);
     try {
       if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-    } catch (e) { }
+    } catch (e) {}
     recoveredCount++;
   }
 
@@ -549,7 +609,7 @@ export async function synchronizeRegistryWithDocument(
     tr.setMeta("normalization", true);
     try {
       if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-    } catch (e) { }
+    } catch (e) {}
     recoveredCount++;
   }
 
@@ -591,7 +651,8 @@ export async function detectAndNormalizeBibliography(
         }
       }
 
-      const isTextNode = node.type.name === "paragraph" || node.type.name === "listItem";
+      const isTextNode =
+        node.type.name === "paragraph" || node.type.name === "listItem";
       if (isTextNode) {
         allParagraphs.push({ pos, node, text: node.textContent.trim() });
       }
@@ -615,7 +676,8 @@ export async function detectAndNormalizeBibliography(
     // Smart heuristic fallback if no specific heading was found
     if (!inRefSection && entries.length === 0) {
       let consecutiveCitations = 0;
-      const heuristicEntries: Array<{ pos: number; node: any; text: string }> = [];
+      const heuristicEntries: Array<{ pos: number; node: any; text: string }> =
+        [];
 
       // Scan bottom-up
       for (let i = allParagraphs.length - 1; i >= 0; i--) {
@@ -662,10 +724,10 @@ export async function detectAndNormalizeBibliography(
       const urlMatch = item.text.match(urlRegex);
       if (urlMatch) {
         let url = urlMatch[0];
-        url = url.replace(/[.,;:!?]+$/, '');
+        url = url.replace(/[.,;:!?]+$/, "");
 
         // Handle balanced parentheses
-        if (url.endsWith(')')) {
+        if (url.endsWith(")")) {
           const openCount = (url.match(/\(/g) || []).length;
           const closeCount = (url.match(/\)/g) || []).length;
           if (closeCount > openCount) {
@@ -686,7 +748,7 @@ export async function detectAndNormalizeBibliography(
       const currentNode = currentDoc.nodeAt(item.pos);
 
       if (!currentNode) continue; // node moved or deleted while awaiting
-      if (currentNode.type.name === 'bibliographyEntry') continue; // already converted
+      if (currentNode.type.name === "bibliographyEntry") continue; // already converted
 
       const schema = editor.state.schema;
       if (!schema.nodes.bibliographyEntry) break;
@@ -695,16 +757,21 @@ export async function detectAndNormalizeBibliography(
       currentNode.content.forEach((n: any) => childNodes.push(n));
 
       // Append clickable link if URL/DOI exists and is not already visibly printed in the text
-      const entryUrl = instUrl || (instDoi ? `https://doi.org/${instDoi}` : null);
+      const entryUrl =
+        instUrl || (instDoi ? `https://doi.org/${instDoi}` : null);
       if (entryUrl && !item.text.includes("http")) {
         childNodes.push(schema.text(" "));
-        const linkMarks = schema.marks.link ? [schema.marks.link.create({ href: entryUrl, target: '_blank' })] : undefined;
+        const linkMarks = schema.marks.link
+          ? [schema.marks.link.create({ href: entryUrl, target: "_blank" })]
+          : undefined;
         childNodes.push(schema.text(entryUrl, linkMarks));
       }
 
       // First try to find if we already know the real UUID for this text
       const allCitations = CitationRegistryService.getAllCitations();
-      let matched = allCitations.find(c => c.raw_reference_text === item.text);
+      let matched = allCitations.find(
+        (c) => c.raw_reference_text === item.text,
+      );
       if (!matched) {
         matched = CitationRegistryService.registerTempCitation(item.text);
       }
@@ -717,7 +784,7 @@ export async function detectAndNormalizeBibliography(
           doi: instDoi,
           refText: item.text,
         },
-        childNodes
+        childNodes,
       );
 
       const tr = editor.state.tr;
@@ -731,33 +798,51 @@ export async function detectAndNormalizeBibliography(
       normalizedCount++;
 
       // Trigger background registry update silently (no await blocking!)
-      CitationRegistryService.registerCitation(projectId, item.text).then((entry) => {
-        // If we used a temp ID, we need to update all nodes referencing it with the real ID
-        if (tempCitationId.startsWith("temp_") && entry && (entry.ref_key || (entry as any).id)) {
-          const realId = entry.ref_key || (entry as any).id;
-          if (editor.view && editor.state) {
-            const updateTr = editor.state.tr;
-            let hasUpdates = false;
-            editor.state.doc.descendants((n, p) => {
-              if ((n.type.name === 'bibliographyEntry' || n.type.name === 'citation') && n.attrs.citationId === tempCitationId) {
-                updateTr.setNodeMarkup(p, null, { ...n.attrs, citationId: realId });
-                hasUpdates = true;
+      CitationRegistryService.registerCitation(projectId, item.text)
+        .then((entry) => {
+          // If we used a temp ID, we need to update all nodes referencing it with the real ID
+          if (
+            tempCitationId.startsWith("temp_") &&
+            entry &&
+            (entry.ref_key || (entry as any).id)
+          ) {
+            const realId = entry.ref_key || (entry as any).id;
+            if (editor.view && editor.state) {
+              const updateTr = editor.state.tr;
+              let hasUpdates = false;
+              editor.state.doc.descendants((n, p) => {
+                if (
+                  (n.type.name === "bibliographyEntry" ||
+                    n.type.name === "citation") &&
+                  n.attrs.citationId === tempCitationId
+                ) {
+                  updateTr.setNodeMarkup(p, null, {
+                    ...n.attrs,
+                    citationId: realId,
+                  });
+                  hasUpdates = true;
+                }
+              });
+              if (hasUpdates) {
+                updateTr.setMeta("normalization", true);
+                updateTr.setMeta("addToHistory", false);
+                editor.view.dispatch(updateTr);
               }
-            });
-            if (hasUpdates) {
-              updateTr.setMeta("normalization", true);
-              updateTr.setMeta("addToHistory", false);
-              editor.view.dispatch(updateTr);
             }
           }
-        }
-      }).catch(e => console.error("Silent registry failure", e));
+        })
+        .catch((e) => console.error("Silent registry failure", e));
     } catch (error) {
-      console.error("[BibNormalize] Failed to convert:", item.text.substring(0, 40));
+      console.error(
+        "[BibNormalize] Failed to convert:",
+        item.text.substring(0, 40),
+      );
     }
   }
 
   if (normalizedCount > 0) {
-    console.log(`✅ [BibNormalize] Converted ${normalizedCount} bibliography entries to interactive nodes.`);
+    console.log(
+      `✅ [BibNormalize] Converted ${normalizedCount} bibliography entries to interactive nodes.`,
+    );
   }
 }

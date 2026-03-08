@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { Editor } from "@tiptap/core";
 import { extractPatterns } from "./patterns";
+import { parseReferenceText } from "../../utils/citationFormatter";
 
 export interface ReferenceRecord {
   id: string; // "greenberg2009"
@@ -145,7 +146,7 @@ export class CitationNormalizer {
 
       try {
         if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-      } catch (e) { }
+      } catch (e) {}
     }
 
     return {
@@ -166,7 +167,7 @@ export class CitationNormalizer {
       await import("../CitationRegistryService");
 
     for (const ref of referenceList.entries) {
-      const parsed = CitationNormalizer.parseReference(ref.rawText);
+      const parsed = parseReferenceText(ref.rawText);
       if (!parsed) continue;
 
       try {
@@ -198,45 +199,6 @@ export class CitationNormalizer {
   }
 
   /**
-   * Parse a single reference string into a record
-   */
-  public static parseReference(text: string): ReferenceRecord | null {
-    // Pattern: Start of string -> Authors -> (Year) or Year.
-    const yearMatch = text.match(/\((\d{4})\)/) || text.match(/\b(\d{4})\./);
-    if (!yearMatch) return null;
-
-    const year = parseInt(yearMatch[1]);
-    const preYearText = text.substring(0, yearMatch.index).trim();
-    const postYearText = text
-      .substring(yearMatch.index! + yearMatch[0].length)
-      .trim();
-
-    // Extract DOI/URL
-    const doiMatch = text.match(/10\.\d{4,9}\/[-._;()/:A-Za-z0-9]+/);
-    const urlMatch = text.match(/https?:\/\/[^\s]+|www\.[^\s]+/);
-
-    // Extract primary author for ID generation
-    // "Ioannidis, J. P. A." -> "Ioannidis"
-    let primaryAuthor = preYearText.split(/,|\.|&/)[0].trim();
-    // Clean author name for ID (take only alpha part of first word)
-    const authorIdPart = primaryAuthor
-      .split(/\s/)[0]
-      .replace(/[^a-zA-Z]/g, "")
-      .toLowerCase();
-
-    // Generate ID
-    const id = `${authorIdPart}${year}`;
-
-    return {
-      id,
-      authors: [primaryAuthor],
-      year,
-      rawText: text,
-      title: postYearText.split(/\.|\?|!/)[0].trim() || "Untitled",
-    };
-  }
-
-  /**
    * Step 2: Detect Candidates (Refined)
    */
   private detectCandidates(
@@ -249,32 +211,37 @@ export class CitationNormalizer {
     const patterns = extractPatterns(text, absolutePos);
 
     for (const pattern of patterns) {
-      // Only process AUTHOR_YEAR or similar patterns, skip NUMERIC if not relevant (or handle appropriately)
-      if (
-        pattern.patternType === "AUTHOR_YEAR" ||
-        pattern.patternType === "et_al_with_period" ||
-        pattern.patternType === "et_al_no_period"
-      ) {
-        // Extract Year and Author from the matched text
-        const textStr = pattern.text;
-        const yearMatch = textStr.match(/(\d{4})/);
+      const textStr = pattern.text;
 
-        if (yearMatch) {
-          const year = parseInt(yearMatch[1]);
-          // Clean text to get author: "(Greenberg, 2009)" -> "Greenberg"
-          let authorText = textStr
-            .replace(/[()]/g, "") // remove parens
-            .replace(year.toString(), "") // remove year
-            .replace(/,/g, "") // remove commas
-            .trim();
-
-          // Handle "et al"
-          if (authorText.includes("et al")) {
-            authorText = authorText.split("et al")[0].trim();
-          }
-
+      if (pattern.patternType === "NUMERIC") {
+        // IEEE Match
+        const numMatch = textStr.match(/\d+/);
+        if (numMatch) {
           candidates.push({
-            text: pattern.text, // The full match to replace
+            text: textStr,
+            start: pattern.start,
+            end: pattern.end,
+            year: 0, // Year not needed for numeric matching by ID
+            authors: [numMatch[0]], // Use number as "author" for matching logic
+            isAmbiguous: false,
+          });
+        }
+      } else {
+        // APA, MLA, Chicago
+        const yearMatch = textStr.match(/(\d{4})/);
+        const year = yearMatch ? parseInt(yearMatch[1]) : 0;
+
+        // Clean text to get author: "(Greenberg, 2009)" -> "Greenberg" or "(Smith)" -> "Smith"
+        let authorText = textStr
+          .replace(/[()\[\]]/g, "") // remove parens/brackets
+          .replace(/\d{4}/g, "") // remove year
+          .replace(/,/g, "") // remove commas
+          .replace(/et al\.?/g, "") // remove et al
+          .trim();
+
+        if (authorText) {
+          candidates.push({
+            text: textStr,
             start: pattern.start,
             end: pattern.end,
             year: year,
@@ -299,9 +266,15 @@ export class CitationNormalizer {
     const candidateAuthor = candidate.authors[0].toLowerCase();
     const year = candidate.year;
 
-    // Find all records matching the year
+    // 1. Numeric Match (IEEE)
+    if (year === 0 && /^\d+$/.test(candidateAuthor)) {
+      const record = this.referenceIndex.get(candidateAuthor);
+      if (record) return { id: record.id, score: 1.0, record };
+    }
+
+    // 2. Author-Year or Author Match
     const potentialMatches = Array.from(this.referenceIndex.values()).filter(
-      (r) => r.year === year,
+      (r) => year === 0 || r.year === year || r.year === 0,
     );
 
     let bestMatch: ReferenceRecord | null = null;

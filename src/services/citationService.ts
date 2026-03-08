@@ -64,7 +64,8 @@ export interface StoredCitation {
   impactFactor?: string | number; // Added based on usage
   openAccess?: boolean; // Added based on usage
   raw_reference_text?: string; // Added to fix property missing error
-  formatted_citations?: Record<string, string>;
+  formatted_citations?: any;
+  publisher?: string;
   added_at?: string;
   themes?: string[];
   matrix_notes?: string;
@@ -79,12 +80,12 @@ export class CitationService {
   static async findMissingLink(
     projectId: string,
     keywords: string[],
-    field: string = "default"
+    field: string = "default",
   ): Promise<SuggestedPaper[]> {
     try {
       const response = await apiClient.post(
         "/api/citations/find-missing-link",
-        { projectId, keywords, field }
+        { projectId, keywords, field },
       );
 
       return response.suggestions;
@@ -101,7 +102,7 @@ export class CitationService {
     try {
       console.log("[CitationService] Searching for papers:", query);
       const response = await apiClient.get(
-        `/api/citations/search?q=${encodeURIComponent(query)}`
+        `/api/citations/search?q=${encodeURIComponent(query)}`,
       );
 
       console.log("[CitationService] Search response:", response);
@@ -124,11 +125,11 @@ export class CitationService {
    */
   static async getConfidenceAnalysis(
     projectId: string,
-    field: string = "default"
+    field: string = "default",
   ): Promise<CitationConfidenceAnalysis> {
     try {
       const response = await apiClient.get(
-        `/api/citations/confidence/${projectId}?field=${encodeURIComponent(field)}`
+        `/api/citations/confidence/${projectId}?field=${encodeURIComponent(field)}`,
       );
 
       return response.data;
@@ -143,11 +144,11 @@ export class CitationService {
    */
   static async getRecencyAnalysis(
     projectId: string,
-    field: string = "default"
+    field: string = "default",
   ): Promise<RecencyAnalysis> {
     try {
       const response = await apiClient.get(
-        `/api/citations/recency/${projectId}?field=${encodeURIComponent(field)}`
+        `/api/citations/recency/${projectId}?field=${encodeURIComponent(field)}`,
       );
 
       return response.data;
@@ -190,7 +191,7 @@ export class CitationService {
       abstract?: string;
       citationCount?: number;
       tags?: string[];
-    }
+    },
   ): Promise<any> {
     try {
       // Generate precomputed citations
@@ -205,7 +206,7 @@ export class CitationService {
         pages: citation.pages,
         doi: citation.doi,
         url: citation.url,
-        source: citation.source
+        source: citation.source,
       });
 
       const response = await apiClient.post(`/api/citations/${projectId}`, {
@@ -224,7 +225,7 @@ export class CitationService {
         abstract: citation.abstract,
         formatted_citations: formattedCitations,
         added_at: new Date().toISOString(),
-        tags: citation.tags
+        tags: citation.tags,
       });
 
       return response;
@@ -239,7 +240,7 @@ export class CitationService {
    */
   static async scanContent(
     content: string,
-    projectId?: string
+    projectId?: string,
   ): Promise<{
     suggestions: {
       sentence: string;
@@ -247,7 +248,11 @@ export class CitationService {
       type: "factual_claim" | "definition" | "statistic";
     }[];
     matchCount: number;
-    scanStatus: "success" | "quota_exceeded" | "subscription_error" | "network_error";
+    scanStatus:
+      | "success"
+      | "quota_exceeded"
+      | "subscription_error"
+      | "network_error";
     errorMessage?: string;
   }> {
     try {
@@ -258,7 +263,7 @@ export class CitationService {
 
       return {
         ...response.data,
-        scanStatus: "success"
+        scanStatus: "success",
       };
     } catch (error: any) {
       console.error("Error scanning content:", error);
@@ -266,21 +271,30 @@ export class CitationService {
       // Handle specific error types
       if (error.response?.status === 403) {
         if (error.message?.includes("usage limit")) {
-          const quotaError = new Error("Citation check usage limit reached. Please upgrade your plan.");
+          const quotaError = new Error(
+            "Citation check usage limit reached. Please upgrade your plan.",
+          );
           (quotaError as any).type = "quota_exceeded";
           (quotaError as any).used = error.response.data?.used;
           (quotaError as any).limit = error.response.data?.limit;
           (quotaError as any).resetTime = error.response.data?.resetTime;
           throw quotaError;
         } else {
-          const subscriptionError = new Error("Subscription verification failed. Please check your account.");
+          const subscriptionError = new Error(
+            "Subscription verification failed. Please check your account.",
+          );
           (subscriptionError as any).type = "subscription_error";
           (subscriptionError as any).details = error.response.data;
           throw subscriptionError;
         }
-      } else if (error.code === "ERR_NETWORK" || error.message?.includes("network")) {
+      } else if (
+        error.code === "ERR_NETWORK" ||
+        error.message?.includes("network")
+      ) {
         // Fallback simulation when backend is offline
-        console.log("🔧 Backend offline - simulating citation scan for testing");
+        console.log(
+          "🔧 Backend offline - simulating citation scan for testing",
+        );
 
         // Simulate finding some citations in the content
         const simulatedSuggestions = this.simulateCitationDetection(content);
@@ -288,7 +302,7 @@ export class CitationService {
         return {
           suggestions: simulatedSuggestions,
           matchCount: simulatedSuggestions.length,
-          scanStatus: "success"
+          scanStatus: "success",
         };
       }
 
@@ -308,23 +322,25 @@ export class CitationService {
     const patterns = [
       /\b(study|research|according to|found that|demonstrated|showed)\b.*?\d+%?/gi,
       /\b(statistics|data|survey|poll)\b.*?\d+/gi,
-      /\b(is|are|was|were)\b.*?\b(important|significant|crucial|essential)\b/gi
+      /\b(is|are|was|were)\b.*?\b(important|significant|crucial|essential)\b/gi,
     ];
 
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
+    const sentences = content
+      .split(/[.!?]+/)
+      .filter((s) => s.trim().length > 20);
     const suggestions: any[] = [];
 
-    sentences.forEach(sentence => {
+    sentences.forEach((sentence) => {
       let matchCount = 0;
-      patterns.forEach(pattern => {
+      patterns.forEach((pattern) => {
         if (pattern.test(sentence)) matchCount++;
       });
 
       if (matchCount > 0) {
         suggestions.push({
           sentence: sentence.trim(),
-          suggestion: `Consider adding a citation for this ${matchCount > 1 ? 'claim' : 'statement'}`,
-          type: matchCount > 1 ? "factual_claim" : "statistic"
+          suggestion: `Consider adding a citation for this ${matchCount > 1 ? "claim" : "statement"}`,
+          type: matchCount > 1 ? "factual_claim" : "statistic",
         });
       }
     });
@@ -339,12 +355,12 @@ export class CitationService {
   static async updateCitationThemes(
     projectId: string,
     citationId: string,
-    data: { themes?: string[]; matrix_notes?: string }
+    data: { themes?: string[]; matrix_notes?: string },
   ): Promise<any> {
     try {
       const response = await apiClient.put(
         `/api/citations/${projectId}/${citationId}`,
-        data
+        data,
       );
       return response.data;
     } catch (error: any) {
@@ -358,12 +374,12 @@ export class CitationService {
    */
   static async analyzeCitation(
     projectId: string,
-    citationId: string
+    citationId: string,
   ): Promise<any> {
     try {
       const response = await apiClient.post(
         `/api/citations/${projectId}/${citationId}/analyze`,
-        {}
+        {},
       );
       return response.data;
     } catch (error: any) {
@@ -375,9 +391,15 @@ export class CitationService {
   /**
    * Real-time verification for a single citation
    */
-  static async verifySingleCitation(citation: { title: string; doi?: string }): Promise<{ isReliable: boolean; source: string | null }> {
+  static async verifySingleCitation(citation: {
+    title: string;
+    doi?: string;
+  }): Promise<{ isReliable: boolean; source: string | null }> {
     try {
-      const response = await apiClient.post("/api/citations/verify-single", citation);
+      const response = await apiClient.post(
+        "/api/citations/verify-single",
+        citation,
+      );
       return response.data;
     } catch (e: any) {
       console.error("Single citation verification failed", e);
@@ -390,7 +412,9 @@ export class CitationService {
    */
   static async findCitationMetadata(query: string): Promise<any> {
     try {
-      const response = await apiClient.post("/api/citations/auto-fix", { query });
+      const response = await apiClient.post("/api/citations/auto-fix", {
+        query,
+      });
       return response.data;
     } catch (e: any) {
       console.error("Auto-fix search failed", e);
@@ -400,9 +424,15 @@ export class CitationService {
   /**
    * Batch AI Analysis of citations for Literature Matrix
    */
-  static async batchAnalyzeCitations(projectId: string, force: boolean = false): Promise<any[]> {
+  static async batchAnalyzeCitations(
+    projectId: string,
+    force: boolean = false,
+  ): Promise<any[]> {
     try {
-      const response = await apiClient.post(`/api/citations/${projectId}/batch-analyze`, { force });
+      const response = await apiClient.post(
+        `/api/citations/${projectId}/batch-analyze`,
+        { force },
+      );
       return response.data;
     } catch (error: any) {
       console.error("Batch analysis failed:", error);
@@ -416,7 +446,7 @@ export class CitationService {
   static async searchCitations(query: string): Promise<any[]> {
     try {
       const response = await apiClient.get(
-        `/api/citations/search?q=${encodeURIComponent(query)}`
+        `/api/citations/search?q=${encodeURIComponent(query)}`,
       );
       return response.data || [];
     } catch (error: any) {
@@ -428,7 +458,9 @@ export class CitationService {
   /**
    * Get all citations for a project
    */
-  static async getProjectCitations(projectId: string): Promise<StoredCitation[]> {
+  static async getProjectCitations(
+    projectId: string,
+  ): Promise<StoredCitation[]> {
     try {
       const response = await apiClient.get(`/api/citations/${projectId}`);
       return response.data || [];
@@ -451,11 +483,77 @@ export class CitationService {
   }
 
   /**
+   * Update citation metadata
+   */
+  static async updateCitation(
+    projectId: string,
+    citationId: string,
+    updates: Partial<StoredCitation>,
+  ): Promise<StoredCitation> {
+    try {
+      // If metadata fields are changing, regenerate formatted_citations
+      const metadataFields = [
+        "title",
+        "authors",
+        "author",
+        "year",
+        "journal",
+        "volume",
+        "issue",
+        "pages",
+        "doi",
+        "url",
+      ];
+      const hasMetadataChanges = Object.keys(updates).some((key) =>
+        metadataFields.includes(key),
+      );
+
+      if (hasMetadataChanges) {
+        // We need the full record for formatting, or at least the changing fields
+        // Since this is a Partial update, we usually would need to fetch first,
+        // but for simplicity, we'll assume the caller provides enough info OR
+        // we'll just merge what we have.
+        // For the export flow context, the caller HAS the full updated record.
+
+        // Generate precomputed citations if we have the minimum requirements
+        if (updates.title) {
+          updates.formatted_citations = generatePrecomputedCitations({
+            title: updates.title,
+            authors:
+              updates.authors || (updates.author ? [updates.author] : []),
+            author:
+              updates.author ||
+              (updates.authors ? updates.authors.join(", ") : ""),
+            year: Number(updates.year) || new Date().getFullYear(),
+            journal: updates.journal,
+            volume: updates.volume,
+            issue: updates.issue,
+            pages: updates.pages,
+            doi: updates.doi,
+            url: updates.url,
+          });
+        }
+      }
+
+      const response = await apiClient.put(
+        `/api/citations/${projectId}/${citationId}`,
+        updates,
+      );
+      return response.data || response;
+    } catch (error: any) {
+      console.error("Error updating citation:", error);
+      throw new Error(error.message || "Failed to update citation");
+    }
+  }
+
+  /**
    * Import citation from DOI
    */
   static async importFromDOI(doi: string): Promise<any> {
     try {
-      const response = await apiClient.post("/api/citations/import/doi", { doi });
+      const response = await apiClient.post("/api/citations/import/doi", {
+        doi,
+      });
       return response.data;
     } catch (error: any) {
       console.error("Error importing from DOI:", error);
@@ -468,7 +566,9 @@ export class CitationService {
    */
   static async importFromURL(url: string): Promise<any> {
     try {
-      const response = await apiClient.post("/api/citations/import/url", { url });
+      const response = await apiClient.post("/api/citations/import/url", {
+        url,
+      });
       return response.data;
     } catch (error: any) {
       console.error("Error importing from URL:", error);
@@ -479,7 +579,10 @@ export class CitationService {
   /**
    * Format a citation in a specific style
    */
-  static formatCitation(citation: any, style: "apa" | "mla" | "chicago"): string {
+  static formatCitation(
+    citation: any,
+    style: "apa" | "mla" | "chicago",
+  ): string {
     // Use precomputed citations if available
     if (citation.formatted_citations && citation.formatted_citations[style]) {
       return citation.formatted_citations[style];
@@ -494,9 +597,9 @@ export class CitationService {
 
     const authorsString = authors
       .map((a: any) =>
-        typeof a === 'string'
+        typeof a === "string"
           ? a
-          : `${a.lastName || ''}, ${a.firstName || ''}`.trim()
+          : `${a.lastName || ""}, ${a.firstName || ""}`.trim(),
       )
       .filter(Boolean)
       .join("; ");
@@ -504,7 +607,11 @@ export class CitationService {
     const year = citation.year || "n.d.";
     const title = citation.title || "Untitled";
 
-    const link = citation.doi ? ` https://doi.org/${citation.doi}` : (citation.url ? ` ${citation.url}` : "");
+    const link = citation.doi
+      ? ` https://doi.org/${citation.doi}`
+      : citation.url
+        ? ` ${citation.url}`
+        : "";
 
     switch (style) {
       case "apa":
@@ -527,7 +634,7 @@ export class CitationService {
   static async searchExternal(query: string, type?: string): Promise<any[]> {
     try {
       const response = await apiClient.get(
-        `/api/citations/search-external?q=${encodeURIComponent(query)}${type ? `&type=${type}` : ""}`
+        `/api/citations/search-external?q=${encodeURIComponent(query)}${type ? `&type=${type}` : ""}`,
       );
       return response.data || [];
     } catch (error: any) {
@@ -542,7 +649,7 @@ export class CitationService {
   static async getRecentResearchTopics(limit: number = 10): Promise<any[]> {
     try {
       const response = await apiClient.get(
-        `/api/research/topics/recent?limit=${limit}`
+        `/api/research/topics/recent?limit=${limit}`,
       );
       return response.data || [];
     } catch (error: any) {
@@ -580,7 +687,10 @@ export class CitationService {
   /**
    * Create a citation (alias for addCitation for compatibility)
    */
-  static async createCitation(projectId: string, citationData: any): Promise<any> {
+  static async createCitation(
+    projectId: string,
+    citationData: any,
+  ): Promise<any> {
     return this.addCitation(projectId, citationData);
   }
 
@@ -588,7 +698,12 @@ export class CitationService {
    * Starts an asynchronous background citation audit.
    * Returns an auditId that can be tracked via SSE.
    */
-  static async startAudit(documentId: string, projectId: string, docState: any, style: string = "APA"): Promise<string> {
+  static async startAudit(
+    documentId: string,
+    projectId: string,
+    docState: any,
+    style: string = "APA",
+  ): Promise<string> {
     try {
       const response = await apiClient.post("/api/audit/start", {
         documentId,
@@ -601,7 +716,9 @@ export class CitationService {
       return response.data?.data?.auditId || response.data?.auditId;
     } catch (error: any) {
       console.error("Error starting audit:", error);
-      throw new Error(error.response?.data?.error || "Failed to start audit job");
+      throw new Error(
+        error.response?.data?.error || "Failed to start audit job",
+      );
     }
   }
 }

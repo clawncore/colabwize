@@ -29,7 +29,7 @@ import {
   BookOpen,
   PenTool,
   History,
-  Map
+  Map,
 } from "lucide-react";
 import { SearchAlertsPanel } from "./SearchAlertsPanel";
 import { AIProbabilityHeatmap } from "../originality/AIProbabilityHeatmap";
@@ -150,10 +150,14 @@ const EditorWorkspacePage: React.FC = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Source & Research State
-  const [activeSourceTab, setActiveSourceTab] = useState<"sources" | "matrix" | "collections">("sources");
+  const [activeSourceTab, setActiveSourceTab] = useState<
+    "sources" | "matrix" | "collections"
+  >("sources");
   const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
   const [matrixMode, setMatrixMode] = useState<"split" | "full">("split");
-  const [visualMapMode, setVisualMapMode] = useState<"graph" | "heatmap" | "full" | "split">("graph");
+  const [visualMapMode, setVisualMapMode] = useState<
+    "graph" | "heatmap" | "full" | "split"
+  >("graph");
 
   // Audit State
   const [selectedAuditReport, setSelectedAuditReport] = useState<any>(null);
@@ -238,7 +242,6 @@ const EditorWorkspacePage: React.FC = () => {
       console.error("Failed to reload project citations:", error);
     }
   }, [selectedProject]); // Added full selectedProject to deps
-
 
   const handleStyleSet = async (style: string) => {
     if (!selectedProject) return;
@@ -533,196 +536,227 @@ const EditorWorkspacePage: React.FC = () => {
   );
   const [isMembersLoading, setIsMembersLoading] = useState(false);
 
-  const handleInsertCitation = React.useCallback(async (text: string, trackingInfo?: any) => {
-    if (editorInstance) {
-      const sourceId = trackingInfo?.sourceId;
-      const source = trackingInfo?.fullReferenceEntry;
-
-      // PRE-POPULATE REGISTRY: Ensure the citation is in the cache before the
-      // CitationNode tries to render it. Without this, the node renders as (Unknown, ????)
-      // because the async registry init hasn't returned yet.
-      if (sourceId && source) {
-        const { CitationRegistryService } =
-          await import("../../services/CitationRegistryService");
-        CitationRegistryService.registerTempCitation(
-          source.raw_reference_text || source.title || text,
-          {
-            id: sourceId,
-            title: source.title,
-            authors: source.authors,
-            year: source.year,
-            url: source.url,
-            doi: source.doi,
-          },
-        );
+  // Global event listener to allow deep components (like Citation NodeView)
+  // to open sidebar panels without direct prop drilling
+  useEffect(() => {
+    const handleOpenSidebarPanel = (e: Event) => {
+      const customEvent = e as CustomEvent<{
+        panelType: RightPanelType;
+        data?: any;
+      }>;
+      if (customEvent.detail && customEvent.detail.panelType) {
+        openPanel(customEvent.detail.panelType, customEvent.detail.data);
       }
+    };
 
-      // 1. Insert in-text citation at cursor
-      if (sourceId) {
-        let citationUrl = undefined;
-        if (source) {
-          citationUrl =
-            source.url || (source.doi ? `https://doi.org/${source.doi}` : undefined);
-        }
-        editorInstance.commands.insertCitation({
-          citationId: sourceId,
-          text: text,
-          url: citationUrl,
-        });
-      } else {
-        editorInstance.chain().focus().insertContent(text).run();
-      }
+    window.addEventListener("openSidebarPanel", handleOpenSidebarPanel);
+    return () => {
+      window.removeEventListener("openSidebarPanel", handleOpenSidebarPanel);
+    };
+  }, [openPanel]);
 
-      // 2. Append reference entry if provided
-      if (trackingInfo && trackingInfo.fullReferenceEntry) {
-        const source = trackingInfo.fullReferenceEntry;
-        const style = trackingInfo.style
-          ? trackingInfo.style.toLowerCase()
-          : "apa";
+  const handleInsertCitation = React.useCallback(
+    async (text: string, trackingInfo?: any) => {
+      if (editorInstance) {
+        const sourceId = trackingInfo?.sourceId;
+        const source = trackingInfo?.fullReferenceEntry;
 
-        let refText = text;
-
-        // Always try to generate the correctly formatted citation string on the fly,
-        // to ensure bibliography formatting is correct even for newly added/unprocessed sources.
-        try {
-          const formatStyle =
-            style === "mla"
-              ? "MLA"
-              : style === "chicago"
-                ? "Chicago"
-                : style === "ieee"
-                  ? "IEEE"
-                  : "APA";
-
-          const generatedRef = formatCitation(
-            source,
-            formatStyle as any,
-            "reference-entry",
+        // PRE-POPULATE REGISTRY: Ensure the citation is in the cache before the
+        // CitationNode tries to render it. Without this, the node renders as (Unknown, ????)
+        // because the async registry init hasn't returned yet.
+        if (sourceId && source) {
+          const { CitationRegistryService } =
+            await import("../../services/CitationRegistryService");
+          CitationRegistryService.registerTempCitation(
+            source.raw_reference_text || source.title || text,
+            {
+              id: sourceId,
+              title: source.title,
+              authors: source.authors,
+              year: source.year,
+              url: source.url,
+              doi: source.doi,
+            },
           );
-          if (generatedRef) {
-            refText = generatedRef;
-          }
-        } catch (err) {
-          console.warn(
-            "Failed to dynamically format citation, using fallback",
-            err,
-          );
-          if (source.formatted_citations && source.formatted_citations[style]) {
-            refText =
-              source.formatted_citations[style].reference ||
-              source.formatted_citations[style];
-          } else if (source.raw_reference_text) {
-            refText = source.raw_reference_text;
-          } else if (source.title) {
-            refText = source.title;
-          }
         }
 
-        const doc = editorInstance.state.doc;
-        let isAlreadyListed = false;
-
-        // Use robust citationId check to see if this source is already in the bibliography
-        doc.descendants((node: any) => {
-          if (node.type.name === "bibliographyEntry" && node.attrs.citationId === sourceId) {
-            isAlreadyListed = true;
-            return false;
+        // 1. Insert in-text citation at cursor
+        if (sourceId) {
+          let citationUrl = undefined;
+          if (source) {
+            citationUrl =
+              source.url ||
+              (source.doi ? `https://doi.org/${source.doi}` : undefined);
           }
-        });
+          editorInstance.commands.insertCitation({
+            citationId: sourceId,
+            text: text,
+            url: citationUrl,
+          });
+        } else {
+          editorInstance.chain().focus().insertContent(text).run();
+        }
 
-        if (!isAlreadyListed) {
-          // Save current cursor position
-          const currentPos = editorInstance.state.selection.anchor;
+        // 2. Append reference entry if provided
+        if (trackingInfo && trackingInfo.fullReferenceEntry) {
+          const source = trackingInfo.fullReferenceEntry;
+          const style = trackingInfo.style
+            ? trackingInfo.style.toLowerCase()
+            : "apa";
 
-          // Move to end WITHOUT focusing (to avoid scroll jumping)
-          const endPos = doc.content.size;
-          let chain = editorInstance.chain().setTextSelection(endPos);
+          let refText = text;
 
-          const widthRef = editorInstance.getText();
-          // Check if References header exists (heuristic)
-          if (
-            !widthRef.includes("References") &&
-            !widthRef.includes("Bibliography") &&
-            !widthRef.includes("Works Cited")
-          ) {
-            chain = chain.insertContent([
-              {
-                type: "heading",
-                attrs: { level: 2 },
-                content: [{ type: "text", text: "References" }],
-              },
-            ]);
+          // Always try to generate the correctly formatted citation string on the fly,
+          // to ensure bibliography formatting is correct even for newly added/unprocessed sources.
+          try {
+            const formatStyle =
+              style === "mla"
+                ? "MLA"
+                : style === "chicago"
+                  ? "Chicago"
+                  : style === "ieee"
+                    ? "IEEE"
+                    : "APA";
+
+            const generatedRef = formatCitation(
+              source,
+              formatStyle as any,
+              "reference-entry",
+            );
+            if (generatedRef) {
+              refText = generatedRef;
+            }
+          } catch (err) {
+            console.warn(
+              "Failed to dynamically format citation, using fallback",
+              err,
+            );
+            if (
+              source.formatted_citations &&
+              source.formatted_citations[style]
+            ) {
+              refText =
+                source.formatted_citations[style].reference ||
+                source.formatted_citations[style];
+            } else if (source.raw_reference_text) {
+              refText = source.raw_reference_text;
+            } else if (source.title) {
+              refText = source.title;
+            }
           }
 
-          // Build bibliography entry content with hyperlink if URL/DOI exists
-          const content: any[] = [{ type: "text", text: refText }];
-          const url = source.url || (source.doi ? `https://doi.org/${source.doi}` : null);
-          if (url) {
-            content.push({ type: "text", text: " " });
-            content.push({
-              type: "text",
-              text: url,
-              marks: [
+          const doc = editorInstance.state.doc;
+          let isAlreadyListed = false;
+
+          // Use robust citationId check to see if this source is already in the bibliography
+          doc.descendants((node: any) => {
+            if (
+              node.type.name === "bibliographyEntry" &&
+              node.attrs.citationId === sourceId
+            ) {
+              isAlreadyListed = true;
+              return false;
+            }
+          });
+
+          if (!isAlreadyListed) {
+            // Save current cursor position
+            const currentPos = editorInstance.state.selection.anchor;
+
+            // Move to end WITHOUT focusing (to avoid scroll jumping)
+            const endPos = doc.content.size;
+            let chain = editorInstance.chain().setTextSelection(endPos);
+
+            const widthRef = editorInstance.getText();
+            // Check if References header exists (heuristic)
+            if (
+              !widthRef.includes("References") &&
+              !widthRef.includes("Bibliography") &&
+              !widthRef.includes("Works Cited")
+            ) {
+              chain = chain.insertContent([
                 {
-                  type: "link",
-                  attrs: {
-                    href: url,
-                    target: "_blank",
-                    class: "bibliography-url-link"
-                  }
-                }
-              ]
-            });
+                  type: "heading",
+                  attrs: { level: 2 },
+                  content: [{ type: "text", text: "References" }],
+                },
+              ]);
+            }
+
+            // Build bibliography entry content with hyperlink if URL/DOI exists
+            const content: any[] = [{ type: "text", text: refText }];
+            const url =
+              source.url ||
+              (source.doi ? `https://doi.org/${source.doi}` : null);
+            if (url) {
+              content.push({ type: "text", text: " " });
+              content.push({
+                type: "text",
+                text: url,
+                marks: [
+                  {
+                    type: "link",
+                    attrs: {
+                      href: url,
+                      target: "_blank",
+                      class: "bibliography-url-link",
+                    },
+                  },
+                ],
+              });
+            }
+
+            // Insert directly as a bibliographyEntry node to prevent double-normalization flash
+            chain
+              .insertContent({
+                type: "bibliographyEntry",
+                attrs: {
+                  citationId: sourceId,
+                  url: url,
+                  doi: source.doi,
+                  refText: refText,
+                },
+                content: content,
+              })
+              .run();
+
+            // Restore cursor position to where the citation was inserted
+            // account for the citation node having size 1
+            editorInstance.commands.setTextSelection(currentPos + 1);
           }
+        }
 
-          // Insert directly as a bibliographyEntry node to prevent double-normalization flash
-          chain
-            .insertContent({
-              type: "bibliographyEntry",
-              attrs: {
-                citationId: sourceId,
-                url: url,
-                doi: source.doi,
-                refText: refText,
-              },
-              content: content,
-            })
-            .run();
+        if (trackingInfo) {
+          console.groupCollapsed("[Authorship] Citation Event");
+          console.log("Metadata:", trackingInfo);
+          console.log(
+            "This event contributes to the Authorship Certificate verification.",
+          );
+          console.groupEnd();
+          // Future: dispatch to Authorship Certificate service
+        }
 
-          // Restore cursor position to where the citation was inserted
-          // account for the citation node having size 1
-          editorInstance.commands.setTextSelection(currentPos + 1);
+        // 3. Trigger immediate save to ensure persistence (Only in non-collab mode)
+        // In collab mode, Hocuspocus handles the persistence of the content change
+        if (selectedProject && !selectedProject.workspace_id) {
+          setTimeout(async () => {
+            const content = editorInstance.getJSON();
+            const words = editorInstance.storage.characterCount.words();
+            await documentService.updateProject(
+              selectedProject.id,
+              selectedProject.title,
+              selectedProject.description || "",
+              content,
+              words,
+              selectedProject.citation_style,
+            );
+            console.log("Immediate save complete after citation insertion");
+          }, 500);
         }
       }
-
-      if (trackingInfo) {
-        console.groupCollapsed("[Authorship] Citation Event");
-        console.log("Metadata:", trackingInfo);
-        console.log(
-          "This event contributes to the Authorship Certificate verification.",
-        );
-        console.groupEnd();
-        // Future: dispatch to Authorship Certificate service
-      }
-
-      // 3. Trigger immediate save to ensure persistence (Only in non-collab mode)
-      // In collab mode, Hocuspocus handles the persistence of the content change
-      if (selectedProject && !selectedProject.workspace_id) {
-        setTimeout(async () => {
-          const content = editorInstance.getJSON();
-          const words = editorInstance.storage.characterCount.words();
-          await documentService.updateProject(
-            selectedProject.id,
-            selectedProject.title,
-            selectedProject.description || "",
-            content,
-            words,
-            selectedProject.citation_style,
-          );
-          console.log("Immediate save complete after citation insertion");
-        }, 500);
-      }
-    }
-  }, [editorInstance, selectedProject]);
+    },
+    [editorInstance, selectedProject],
+  );
 
   const handleSyncOutlineToEditor = (outline: any[]) => {
     if (!editorInstance) return;

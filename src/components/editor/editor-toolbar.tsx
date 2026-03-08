@@ -65,13 +65,16 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   const setLink = () => {
     if (linkUrl) {
       if (editor.state.selection.empty) {
-        // If no text is selected, insert the URL as a link
+        // If no text is selected, insert the URL text with the link mark
         editor
           .chain()
           .focus()
-          .insertContent(
-            `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${linkUrl}</a>`
-          )
+          .insertContent(linkUrl)
+          .setTextSelection({
+            from: editor.state.selection.from,
+            to: editor.state.selection.from + linkUrl.length,
+          })
+          .setLink({ href: linkUrl, target: "_blank" })
           .run();
       } else {
         // If text is selected, turn it into a link
@@ -94,7 +97,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   ] as const;
 
   const currentHeading = headingLevels.find((h) =>
-    editor.isActive("heading", { level: h.level })
+    editor.isActive("heading", { level: h.level }),
   );
 
   return (
@@ -104,8 +107,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          title={isCollapsed ? "Show toolbar" : "Hide toolbar"}
-        >
+          title={isCollapsed ? "Show toolbar" : "Hide toolbar"}>
           {isCollapsed ? (
             <>
               <ChevronDown className="h-4 w-4" />
@@ -142,7 +144,10 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Toggle size="sm" title="Heading" className="h-8 gap-1.5 px-2.5 shrink-0">
+              <Toggle
+                size="sm"
+                title="Heading"
+                className="h-8 gap-1.5 px-2.5 shrink-0">
                 <Type className="h-[15px] w-[15px]" />
                 <span className="text-xs">
                   {currentHeading?.label ?? "Paragraph"}
@@ -176,27 +181,43 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           {/* Font Family Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Toggle size="sm" title="Font Family" className="gap-1.5 px-2.5 h-8 w-[6.5rem] justify-between shrink-0">
+              <Toggle
+                size="sm"
+                title="Font Family"
+                className="gap-1.5 px-2.5 h-8 w-[6.5rem] justify-between shrink-0">
                 <span className="text-xs truncate">
-                  {editor.getAttributes('textStyle').fontFamily || "Default"}
+                  {editor.getAttributes("textStyle").fontFamily || "Default"}
                 </span>
                 <ChevronDown className="h-3 w-3 opacity-50" />
               </Toggle>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-white">
-              <DropdownMenuItem onClick={() => editor.chain().focus().unsetFontFamily().run()}>
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().unsetFontFamily().run()}>
                 <span className="text-sm font-sans">Default (San Serif)</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => editor.chain().focus().setFontFamily('Times New Roman').run()}>
+              <DropdownMenuItem
+                onClick={() =>
+                  editor.chain().focus().setFontFamily("Times New Roman").run()
+                }>
                 <span className="text-sm font-serif">Times New Roman</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => editor.chain().focus().setFontFamily('Arial').run()}>
+              <DropdownMenuItem
+                onClick={() =>
+                  editor.chain().focus().setFontFamily("Arial").run()
+                }>
                 <span className="text-sm font-sans">Arial</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => editor.chain().focus().setFontFamily('Courier New').run()}>
+              <DropdownMenuItem
+                onClick={() =>
+                  editor.chain().focus().setFontFamily("Courier New").run()
+                }>
                 <span className="text-sm font-mono">Courier New</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => editor.chain().focus().setFontFamily('Georgia').run()}>
+              <DropdownMenuItem
+                onClick={() =>
+                  editor.chain().focus().setFontFamily("Georgia").run()
+                }>
                 <span className="text-sm font-serif">Georgia</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -225,7 +246,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             title="Underline"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("underline")}
-            onPressedChange={() => editor.chain().focus().toggleUnderline().run()}>
+            onPressedChange={() =>
+              editor.chain().focus().toggleUnderline().run()
+            }>
             <Underline className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
@@ -241,7 +264,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             title="Superscript"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("superscript")}
-            onPressedChange={() => editor.chain().focus().toggleSuperscript().run()}>
+            onPressedChange={() =>
+              editor.chain().focus().toggleSuperscript().run()
+            }>
             <Superscript className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
@@ -249,7 +274,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             title="Subscript"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("subscript")}
-            onPressedChange={() => editor.chain().focus().toggleSubscript().run()}>
+            onPressedChange={() =>
+              editor.chain().focus().toggleSubscript().run()
+            }>
             <Subscript className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
@@ -262,30 +289,81 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           </Toggle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Toggle size="sm" title="Highlight" pressed={editor.isActive("highlight")} className="gap-1 px-2 h-8 w-12 justify-between shrink-0">
+              <Toggle
+                size="sm"
+                title="Highlight"
+                pressed={editor.isActive("highlight")}
+                className="gap-1 px-2 h-8 w-12 justify-between shrink-0">
                 <Highlighter className="h-[15px] w-[15px]" />
                 <ChevronDown className="h-3 w-3 opacity-50" />
               </Toggle>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-white min-w-[3rem] p-1">
               <div className="flex gap-1">
-                <DropdownMenuItem onClick={() => editor.chain().focus().toggleHighlight({ color: 'yellow' }).run()} className="p-1 focus:bg-gray-100 cursor-pointer" title="Yellow">
+                <DropdownMenuItem
+                  onClick={() =>
+                    editor
+                      .chain()
+                      .focus()
+                      .toggleHighlight({ color: "yellow" })
+                      .run()
+                  }
+                  className="p-1 focus:bg-gray-100 cursor-pointer"
+                  title="Yellow">
                   <div className="w-4 h-4 rounded-full bg-yellow-300 border border-gray-200"></div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => editor.chain().focus().toggleHighlight({ color: '#86efac' }).run()} className="p-1 focus:bg-gray-100 cursor-pointer" title="Green">
+                <DropdownMenuItem
+                  onClick={() =>
+                    editor
+                      .chain()
+                      .focus()
+                      .toggleHighlight({ color: "#86efac" })
+                      .run()
+                  }
+                  className="p-1 focus:bg-gray-100 cursor-pointer"
+                  title="Green">
                   <div className="w-4 h-4 rounded-full bg-green-300 border border-gray-200"></div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => editor.chain().focus().toggleHighlight({ color: '#fca5a5' }).run()} className="p-1 focus:bg-gray-100 cursor-pointer" title="Red">
+                <DropdownMenuItem
+                  onClick={() =>
+                    editor
+                      .chain()
+                      .focus()
+                      .toggleHighlight({ color: "#fca5a5" })
+                      .run()
+                  }
+                  className="p-1 focus:bg-gray-100 cursor-pointer"
+                  title="Red">
                   <div className="w-4 h-4 rounded-full bg-red-300 border border-gray-200"></div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => editor.chain().focus().toggleHighlight({ color: '#93c5fd' }).run()} className="p-1 focus:bg-gray-100 cursor-pointer" title="Blue">
+                <DropdownMenuItem
+                  onClick={() =>
+                    editor
+                      .chain()
+                      .focus()
+                      .toggleHighlight({ color: "#93c5fd" })
+                      .run()
+                  }
+                  className="p-1 focus:bg-gray-100 cursor-pointer"
+                  title="Blue">
                   <div className="w-4 h-4 rounded-full bg-blue-300 border border-gray-200"></div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => editor.chain().focus().toggleHighlight({ color: '#d8b4fe' }).run()} className="p-1 focus:bg-gray-100 cursor-pointer" title="Purple">
+                <DropdownMenuItem
+                  onClick={() =>
+                    editor
+                      .chain()
+                      .focus()
+                      .toggleHighlight({ color: "#d8b4fe" })
+                      .run()
+                  }
+                  className="p-1 focus:bg-gray-100 cursor-pointer"
+                  title="Purple">
                   <div className="w-4 h-4 rounded-full bg-purple-300 border border-gray-200"></div>
                 </DropdownMenuItem>
               </div>
-              <DropdownMenuItem onClick={() => editor.chain().focus().unsetHighlight().run()} className="mt-1 text-xs justify-center cursor-pointer">
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().unsetHighlight().run()}
+                className="mt-1 text-xs justify-center cursor-pointer">
                 Clear
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -296,8 +374,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             title="Insert Logic / Math"
             pressed={editor.isActive("math")}
             className="h-8 w-8 font-serif italic font-bold shrink-0 text-[13px]"
-            onClick={() => setIsMathModalOpen(true)}
-          >
+            onClick={() => setIsMathModalOpen(true)}>
             Tx
           </Toggle>
 
@@ -351,7 +428,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             title="Bullet List"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("bulletList")}
-            onPressedChange={() => editor.chain().focus().toggleBulletList().run()}>
+            onPressedChange={() =>
+              editor.chain().focus().toggleBulletList().run()
+            }>
             <List className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
@@ -372,7 +451,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             title="Blockquote"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("blockquote")}
-            onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}>
+            onPressedChange={() =>
+              editor.chain().focus().toggleBlockquote().run()
+            }>
             <Quote className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
@@ -471,7 +552,11 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
           <Popover>
             <PopoverTrigger asChild>
-              <Toggle size="sm" title="Link" pressed={editor.isActive("link")} className="h-8 w-8 shrink-0">
+              <Toggle
+                size="sm"
+                title="Link"
+                pressed={editor.isActive("link")}
+                className="h-8 w-8 shrink-0">
                 <Link className="h-[15px] w-[15px]" />
               </Toggle>
             </PopoverTrigger>
@@ -528,7 +613,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                   .command(({ tr, dispatch }) => {
                     if (dispatch) {
                       // JSON selection from tiptap is { type, anchor, head }
-                      const selection = (editor.state.selection.constructor as any).fromJSON(editor.state.doc, savedSelection);
+                      const selection = (
+                        editor.state.selection.constructor as any
+                      ).fromJSON(editor.state.doc, savedSelection);
                       tr.setSelection(selection);
                     }
                     return true;
@@ -548,10 +635,14 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             onClose={() => setIsMathModalOpen(false)}
             onInsert={(latex) => {
               // Insert math node
-              editor.chain().focus().insertContent({
-                type: 'math',
-                attrs: { latex }
-              }).run();
+              editor
+                .chain()
+                .focus()
+                .insertContent({
+                  type: "math",
+                  attrs: { latex },
+                })
+                .run();
             }}
           />
         </div>

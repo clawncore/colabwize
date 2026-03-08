@@ -39,23 +39,27 @@ export function extractPatterns(
     });
   }
 
-  // Handle et al patterns if required by existing audits
-  const etAlPeriodRegex = /\([^()]{2,150}et al\.,\s*(?:19|20)\d{2}[a-z]?(?:\s*,?\s*[^)]*)?\)/g;
-  while ((m = etAlPeriodRegex.exec(text)) !== null) {
-    if (m.index === etAlPeriodRegex.lastIndex) etAlPeriodRegex.lastIndex++;
-    matches.push({
-      patternType: "et_al_with_period",
-      start: m.index,
-      end: m.index + m[0].length,
-      text: m[0],
-    });
+  // MLA e.g. (Smith) or (Smith and Doe) or (Smith et al.)
+  const mlaRegex = /\([^()]{2,100}(?:et al\.|and\s+[^()]+)?\)/g;
+  while ((m = mlaRegex.exec(text)) !== null) {
+    if (m.index === mlaRegex.lastIndex) mlaRegex.lastIndex++;
+    // Only count if it DOES NOT contain a year (otherwise it's APA/Chicago)
+    if (!m[0].match(/\d{4}/)) {
+      matches.push({
+        patternType: "AUTHOR_ONLY",
+        start: m.index,
+        end: m.index + m[0].length,
+        text: m[0],
+      });
+    }
   }
 
-  const etAlNoPeriodRegex = /\([^()]{2,150}et al\s*(?:19|20)\d{2}[a-z]?(?:\s*,?\s*[^)]*)?\)/g;
-  while ((m = etAlNoPeriodRegex.exec(text)) !== null) {
-    if (m.index === etAlNoPeriodRegex.lastIndex) etAlNoPeriodRegex.lastIndex++;
+  // Chicago e.g. (Smith 2023) - Note the lack of comma
+  const chicagoRegex = /\([^(),]{2,100}\s+(?:19|20)\d{2}[a-z]?\)/g;
+  while ((m = chicagoRegex.exec(text)) !== null) {
+    if (m.index === chicagoRegex.lastIndex) chicagoRegex.lastIndex++;
     matches.push({
-      patternType: "et_al_no_period",
+      patternType: "AUTHOR_YEAR_SPACE",
       start: m.index,
       end: m.index + m[0].length,
       text: m[0],

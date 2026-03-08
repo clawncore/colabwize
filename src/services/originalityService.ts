@@ -13,14 +13,14 @@ export interface SimilarityMatch {
   positionStart: number;
   positionEnd: number;
   classification:
-  | "green"
-  | "yellow"
-  | "red"
-  | "blue"
-  | "common_phrase"
-  | "quoted_correctly"
-  | "needs_citation"
-  | "close_paraphrase";
+    | "green"
+    | "yellow"
+    | "red"
+    | "blue"
+    | "common_phrase"
+    | "quoted_correctly"
+    | "needs_citation"
+    | "close_paraphrase";
 }
 
 export interface OriginalityScan {
@@ -74,7 +74,8 @@ export class OriginalityService {
     if (!data) return data;
 
     // Check if we need to map snake_case
-    const isSnakeCase = data.overall_score !== undefined || data.scan_status !== undefined;
+    const isSnakeCase =
+      data.overall_score !== undefined || data.scan_status !== undefined;
 
     if (!isSnakeCase) {
       return data as OriginalityScan;
@@ -99,14 +100,16 @@ export class OriginalityService {
         similarityScore: m.similarity_score ?? m.similarityScore,
         positionStart: m.position_start ?? m.positionStart,
         positionEnd: m.position_end ?? m.positionEnd,
-        classification: m.classification
+        classification: m.classification,
       })),
       scannedAt: data.scanned_at || data.scannedAt,
+      realityCheck: data.realityCheck || data.reality_check,
       wordsScanned: data.words_scanned ?? data.wordsScanned,
       costAmount: data.cost_amount ?? data.costAmount,
       matchCount: data.match_count ?? data.matchCount,
-      documentTitle: data.documentTitle || data.document_title || "Untitled Document",
-      scannedContent: data.scannedContent || data.scanned_content
+      documentTitle:
+        data.documentTitle || data.document_title || "Untitled Document",
+      scannedContent: data.scannedContent || data.scanned_content,
     };
   }
 
@@ -115,7 +118,7 @@ export class OriginalityService {
    */
   static async scanDocument(
     projectId: string,
-    content: string
+    content: string,
   ): Promise<OriginalityScan> {
     try {
       const response = await apiClient.post("/api/originality/scan", {
@@ -130,7 +133,7 @@ export class OriginalityService {
       // Check if it's a subscription limit error
       if (error.status === 403 && error.upgrade) {
         const upgradeError: any = new Error(
-          error.message || "Scan limit reached"
+          error.message || "Scan limit reached",
         );
         upgradeError.needsUpgrade = true;
         upgradeError.feature = "originality_scan";
@@ -161,10 +164,12 @@ export class OriginalityService {
   static async getProjectScans(projectId: string): Promise<OriginalityScan[]> {
     try {
       const response = await apiClient.get(
-        `/api/originality/project/${projectId}`
+        `/api/originality/project/${projectId}`,
       );
 
-      return (response.data || []).map((item: any) => this.normalizeResponse(item));
+      return (response.data || []).map((item: any) =>
+        this.normalizeResponse(item),
+      );
     } catch (error: any) {
       console.error("Error getting project scans:", error);
       throw new Error(error.message || "Failed to get project scans");
@@ -177,7 +182,9 @@ export class OriginalityService {
   static async getScanHistory(): Promise<OriginalityScan[]> {
     try {
       const response = await apiClient.get("/api/originality/history");
-      return (response.data || []).map((item: any) => this.normalizeResponse(item));
+      return (response.data || []).map((item: any) =>
+        this.normalizeResponse(item),
+      );
     } catch (error: any) {
       console.error("Error getting scan history:", error);
       throw new Error(error.message || "Failed to get scan history");
@@ -190,7 +197,7 @@ export class OriginalityService {
   static async getRephrases(
     scanId: string,
     matchId: string,
-    originalText: string
+    originalText: string,
   ): Promise<RephraseSuggestion[]> {
     try {
       const response = await apiClient.post("/api/originality/rephrase", {
@@ -206,7 +213,7 @@ export class OriginalityService {
       // Check if it's a subscription limit error
       if (error.status === 403 && error.upgrade) {
         const upgradeError: any = new Error(
-          error.message || "Rephrase limit reached"
+          error.message || "Rephrase limit reached",
         );
         upgradeError.needsUpgrade = true;
         upgradeError.feature = "originality_scan";
@@ -221,11 +228,11 @@ export class OriginalityService {
    * Get all cached suggestions for a scan
    */
   static async getScanSuggestions(
-    scanId: string
+    scanId: string,
   ): Promise<RephraseSuggestion[]> {
     try {
       const response = await apiClient.get(
-        `/api/originality/scan/${scanId}/suggestions`
+        `/api/originality/scan/${scanId}/suggestions`,
       );
 
       return response.data;
@@ -240,7 +247,7 @@ export class OriginalityService {
    */
   static async compareDrafts(
     currentDraft: string,
-    previousDraft: string
+    previousDraft: string,
   ): Promise<DraftComparisonResult> {
     try {
       const response = await apiClient.post("/api/originality/compare", {
@@ -260,7 +267,7 @@ export class OriginalityService {
    */
   static async checkSelfPlagiarism(
     currentContent: string,
-    currentProjectId: string
+    currentProjectId: string,
   ): Promise<DraftComparisonResult[]> {
     try {
       const response = await apiClient.post(
@@ -268,7 +275,7 @@ export class OriginalityService {
         {
           currentContent,
           currentProjectId,
-        }
+        },
       );
       return response.data;
     } catch (error: any) {
@@ -280,7 +287,9 @@ export class OriginalityService {
   /**
    * Humanize text using Adversarial AI (Auto-Humanizer)
    */
-  static async humanizeText(content: string): Promise<{ variations: string[]; provider: "anthropic" | "openai" }> {
+  static async humanizeText(
+    content: string,
+  ): Promise<{ variations: string[]; provider: "anthropic" | "openai" }> {
     try {
       const response = await apiClient.post("/api/originality/humanize", {
         content,
@@ -297,12 +306,12 @@ export class OriginalityService {
    */
   static async checkSectionRisk(
     projectId: string,
-    content: string
+    content: string,
   ): Promise<{ riskScore: number; flags: string[]; isAiSuspected: boolean }> {
     try {
       const response = await apiClient.post("/api/originality/section-check", {
         projectId,
-        content
+        content,
       });
       return response.data;
     } catch (e: any) {
@@ -318,14 +327,17 @@ export class OriginalityService {
   static async rewriteSelection(
     selection: string,
     mode: "QUICK" | "ACADEMIC" | "DEEP" = "ACADEMIC",
-    context?: string
+    context?: string,
   ): Promise<{ variations: string[]; provider: string }> {
     try {
-      const response = await apiClient.post("/api/originality/rewrite-selection", {
-        selection,
-        mode,
-        context
-      });
+      const response = await apiClient.post(
+        "/api/originality/rewrite-selection",
+        {
+          selection,
+          mode,
+          context,
+        },
+      );
       return response.data;
     } catch (e: any) {
       console.error("Error rewriting selection", e);
@@ -339,13 +351,13 @@ export class OriginalityService {
   static async explainRisk(
     matchText: string,
     sourceText: string,
-    riskLevel: string
+    riskLevel: string,
   ): Promise<string> {
     try {
       const response = await apiClient.post("/api/originality/explain-risk", {
         matchText,
         sourceText,
-        riskLevel
+        riskLevel,
       });
       return response.data?.explanation || "No explanation available.";
     } catch (e: any) {
