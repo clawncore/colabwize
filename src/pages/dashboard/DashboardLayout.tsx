@@ -1263,14 +1263,6 @@ export default function DashboardLayout({
                         featureName="scans"
                       />
 
-                      {/* Paper Search Meter */}
-                      <UsageMeter
-                        current={planUsage?.paper_search || 0}
-                        limit={planLimits?.paper_search ?? 3}
-                        planName={userPlan}
-                        featureName="searches"
-                      />
-
                       {/* Citations Meter */}
                       <UsageMeter
                         current={

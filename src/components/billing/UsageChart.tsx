@@ -61,7 +61,7 @@ const PLAN_FEATURES_LIST: Record<string, string[]> = {
   free: [
     "3 document scans per month",
     "3 Rephrase Suggestions",
-    "3 Paper Searches",
+    "25 Paper Searches",
     "Max 100,000 characters",
     "Basic originality check",
     "Watermarked certificate",
@@ -70,7 +70,7 @@ const PLAN_FEATURES_LIST: Record<string, string[]> = {
   plus: [
     "50 document scans per month",
     "50 Rephrase Suggestions",
-    "50 Paper Searches",
+    "100 Paper Searches",
     "Max 300,000 characters",
     "Full originality map",
     "Citation confidence auditor",
@@ -81,6 +81,7 @@ const PLAN_FEATURES_LIST: Record<string, string[]> = {
   premium: [
     "Unlimited document scans",
     "Unlimited Rephrase Suggestions",
+    "200 Paper Searches",
     "Max 500,000 characters",
     "Priority scanning",
     "Advanced citation suggestions",

@@ -1,4 +1,3 @@
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,11 +13,12 @@ import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect, useCallback } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
-import { CitationService, SuggestedPaper } from "../../services/citationService";
+import {
+  CitationService,
+  SuggestedPaper,
+} from "../../services/citationService";
 import { apiClient } from "../../services/apiClient";
 import { CredibilityBadge } from "./CredibilityBadge";
-
-
 
 interface PaperSuggestionsPanelProps {
   projectId: string;
@@ -47,7 +47,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     limits: planLimits,
     usage: planUsage,
     creditBalance,
-    fetchSubscription
+    fetchSubscription,
   } = useSubscriptionStore();
   // const { user } = useAuth(); // Unused
 
@@ -66,28 +66,34 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
   const PAPERS_PER_PAGE = 10;
 
   // Credibility scores
-  const [credibilityScores, setCredibilityScores] = useState<Map<string, any>>(new Map());
-
+  const [credibilityScores, setCredibilityScores] = useState<Map<string, any>>(
+    new Map(),
+  );
 
   const calculateCredibilityScores = useCallback(async () => {
     try {
-      const papers = suggestedPapers.map(p => ({
+      const papers = suggestedPapers.map((p) => ({
         title: p.title,
         author: p.authors && p.authors.length > 0 ? p.authors[0] : "Unknown",
         year: p.year,
         citationCount: p.citationCount,
         journal: p.journal,
         url: p.url,
-        isPeerReviewed: p.source !== 'arxiv'
+        isPeerReviewed: p.source !== "arxiv",
       }));
 
-      const response = await apiClient.post("/api/citations/batch-credibility", { papers });
+      const response = await apiClient.post(
+        "/api/citations/batch-credibility",
+        { papers },
+      );
 
       if (response.data.success) {
         const scores = new Map<string, any>();
-        Object.entries(response.data.credibilityScores).forEach(([title, score]) => {
-          scores.set(title, score);
-        });
+        Object.entries(response.data.credibilityScores).forEach(
+          ([title, score]) => {
+            scores.set(title, score);
+          },
+        );
         setCredibilityScores(scores);
       }
     } catch (error) {
@@ -102,55 +108,64 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     }
   }, [suggestedPapers, calculateCredibilityScores]);
 
+  const performSearch = useCallback(
+    async (query: string) => {
+      setIsSearching(true);
+      setDisplayCount(10); // Reset
+      try {
+        const results = await CitationService.searchPapers(query);
+        setSuggestedPapers(results || []);
+        // Refresh subscription to update usage
+        fetchSubscription(true);
+      } catch (error: any) {
+        console.error("Search failed:", error);
+        const isLimitError =
+          error.response?.status === 403 || error.message?.includes("limit");
 
-  const performSearch = useCallback(async (query: string) => {
-    setIsSearching(true);
-    setDisplayCount(10); // Reset
-    try {
-      const results = await CitationService.searchPapers(query);
-      setSuggestedPapers(results || []);
-      // Refresh subscription to update usage
-      fetchSubscription(true);
-    } catch (error: any) {
-      console.error("Search failed:", error);
-      const isLimitError = error.response?.status === 403 || error.message?.includes("limit");
+        if (isLimitError) {
+          // If we hit backend limit (e.g. no credits), show dialog
+          setShowLimitDialog(true);
+          return;
+        }
 
-      if (isLimitError) {
-        // If we hit backend limit (e.g. no credits), show dialog
+        toast({
+          title: "Search Failed",
+          description: "Failed to search for papers. Please try again.",
+          variant: "destructive",
+          duration: 5000,
+        });
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [fetchSubscription, toast],
+  );
+
+  const executeSearch = useCallback(
+    async (query: string, force = false) => {
+      if (!query.trim()) return;
+
+      // Check Limits BEFORE searching (Client-side pre-check)
+      const limit = planLimits?.paper_search ?? 25;
+      const used = planUsage?.paper_search ?? 0;
+      const isFree = plan?.toLowerCase().includes("free");
+
+      // If free plan and limit reached/exceeded, and NOT forcing
+      if (isFree && used >= limit && !force) {
+        setPendingQuery(query);
         setShowLimitDialog(true);
         return;
       }
 
-      toast({
-        title: "Search Failed",
-        description: "Failed to search for papers. Please try again.",
-        variant: "destructive",
-        duration: 5000,
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  }, [fetchSubscription, toast]);
+      await performSearch(query);
+    },
+    [planLimits, planUsage, plan, performSearch],
+  );
 
-  const executeSearch = useCallback(async (query: string, force = false) => {
-    if (!query.trim()) return;
-
-    // Check Limits BEFORE searching (Client-side pre-check)
-    const limit = planLimits?.paper_search ?? 3;
-    const used = planUsage?.paper_search ?? 0;
-    const isFree = plan?.toLowerCase().includes('free');
-
-    // If free plan and limit reached/exceeded, and NOT forcing
-    if (isFree && used >= limit && !force) {
-      setPendingQuery(query);
-      setShowLimitDialog(true);
-      return;
-    }
-
-    await performSearch(query);
-  }, [planLimits, planUsage, plan, performSearch]);
-
-  const handleManualSearch = async (e?: React.FormEvent, searchStr?: string) => {
+  const handleManualSearch = async (
+    e?: React.FormEvent,
+    searchStr?: string,
+  ) => {
     if (e) e.preventDefault();
     const query = searchStr || searchQuery;
     executeSearch(query);
@@ -172,11 +187,11 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
 
       await CitationService.addCitation(projectId, {
         ...paper,
-        citationCount: paper.citationCount
+        citationCount: paper.citationCount,
       });
 
       // Mark as added
-      setAddedPaperIds(prev => new Set(prev).add(paperId));
+      setAddedPaperIds((prev) => new Set(prev).add(paperId));
 
       if (onSourceAdded) {
         onSourceAdded();
@@ -194,7 +209,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
   const hasMore = suggestedPapers.length > displayCount;
 
   const handleLoadMore = () => {
-    setDisplayCount(prev => prev + PAPERS_PER_PAGE);
+    setDisplayCount((prev) => prev + PAPERS_PER_PAGE);
   };
 
   // Dialog Actions
@@ -207,7 +222,7 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
         toast({
           title: "Insufficient Credits",
           description: "You don't have enough credits. Please top up.",
-          variant: "destructive"
+          variant: "destructive",
         });
         navigate("/pricing");
       } else {
@@ -240,7 +255,8 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
         {/* Manual Search */}
         <form onSubmit={handleManualSearch} className="mb-6">
           <p className="text-xs text-gray-500 mb-2">
-            Search scholarly databases to locate existing publications and store citation metadata.
+            Search scholarly databases to locate existing publications and store
+            citation metadata.
           </p>
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -270,7 +286,9 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
         {hasSuggestions ? (
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Found {suggestedPapers!.length} Sources {displayCount < suggestedPapers.length && `(Showing ${displayCount})`}
+              Found {suggestedPapers!.length} Sources{" "}
+              {displayCount < suggestedPapers.length &&
+                `(Showing ${displayCount})`}
             </h3>
             <div className="space-y-4">
               {displayedPapers.map((paper, index) => (
@@ -284,9 +302,9 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
                       </h4>
                       <p className="text-xs text-gray-500 mb-2">
                         {Array.isArray(paper.authors) &&
-                          paper.authors.length > 0
+                        paper.authors.length > 0
                           ? paper.authors[0] +
-                          (paper.authors.length > 1 ? " et al." : "")
+                            (paper.authors.length > 1 ? " et al." : "")
                           : "Unknown"}{" "}
                         • {paper.year}
                         {paper.journal && ` • ${paper.journal}`}
@@ -296,7 +314,10 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
                         {/* Credibility Badge */}
                         {credibilityScores.has(paper.title) && (
                           <CredibilityBadge
-                            level={credibilityScores.get(paper.title)?.level || "medium"}
+                            level={
+                              credibilityScores.get(paper.title)?.level ||
+                              "medium"
+                            }
                             score={credibilityScores.get(paper.title)?.score}
                             flags={credibilityScores.get(paper.title)?.flags}
                             size="sm"
@@ -305,7 +326,9 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
 
                         {/* Peer Review Badge */}
                         <span className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 font-medium uppercase text-[10px]">
-                          {paper.source === 'arxiv' ? 'Preprint' : 'Peer-Reviewed'}
+                          {paper.source === "arxiv"
+                            ? "Preprint"
+                            : "Peer-Reviewed"}
                         </span>
                       </div>
                     </div>
@@ -313,12 +336,14 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
                     <button
                       onClick={() => handleAddSource(paper)}
                       disabled={addedPaperIds.has(paper.doi || paper.title)}
-                      className={`w-full py-1.5 text-xs font-medium rounded transition-colors ${addedPaperIds.has(paper.doi || paper.title)
-                        ? "bg-green-50 text-green-700 cursor-default"
-                        : "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                        }`}
-                    >
-                      {addedPaperIds.has(paper.doi || paper.title) ? "✓ In Sources" : "+ Add to Sources"}
+                      className={`w-full py-1.5 text-xs font-medium rounded transition-colors ${
+                        addedPaperIds.has(paper.doi || paper.title)
+                          ? "bg-green-50 text-green-700 cursor-default"
+                          : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                      }`}>
+                      {addedPaperIds.has(paper.doi || paper.title)
+                        ? "✓ In Sources"
+                        : "+ Add to Sources"}
                     </button>
                   </div>
                 </div>
@@ -330,9 +355,9 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
               <div className="mt-6 text-center">
                 <button
                   onClick={handleLoadMore}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
-                >
-                  Load More Papers ({suggestedPapers.length - displayCount} remaining)
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg">
+                  Load More Papers ({suggestedPapers.length - displayCount}{" "}
+                  remaining)
                 </button>
               </div>
             )}
@@ -340,7 +365,8 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-400 text-sm">
-              No sources added yet. Search by title, author, or DOI to add reference metadata.
+              No sources added yet. Search by title, author, or DOI to add
+              reference metadata.
             </p>
           </div>
         )}
@@ -350,7 +376,9 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
       <AlertDialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
         <AlertDialogContent className="bg-white text-gray-900 border-gray-200">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-gray-900">Free Plan Limit Reached</AlertDialogTitle>
+            <AlertDialogTitle className="text-gray-900">
+              Free Plan Limit Reached
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-gray-500">
               You've used all 3 free searches for this month.
               {creditBalance > 0
@@ -359,7 +387,11 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowLimitDialog(false)} className="text-gray-700 bg-gray-100 hover:bg-gray-200 border-gray-200">Cancel</AlertDialogCancel>
+            <AlertDialogCancel
+              onClick={() => setShowLimitDialog(false)}
+              className="text-gray-700 bg-gray-100 hover:bg-gray-200 border-gray-200">
+              Cancel
+            </AlertDialogCancel>
             {creditBalance > 0 ? (
               <AlertDialogAction onClick={handleProceedWithCredits}>
                 Use 1 Credit
