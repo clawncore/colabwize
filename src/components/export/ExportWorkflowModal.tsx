@@ -96,26 +96,13 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             setInstructor(localStorage.getItem("user_instructor") || "");
             setRunningHead(project.title ? project.title.substring(0, 50).toUpperCase() : "");
 
-            // Synchronize with pre-existing audit if available
-            if (initialAuditReport) {
-                setAuditResult({
-                    violations: (initialAuditReport.issues || []).map((i: any) => ({
-                        id: i.id,
-                        ruleId: i.type || 'BACKEND',
-                        message: i.message,
-                        context: i.suggestedFix || i.context,
-                        severity: i.severity,
-                        location: i.location || { startPos: i.location?.start, endPos: i.location?.end }
-                    })),
-                    score: initialAuditReport.summary?.complianceScore
-                });
-                setAuditStarted(true);
-            } else {
-                setAuditResult(null);
-                setAuditStarted(false);
-            }
+            // REMOVED: Synchronization with stale initialAuditReport
+            // We ALWAYS want a fresh scan when entering the export workflow 
+            // to ensure compliance data matches the latest document content.
+            setAuditResult(null);
+            setAuditStarted(false);
         }
-    }, [isOpen, initialAuditReport]);
+    }, [isOpen]);
 
     // --- Step 1: Compliance Logic (formerly Audit) ---
     

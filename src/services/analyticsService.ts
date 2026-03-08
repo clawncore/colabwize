@@ -13,7 +13,8 @@ interface AnalyticsSummary {
 
 interface DashboardData {
   originalityScore?: number;
-  citationStatus?: "strong" | "good" | "weak" | "poor";
+  citationStatus?: string;
+  citationCount?: number;
   authorshipVerified?: boolean;
   projects?: any[]; // Array of user's projects/documents
   trendData?: any[];
@@ -49,6 +50,7 @@ export class AnalyticsService {
         citationStatus: dashboardData.citation_status || undefined,
 
         authorshipVerified: dashboardData.authorship_verified ?? undefined,
+        citationCount: dashboardData.citation_count ?? 0,
         trendData: dashboardData.trend_data || [],
         upcomingDeadlines: dashboardData.upcoming_deadlines || []
       };

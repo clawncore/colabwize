@@ -560,10 +560,9 @@ const EditorWorkspacePage: React.FC = () => {
       // 1. Insert in-text citation at cursor
       if (sourceId) {
         let citationUrl = undefined;
-        if (trackingInfo && trackingInfo.fullReferenceEntry) {
-          const src = trackingInfo.fullReferenceEntry;
+        if (source) {
           citationUrl =
-            src.url || (src.doi ? `https://doi.org/${src.doi}` : undefined);
+            source.url || (source.doi ? `https://doi.org/${source.doi}` : undefined);
         }
         editorInstance.commands.insertCitation({
           citationId: sourceId,
@@ -619,17 +618,26 @@ const EditorWorkspacePage: React.FC = () => {
           }
         }
 
-        const widthRef = editorInstance.getText();
+        const doc = editorInstance.state.doc;
+        let isAlreadyListed = false;
 
-        // Simple duplicate check to avoid adding to references multiple times
-        if (!widthRef.includes(refText) && !widthRef.includes(source.title)) {
+        // Use robust citationId check to see if this source is already in the bibliography
+        doc.descendants((node: any) => {
+          if (node.type.name === "bibliographyEntry" && node.attrs.citationId === sourceId) {
+            isAlreadyListed = true;
+            return false;
+          }
+        });
+
+        if (!isAlreadyListed) {
           // Save current cursor position
           const currentPos = editorInstance.state.selection.anchor;
 
           // Move to end WITHOUT focusing (to avoid scroll jumping)
-          const endPos = editorInstance.state.doc.content.size;
+          const endPos = doc.content.size;
           let chain = editorInstance.chain().setTextSelection(endPos);
 
+          const widthRef = editorInstance.getText();
           // Check if References header exists (heuristic)
           if (
             !widthRef.includes("References") &&
@@ -645,17 +653,38 @@ const EditorWorkspacePage: React.FC = () => {
             ]);
           }
 
+          // Build bibliography entry content with hyperlink if URL/DOI exists
+          const content: any[] = [{ type: "text", text: refText }];
+          const url = source.url || (source.doi ? `https://doi.org/${source.doi}` : null);
+          if (url) {
+            content.push({ type: "text", text: " " });
+            content.push({
+              type: "text",
+              text: url,
+              marks: [
+                {
+                  type: "link",
+                  attrs: {
+                    href: url,
+                    target: "_blank",
+                    class: "bibliography-url-link"
+                  }
+                }
+              ]
+            });
+          }
+
           // Insert directly as a bibliographyEntry node to prevent double-normalization flash
           chain
             .insertContent({
               type: "bibliographyEntry",
               attrs: {
                 citationId: sourceId,
-                url: source.url || source.doi,
+                url: url,
                 doi: source.doi,
                 refText: refText,
               },
-              content: [{ type: "text", text: refText }],
+              content: content,
             })
             .run();
 

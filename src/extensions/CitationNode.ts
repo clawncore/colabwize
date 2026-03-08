@@ -70,10 +70,13 @@ export const CitationNode = Node.create<CitationNodeOptions>({
 
     // Deterministic rendering for export and in-editor display
     renderHTML({ HTMLAttributes, node }) {
-        const { citationId, text } = node.attrs;
+        const { citationId, text, url } = node.attrs;
 
         // Strict canonical rendering: only render what the backend provided
         const displayText = text || "[citation]";
+
+        // Use external URL if available, fallback to internal anchor
+        const href = url || `#bib-${citationId}`;
 
         return [
             "a",
@@ -81,7 +84,9 @@ export const CitationNode = Node.create<CitationNodeOptions>({
                 class: "citation-node",
                 "data-citation-id": citationId,
                 "data-text": displayText,
-                href: `#bib-${citationId}`,
+                href: href,
+                target: url ? "_blank" : undefined,
+                rel: url ? "noopener noreferrer" : undefined,
                 style: `color:#2563eb; font-weight:500; cursor:pointer; text-decoration:none;`,
             }),
             displayText

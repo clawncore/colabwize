@@ -402,9 +402,14 @@ export const Dashboard: React.FC = () => {
                   {["premium", "plus"].some((p) =>
                     userPlan.toLowerCase().includes(p),
                   ) ? (
-                    <span className="font-bold text-gray-900 capitalize">
-                      {dashboardData.citationStatus || "-"}
-                    </span>
+                    <div className="flex flex-col items-end">
+                      <span className="font-bold text-gray-900">
+                        {dashboardData.citationCount || 0}
+                      </span>
+                      <span className="text-[10px] text-gray-500 uppercase font-bold">
+                        {dashboardData.citationStatus || "-"}
+                      </span>
+                    </div>
                   ) : (
                     <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded flex items-center pointer-events-none">
                       <Lock className="w-2.5 h-2.5 mr-1" /> Premium
@@ -517,32 +522,41 @@ export const Dashboard: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="flex items-baseline mb-2">
-                  <span className="text-3xl font-bold text-gray-900 capitalize">
+                <div className="flex items-baseline mb-2 justify-between w-full">
+                  <span className="text-4xl font-extrabold text-gray-900 tracking-tight">
+                    {dashboardData.citationCount || 0}
+                  </span>
+                  <span className="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 capitalize">
                     {dashboardData.citationStatus || "Pending"}
                   </span>
                 </div>
                 <div className="flex items-center mt-3 space-x-2">
                   <div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className={`h-1.5 rounded-full shadow-sm ${dashboardData.citationStatus === "strong" ? "bg-gradient-to-r from-green-500 to-emerald-500" : "bg-gradient-to-r from-amber-500 to-orange-500"}`}
+                      className={`h-1.5 rounded-full shadow-sm ${dashboardData.citationStatus === "Strong" ? "bg-gradient-to-r from-green-500 to-emerald-500" : dashboardData.citationStatus === "Good" ? "bg-gradient-to-r from-blue-500 to-indigo-500" : "bg-gradient-to-r from-amber-500 to-orange-500"}`}
                       style={{
                         width:
-                          dashboardData.citationStatus === "strong"
-                            ? "85%"
-                            : dashboardData.citationStatus === "good"
-                              ? "70%"
-                              : "40%",
+                          dashboardData.citationStatus === "Strong"
+                            ? "95%"
+                            : dashboardData.citationStatus === "Good"
+                              ? "75%"
+                              : dashboardData.citationStatus === "Fair"
+                                ? "50%"
+                                : dashboardData.citationStatus === "Active"
+                                  ? "25%"
+                                  : "5%",
                       }}></div>
                   </div>
                   <span className="text-xs font-bold text-gray-500">
-                    {dashboardData.citationStatus === "strong"
-                      ? "85/100"
-                      : dashboardData.citationStatus === "good"
-                        ? "70/100"
-                        : dashboardData.citationStatus
-                          ? "40/100"
-                          : "0/100"}
+                    {dashboardData.citationStatus === "Strong"
+                      ? "95/100"
+                      : dashboardData.citationStatus === "Good"
+                        ? "75/100"
+                        : dashboardData.citationStatus === "Fair"
+                          ? "50/100"
+                          : dashboardData.citationStatus === "Active"
+                            ? "25/100"
+                            : "0/100"}
                   </span>
                 </div>
               </div>
