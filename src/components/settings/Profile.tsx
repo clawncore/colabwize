@@ -13,9 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
 } from "../ui/dialog";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 export default function Profile() {
   const [profile, setProfile] = useState<ProfileData>({
@@ -29,7 +28,7 @@ export default function Profile() {
     location: "",
   });
   const [originalProfile, setOriginalProfile] = useState<ProfileData | null>(
-    null
+    null,
   );
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +63,7 @@ export default function Profile() {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
@@ -89,10 +88,10 @@ export default function Profile() {
   const handleSaveClick = () => {
     // Check if user has phone number to offer choice
     // If we have both, show selector. If only email, default to email.
-    // For now, let's always show selector if we want to be explicit, 
+    // For now, let's always show selector if we want to be explicit,
     // or just checking if phone exists to enable that option.
 
-    // Logic: 
+    // Logic:
     // 1. Store pending data
     setPendingProfileData(profile);
     // 2. Open Method Selection Modal
@@ -105,7 +104,7 @@ export default function Profile() {
       // Request OTP with selected method
       const response = await apiClient.post("/api/users/request-otp", {
         action: "profile_update",
-        delivery_method: otpMethod
+        delivery_method: otpMethod,
       });
 
       if (response.success) {
@@ -113,7 +112,7 @@ export default function Profile() {
         setShowOTPModal(true);
         toast({
           title: "Code Sent",
-          description: `Verification code sent to your ${otpMethod === 'email' ? 'email' : 'phone'}.`,
+          description: `Verification code sent to your ${otpMethod === "email" ? "email" : "phone"}.`,
         });
       } else {
         throw new Error(response.message || "Failed to request OTP");
@@ -121,8 +120,7 @@ export default function Profile() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description:
-          error.message || "Failed to send code. Please try again.",
+        description: error.message || "Failed to send code. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -266,16 +264,17 @@ export default function Profile() {
                           // More reliable: rely on the fact that uploadAvatar returns the URL (from Service)
                           // We need to capture the return from ProfileService.uploadAvatar
                           // Let's modify the line above:
-                          // const url = await ProfileService.uploadAvatar(file); 
+                          // const url = await ProfileService.uploadAvatar(file);
                           // (Wait, ProfileService.uploadAvatar return type in current file?)
                           // Looking at service file: returns response.fileUrl;
 
                           // Re-implementing call to capture URL:
-                          const uploadedUrl = await ProfileService.uploadAvatar(file);
+                          const uploadedUrl =
+                            await ProfileService.uploadAvatar(file);
 
                           if (uploadedUrl) {
                             await supabase.auth.updateUser({
-                              data: { avatar_url: uploadedUrl }
+                              data: { avatar_url: uploadedUrl },
                             });
                             // This triggers useAuth subscription update
                           }
@@ -520,8 +519,9 @@ export default function Profile() {
             <DialogHeader>
               <DialogTitle>Verify Profile Update</DialogTitle>
               <DialogDescription>
-                We've sent a 6-digit verification code to your {otpMethod === 'sms' ? 'phone number' : 'email address'}.
-                Please enter it below to confirm your profile update.
+                We've sent a 6-digit verification code to your{" "}
+                {otpMethod === "sms" ? "phone number" : "email address"}. Please
+                enter it below to confirm your profile update.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
@@ -576,45 +576,16 @@ export default function Profile() {
           </DialogHeader>
 
           <div className="py-4">
-            <RadioGroup
-              defaultValue="email"
-              value={otpMethod}
-              onValueChange={(val) => setOtpMethod(val as "email" | "sms")}
-              className="flex flex-col space-y-3"
-            >
-              <div className="flex items-center space-x-2 border p-3 rounded-lg cursor-pointer hover:bg-gray-50">
-                <RadioGroupItem value="email" id="method-email" />
-                <Label htmlFor="method-email" className="flex-1 cursor-pointer">
-                  <div className="font-medium">Email</div>
-                  <div className="text-sm text-gray-500">{profile.email}</div>
-                </Label>
+            <div className="flex items-center space-x-2 border p-3 rounded-lg bg-gray-50">
+              <div className="flex-1">
+                <div className="font-medium text-gray-900">Email</div>
+                <div className="text-sm text-gray-500">{profile.email}</div>
               </div>
-
-              {/* Only show/enable phone option if phone number exists? 
-                  For now showing it but it might fail if no phone. 
-                  Ideally we check profile.phone_number if available in state. 
-                  (Note: profile state object might not have phone_number if not fetched/mapped)
-                  ProfileData interface doesn't have phone_number. 
-                  So let's assume if they select SMS and have no phone, backend error will handle it.
-              */}
-              <div className="flex items-center space-x-2 border p-3 rounded-lg cursor-pointer hover:bg-gray-50">
-                <RadioGroupItem value="sms" id="method-sms" />
-                <Label htmlFor="method-sms" className="flex-1 cursor-pointer">
-                  <div className="font-medium">Phone Number</div>
-                  <div className="text-sm text-gray-500">
-                    {/* Phone number not visible in frontend ProfileData interface currently, so just generic text */}
-                    Via SMS
-                  </div>
-                </Label>
-              </div>
-            </RadioGroup>
+            </div>
           </div>
 
           <DialogFooter className="sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setShowMethodModal(false)}
-            >
+            <Button variant="outline" onClick={() => setShowMethodModal(false)}>
               Cancel
             </Button>
             <Button
