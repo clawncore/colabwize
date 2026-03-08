@@ -377,6 +377,8 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
           </div>
         )}
       </div>
+
+
     </div>
   );
 };

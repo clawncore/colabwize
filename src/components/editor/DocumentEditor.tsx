@@ -844,7 +844,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             description: `We've detected you're using ${state.stats.majorityStyle} formatting and updated your settings.`,
           });
         }
-      } catch (err) { }
+      } catch (err) {}
     }, 5000);
 
     return () => clearInterval(interval);
