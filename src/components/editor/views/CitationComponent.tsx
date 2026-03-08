@@ -189,22 +189,23 @@ export const CitationComponent = (props: NodeViewProps) => {
 
   return (
     <NodeViewWrapper className="inline-block" as="span">
-      <HoverCard openDelay={200} closeDelay={200} onOpenChange={handleOpenChange}>
+      <HoverCard
+        openDelay={200}
+        closeDelay={200}
+        onOpenChange={handleOpenChange}>
         <HoverCardTrigger asChild>
           <a
             className="citation-node citation-pill"
             data-citation-id={citationId}
             href={`#bib-${citationId}`}
-            onClick={scrollToRef}
-          >
+            onClick={scrollToRef}>
             {displayText}
           </a>
         </HoverCardTrigger>
         <HoverCardContent
           className="w-[500px] p-3 bg-white shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] rounded-xl border border-gray-100 z-50 flex flex-col gap-2.5"
           side="bottom"
-          align="start"
-        >
+          align="start">
           {/* Top Header Section */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -217,16 +218,22 @@ export const CitationComponent = (props: NodeViewProps) => {
             </div>
             <div className="flex flex-col items-end gap-1 shrink-0">
               {worldCitationCount !== undefined && (
-                <Badge variant="outline" className="px-1.5 py-0 text-[10px] text-green-600 bg-green-50/50 border-green-100 shadow-none font-bold">
+                <Badge
+                  variant="outline"
+                  className="px-1.5 py-0 text-[9px] text-green-600 bg-green-50/50 border-green-100 shadow-none font-bold">
                   {worldCitationCount} WORLD CITES
                 </Badge>
               )}
               {citationCount !== undefined && citationCount > 0 && (
-                <Badge variant="outline" className="px-1.5 py-0 text-[10px] text-blue-600 bg-blue-50/50 border-blue-100 shadow-none font-bold">
+                <Badge
+                  variant="outline"
+                  className="px-1.5 py-0 text-[9px] text-blue-600 bg-blue-50/50 border-blue-100 shadow-none font-bold">
                   {citationCount} DOC CITES
                 </Badge>
               )}
-              <Badge variant="secondary" className="px-1.5 py-0 text-[10px] bg-gray-50 text-gray-400 border-0 flex items-center gap-1 font-bold">
+              <Badge
+                variant="secondary"
+                className="px-1.5 py-0 text-[9px] bg-gray-50 text-gray-400 border-0 flex items-center gap-1 font-bold">
                 REVIEW
               </Badge>
             </div>
@@ -243,17 +250,25 @@ export const CitationComponent = (props: NodeViewProps) => {
           <div className="flex items-center justify-between text-[11px] py-1.5 border-y border-gray-50">
             <div className="flex items-center gap-4 text-gray-500 font-medium">
               <span className="flex items-center gap-1">
-                <span className="text-[9px] text-gray-300 font-black uppercase tracking-tighter">Pub</span>
+                <span className="text-[9px] text-gray-300 font-black uppercase tracking-tighter">
+                  Pub
+                </span>
                 <span className="text-gray-700 truncate max-w-[150px]">
-                  {(metadata?.metadata as any)?.journal || (metadata?.metadata as any)?.publisher || "Academic Publication"}
+                  {(metadata?.metadata as any)?.journal ||
+                    (metadata?.metadata as any)?.publisher ||
+                    "Academic Publication"}
                 </span>
               </span>
               <span className="flex items-center gap-1">
-                <span className="text-[9px] text-gray-300 font-black uppercase tracking-tighter">Year</span>
+                <span className="text-[9px] text-gray-300 font-black uppercase tracking-tighter">
+                  Year
+                </span>
                 <span className="text-gray-700">{metadata?.year || "N/A"}</span>
               </span>
             </div>
-            <Badge variant="outline" className="text-[9px] font-black text-orange-600 border-orange-100 bg-orange-50/50 px-1.5 py-0 h-4 uppercase">
+            <Badge
+              variant="outline"
+              className="text-[9px] font-black text-orange-600 border-orange-100 bg-orange-50/50 px-1.5 py-0 h-4 uppercase">
               Open Access
             </Badge>
           </div>
