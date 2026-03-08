@@ -26,7 +26,10 @@ export const CitationComponent = (props: NodeViewProps) => {
       }
     };
 
-    updateMetadata();
+    const worldCitationCount = metadata?.metadata?.citationCount;
+    const abstract = metadata?.metadata?.abstract;
+
+    const displayText = text || "[citation]";
 
     // Listen for future updates (e.g. from Audit results syncing)
     CitationRegistryService.addListener(updateMetadata);
@@ -37,8 +40,15 @@ export const CitationComponent = (props: NodeViewProps) => {
 
   const worldCitationCount = metadata?.metadata?.citationCount;
   const abstract = metadata?.metadata?.abstract;
+  const citationCount = Number(metadata?.metadata?.impactFactor || 0); // Using impactFactor as a proxy if doc citations not available
 
   const displayText = text || "[citation]";
+
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      // Logic when hovercard opens
+    }
+  };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -228,10 +238,13 @@ export const CitationComponent = (props: NodeViewProps) => {
 
   return (
     <NodeViewWrapper className="inline-block" as="span">
-      <HoverCard openDelay={200} closeDelay={200}>
+      <HoverCard
+        openDelay={200}
+        closeDelay={200}
+        onOpenChange={handleOpenChange}>
         <HoverCardTrigger asChild>
           <a
-            className={`citation-node citation-pill ${props.selected ? "ProseMirror-selectednode" : ""}`}
+            className="citation-node citation-pill"
             data-citation-id={citationId}
             href={`#bib-${citationId}`}
             onClick={scrollToRef}>
@@ -239,57 +252,64 @@ export const CitationComponent = (props: NodeViewProps) => {
           </a>
         </HoverCardTrigger>
         <HoverCardContent
-          className="w-[380px] p-2.5 bg-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] rounded-xl border border-gray-100 z-50 flex flex-col gap-1.5"
+          className="w-[500px] p-3 bg-white shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] rounded-xl border border-gray-100 z-50 flex flex-col gap-2.5"
           side="bottom"
           align="start">
           {/* Top Header Section */}
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h4 className="text-[13px] font-bold text-gray-900 leading-tight line-clamp-2">
+              <h4 className="text-[15px] font-bold text-gray-900 leading-tight line-clamp-2">
                 {metadata?.sourceTitle || "Reference Title Unavailable"}
               </h4>
-              <p className="text-[11px] text-gray-500 font-medium truncate mt-0.5">
+              <p className="text-[12px] text-gray-500 font-medium truncate mt-0.5">
                 {metadata?.authors?.join(", ") || "No Authors Found"}
               </p>
             </div>
-            <div className="flex flex-col items-end gap-1 shrink-0 pt-0.5">
+            <div className="flex flex-col items-end gap-1 shrink-0">
               {worldCitationCount !== undefined && (
                 <Badge
                   variant="outline"
-                  className="px-1 py-0 text-[8px] text-green-600 bg-green-50/50 border-green-100 shadow-none font-bold">
-                  {worldCitationCount}
+                  className="px-1.5 py-0 text-[9px] text-green-600 bg-green-50/50 border-green-100 shadow-none font-bold">
+                  {worldCitationCount} WORLD CITES
+                </Badge>
+              )}
+              {citationCount !== undefined && citationCount > 0 && (
+                <Badge
+                  variant="outline"
+                  className="px-1.5 py-0 text-[9px] text-blue-600 bg-blue-50/50 border-blue-100 shadow-none font-bold">
+                  {citationCount} DOC CITES
                 </Badge>
               )}
               <Badge
                 variant="secondary"
-                className="px-1 py-0 text-[8px] bg-slate-50 text-slate-500 border-slate-200 flex items-center gap-1 font-black uppercase tracking-widest shrink-0">
-                {metadata?.metadata?.database || "REVIEW"}
+                className="px-1.5 py-0 text-[9px] bg-gray-50 text-gray-400 border-0 flex items-center gap-1 font-bold">
+                REVIEW
               </Badge>
             </div>
           </div>
 
           {/* Abstract Section */}
           {abstract && (
-            <p className="text-[11px] text-gray-600 leading-tight line-clamp-2 mt-0.5 italic border-l-2 border-gray-200 pl-2">
+            <p className="text-[12px] text-gray-600 leading-snug line-clamp-3 mt-1 italic border-l-2 border-gray-200 pl-2">
               "{abstract}"
             </p>
           )}
 
           {/* Compact Meta Row */}
-          <div className="flex items-center justify-between text-[10px] py-1 border-y border-gray-50">
-            <div className="flex items-center gap-3 text-gray-500 font-medium">
+          <div className="flex items-center justify-between text-[11px] py-1.5 border-y border-gray-50">
+            <div className="flex items-center gap-4 text-gray-500 font-medium">
               <span className="flex items-center gap-1">
-                <span className="text-[8px] text-gray-300 font-black uppercase tracking-tighter">
+                <span className="text-[9px] text-gray-300 font-black uppercase tracking-tighter">
                   Pub
                 </span>
-                <span className="text-gray-700 truncate max-w-[120px]">
+                <span className="text-gray-700 truncate max-w-[150px]">
                   {(metadata?.metadata as any)?.journal ||
                     (metadata?.metadata as any)?.publisher ||
                     "Academic Publication"}
                 </span>
               </span>
               <span className="flex items-center gap-1">
-                <span className="text-[8px] text-gray-300 font-black uppercase tracking-tighter">
+                <span className="text-[9px] text-gray-300 font-black uppercase tracking-tighter">
                   Year
                 </span>
                 <span className="text-gray-700">{metadata?.year || "N/A"}</span>
@@ -297,7 +317,7 @@ export const CitationComponent = (props: NodeViewProps) => {
             </div>
             <Badge
               variant="outline"
-              className="text-[8px] font-black text-orange-600 border-orange-100 bg-orange-50/50 px-1 py-0 h-3.5 uppercase">
+              className="text-[9px] font-black text-orange-600 border-orange-100 bg-orange-50/50 px-1.5 py-0 h-4 uppercase">
               Open Access
             </Badge>
           </div>

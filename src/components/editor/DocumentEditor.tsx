@@ -354,34 +354,34 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           link: false,
         } as any),
         ...(isCollaborative &&
-        collabReady &&
-        providerRef.current &&
-        ydocRef.current
+          collabReady &&
+          providerRef.current &&
+          ydocRef.current
           ? [
-              Collaboration.configure({
-                document: ydocRef.current,
-              }),
-              CollaborationCursor.configure({
-                provider: providerRef.current,
-                user: {
-                  name:
-                    user?.user_metadata?.full_name ||
-                    user?.email ||
-                    "Anonymous",
-                  color: cursorColor,
-                },
-              }),
-              AuthorshipExtension.configure({
-                user: {
-                  id: user?.id,
-                  name:
-                    user?.user_metadata?.full_name ||
-                    user?.email ||
-                    "Anonymous",
-                  color: cursorColor,
-                },
-              } as any),
-            ]
+            Collaboration.configure({
+              document: ydocRef.current,
+            }),
+            CollaborationCursor.configure({
+              provider: providerRef.current,
+              user: {
+                name:
+                  user?.user_metadata?.full_name ||
+                  user?.email ||
+                  "Anonymous",
+                color: cursorColor,
+              },
+            }),
+            AuthorshipExtension.configure({
+              user: {
+                id: user?.id,
+                name:
+                  user?.user_metadata?.full_name ||
+                  user?.email ||
+                  "Anonymous",
+                color: cursorColor,
+              },
+            } as any),
+          ]
           : []),
         HighlightExtension,
         CharacterCount,
@@ -420,8 +420,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         CitationNode,
         BibliographyEntry,
         CitationLifecycleExtension,
-        AutoNumbering,
-        GrammarExtension,
+        AutoNumbering, // Enable automatic figure and table numbering
+        GrammarExtension, // AI Grammar Checker
         CitationScannerExtension,
       ],
       content: isCollaborative
@@ -489,7 +489,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             try {
               const sel = NodeSelection.create(view.state.doc, pos);
               view.dispatch(view.state.tr.setSelection(sel));
-            } catch (e) {}
+            } catch (e) { }
             return true;
           }
 
@@ -577,16 +577,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             setTimeout(async () => {
               if (editor && !editor.isDestroyed) {
                 try {
-                  const {
-                    detectAndNormalizeBibliography,
-                    detectAndNormalizeCitations,
-                  } = await import("./utils/normalization");
+                  // MUST BE STRICTLY SEQUENTIAL! 
+                  // If run concurrently, they cache positions, transaction #1 shifts the document, 
+                  // and transaction #2 overwrites/deletes wrong text based on stale positions.
+                  const { detectAndNormalizeBibliography, detectAndNormalizeCitations } = await import("./utils/normalization");
                   await detectAndNormalizeBibliography(editor, project.id);
-                  await detectAndNormalizeCitations(
-                    editor,
-                    project.id,
-                    project.citations || [],
-                  );
+                  await detectAndNormalizeCitations(editor, project.id, project.citations || []);
                 } catch (e) {
                   console.error("Normalization error:", e);
                 }
@@ -637,24 +633,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           await CitationRegistryService.initializeFromBackend(project.id);
           (window as any).__currentProjectId__ = project.id;
 
-          import("./utils/normalization").then(
-            async ({
-              detectAndNormalizeBibliography,
-              detectAndNormalizeCitations,
-            }) => {
-              try {
-                // Await sequentially instead of Promise.all to avoid conflicting offset math
-                await detectAndNormalizeBibliography(editor, project.id);
-                await detectAndNormalizeCitations(
-                  editor,
-                  project.id,
-                  project.citations || [],
-                );
-              } catch (e) {
-                console.error("Collab Normalization Failed:", e);
-              }
-            },
-          );
+          import("./utils/normalization").then(async ({ detectAndNormalizeBibliography, detectAndNormalizeCitations }) => {
+            try {
+              // Await sequentially instead of Promise.all to avoid conflicting offset math
+              await detectAndNormalizeBibliography(editor, project.id);
+              await detectAndNormalizeCitations(editor, project.id, project.citations || []);
+            } catch (e) {
+              console.error("Collab Normalization Failed:", e);
+            }
+          });
         } catch (e) {
           console.error("Collab init registry failed:", e);
         }
@@ -749,6 +736,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         const start = $from.start();
         const end = $from.end();
 
+        // Get text of the current block
         const textToCheck = state.doc.textBetween(start, end, " ", " ");
 
         if (!textToCheck || textToCheck.length < 5) return;
@@ -786,7 +774,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) {} // Dispatch clear
+          } catch (e) { } // Dispatch clear
           console.log("âœ… No grammar issues in block.");
           return;
         }
@@ -824,7 +812,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (matchCount > 0 || errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) {}
+          } catch (e) { }
           console.log(`âœ… Applied ${matchCount} grammar highlights to block.`);
         }
       } catch (error) {
@@ -842,39 +830,25 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
     const interval = setInterval(() => {
       try {
-        const citationPlugin = editor.state.plugins.find((p) =>
-          (p as any).key?.startsWith("citationScanner"),
-        );
+        const citationPlugin = editor.state.plugins.find(p => (p as any).key?.startsWith("citationScanner"));
         const state = citationPlugin?.getState(editor.state);
 
-        if (
-          state?.stats?.majorityStyle &&
-          state.stats.majorityStyle !== project.citation_style
-        ) {
-          console.log(
-            `[AutoStyle] Detected style change: ${state.stats.majorityStyle}`,
-          );
+        if (state?.stats?.majorityStyle && state.stats.majorityStyle !== project.citation_style) {
+          console.log(`[AutoStyle] Detected style change: ${state.stats.majorityStyle}`);
           onProjectUpdate?.({
             ...project,
-            citation_style: state.stats.majorityStyle,
+            citation_style: state.stats.majorityStyle
           });
           toast({
             title: "Style Detected",
             description: `We've detected you're using ${state.stats.majorityStyle} formatting and updated your settings.`,
           });
         }
-      } catch (err) {}
+      } catch (err) { }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [
-    editor,
-    isEditorMounted,
-    project.citation_style,
-    onProjectUpdate,
-    toast,
-    project,
-  ]);
+  }, [editor, isEditorMounted, project.citation_style, onProjectUpdate, toast]);
 
   const statsRef = useRef({
     timeSpent: 0,
@@ -1233,11 +1207,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               <div className="flex items-center space-x-2 flex-wrap">
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isPreviewMode
-                      ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
+                    ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1253,11 +1226,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isFocusMode
-                      ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
+                    ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />

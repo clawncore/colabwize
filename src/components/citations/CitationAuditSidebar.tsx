@@ -98,41 +98,6 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
       }).run();
     });
   }, [editor]);
-
-  const syncRegistryWithReport = useCallback(async (report: any) => {
-    if (!report?.verificationResults?.length) return;
-    
-    const { CitationRegistryService } = await import("../../services/CitationRegistryService");
-    
-    report.verificationResults.forEach((res: any) => {
-      // Sync metadata if we found a paper, regardless of confidence (user wants to see 'closest' matches)
-      if (res.foundPaper && res.inlineLocation) {
-        // Find the citation node at this location to get the citationId
-        let citationId: string | null = null;
-        editor?.state.doc.descendants((node, pos) => {
-          if (node.type.name === 'citation' && pos === res.inlineLocation.start) {
-            citationId = node.attrs.citationId;
-            return false;
-          }
-        });
-
-        if (citationId) {
-          CitationRegistryService.updateCitationMetadata(citationId, {
-            sourceTitle: res.foundPaper.title,
-            authors: res.foundPaper.authors,
-            year: res.foundPaper.year,
-            url: res.foundPaper.url,
-            doi: res.foundPaper.doi,
-            metadata: {
-              ...res.foundPaper,
-              journal: res.foundPaper.journal || res.foundPaper.publisher,
-              database: res.foundPaper.database
-            }
-          });
-        }
-      }
-    });
-  }, [editor]);
   // ── Start the async backend audit ─────────────────────────────────────────
   const handleRunAudit = useCallback(async () => {
     console.log("handleRunAudit triggered!");
@@ -196,7 +161,6 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
             setAuditStatus("COMPLETED");
             setAuditReport(payload.report);
             applyHighlights(payload.report);
-            syncRegistryWithReport(payload.report);
             onAuditComplete?.(payload.report);
             sse.close();
           } else if (payload.status === "FAILED") {
@@ -232,7 +196,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
       }, 100);
       return () => clearTimeout(timer);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialResults]); // Only run once on mount
 
   // ── Derived values ─────────────────────────────────────────────────────────
@@ -402,12 +366,17 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
               </button>
             </div>
 
-
+            {auditReport.isCached && (
+              <div className="px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest leading-none">
+                  Cached Result
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
-
-
     </div>
   );
 };
