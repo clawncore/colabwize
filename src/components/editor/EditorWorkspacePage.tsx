@@ -786,7 +786,7 @@ const EditorWorkspacePage: React.FC = () => {
       {/* Left Sidebar - Documents List or Audit Panel - Hidden in Focus Mode */}
       {!isFocusMode && (
         <div
-          className={`flex-shrink-0 bg-white border-r border-gray-100 flex flex-col transition-all duration-300 ease-in-out z-30 shadow-sm relative overflow-hidden h-full`}>
+          className={`flex-shrink-0 bg-white border-r border-gray-100 flex flex-row transition-all duration-300 ease-in-out z-30 shadow-sm relative overflow-hidden h-full`}>
           {/* Vertical Navigation Rail (The "Display" panel) */}
           <div
             className={`${isNavRailOpen ? "w-[240px]" : "w-[60px]"} h-full flex-shrink-0 border-r border-gray-100 flex flex-col bg-[#F9FAFB]/90 transition-all duration-300 overflow-hidden`}>
