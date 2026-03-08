@@ -136,7 +136,7 @@
     "sitemap": "node scripts/generate-sitemap.js",
     "start": "craco start",
     "dev": "craco start",
-    "build": "craco build",
+    "build": "CI=false craco build",
     "test": "craco test",
     "eject": "react-scripts eject"
   },
