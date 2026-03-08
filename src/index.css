@@ -1349,7 +1349,7 @@ mark.citation-highlight[data-type="violation"] {
 [data-citation-style="ieee"].citation-scan-linked {
   font-family: inherit;
 }
-=======
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
