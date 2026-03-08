@@ -10,7 +10,7 @@ export const MathExtension = Node.create({
     inline: true,
 
     draggable: true,
-
+    selectable: true,
     atom: true,
 
     addAttributes() {
@@ -60,6 +60,35 @@ export const MathExtension = Node.create({
 
             return {
                 dom,
+                update: (updatedNode) => {
+                    if (updatedNode.type.name !== node.type.name) {
+                        return false;
+                    }
+
+                    const newLatex = updatedNode.attrs.latex;
+                    if (newLatex !== node.attrs.latex) {
+                        try {
+                            katex.render(newLatex, dom, {
+                                throwOnError: false,
+                                errorColor: '#cc0000',
+                            });
+                            dom.title = newLatex;
+                        } catch (error) {
+                            dom.textContent = newLatex;
+                        }
+                    }
+                    return true;
+                },
+                selectNode: () => {
+                    dom.classList.add('ProseMirror-selectednode');
+                    dom.style.outline = '2px solid #2563eb';
+                    dom.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+                },
+                deselectNode: () => {
+                    dom.classList.remove('ProseMirror-selectednode');
+                    dom.style.outline = 'none';
+                    dom.style.backgroundColor = 'transparent';
+                },
             };
         };
     },
