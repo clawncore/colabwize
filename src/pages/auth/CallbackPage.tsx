@@ -12,9 +12,6 @@ const CallbackPage: React.FC = () => {
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
-      // Set auth provider for apiClient
-      localStorage.setItem("auth_provider", "google");
-
       try {
         console.log("OAuth callback page loaded");
 
@@ -47,6 +44,10 @@ const CallbackPage: React.FC = () => {
           console.log("Session established, attempting to sync with backend");
           const user = session.user;
 
+          // Set auth provider dynamically for apiClient
+          const provider = user.app_metadata?.provider || "oauth";
+          localStorage.setItem("auth_provider", provider);
+
           // Optimistic verification: Check if user exists in DB (or create them)
           if (user) {
             try {
@@ -62,9 +63,9 @@ const CallbackPage: React.FC = () => {
 
                 // Check for 2FA requirement FIRST (Backend might return requires_2fa: true without a full user object)
                 if (syncResult.requires_2fa && (syncResult.userId || syncResult.user?.id)) {
-                  console.log("2FA required for Google user, redirecting to verification");
+                  console.log(`2FA required for ${provider} user, redirecting to verification`);
                   const uid = syncResult.userId || syncResult.user?.id;
-                  navigate(`/login?requires_2fa=true&userId=${uid}&provider=google`, { replace: true });
+                  navigate(`/login?requires_2fa=true&userId=${uid}&provider=${provider}`, { replace: true });
                   return;
                 }
 
@@ -74,12 +75,14 @@ const CallbackPage: React.FC = () => {
                   // Refresh client-side user state
                   await refreshUser();
 
-                  // Only redirect to survey if explicitly required and user is NEW
-                  // We default to dashboard for existing users to prevent loops
-                  const isNewUser = syncResult.user.created_at && (new Date().getTime() - new Date(syncResult.user.created_at).getTime() < 60000); // Created in last minute
+                  // IMPROVED: Logic to determine if user should go to survey
+                  // 1. Trust backend flag explicitly
+                  // 2. Fallback to "new user" detection if backend flag is missing but it's a very recent account
+                  const surveyCompleted = syncResult.user.survey_completed;
+                  const isNewUser = syncResult.user.created_at && (new Date().getTime() - new Date(syncResult.user.created_at).getTime() < 300000); // Created in last 5 minutes
 
-                  if (isNewUser && !syncResult.user.survey_completed) {
-                    console.log("New user needs to complete survey, redirecting to signup/onboarding");
+                  if ((!surveyCompleted || (isNewUser && surveyCompleted === false)) && !syncResult.user.onboarding_skipped) {
+                    console.log("[CallbackPage] User needs to complete survey, redirecting to onboarding");
 
                     // Store OAuth user data for the signup flow
                     const oauthUserData = {
@@ -111,35 +114,34 @@ const CallbackPage: React.FC = () => {
                       redirectUrl += `?${params.toString()}`;
                     }
 
-                    console.log("Redirecting to:", redirectUrl);
+                    console.log("Redirecting to onboarding:", redirectUrl);
                     navigate(redirectUrl, { replace: true });
-                    return;
-                  }
-
-                  // Check for 2FA requirement
-                  if (syncResult.requires_2fa && syncResult.userId) {
-                    console.log("2FA required for Google user, redirecting to verification");
-                    // We need to pass the userId and indicate it's a google login needing 2FA
-                    navigate(`/login?requires_2fa=true&userId=${syncResult.userId}&provider=google`, { replace: true });
                     return;
                   }
 
                   // Default: Go to Dashboard
                   console.log("User authenticated, redirecting to dashboard");
-                  await new Promise((r) => setTimeout(r, 100)); // Small delay for state propagation
                   navigate("/dashboard", { replace: true });
                   return;
                 }
               }
-            } catch (err) {
-              console.warn("Sync failed, but session exists. Proceeding to dashboard optimistically:", err);
+            } catch (err: any) {
+              console.error("Sync failed:", err);
+
+              // If it's a CORS or network error, we should probably tell the user
+              if (err.message?.includes("Failed to fetch") || err.message?.includes("Network error")) {
+                 setError("Could not reach the authentication server. Please check your internet connection and try again.");
+                 setLoading(false);
+                 return;
+              }
+
               // Fallback: Proceed to Dashboard if sync fails but we have a session
               // This prevents locking users out due to backend glitches
               navigate("/dashboard", { replace: true });
               return;
             }
 
-            // Fallback for logic flow (should ideally not reach here if session exists)
+            // Fallback for logic flow
             navigate("/dashboard", { replace: true });
             return;
           }

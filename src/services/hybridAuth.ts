@@ -268,12 +268,18 @@ export async function syncUser(): Promise<{
     const tokenToUse = session.access_token;
 
     // Determine header based on current provider
-    const isGoogle =
-      typeof localStorage !== "undefined" &&
-      localStorage.getItem("auth_provider") === "google";
-    const authHeader = isGoogle
-      ? { "X-Auth-Google": `Bearer ${tokenToUse}` }
-      : { "X-Auth-Organic": `Bearer ${tokenToUse}` };
+    const authProvider = typeof localStorage !== "undefined" 
+      ? localStorage.getItem("auth_provider") || "organic" 
+      : "organic";
+    
+    let authHeader: Record<string, string>;
+    if (authProvider === "google") {
+      authHeader = { "X-Auth-Google": `Bearer ${tokenToUse}` };
+    } else if (authProvider === "azure" || authProvider === "microsoft") {
+      authHeader = { "X-Auth-Microsoft": `Bearer ${tokenToUse}` };
+    } else {
+      authHeader = { "X-Auth-Organic": `Bearer ${tokenToUse}` };
+    }
 
     const response = await fetchWithTimeout(
       `${API_BASE_URL}/api/auth/hybrid/signin`,
@@ -508,12 +514,18 @@ export async function updateUserProfile(updates: {
     }
 
     // Determine header based on current provider
-    const isGoogle =
-      typeof localStorage !== "undefined" &&
-      localStorage.getItem("auth_provider") === "google";
-    const authHeader = isGoogle
-      ? { "X-Auth-Google": `Bearer ${idToken}` }
-      : { "X-Auth-Organic": `Bearer ${idToken}` };
+    const authProvider = typeof localStorage !== "undefined" 
+      ? localStorage.getItem("auth_provider") || "organic" 
+      : "organic";
+    
+    let authHeader: Record<string, string>;
+    if (authProvider === "google") {
+      authHeader = { "X-Auth-Google": `Bearer ${idToken}` };
+    } else if (authProvider === "azure" || authProvider === "microsoft") {
+      authHeader = { "X-Auth-Microsoft": `Bearer ${idToken}` };
+    } else {
+      authHeader = { "X-Auth-Organic": `Bearer ${idToken}` };
+    }
 
     // Send updates to our hybrid backend endpoint
     const response = await fetchWithTimeout(

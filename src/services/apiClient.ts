@@ -60,31 +60,15 @@ class ApiClient {
       // Determine user provider from token or session metadata if available
       // Since we don't have direct access to user metadata here without another call,
       // we'll try to infer or check local storage if stored during login
-      const oauthUserData =
-        typeof sessionStorage !== "undefined"
-          ? sessionStorage.getItem("oauthUserData")
-          : null;
-      let isGoogle = false;
+      // Determine user provider
+      const authProvider = typeof localStorage !== "undefined" 
+        ? localStorage.getItem("auth_provider") || "organic" 
+        : "organic";
 
-      if (oauthUserData) {
-        try {
-          const userData = JSON.parse(oauthUserData);
-          isGoogle = userData.provider === "google";
-        } catch (e) {
-          // Ignore parse error
-        }
-      } else {
-        // Fallback inference: If no oauth data, assume organic for now,
-        // OR check if we can get user details cheaply.
-        // Ideally hybridAuth.ts sets a flag.
-        // For now, let's look for a specific flag in localStorage set by login
-        isGoogle =
-          typeof localStorage !== "undefined" &&
-          localStorage.getItem("auth_provider") === "google";
-      }
-
-      if (isGoogle) {
+      if (authProvider === "google") {
         (defaultOptions.headers as any)["X-Auth-Google"] = `Bearer ${token}`;
+      } else if (authProvider === "azure" || authProvider === "microsoft") {
+        (defaultOptions.headers as any)["X-Auth-Microsoft"] = `Bearer ${token}`;
       } else {
         (defaultOptions.headers as any)["X-Auth-Organic"] = `Bearer ${token}`;
       }
