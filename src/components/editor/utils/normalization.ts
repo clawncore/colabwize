@@ -61,6 +61,7 @@ export function isLikelyCitation(text: string): boolean {
       "since",
       "as",
       "when",
+      "o",
     ];
     if (
       (!commonWords.includes(firstWord) && cleanText.includes("vol")) ||
@@ -180,14 +181,10 @@ export async function detectAndNormalizeCitations(
   editor.state.doc.descendants((node) => {
     if (stopScanningPhase1) return false;
 
-    if (
-      node.type.name === "heading" ||
-      node.type.name === "paragraph" ||
-      node.type.name === "bibliographyEntry"
-    ) {
+    if (node.type.name === "heading" || node.type.name === "paragraph" || node.type.name === "bibliographyEntry") {
       const text = node.textContent.toLowerCase().trim();
-      const isRefBoundary =
-        node.type.name === "bibliographyEntry" ||
+      const isRefBoundary = 
+        node.type.name === "bibliographyEntry" || 
         /references|bibliography|works cited|reference list/i.test(text);
 
       if (isRefBoundary) {
@@ -247,14 +244,10 @@ export async function detectAndNormalizeCitations(
   currentDoc.descendants((node, pos) => {
     if (stopScanningPhase3) return false;
 
-    if (
-      node.type.name === "heading" ||
-      node.type.name === "paragraph" ||
-      node.type.name === "bibliographyEntry"
-    ) {
+    if (node.type.name === "heading" || node.type.name === "paragraph" || node.type.name === "bibliographyEntry") {
       const text = node.textContent.toLowerCase().trim();
-      const isRefBoundary =
-        node.type.name === "bibliographyEntry" ||
+      const isRefBoundary = 
+        node.type.name === "bibliographyEntry" || 
         /references|bibliography|works cited|reference list/i.test(text);
 
       if (isRefBoundary) {
@@ -269,15 +262,13 @@ export async function detectAndNormalizeCitations(
 
       // CRITICAL: Skip leading IEEE markers like [1] at the start of a paragraph
       // These are reference definitions, not in-text citations.
-      const isParaStart =
-        pos === 0 || currentDoc.resolve(pos).parentOffset === 0;
+      const isParaStart = pos === 0 || currentDoc.resolve(pos).parentOffset === 0;
       const text = node.text;
-
+      
       const matches = extractPatterns(text, 0, "structural");
       matches.forEach((match) => {
         // Special Case: If it's the very first thing in the paragraph and matches [1], skip it
-        if (isParaStart && match.start === 0 && match.text.match(/^\[\d+\]/))
-          return;
+        if (isParaStart && match.start === 0 && match.text.match(/^\[\d+\]/)) return;
 
         if (match.text.match(/^\[\d+(?:-\d+)?\]/)) ieeeCount++;
         else if (match.text.match(/^\(.*\d{4}[a-z]?.*\)/)) {
@@ -794,55 +785,14 @@ export async function detectAndNormalizeBibliography(
 
       if (editor.view && editor.view.dom) {
         editor.view.dispatch(tr);
+        normalizedCount++;
       }
-      normalizedCount++;
-
-      // Trigger background registry update silently (no await blocking!)
-      CitationRegistryService.registerCitation(projectId, item.text)
-        .then((entry) => {
-          // If we used a temp ID, we need to update all nodes referencing it with the real ID
-          if (
-            tempCitationId.startsWith("temp_") &&
-            entry &&
-            (entry.ref_key || (entry as any).id)
-          ) {
-            const realId = entry.ref_key || (entry as any).id;
-            if (editor.view && editor.state) {
-              const updateTr = editor.state.tr;
-              let hasUpdates = false;
-              editor.state.doc.descendants((n, p) => {
-                if (
-                  (n.type.name === "bibliographyEntry" ||
-                    n.type.name === "citation") &&
-                  n.attrs.citationId === tempCitationId
-                ) {
-                  updateTr.setNodeMarkup(p, null, {
-                    ...n.attrs,
-                    citationId: realId,
-                  });
-                  hasUpdates = true;
-                }
-              });
-              if (hasUpdates) {
-                updateTr.setMeta("normalization", true);
-                updateTr.setMeta("addToHistory", false);
-                editor.view.dispatch(updateTr);
-              }
-            }
-          }
-        })
-        .catch((e) => console.error("Silent registry failure", e));
-    } catch (error) {
-      console.error(
-        "[BibNormalize] Failed to convert:",
-        item.text.substring(0, 40),
-      );
+    } catch (err) {
+      console.error("[BibNormalize] Error normalizing entry:", err);
     }
   }
 
   if (normalizedCount > 0) {
-    console.log(
-      `✅ [BibNormalize] Converted ${normalizedCount} bibliography entries to interactive nodes.`,
-    );
+    console.log(`✅ Normalized ${normalizedCount} bibliography entries.`);
   }
 }

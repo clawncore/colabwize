@@ -249,10 +249,10 @@ export class CitationService {
     }[];
     matchCount: number;
     scanStatus:
-      | "success"
-      | "quota_exceeded"
-      | "subscription_error"
-      | "network_error";
+    | "success"
+    | "quota_exceeded"
+    | "subscription_error"
+    | "network_error";
     errorMessage?: string;
   }> {
     try {
@@ -698,12 +698,7 @@ export class CitationService {
    * Starts an asynchronous background citation audit.
    * Returns an auditId that can be tracked via SSE.
    */
-  static async startAudit(
-    documentId: string,
-    projectId: string,
-    docState: any,
-    style: string = "APA",
-  ): Promise<string> {
+  static async startAudit(documentId: string, projectId: string, docState: any, style: string = "APA"): Promise<string> {
     try {
       const response = await apiClient.post("/api/audit/start", {
         documentId,
