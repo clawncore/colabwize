@@ -83,10 +83,10 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
       if (start >= end) return;
 
       const colorMap: Record<IssueSeverity, string> = {
-        CRITICAL: "rgba(220, 38, 38, 0.22)",
-        MAJOR: "rgba(234, 88, 12, 0.22)",
-        MINOR: "rgba(250, 204, 21, 0.28)",
-        INFO: "rgba(59, 130, 246, 0.18)",
+        CRITICAL: "rgba(220, 38, 38, 0.22)", // Red-ish
+        MAJOR: "rgba(234, 88, 12, 0.25)",    // Strong Orange
+        MINOR: "rgba(245, 158, 11, 0.22)",   // Amber
+        INFO: "rgba(251, 146, 60, 0.18)",    // Soft Orange
       };
       const color = colorMap[issue.severity as IssueSeverity] ?? colorMap.INFO;
 
@@ -97,6 +97,71 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
         expected: issue.suggestedFix,
       }).run();
     });
+  }, [editor]);
+
+  // ── Sync Registry with Verification Results ────────────────────────────────
+  // This is what powers the in-editor citation hover card to show real paper
+  // metadata (title, authors, year, DOI) after the audit completes.
+  const syncRegistryWithReport = useCallback(async (report: any) => {
+    console.log("🔍 [Audit] syncRegistryWithReport start", { results: report?.verificationResults?.length });
+    if (!report?.verificationResults?.length) return;
+
+    try {
+      const { CitationRegistryService } = await import("../../services/CitationRegistryService");
+
+      report.verificationResults.forEach((res: any) => {
+        if (res.foundPaper && res.inlineLocation) {
+          // 1. Find the node in the editor to get its internal citationId
+          let citationId: string | null = null;
+          console.log(`🔍 [Audit] Scanning for citation at target pos ${res.inlineLocation.start}...`);
+          
+          editor?.state.doc.descendants((node, pos) => {
+            if (node.type.name === 'citation') {
+              console.log(`   - Found citation node ${node.attrs.citationId} at pos ${pos}`);
+              if (pos === res.inlineLocation.start) {
+                citationId = node.attrs.citationId;
+                return false;
+              }
+            }
+          });
+
+          if (citationId) {
+            console.log(`📍 [Audit] Found citation node ${citationId} at pos ${res.inlineLocation.start}`);
+            
+            // 2. Ensure it's in the registry (it should be, but just in case)
+            const existing = CitationRegistryService.getCitation(citationId);
+            if (!existing) {
+              console.warn(`⚠️ [Audit] citationId ${citationId} missing from registry. Auto-registering...`);
+              CitationRegistryService.registerTempCitation(res.inlineLocation.text || "Unknown Source", { 
+                id: citationId,
+                title: res.foundPaper.title,
+                authors: res.foundPaper.authors,
+                year: res.foundPaper.year
+              });
+            }
+
+            // 3. Apply the verified metadata
+            CitationRegistryService.updateCitationMetadata(citationId, {
+              sourceTitle: res.foundPaper.title,
+              authors: res.foundPaper.authors,
+              year: res.foundPaper.year,
+              url: res.foundPaper.url,
+              doi: res.foundPaper.doi,
+              metadata: {
+                ...res.foundPaper,
+                journal: res.foundPaper.journal || res.foundPaper.publisher || res.foundPaper.database,
+                database: res.foundPaper.database
+              }
+            });
+            console.log(`✅ [Audit] Metadata synced for ${citationId}`);
+          } else {
+            console.warn(`❌ [Audit] No citation node found at pos ${res.inlineLocation.start}. Sync skipped.`);
+          }
+        }
+      });
+    } catch (err) {
+      console.error("❌ [Audit] Critical error in syncRegistryWithReport:", err);
+    }
   }, [editor]);
   // ── Start the async backend audit ─────────────────────────────────────────
   const handleRunAudit = useCallback(async () => {
@@ -161,6 +226,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
             setAuditStatus("COMPLETED");
             setAuditReport(payload.report);
             applyHighlights(payload.report);
+            syncRegistryWithReport(payload.report);
             onAuditComplete?.(payload.report);
             sse.close();
           } else if (payload.status === "FAILED") {
@@ -208,7 +274,9 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const infoCount = auditReport?.issues?.filter((i: any) => i.severity === "INFO").length ?? 0;
   const score = auditReport?.summary?.complianceScore ?? null;
-  const isExportBlocked = criticalCount > 0;
+  // Block export only when the overall compliance score is genuinely poor (< 70).
+  // A single isolated critical issue on an otherwise high-scoring doc should NOT block export.
+  const isExportBlocked = score !== null && score < 70;
 
   // ── Stage label ────────────────────────────────────────────────────────────
   const stageLabel = STAGE_LABELS[currentStage] ?? currentStage;

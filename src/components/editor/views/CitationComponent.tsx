@@ -33,9 +33,32 @@ export const CitationComponent = (props: NodeViewProps) => {
     };
   }, [citationId]);
 
-  const worldCitationCount = metadata?.metadata?.citationCount;
+  // Calculate how many times this citation appears in the entire document
+  const [docCitationCount, setDocCitationCount] = useState(0);
+
+  useEffect(() => {
+    if (!editor || !citationId) return;
+
+    const calculateDocCount = () => {
+      let count = 0;
+      editor.state.doc.descendants((node) => {
+        if (node.type.name === "citation" && node.attrs.citationId === citationId) {
+          count++;
+        }
+      });
+      setDocCitationCount(count);
+    };
+
+    calculateDocCount();
+    // Re-calculate when the document changes (transaction)
+    editor.on("transaction", calculateDocCount);
+    return () => {
+      editor.off("transaction", calculateDocCount);
+    };
+  }, [editor, citationId]);
+
+  const worldCitationCount = metadata?.metadata?.citationCount || (metadata?.metadata as any)?.citation_count;
   const abstract = metadata?.metadata?.abstract;
-  const citationCount = Number(metadata?.metadata?.impactFactor || 0);
   const displayText = text || "[citation]";
 
   const handleOpenChange = (open: boolean) => {
@@ -203,7 +226,7 @@ export const CitationComponent = (props: NodeViewProps) => {
           </a>
         </HoverCardTrigger>
         <HoverCardContent
-          className="w-[500px] p-3 bg-white shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] rounded-xl border border-gray-100 z-50 flex flex-col gap-2.5"
+          className="w-[500px] p-3 !bg-white !opacity-100 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] rounded-xl border border-gray-100 z-[100] flex flex-col gap-2.5"
           side="bottom"
           align="start">
           {/* Top Header Section */}
@@ -217,18 +240,18 @@ export const CitationComponent = (props: NodeViewProps) => {
               </p>
             </div>
             <div className="flex flex-col items-end gap-1 shrink-0">
-              {worldCitationCount !== undefined && (
+              {worldCitationCount !== undefined && Number(worldCitationCount) > 0 && (
                 <Badge
                   variant="outline"
                   className="px-1.5 py-0 text-[9px] text-green-600 bg-green-50/50 border-green-100 shadow-none font-bold">
                   {worldCitationCount} WORLD CITES
                 </Badge>
               )}
-              {citationCount !== undefined && citationCount > 0 && (
+              {docCitationCount > 0 && (
                 <Badge
                   variant="outline"
                   className="px-1.5 py-0 text-[9px] text-blue-600 bg-blue-50/50 border-blue-100 shadow-none font-bold">
-                  {citationCount} DOC CITES
+                  {docCitationCount} DOC CITES
                 </Badge>
               )}
               <Badge

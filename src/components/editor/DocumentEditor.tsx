@@ -347,13 +347,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   const editor = useEditor(
     {
-      immediatelyRender: false,
       editable: !isReadOnly,
       extensions: [
         StarterKit.configure({
-          history: !isCollaborative,
-          link: false,
-        } as any),
+          history: isCollaborative ? false : {},
+        }),
         ...(isCollaborative &&
         collabReady &&
         providerRef.current &&

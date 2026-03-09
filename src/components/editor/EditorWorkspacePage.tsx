@@ -1470,15 +1470,13 @@ const EditorWorkspacePage: React.FC = () => {
                     if (editorInstance) {
                       editorInstance.commands.focus();
                       editorInstance.commands.clearAllHighlights?.();
-                      editorInstance.commands.setTextSelection({
-                        from: location.startPos,
-                        to: location.endPos,
-                      });
+                      
+                      // Highlight with Orange for navigation jump
                       editorInstance.commands.highlightRange?.(
                         location.startPos,
                         location.endPos,
                         {
-                          color: "rgba(59, 130, 246, 0.2)",
+                          color: "rgba(251, 146, 60, 0.4)",
                           message: "Issue Location",
                         },
                       );
@@ -1504,8 +1502,25 @@ const EditorWorkspacePage: React.FC = () => {
                         description: `"${issue.selectedSource?.title}" has been successfully added.`,
                       });
                     } else if (issue.action === "SEARCH") {
+                      // Extract the best possible search query: 
+                      // 1. Explicit citation text if available
+                      // 2. The title found by the audit (foundPaper.title)
+                      // 3. Fallback to a clipped version of the message
+                      // Extract the best possible search query: 
+                      // 1. Explicit citation text if available
+                      // 2. The title found by the audit (foundPaper.title)
+                      // 3. Fallback to a clipped version of the message, stripping fluff
+                      let query = issue.citationText || 
+                                  issue.metadata?.foundPaper?.title || 
+                                  issue.metadata?.extractedTitle ||
+                                  issue.message.split('match)')[1]?.replace(/[".]/g, '').replace('Closest paper found:', '').trim() || 
+                                  issue.message.substring(0, 50);
+                      
+                      // Final cleanup of the query
+                      query = query.replace(/^[:\s-]+/, '').trim();
+
                       openPanel("citations", {
-                        contextKeywords: [issue.citationText || issue.message],
+                        contextKeywords: [query],
                         autoSearch: true,
                       });
                       toast({

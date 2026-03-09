@@ -7,6 +7,8 @@ import {
   HelpCircle,
   Target,
   Search,
+  ExternalLink,
+  ShieldCheck,
 } from "lucide-react";
 
 interface CitationAuditReportPanelProps {
@@ -46,7 +48,7 @@ const IssueCard: React.FC<{
             {issue.location && onNavigate && (
               <button
                 onClick={() => onNavigate(issue.location)}
-                className="text-[10px] font-bold text-slate-300 hover:text-blue-500 uppercase tracking-widest transition-colors">
+                className="text-[10px] font-bold text-slate-300 hover:text-orange-500 uppercase tracking-widest transition-colors">
                 View in Doc
               </button>
             )}
@@ -101,6 +103,82 @@ const IssueCard: React.FC<{
   );
 };
 
+// ── Verified Source Card ──────────────────────────────────────────────────────
+const VerifiedSourceCard: React.FC<{ result: any }> = ({ result }) => {
+  const similarityPct = result.similarity !== undefined
+    ? Math.round(result.similarity * 100)
+    : null;
+
+  // Colour the score: ≥80 green, ≥60 amber, else red
+  const scoreColor = similarityPct === null ? "text-slate-400 bg-slate-50 border-slate-200"
+    : similarityPct >= 80 ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+    : similarityPct >= 60 ? "text-amber-700 bg-amber-50 border-amber-200"
+    : "text-red-700 bg-red-50 border-red-200";
+
+  return (
+    <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="flex gap-5">
+        <div className="mt-1 flex-shrink-0 text-emerald-500">
+          <ShieldCheck className="w-7 h-7" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start mb-1.5">
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-600">
+              VERIFIED SOURCE
+            </h4>
+            {similarityPct !== null && (
+              <span className={`text-[11px] font-black px-2.5 py-1 rounded-lg border ${scoreColor}`}>
+                {similarityPct}% MATCH
+              </span>
+            )}
+          </div>
+
+          {result.foundPaper?.url ? (
+            <a
+              href={result.foundPaper.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[14px] font-semibold text-slate-800 leading-relaxed mb-2 line-clamp-2 hover:text-blue-600 hover:underline inline-flex items-start gap-1 group/link transition-colors">
+              {result.foundPaper?.title || result.message}
+              <ExternalLink className="w-3 h-3 mt-1 flex-shrink-0 opacity-50 group-hover/link:opacity-100" />
+            </a>
+          ) : (
+            <p className="text-[14px] font-semibold text-slate-800 leading-relaxed mb-2 line-clamp-2">
+              {result.foundPaper?.title || result.message}
+            </p>
+          )}
+
+          <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 font-medium">
+            {result.foundPaper?.year && <span>{result.foundPaper.year}</span>}
+            {result.foundPaper?.year && result.foundPaper?.database && <span>•</span>}
+            {result.foundPaper?.database && <span className="capitalize">{result.foundPaper.database}</span>}
+            {result.foundPaper?.doi && (
+              <>
+                <span>•</span>
+                <span className="font-mono text-[10px]">{result.foundPaper.doi}</span>
+              </>
+            )}
+          </div>
+
+          {/* Inline citation text */}
+          {result.inlineLocation?.text && (
+            <div className="mt-3 font-mono text-[11px] text-slate-400 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
+              "{result.inlineLocation.text}"
+            </div>
+          )}
+
+          {/* Semantic support */}
+          {result.semanticAnalysis?.reasoning && (
+            <p className="mt-2 text-[12px] text-slate-500 leading-relaxed italic">
+              {result.semanticAnalysis.reasoning}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const CitationAuditReportPanel: React.FC<
   CitationAuditReportPanelProps
 > = ({ report, onBack, onNavigateToIssue, onExecuteFix }) => {
@@ -138,28 +216,39 @@ export const CitationAuditReportPanel: React.FC<
     },
   ];
 
+  // Pull verified results from verificationResults array (backend pipeline)
+  const verifiedResults = (report.verificationResults || []).filter(
+    (r: any) => r.status === "VERIFIED"
+  );
+
+  const hasIssues = report.issues && report.issues.length > 0;
+
   return (
     <div className="flex flex-col h-full bg-white font-sans">
       {/* Minimalist Header */}
-      <div className="flex items-center gap-4 p-8 border-b border-slate-50 bg-white flex-shrink-0">
-        <button
-          onClick={onBack}
-          className="p-2 hover:bg-slate-50 rounded-2xl text-slate-400 transition-all border border-transparent hover:border-slate-100">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div className="flex flex-col">
-          <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase">
-            Citation Audit Report
-          </h1>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">
-            Reference & Bibliography Analysis
-          </p>
+      <div className="flex items-center justify-center border-b border-slate-50 bg-white flex-shrink-0">
+        <div className="w-full max-w-[850px] flex items-center gap-4 p-6 px-8">
+          <button
+            onClick={onBack}
+            className="p-2 hover:bg-slate-50 rounded-2xl text-slate-400 transition-all border border-transparent hover:border-slate-100">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase">
+              Citation Audit Report
+            </h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">
+              Reference & Bibliography Analysis
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Simplest Results View */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30">
-        <div className="px-12 py-12 max-w-6xl mx-auto space-y-16">
+      {/* Results View */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/50">
+        <div className="px-8 py-10 max-w-[850px] mx-auto space-y-16">
+
+          {/* ── Issues by Severity ── */}
           {severities.map((sev) => {
             const sevIssues =
               report.issues?.filter((i: any) => i.severity === sev.id) || [];
@@ -197,7 +286,31 @@ export const CitationAuditReportPanel: React.FC<
             );
           })}
 
-          {(!report.issues || report.issues.length === 0) && (
+          {/* ── Verified Sources ── */}
+          {verifiedResults.length > 0 && (
+            <div className="space-y-8">
+              <div className="flex items-center justify-between pb-4 border-b border-emerald-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/20" />
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em]">
+                    VERIFIED SOURCES
+                  </h3>
+                </div>
+                <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
+                  CONFIRMED IN ACADEMIC DATABASES
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6">
+                {verifiedResults.map((result: any, idx: number) => (
+                  <VerifiedSourceCard key={idx} result={result} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── All Clear ── */}
+          {!hasIssues && verifiedResults.length === 0 && (
             <div className="flex flex-col items-center justify-center py-32 text-center">
               <div className="w-20 h-20 bg-emerald-50 rounded-[40px] flex items-center justify-center mb-6">
                 <CheckCircle className="w-10 h-10 text-emerald-500" />
@@ -216,3 +329,4 @@ export const CitationAuditReportPanel: React.FC<
     </div>
   );
 };
+

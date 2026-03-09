@@ -81,9 +81,7 @@ export default function MiniEditor({
 }: MiniEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        link: false,
-      }),
+      StarterKit,
       Placeholder.configure({
         placeholder: placeholder || "Add a detailed description...",
       }),
@@ -92,7 +90,6 @@ export default function MiniEditor({
       }),
     ],
     content: value,
-    immediatelyRender: false,
     editable: !readOnly,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
