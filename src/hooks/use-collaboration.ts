@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import { supabase } from "../lib/supabase/client";
+import ConfigService from "../services/ConfigService";
 
 interface UseCollaborationProps {
   documentId: string;
@@ -44,8 +45,7 @@ export const useCollaboration = ({
         if (!mounted) return;
 
         // 3. Initialize Hocuspocus Provider
-        const wsUrl =
-          process.env.NEXT_PUBLIC_COLLAB_URL || "ws://localhost:9081";
+        const wsUrl = ConfigService.getCollabUrl();
 
         newProvider = new HocuspocusProvider({
           url: wsUrl,

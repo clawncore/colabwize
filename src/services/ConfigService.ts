@@ -18,13 +18,42 @@ export class ConfigService {
 
     // Log resolved config once at boot
     if (!this.logged) {
-      console.log("✅ [Config] Environment Loaded:", ConfigService.getNodeEnv());
+      console.log(
+        "✅ [Config] Environment Loaded:",
+        ConfigService.getNodeEnv(),
+      );
       console.log("✅ [Config] API URL:", url);
-      console.log("✅ [Config] Supabase URL:", process.env.REACT_APP_SUPABASE_URL ? "Set" : "Missing");
+      console.log("✅ [Config] Collab URL:", ConfigService.getCollabUrl());
+      console.log(
+        "✅ [Config] Supabase URL:",
+        process.env.REACT_APP_SUPABASE_URL ? "Set" : "Missing",
+      );
       this.logged = true;
     }
 
     return url;
+  }
+
+  /**
+   * Get the collaboration (Hocuspocus) WebSocket URL
+   */
+  static getCollabUrl(): string {
+    const isProd = this.getNodeEnv() === "production";
+    const defaultUrl = isProd
+      ? "wss://api.colabwize.com/collaboration"
+      : "ws://localhost:3001/collaboration";
+    return process.env.REACT_APP_HOCUSPOCUS_URL || defaultUrl;
+  }
+
+  /**
+   * Get the notification WebSocket URL
+   */
+  static getNotificationUrl(): string {
+    const isProd = this.getNodeEnv() === "production";
+    const defaultUrl = isProd
+      ? "wss://api.colabwize.com/notifications"
+      : "ws://localhost:3001/notifications";
+    return process.env.REACT_APP_NOTIFICATION_URL || defaultUrl;
   }
 
   /**
@@ -35,7 +64,9 @@ export class ConfigService {
     const anonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
     if (!url || !anonKey) {
-      console.warn("❌ [Config] Supabase configuration missing in environment variables!");
+      console.warn(
+        "❌ [Config] Supabase configuration missing in environment variables!",
+      );
     }
 
     return {
