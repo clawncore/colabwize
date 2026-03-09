@@ -1683,10 +1683,10 @@ const EditorWorkspacePage: React.FC = () => {
         <>
           <div
             onMouseDown={() => setIsResizingRight(true)}
-            className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors"
+            className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors relative z-[72]"
           />
           <div
-            className="bg-white border-l border-gray-200 flex flex-col relative shadow-xl z-20"
+            className="bg-white border-l border-gray-200 flex flex-col relative shadow-xl z-[72]"
             style={{ width: `${rightSidebarWidth}px` }}>
             {/* Panel Header */}
             <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white flex-shrink-0">
