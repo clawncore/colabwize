@@ -36,6 +36,7 @@ import { SearchAlertsPanel } from "./SearchAlertsPanel";
 import { AIProbabilityHeatmap } from "../originality/AIProbabilityHeatmap";
 import { OutlineBuilder } from "./OutlineBuilder";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { EditorOnboardingTour } from "../onboarding/EditorOnboardingTour";
 import { OnboardingService } from "../../services/onboardingService";
 import { OriginalityMapSidebar } from "../originality/OriginalityMapSidebar";
@@ -107,7 +108,7 @@ const EditorWorkspacePage: React.FC = () => {
   const [panelData, setPanelData] = useState<any>(null);
 
   // Resizable widths
-  const [leftSidebarWidth, setLeftSidebarWidth] = useState(280); // Now represents ONLY the content panel width
+  const [leftSidebarWidth, setLeftSidebarWidth] = useState(260); // Slightly tighter default width
   const [rightSidebarWidth, setRightSidebarWidth] = useState(300); // Reduced from 340 for better fit
 
   // Search Alerts notification state
@@ -271,7 +272,7 @@ const EditorWorkspacePage: React.FC = () => {
 
     const updatedCitations = selectedProject.citations.map((c: any) =>
       (c.id && updatedSource.id && c.id === updatedSource.id) ||
-        c.title === updatedSource.title
+      c.title === updatedSource.title
         ? updatedSource
         : c,
     );
@@ -786,10 +787,13 @@ const EditorWorkspacePage: React.FC = () => {
       {/* Left Sidebar - Documents List or Audit Panel - Hidden in Focus Mode */}
       {!isFocusMode && (
         <div
-          className={`flex-shrink-0 bg-white border-r border-gray-100 flex flex-row transition-all duration-300 ease-in-out z-30 shadow-sm relative overflow-hidden h-full`}>
+          className={`flex-shrink-0 bg-white border-r border-gray-100 flex flex-row z-30 shadow-sm relative overflow-hidden h-full`}>
           {/* Vertical Navigation Rail (The "Display" panel) */}
-          <div
-            className={`${isNavRailOpen ? "w-[240px]" : "w-[60px]"} h-full flex-shrink-0 border-r border-gray-100 flex flex-col bg-[#F9FAFB]/90 transition-all duration-300 overflow-hidden`}>
+          <motion.div
+            initial={false}
+            animate={{ width: isNavRailOpen ? 240 : 60 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="h-full flex-shrink-0 border-r border-gray-100 flex flex-col bg-[#F9FAFB]/90 overflow-hidden">
             {/* Header */}
             <div
               className={`p-4 flex items-center ${isNavRailOpen ? "justify-between" : "justify-center"} border-b border-gray-100 mb-2 h-[60px]`}>
@@ -858,10 +862,11 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("documents");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "documents"
+                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "documents"
                     ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                }`}
                 title={!isNavRailOpen ? "My Documents" : ""}>
                 <FileText
                   className={`w-4 h-4 ${activeLeftPanel === "documents" ? "text-[#6366F1]" : "text-gray-400"}`}
@@ -876,10 +881,11 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveSourceTab("sources");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "sources"
+                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "sources"
                     ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                }`}
                 title={!isNavRailOpen ? "Source Library" : ""}>
                 <BookOpen
                   className={`w-4 h-4 ${activeLeftPanel === "sources" ? "text-[#6366F1]" : "text-gray-400"}`}
@@ -892,10 +898,11 @@ const EditorWorkspacePage: React.FC = () => {
                 <div className="ml-9 mt-1 space-y-1 border-l-2 border-gray-100 pl-3 mb-4 transition-all">
                   <button
                     onClick={() => setActiveSourceTab("sources")}
-                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${activeSourceTab === "sources"
-                      ? "text-[#6366F1] bg-white shadow-sm"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                      }`}>
+                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
+                      activeSourceTab === "sources"
+                        ? "text-[#6366F1] bg-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    }`}>
                     <div
                       className={`w-1.5 h-1.5 rounded-full ${activeSourceTab === "sources" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                     />
@@ -903,10 +910,11 @@ const EditorWorkspacePage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setActiveSourceTab("collections")}
-                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${activeSourceTab === "collections"
-                      ? "text-[#6366F1] bg-white shadow-sm"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                      }`}>
+                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
+                      activeSourceTab === "collections"
+                        ? "text-[#6366F1] bg-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    }`}>
                     <div
                       className={`w-1.5 h-1.5 rounded-full ${activeSourceTab === "collections" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                     />
@@ -914,10 +922,11 @@ const EditorWorkspacePage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setActiveSourceTab("matrix")}
-                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${activeSourceTab === "matrix"
-                      ? "text-[#6366F1] bg-white shadow-sm"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                      }`}>
+                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
+                      activeSourceTab === "matrix"
+                        ? "text-[#6366F1] bg-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    }`}>
                     <div
                       className={`w-1.5 h-1.5 rounded-full ${activeSourceTab === "matrix" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                     />
@@ -932,10 +941,11 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("outline");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "outline"
-                  ? "bg-[#F59E0B]/10 text-[#D97706] border border-[#F59E0B]/20"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "outline"
+                    ? "bg-[#F59E0B]/10 text-[#D97706] border border-[#F59E0B]/20"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={!isNavRailOpen ? "Outline" : ""}>
                 <PenTool
                   className={`w-4 h-4 ${activeLeftPanel === "outline" ? "text-[#D97706]" : "text-gray-400"}`}
@@ -949,10 +959,11 @@ const EditorWorkspacePage: React.FC = () => {
                   setActivePanelType("add-citation");
                   setIsRightSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activePanelType === "add-citation"
-                  ? "bg-blue-100 text-blue-600 border border-blue-200"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activePanelType === "add-citation"
+                    ? "bg-blue-100 text-blue-600 border border-blue-200"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={!isNavRailOpen ? "Add Citation" : ""}>
                 <PlusSquare
                   className={`w-4 h-4 ${activePanelType === "add-citation" ? "text-blue-600" : "text-gray-400"}`}
@@ -966,19 +977,18 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("visual-map");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "visual-map"
-                  ? "bg-amber-100 text-amber-600 border border-amber-200"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "visual-map"
+                    ? "bg-amber-100 text-amber-600 border border-amber-200"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={!isNavRailOpen ? "Visual Map" : ""}>
                 <Map
                   className={`w-4 h-4 ${activeLeftPanel === "visual-map" ? "text-amber-600" : "text-gray-400"}`}
                 />
                 {isNavRailOpen && (
                   <div className="flex items-center justify-between w-full">
-                    <span className="flex items-center gap-2">
-                      Visual Map
-                    </span>
+                    <span className="flex items-center gap-2">Visual Map</span>
                   </div>
                 )}
               </button>
@@ -990,12 +1000,13 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("research-gaps");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "research-gaps"
-                  ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
-                  : userPlan !== "Premium"
-                    ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "research-gaps"
+                    ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
+                    : userPlan !== "Premium"
+                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={
                   userPlan !== "Premium"
                     ? "Available on Premium Plan"
@@ -1025,12 +1036,13 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("search-alerts");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "search-alerts"
-                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
-                  : userPlan !== "Premium"
-                    ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "search-alerts"
+                    ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                    : userPlan !== "Premium"
+                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={
                   userPlan !== "Premium"
                     ? "Available on Premium Plan"
@@ -1067,12 +1079,13 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("research-assistant");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "research-assistant"
-                  ? "bg-purple-100 text-purple-600 border border-purple-200"
-                  : userPlan !== "Premium"
-                    ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "research-assistant"
+                    ? "bg-purple-100 text-purple-600 border border-purple-200"
+                    : userPlan !== "Premium"
+                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={
                   userPlan !== "Premium"
                     ? "Available on Premium Plan"
@@ -1102,10 +1115,11 @@ const EditorWorkspacePage: React.FC = () => {
                     setActivePanelType("collaboration-history");
                     setIsRightSidebarOpen(true);
                   }}
-                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activePanelType === "collaboration-history"
-                    ? "bg-blue-100 text-blue-600 border border-blue-200"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    }`}
+                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activePanelType === "collaboration-history"
+                      ? "bg-blue-100 text-blue-600 border border-blue-200"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  }`}
                   title={!isNavRailOpen ? "Edit History" : ""}>
                   <History
                     className={`w-4 h-4 ${activePanelType === "collaboration-history" ? "text-blue-600" : "text-gray-400"}`}
@@ -1116,193 +1130,214 @@ const EditorWorkspacePage: React.FC = () => {
             </div>
 
             {/* Credit Meter Fixed at Bottom of Rail */}
-            <div
-              className={`flex-shrink-0 w-full p-4 border-t border-gray-200/50 ${!isNavRailOpen && "hidden"}`}>
-              <UsageMeter
-                current={creditBalance}
-                limit={0}
-                planName={userPlan}
-                featureName="credits"
-                mode="credits"
-              />
-            </div>
-          </div>
+            <AnimatePresence>
+              {isNavRailOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex-shrink-0 w-full p-4 border-t border-gray-200/50">
+                  <UsageMeter
+                    current={creditBalance}
+                    limit={0}
+                    planName={userPlan}
+                    featureName="credits"
+                    mode="credits"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
           {/* Sidebar Content Area */}
-          {!(activeLeftPanel === "sources" && activeSourceTab === "matrix") &&
-            activeLeftPanel !== "visual-map" && (
-              <div
-                className={`flex-1 flex flex-col min-w-0 bg-white relative`}>
-                {activeLeftPanel === "documents" && isLeftSidebarOpen && (
-                  <div className="flex-1 overflow-hidden flex flex-col">
-                    <DocumentList
-                      onProjectSelect={handleProjectSelect}
-                      onCreateNew={handleCreateNew}
-                      selectedProjectId={selectedProject?.id}
-                      displayMode="list"
-                      showActions={false}
-                      hideHeader={true}
+          <AnimatePresence mode="wait">
+            {isLeftSidebarOpen &&
+              activeLeftPanel &&
+              activeLeftPanel !== "visual-map" && (
+                <motion.div
+                  key={activeLeftPanel}
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: leftSidebarWidth }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="flex flex-col min-w-0 bg-white relative border-r border-gray-100 overflow-hidden h-full">
+                  {activeLeftPanel === "documents" && (
+                    <div className="flex-1 overflow-hidden flex flex-col">
+                      <DocumentList
+                        onProjectSelect={handleProjectSelect}
+                        onCreateNew={handleCreateNew}
+                        selectedProjectId={selectedProject?.id}
+                        displayMode="list"
+                        showActions={false}
+                        hideHeader={true}
+                      />
+                    </div>
+                  )}
+
+                  {activeLeftPanel === "sources" && (
+                    <div className="flex-1 overflow-hidden flex flex-col">
+                      <SourcesLibraryPanel
+                        citations={selectedProject?.citations || []}
+                        onInsertCitation={handleInsertCitation}
+                        onFindMore={() => openPanel("citations")}
+                        projectId={selectedProject?.id}
+                        citationStyle={selectedProject?.citation_style}
+                        onStyleSet={handleStyleSet}
+                        activeTab={activeSourceTab}
+                        onSourceSelect={setSelectedLibrarySource}
+                        selectedLibrarySource={selectedLibrarySource}
+                        viewMode={matrixMode}
+                        onToggleViewMode={() =>
+                          setMatrixMode(
+                            matrixMode === "full" ? "split" : "full",
+                          )
+                        }
+                        onUpdateCitations={handleBatchSourceUpdate}
+                        userPlan={userPlan}
+                      />
+                    </div>
+                  )}
+
+                  {activeLeftPanel === "audit" && (
+                    <CitationAuditSidebar
+                      projectId={selectedProject?.id || ""}
+                      editor={editorInstance}
+                      onClose={() => setActiveLeftPanel("documents")}
+                      onViewFullReport={(report) =>
+                        setSelectedAuditReport(report)
+                      }
+                      onAuditComplete={(report) => setLastAuditReport(report)}
+                      onFindPapers={(keywords) => {
+                        openPanel("citations", { contextKeywords: keywords });
+                      }}
+                      initialResults={leftPanelData}
+                      citationStyle={selectedProject?.citation_style}
+                      citationLibrary={selectedProject?.citations}
+                      onUpgrade={() => setShowUpgradeModal(true)}
                     />
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
 
-          {activeLeftPanel === "sources" && isLeftSidebarOpen && (
-            <div className="flex-1 overflow-hidden flex flex-col">
-              <SourcesLibraryPanel
-                citations={selectedProject?.citations || []}
-                onInsertCitation={handleInsertCitation}
-                onFindMore={() => openPanel("citations")}
-                projectId={selectedProject?.id}
-                citationStyle={selectedProject?.citation_style}
-                onStyleSet={handleStyleSet}
-                activeTab={activeSourceTab}
-                onSourceSelect={setSelectedLibrarySource}
-                selectedLibrarySource={selectedLibrarySource}
-                viewMode={matrixMode}
-                onToggleViewMode={() =>
-                  setMatrixMode(matrixMode === "full" ? "split" : "full")
-                }
-                onUpdateCitations={handleBatchSourceUpdate}
-                userPlan={userPlan}
-              />
-            </div>
-          )}
+                  {activeLeftPanel === "research-gaps" && selectedProject && (
+                    <div className="flex-1 overflow-hidden flex flex-col bg-white">
+                      <ResearchGapsPanel
+                        projectId={selectedProject.id}
+                        onSearchGap={(keywords) => {
+                          openPanel("citations", {
+                            contextKeywords: keywords,
+                          });
+                        }}
+                      />
+                    </div>
+                  )}
 
-          {activeLeftPanel === "audit" && isLeftSidebarOpen && (
-            <CitationAuditSidebar
-              projectId={selectedProject?.id || ""}
-              editor={editorInstance}
-              onClose={() => setActiveLeftPanel("documents")}
-              onViewFullReport={(report) => setSelectedAuditReport(report)}
-              onAuditComplete={(report) => setLastAuditReport(report)}
-              onFindPapers={(keywords) => {
-                openPanel("citations", { contextKeywords: keywords });
-              }}
-              initialResults={leftPanelData}
-              citationStyle={selectedProject?.citation_style}
-              citationLibrary={selectedProject?.citations}
-              onUpgrade={() => setShowUpgradeModal(true)}
-            />
-          )}
+                  {activeLeftPanel === "outline" && selectedProject && (
+                    <div className="flex-1 overflow-hidden flex flex-col">
+                      <OutlineBuilder
+                        project={selectedProject}
+                        onUpdate={async (outline) => {
+                          const updatedProject = {
+                            ...selectedProject,
+                            outline,
+                          };
+                          handleProjectUpdate(updatedProject);
+                          try {
+                            await documentService.updateProject(
+                              updatedProject.id,
+                              updatedProject.title,
+                              updatedProject.description || "",
+                              updatedProject.content,
+                              updatedProject.word_count,
+                              updatedProject.citation_style,
+                              outline,
+                            );
+                          } catch (err) {
+                            console.error("Failed to auto-save outline:", err);
+                          }
+                        }}
+                        onSyncToEditor={handleSyncOutlineToEditor}
+                      />
+                    </div>
+                  )}
 
-          {activeLeftPanel === "research-gaps" &&
-            isLeftSidebarOpen &&
-            selectedProject && (
-              <div className="flex-1 overflow-hidden flex flex-col bg-white">
-                <ResearchGapsPanel
-                  projectId={selectedProject.id}
-                  onSearchGap={(keywords) => {
-                    openPanel("citations", {
-                      contextKeywords: keywords,
-                    });
-                  }}
-                />
-              </div>
-            )}
+                  {activeLeftPanel === "search-alerts" && (
+                    <div className="flex-1 overflow-hidden flex flex-col bg-white">
+                      <SearchAlertsPanel projectId={selectedProject?.id} />
+                    </div>
+                  )}
 
-          {activeLeftPanel === "outline" &&
-            isLeftSidebarOpen &&
-            selectedProject && (
-              <div className="flex-1 overflow-hidden flex flex-col">
-                <OutlineBuilder
-                  project={selectedProject}
-                  onUpdate={async (outline) => {
-                    const updatedProject = {
-                      ...selectedProject,
-                      outline,
-                    };
-                    handleProjectUpdate(updatedProject);
-                    // Persist to backend for auto-save
-                    try {
-                      await documentService.updateProject(
-                        updatedProject.id,
-                        updatedProject.title,
-                        updatedProject.description || "",
-                        updatedProject.content,
-                        updatedProject.word_count,
-                        updatedProject.citation_style,
-                        outline,
-                      );
-                    } catch (err) {
-                      console.error("Failed to auto-save outline:", err);
-                    }
-                  }}
-                  onSyncToEditor={handleSyncOutlineToEditor}
-                />
-              </div>
-            )}
+                  {activeLeftPanel === "research-assistant" && (
+                    <div className="flex-1 overflow-hidden flex flex-col bg-white">
+                      <AIResearchAssistant
+                        isOpen={true}
+                        isPanel={true}
+                        onClose={() => setIsLeftSidebarOpen(false)}
+                        projectId={selectedProject?.id}
+                        onInsertContent={(content) => {
+                          if (editorInstance) {
+                            editorInstance
+                              .chain()
+                              .focus()
+                              .insertContent(content)
+                              .run();
+                          }
+                        }}
+                        onCitationAdded={() => {
+                          reloadProjectCitations();
+                        }}
+                      />
+                    </div>
+                  )}
+                  {/* Subtle shadow overlay to give depth to the opening panel */}
+                  <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-black/5 to-transparent pointer-events-none" />
+                </motion.div>
+              )}
 
-          {activeLeftPanel === "search-alerts" && isLeftSidebarOpen && (
-            <div className="flex-1 overflow-hidden flex flex-col bg-white">
-              <SearchAlertsPanel projectId={selectedProject?.id} />
-            </div>
-          )}
-
-          {activeLeftPanel === "research-assistant" &&
-            isLeftSidebarOpen && (
-              <div className="flex-1 overflow-hidden flex flex-col bg-white">
-                <AIResearchAssistant
-                  isOpen={true}
-                  isPanel={true}
-                  onClose={() => setIsLeftSidebarOpen(false)}
-                  projectId={selectedProject?.id}
-                  onInsertContent={(content) => {
-                    if (editorInstance) {
-                      editorInstance
-                        .chain()
-                        .focus()
-                        .insertContent(content)
-                        .run();
-                    }
-                  }}
-                  onCitationAdded={() => {
-                    reloadProjectCitations();
-                  }}
-                />
-              </div>
-            )}
-
-          {activeLeftPanel === "visual-map" &&
-            isLeftSidebarOpen &&
-            selectedProject && (
-              <div className="flex-1 overflow-hidden flex flex-col bg-white">
-                {visualMapMode === "full" ? (
-                  <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-gray-500 bg-gray-50 h-[calc(100vh-60px)]">
-                    <Map className="w-12 h-12 mb-4 text-gray-300" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      Visual Map is Full Screen
-                    </h3>
-                    <p className="text-sm">
-                      Close the full screen view to interact with the map
-                      here.
-                    </p>
-                    <button
-                      onClick={() => setVisualMapMode("split")}
-                      className="mt-4 px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                      Exit Full Screen
-                    </button>
-                  </div>
-                ) : (
-                  <CitationGraph
-                    projectId={selectedProject.id}
-                    project={selectedProject}
-                    onTopicSelect={(topic) => {
-                      openPanel("citations", { contextKeywords: [topic] });
-                    }}
-                    onAskAI={(topic) => {
-                      const prompt = `Discuss what these sources say about "${topic}", in the larger context of "${selectedProject.title}". (Note: Provide a direct response only, without conversational filler or introductory text.)`;
-                      openPanel("ai-chat", { initialInput: prompt });
-                    }}
-                    viewMode="split"
-                    onToggleViewMode={() => setVisualMapMode("full")}
-                    width={leftSidebarWidth}
-                    height={window.innerHeight - 60}
-                  />
-                )}
-              </div>
-            )}
+            {activeLeftPanel === "visual-map" &&
+              isLeftSidebarOpen &&
+              selectedProject && (
+                <motion.div
+                  key="visual-map"
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: leftSidebarWidth }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="flex overflow-hidden flex-col bg-white">
+                  {visualMapMode === "full" ? (
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-gray-500 bg-gray-50 h-[calc(100vh-60px)]">
+                      <Map className="w-12 h-12 mb-4 text-gray-300" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Visual Map is Full Screen
+                      </h3>
+                      <p className="text-sm">
+                        Close the full screen view to interact with the map
+                        here.
+                      </p>
+                      <button
+                        onClick={() => setVisualMapMode("split")}
+                        className="mt-4 px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        Exit Full Screen
+                      </button>
+                    </div>
+                  ) : (
+                    <CitationGraph
+                      projectId={selectedProject.id}
+                      project={selectedProject}
+                      onTopicSelect={(topic) => {
+                        openPanel("citations", { contextKeywords: [topic] });
+                      }}
+                      onAskAI={(topic) => {
+                        const prompt = `Discuss what these sources say about "${topic}", in the larger context of "${selectedProject.title}". (Note: Provide a direct response only, without conversational filler or introductory text.)`;
+                        openPanel("ai-chat", { initialInput: prompt });
+                      }}
+                      viewMode="split"
+                      onToggleViewMode={() => setVisualMapMode("full")}
+                      width={leftSidebarWidth}
+                      height={window.innerHeight - 60}
+                    />
+                  )}
+                </motion.div>
+              )}
+          </AnimatePresence>
         </div>
       )}
       {/* Left Resize Handle */}
@@ -1313,15 +1348,14 @@ const EditorWorkspacePage: React.FC = () => {
 
       {/* Toggle Left Sidebar Button - Hidden in Focus Mode */}
       {!isFocusMode && (
-        <button
+        <motion.button
+          layout
           onClick={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}
-          className={`absolute top-4 z-20 p-1.5 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-all duration-300`}
-          style={{
-            left:
-              isNavRailOpen || isLeftSidebarOpen || true
-                ? `${(isNavRailOpen ? 240 : 60) + (isLeftSidebarOpen ? leftSidebarWidth : 0) - 16}px`
-                : "16px",
+          className={`absolute top-4 z-40 p-1.5 bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-colors duration-300`}
+          animate={{
+            left: `${(isNavRailOpen ? 240 : 60) + (isLeftSidebarOpen ? leftSidebarWidth : 0) - 16}px`,
           }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
           title={
             isLeftSidebarOpen ? "Hide Content Panel" : "Show Content Panel"
           }>
@@ -1346,13 +1380,47 @@ const EditorWorkspacePage: React.FC = () => {
               />
             )}
           </svg>
-        </button>
+        </motion.button>
       )}
 
       {/* Center Panel */}
       <div className="flex-1 h-full overflow-hidden min-w-0">
         {/* PERSISTENT EDITOR LAYER */}
-        <div className={`h-full w-full ${(selectedAuditReport || selectedLibrarySource || (activeLeftPanel === "sources" && activeSourceTab === "matrix") || (activeLeftPanel === "visual-map") || isEditorLoading) ? 'hidden' : 'block'}`}>
+        <motion.div
+          animate={{
+            opacity:
+              selectedAuditReport ||
+              selectedLibrarySource ||
+              (activeLeftPanel === "sources" &&
+                activeSourceTab === "matrix" &&
+                matrixMode === "full") ||
+              (activeLeftPanel === "visual-map" && visualMapMode === "full") ||
+              isEditorLoading
+                ? 0
+                : 1,
+            scale:
+              selectedAuditReport ||
+              selectedLibrarySource ||
+              (activeLeftPanel === "sources" &&
+                activeSourceTab === "matrix" &&
+                matrixMode === "full") ||
+              (activeLeftPanel === "visual-map" && visualMapMode === "full") ||
+              isEditorLoading
+                ? 0.98
+                : 1,
+            display:
+              selectedAuditReport ||
+              selectedLibrarySource ||
+              (activeLeftPanel === "sources" &&
+                activeSourceTab === "matrix" &&
+                matrixMode === "full") ||
+              (activeLeftPanel === "visual-map" && visualMapMode === "full") ||
+              isEditorLoading
+                ? "none"
+                : "block",
+          }}
+          transition={{ duration: 0.3 }}
+          className="h-full w-full">
           {selectedProject && (
             <DocumentEditor
               key={selectedProject.id}
@@ -1372,7 +1440,7 @@ const EditorWorkspacePage: React.FC = () => {
               isReadOnly={!!selectedProject.workspace_id && !canEditWorkspace}
             />
           )}
-        </div>
+        </motion.div>
 
         {/* LOADING OVERLAY */}
         {isEditorLoading && (
@@ -1386,328 +1454,381 @@ const EditorWorkspacePage: React.FC = () => {
         )}
 
         {/* AUDIT REPORT OVERLAY */}
-        {selectedAuditReport && (
-          <div className="absolute inset-0 z-40 bg-white">
-            <CitationAuditReportPanel
-              report={selectedAuditReport}
-              onBack={() => setSelectedAuditReport(null)}
-              onNavigateToIssue={(location) => {
-                setSelectedAuditReport(null);
-                // No longer need a large delay as editor is already mounted
-                setTimeout(() => {
-                  if (editorInstance) {
-                    editorInstance.commands.focus();
-                    editorInstance.commands.clearAllHighlights?.();
-                    editorInstance.commands.setTextSelection({
-                      from: location.startPos,
-                      to: location.endPos
-                    });
-                    editorInstance.commands.highlightRange?.(location.startPos, location.endPos, {
-                      color: "rgba(59, 130, 246, 0.2)",
-                      message: "Issue Location",
-                    });
-                    editorInstance.commands.scrollIntoView();
-                  }
-                }, 50);
-              }}
-              onExecuteFix={(issue) => {
-                if (editorInstance) {
-                  if (issue.action === 'REMOVE' && issue.location) {
-                    editorInstance.commands.focus();
-                    editorInstance.commands.deleteRange({
-                      from: issue.location.startPos,
-                      to: issue.location.endPos
-                    });
-                    toast({
-                      title: "Citation Removed",
-                      description: `The redundant or broken citation has been removed from the document.`,
-                    });
-                  } else if (issue.action === 'RESOLVE') {
-                    toast({
-                      title: "Source Linked",
-                      description: `"${issue.selectedSource?.title}" has been successfully added.`,
-                    });
-                  } else if (issue.action === 'SEARCH') {
-                    openPanel("citations", {
-                      contextKeywords: [issue.citationText || issue.message],
-                      autoSearch: true
-                    });
-                    toast({
-                      title: "Researching Source",
-                      description: `Searching academic databases for matches...`,
-                    });
-                  }
+        <AnimatePresence>
+          {selectedAuditReport && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute inset-0 z-40 bg-white">
+              <CitationAuditReportPanel
+                report={selectedAuditReport}
+                onBack={() => setSelectedAuditReport(null)}
+                onNavigateToIssue={(location) => {
                   setSelectedAuditReport(null);
-                } else {
-                  toast({
-                    title: "Fix Unavailable",
-                    description: "This issue cannot be automatically fixed yet.",
-                    variant: "destructive"
-                  });
-                }
-              }}
-            />
-          </div>)}
+                  setTimeout(() => {
+                    if (editorInstance) {
+                      editorInstance.commands.focus();
+                      editorInstance.commands.clearAllHighlights?.();
+                      editorInstance.commands.setTextSelection({
+                        from: location.startPos,
+                        to: location.endPos,
+                      });
+                      editorInstance.commands.highlightRange?.(
+                        location.startPos,
+                        location.endPos,
+                        {
+                          color: "rgba(59, 130, 246, 0.2)",
+                          message: "Issue Location",
+                        },
+                      );
+                      editorInstance.commands.scrollIntoView();
+                    }
+                  }, 50);
+                }}
+                onExecuteFix={(issue) => {
+                  if (editorInstance) {
+                    if (issue.action === "REMOVE" && issue.location) {
+                      editorInstance.commands.focus();
+                      editorInstance.commands.deleteRange({
+                        from: issue.location.startPos,
+                        to: issue.location.endPos,
+                      });
+                      toast({
+                        title: "Citation Removed",
+                        description: `The redundant or broken citation has been removed from the document.`,
+                      });
+                    } else if (issue.action === "RESOLVE") {
+                      toast({
+                        title: "Source Linked",
+                        description: `"${issue.selectedSource?.title}" has been successfully added.`,
+                      });
+                    } else if (issue.action === "SEARCH") {
+                      openPanel("citations", {
+                        contextKeywords: [issue.citationText || issue.message],
+                        autoSearch: true,
+                      });
+                      toast({
+                        title: "Researching Source",
+                        description: `Searching academic databases for matches...`,
+                      });
+                    }
+                    setSelectedAuditReport(null);
+                  } else {
+                    toast({
+                      title: "Fix Unavailable",
+                      description:
+                        "This issue cannot be automatically fixed yet.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* SOURCE DETAIL OVERLAY */}
-        {selectedLibrarySource && (
-          <div className="absolute inset-0 z-30 bg-white">
-            <SourceDetailPanel
-              source={selectedLibrarySource}
-              projectId={selectedProject?.id || ""}
-              onBack={() => setSelectedLibrarySource(null)}
-              onUpdate={handleSourceUpdate}
-              isPremium={userPlan === "Premium"}
-            />
-          </div>
-        )}
+        <AnimatePresence>
+          {selectedLibrarySource && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="absolute inset-0 z-30 bg-white">
+              <SourceDetailPanel
+                source={selectedLibrarySource}
+                projectId={selectedProject?.id || ""}
+                onBack={() => setSelectedLibrarySource(null)}
+                onUpdate={handleSourceUpdate}
+                isPremium={userPlan === "Premium"}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* LITERATURE MATRIX OVERLAY */}
-        {activeLeftPanel === "sources" && activeSourceTab === "matrix" && (
-          <div className="absolute inset-0 z-20 bg-white">
-            <LiteratureMatrix
-              sources={selectedProject?.citations || []}
-              projectId={selectedProject?.id}
-              onUpdateCitations={handleBatchSourceUpdate}
-              userPlan={userPlan}
-            />
-          </div>
-        )}
+        <AnimatePresence>
+          {activeLeftPanel === "sources" &&
+            activeSourceTab === "matrix" &&
+            matrixMode === "full" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="absolute inset-0 z-40 bg-white">
+                <LiteratureMatrix
+                  sources={selectedProject?.citations || []}
+                  projectId={selectedProject?.id}
+                  onUpdateCitations={handleBatchSourceUpdate}
+                  userPlan={userPlan}
+                  viewMode={matrixMode}
+                  onToggleViewMode={() => setMatrixMode("split")}
+                />
+              </motion.div>
+            )}
+        </AnimatePresence>
 
         {/* VISUAL MAP OVERLAY */}
-        {activeLeftPanel === "visual-map" && selectedProject && (
-          <div className="absolute inset-0 z-10 bg-white">
-            {visualMapMode === "split" ? (
-              <div className="flex h-full w-full">
-                <div className="w-1/4 border-r border-gray-200">
-                  <CitationGraph
-                    projectId={selectedProject.id}
-                    project={selectedProject}
-                    onTopicSelect={(topic) => {
-                      openPanel("citations", { contextKeywords: [topic] });
-                    }}
-                    onAskAI={(topic) => {
-                      const prompt = `Discuss what these sources say about "${topic}", in the larger context of "${selectedProject.title}". (Note: Provide a direct response only, without conversational filler or introductory text.)`;
-                      openPanel("ai-chat", { initialInput: prompt });
-                    }}
-                    viewMode="split"
-                    onToggleViewMode={() => setVisualMapMode("full")}
-                    width={(typeof window !== "undefined" ? window.innerWidth : 1920) / 3}
-                    height={typeof window !== "undefined" ? window.innerHeight : 1080}
-                  />
-                </div>
-                <div className="flex-1 h-full relative">
-                  <div className="h-full w-full flex items-center justify-center bg-gray-50">
-                    <p className="text-gray-400">Editor is active in Full View mode. Switch back to synchronize.</p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <CitationGraph
-                projectId={selectedProject.id}
-                project={selectedProject}
-                onTopicSelect={(topic) => {
-                  openPanel("citations", { contextKeywords: [topic] });
-                }}
-                onAskAI={(topic) => {
-                  const prompt = `Discuss what these sources say about "${topic}", in the larger context of "${selectedProject.title}".`;
-                  const hiddenInstruction = "(Note: Provide a direct response only, without conversational filler or introductory text.)";
-                  openPanel("ai-chat", {
-                    initialInput: prompt,
-                    initialHiddenInstruction: hiddenInstruction,
-                  });
-                }}
-                viewMode="full"
-                onToggleViewMode={() => setVisualMapMode("split")}
-                width={typeof window !== "undefined" ? window.innerWidth : 1920}
-                height={typeof window !== "undefined" ? window.innerHeight : 1080}
-              />
+        <AnimatePresence>
+          {activeLeftPanel === "visual-map" &&
+            selectedProject &&
+            visualMapMode === "full" && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-40 bg-white">
+                <CitationGraph
+                  projectId={selectedProject.id}
+                  project={selectedProject}
+                  onTopicSelect={(topic) => {
+                    openPanel("citations", { contextKeywords: [topic] });
+                  }}
+                  onAskAI={(topic) => {
+                    const prompt = `Discuss what these sources say about "${topic}", in the larger context of "${selectedProject.title}".`;
+                    const hiddenInstruction =
+                      "(Note: Provide a direct response only, without conversational filler or introductory text.)";
+                    openPanel("ai-chat", {
+                      initialInput: prompt,
+                      initialHiddenInstruction: hiddenInstruction,
+                    });
+                  }}
+                  viewMode="full"
+                  onToggleViewMode={() => setVisualMapMode("split")}
+                  onBack={() => setVisualMapMode("split")}
+                  width={
+                    typeof window !== "undefined" ? window.innerWidth : 1920
+                  }
+                  height={
+                    typeof window !== "undefined" ? window.innerHeight : 1080
+                  }
+                />
+              </motion.div>
             )}
-          </div>
-        )}
+        </AnimatePresence>
 
         {/* EMPTY STATE */}
         {!selectedProject && !isEditorLoading && (
           <div className="h-full flex flex-col items-center justify-center bg-gray-50">
             <div className="text-center px-8 max-w-md">
               <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="w-10 h-10 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">No Document Selected</h2>
-              <p className="text-gray-500 mb-6">Select a document from the sidebar or upload a new one to start scanning.</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                No Document Selected
+              </h2>
+              <p className="text-gray-500 mb-6">
+                Select a document from the sidebar or upload a new one to start
+                scanning.
+              </p>
             </div>
           </div>
         )}
       </div>
 
       {/* Toggle Right Sidebar Button - Hidden in Focus Mode. ALLOWED in All display modes. */}
-      {
-        !isFocusMode && (
-          <button
-            onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-            className={`absolute top-4 z-[71] p-2 bg-white border border-gray-300 rounded-md shadow-md hover:bg-gray-50 transition-all`}
-            style={{
-              right: isRightSidebarOpen
-                ? `${(activePanelType === "team-chat" ? 400 : rightSidebarWidth) + 8}px`
-                : "16px",
-            }}
-            title={
-              isRightSidebarOpen
-                ? `Hide ${getPanelTitle()}`
-                : `Show ${getPanelTitle()}`
-            }>
-            <svg
-              className="w-5 h-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24">
-              {isRightSidebarOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 5l7 7-7 7M5 5l7 7-7 7"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                />
-              )}
-            </svg>
-          </button>
-        )
-      }
+      {!isFocusMode && (
+        <motion.button
+          layout
+          onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+          className={`absolute top-4 z-[71] p-2 bg-white border border-gray-300 rounded-md shadow-md hover:bg-gray-50 transition-colors`}
+          animate={{
+            right: isRightSidebarOpen
+              ? `${(activePanelType === "team-chat" ? 400 : rightSidebarWidth) + 8}px`
+              : "16px",
+          }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          title={
+            isRightSidebarOpen
+              ? `Hide ${getPanelTitle()}`
+              : `Show ${getPanelTitle()}`
+          }>
+          <svg
+            className="w-5 h-5 text-gray-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            {isRightSidebarOpen ? (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 5l7 7-7 7M5 5l7 7-7 7"
+              />
+            ) : (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+              />
+            )}
+          </svg>
+        </motion.button>
+      )}
 
       {/* Right Sidebar - Feature-Specific Panels - Hidden in Focus Mode. ALLOWED in All display modes. */}
-      {
-        !isFocusMode && isRightSidebarOpen && activePanelType && (
-          <>
-            {/* Right Resize Handle */}
-            <div
-              onMouseDown={() => setIsResizingRight(true)}
-              className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors"
-            />
-            <div
-              style={{
-                width: `${activePanelType === "team-chat" ? 400 : rightSidebarWidth}px`,
-              }}
-              className="flex-shrink-0 h-full transition-all border-l border-gray-200 z-[70] bg-white relative">
-              {/* Render appropriate panel based on type */}
-              {activePanelType === "citations" && selectedProject && (
-                <PaperSuggestionsPanel
-                  projectId={selectedProject.id}
-                  onClose={() => setIsRightSidebarOpen(false)}
-                  onInsertCitation={handleInsertCitation}
-                  onSourceAdded={() => {
-                    reloadProjectCitations();
-                  }}
-                  contextKeywords={panelData?.contextKeywords}
-                />
-              )}
-              {activePanelType === "rephrase" && (
-                <RephraseSuggestionsPanel
-                  projectId={selectedProject?.id}
-                  panelData={panelData}
-                  onClose={() => setIsRightSidebarOpen(false)}
-                />
-              )}
-              {activePanelType === "reality-check" && panelData && (
-                <div className="p-4 h-full overflow-y-auto custom-scrollbar">
-                  <AnxietyRealityCheckPanel stats={panelData} />
-                </div>
-              )}
-              {activePanelType === "draft-comparison" && panelData && (
-                <DraftComparisonPanel
-                  result={panelData}
-                  onClose={() => setIsRightSidebarOpen(false)}
-                />
-              )}
-              {activePanelType === "citation-confidence" && selectedProject && (
-                <div className="p-4 h-full overflow-y-auto custom-scrollbar">
-                  <CitationConfidencePanel projectId={selectedProject.id} />
-                </div>
-              )}
-              {activePanelType === "ai-chat" && selectedProject && (
-                <AIChatPanel
-                  documentContent={JSON.stringify(selectedProject.content)}
-                  selectedText={panelData?.selectedText}
-                  projectId={selectedProject.id}
-                  projectTitle={selectedProject.title}
-                  projectDescription={selectedProject.description}
-                  originalityResults={panelData?.originalityResults}
-                  citationSuggestions={panelData?.citationSuggestions}
-                  initialInput={panelData?.initialInput}
-                  initialHiddenInstruction={panelData?.initialHiddenInstruction}
-                  projectSources={selectedProject.citations} // Added prop
-                  onClose={() => setIsRightSidebarOpen(false)}
-                />
-              )}
-              {activePanelType === "ai-results" && panelData && (
-                <div className="p-4 h-full overflow-y-auto custom-scrollbar">
-                  <AIProbabilityHeatmap
-                    content={editorInstance?.getText() || ""}
-                    results={panelData.sentences}
-                  />
-                </div>
-              )}
-              {activePanelType === "originality-results" && panelData && (
-                <div className="h-full overflow-y-auto custom-scrollbar bg-gray-50">
-                  <OriginalityMapSidebar
-                    results={panelData}
-                    documentContent={editorInstance?.getText() || ""}
-                    onAskAI={(prompt, hiddenCtx) => {
-                      openPanel("ai-chat", {
-                        initialInput: prompt,
-                        initialHiddenInstruction: hiddenCtx,
-                      });
-                    }}
-                  />
-                </div>
-              )}
-              {activePanelType === "add-citation" && (
-                <AddCitationModal
-                  isOpen={true}
-                  isPanel={true}
-                  onClose={() => setIsRightSidebarOpen(false)}
-                  projectId={selectedProject?.id}
-                  citations={selectedProject?.citations || []}
-                  onInsertCitation={handleInsertCitation}
-                  onCitationAdded={() => {
-                    reloadProjectCitations();
-                  }}
-                />
-              )}
-              {activePanelType === "collaboration-history" && (
-                <CollaborationHistoryPanel
-                  editor={editorInstance}
-                  members={workspaceMembers}
-                  isLoading={isMembersLoading}
-                  onClose={() => setIsRightSidebarOpen(false)}
-                />
-              )}
-              {activePanelType === "team-chat" &&
-                selectedProject?.workspace_id && (
-                  <TeamChat
-                    workspaceId={selectedProject.workspace_id}
-                    className="h-full"
-                  />
-                )}
-              {activePanelType === "team-chat" &&
-                !selectedProject?.workspace_id && (
-                  <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                    <p className="text-sm text-slate-500">
-                      Team Chat is only available for workspace documents.
-                    </p>
-                  </div>
-                )}
-            </div>
-          </>
-        )}
+      {!isFocusMode && (
+        <AnimatePresence>
+          {isRightSidebarOpen && activePanelType && (
+            <motion.div
+              initial={{ x: 400, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 400, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="flex h-full flex-shrink-0 z-[70] bg-white relative">
+              {/* Right Resize Handle */}
+              <div
+                onMouseDown={() => setIsResizingRight(true)}
+                className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors"
+              />
+              <div
+                style={{
+                  width: `${activePanelType === "team-chat" ? 400 : rightSidebarWidth}px`,
+                }}
+                className="h-full border-l border-gray-200 flex flex-col bg-white overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activePanelType}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex-1 overflow-hidden">
+                    {/* Render appropriate panel based on type */}
+                    {activePanelType === "citations" && selectedProject && (
+                      <PaperSuggestionsPanel
+                        projectId={selectedProject.id}
+                        onClose={() => setIsRightSidebarOpen(false)}
+                        onInsertCitation={handleInsertCitation}
+                        onSourceAdded={() => {
+                          reloadProjectCitations();
+                        }}
+                        contextKeywords={panelData?.contextKeywords}
+                      />
+                    )}
+                    {activePanelType === "rephrase" && (
+                      <RephraseSuggestionsPanel
+                        projectId={selectedProject?.id}
+                        panelData={panelData}
+                        onClose={() => setIsRightSidebarOpen(false)}
+                      />
+                    )}
+                    {activePanelType === "reality-check" && panelData && (
+                      <div className="p-4 h-full overflow-y-auto custom-scrollbar">
+                        <AnxietyRealityCheckPanel stats={panelData} />
+                      </div>
+                    )}
+                    {activePanelType === "draft-comparison" && panelData && (
+                      <DraftComparisonPanel
+                        result={panelData}
+                        onClose={() => setIsRightSidebarOpen(false)}
+                      />
+                    )}
+                    {activePanelType === "citation-confidence" &&
+                      selectedProject && (
+                        <div className="p-4 h-full overflow-y-auto custom-scrollbar">
+                          <CitationConfidencePanel
+                            projectId={selectedProject.id}
+                          />
+                        </div>
+                      )}
+                    {activePanelType === "ai-chat" && selectedProject && (
+                      <AIChatPanel
+                        documentContent={JSON.stringify(
+                          selectedProject.content,
+                        )}
+                        selectedText={panelData?.selectedText}
+                        projectId={selectedProject.id}
+                        projectTitle={selectedProject.title}
+                        projectDescription={selectedProject.description}
+                        originalityResults={panelData?.originalityResults}
+                        citationSuggestions={panelData?.citationSuggestions}
+                        initialInput={panelData?.initialInput}
+                        initialHiddenInstruction={
+                          panelData?.initialHiddenInstruction
+                        }
+                        projectSources={selectedProject.citations} // Added prop
+                        onClose={() => setIsRightSidebarOpen(false)}
+                      />
+                    )}
+                    {activePanelType === "ai-results" && panelData && (
+                      <div className="p-4 h-full overflow-y-auto custom-scrollbar">
+                        <AIProbabilityHeatmap
+                          content={editorInstance?.getText() || ""}
+                          results={panelData.sentences}
+                        />
+                      </div>
+                    )}
+                    {activePanelType === "originality-results" && panelData && (
+                      <div className="h-full overflow-y-auto custom-scrollbar bg-gray-50">
+                        <OriginalityMapSidebar
+                          results={panelData}
+                          documentContent={editorInstance?.getText() || ""}
+                          onAskAI={(prompt, hiddenCtx) => {
+                            openPanel("ai-chat", {
+                              initialInput: prompt,
+                              initialHiddenInstruction: hiddenCtx,
+                            });
+                          }}
+                        />
+                      </div>
+                    )}
+                    {activePanelType === "add-citation" && (
+                      <AddCitationModal
+                        isOpen={true}
+                        isPanel={true}
+                        onClose={() => setIsRightSidebarOpen(false)}
+                        projectId={selectedProject?.id}
+                        citations={selectedProject?.citations || []}
+                        onInsertCitation={handleInsertCitation}
+                        onCitationAdded={() => {
+                          reloadProjectCitations();
+                        }}
+                      />
+                    )}
+                    {activePanelType === "collaboration-history" && (
+                      <CollaborationHistoryPanel
+                        editor={editorInstance}
+                        members={workspaceMembers}
+                        isLoading={isMembersLoading}
+                        onClose={() => setIsRightSidebarOpen(false)}
+                      />
+                    )}
+                    {activePanelType === "team-chat" &&
+                      selectedProject?.workspace_id && (
+                        <TeamChat
+                          workspaceId={selectedProject.workspace_id}
+                          className="h-full"
+                        />
+                      )}
+                    {activePanelType === "team-chat" &&
+                      !selectedProject?.workspace_id && (
+                        <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                          <p className="text-sm text-slate-500">
+                            Team Chat is only available for workspace documents.
+                          </p>
+                        </div>
+                      )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
 
       {/* Editor Onboarding Tour */}
       <EditorOnboardingTour
@@ -1725,4 +1846,3 @@ const EditorWorkspacePage: React.FC = () => {
 };
 
 export default EditorWorkspacePage;
-

@@ -1313,33 +1313,17 @@ export default function DashboardLayout({
 
                   {isUsageCollapsed &&
                     (() => {
-                      const derivedCurrent =
-                        ((planUsage?.originality_scan || 0) >=
-                        (planLimits?.originality_scan ?? 3)
-                          ? 1
-                          : 0) +
-                        ((planUsage?.citation_check ||
-                          planUsage?.citation_audit ||
-                          0) >=
-                        (planLimits?.citation_audit ??
-                          planLimits?.citation_check ??
-                          0)
-                          ? 1
-                          : 0) +
-                        ((planUsage?.rephrase ||
-                          planUsage?.rephrase_suggestions ||
-                          0) >= (planLimits?.rephrase_suggestions ?? 3)
-                          ? 1
-                          : 0);
+                      const currentScans =
+                        planUsage?.scan || planUsage?.scans_per_month || 0;
+                      const limitScans = planLimits?.scans_per_month ?? 3;
 
-                      // Use actual limit or fallback for Free, but treat Premium as unlimited visually if needed
                       const isPremium =
                         userPlan.toLowerCase().includes("premium") ||
                         userPlan.toLowerCase().includes("plus");
-                      const derivedLimit = isPremium ? 100 : 3;
+
                       const percent = isPremium
                         ? 0
-                        : Math.min((derivedCurrent / derivedLimit) * 100, 100);
+                        : Math.min((currentScans / limitScans) * 100, 100);
 
                       return (
                         <div className="mt-1">
@@ -1351,11 +1335,13 @@ export default function DashboardLayout({
                           </div>
                           <div className="flex justify-end items-center mt-1">
                             <p className="text-[10px] text-gray-400">
-                              {derivedCurrent} / {derivedLimit} Scans
+                              {currentScans} / {limitScans} Scans
                             </p>
-                            <span className="text-[10px] text-gray-400 ml-1">
-                              ({Math.round(percent)}%)
-                            </span>
+                            {!isPremium && (
+                              <span className="text-[10px] text-gray-400 ml-1">
+                                ({Math.round(percent)}%)
+                              </span>
+                            )}
                           </div>
                         </div>
                       );

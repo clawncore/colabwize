@@ -57,6 +57,19 @@ export const CitationGraph: React.FC<CitationGraphProps> = ({
   const dragStartRef = useRef({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Handle Escape key to close full screen
+  useEffect(() => {
+    if (viewMode === "full" && onToggleViewMode) {
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          onToggleViewMode();
+        }
+      };
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
+    }
+  }, [viewMode, onToggleViewMode]);
+
   // Generate Tree Data from Project
   useEffect(() => {
     setLoading(true);
@@ -390,9 +403,9 @@ export const CitationGraph: React.FC<CitationGraphProps> = ({
     <div className="h-full w-full flex flex-col bg-white overflow-hidden relative">
       {/* Header */}
       <div className="absolute top-4 left-4 z-20 flex items-center gap-3 bg-white/95 backdrop-blur-md p-2 pl-3 rounded-lg border border-gray-100 shadow-md max-w-[calc(100%-32px)]">
-        {onBack && viewMode === "full" && (
+        {viewMode === "full" && (onBack || onToggleViewMode) && (
           <button
-            onClick={onBack}
+            onClick={() => (onBack ? onBack() : onToggleViewMode!())}
             className="p-1.5 hover:bg-gray-100 rounded-md text-gray-500 hover:text-gray-900 transition-colors pointer-events-auto"
             title="Go Back">
             <ArrowLeft className="w-5 h-5" />

@@ -135,16 +135,20 @@ export class BibliographyManager {
 
     if (typeof doc.descendants === "function") {
       doc.descendants((node: any, pos: number) => {
-        if (node.type.name === "heading") {
+        if (
+          node.type.name === "heading" ||
+          (node.type.name === "paragraph" && node.attrs?.level)
+        ) {
           const textContent = node.textContent?.toLowerCase() || "";
           if (
-            textContent.includes("references") ||
+            textContent.includes("reference") ||
+            textContent.includes("bibliography") ||
             textContent.includes("works cited") ||
-            textContent.includes("bibliography")
+            textContent.includes("sources")
           ) {
             inRefSection = true;
-          } else if (inRefSection) {
-            // Stop if we hit another non-reference heading
+          } else if (inRefSection && node.textContent?.trim().length > 0) {
+            // If we find another heading that ISN'T a reference heading, stop
             inRefSection = false;
           }
         } else if (
@@ -180,15 +184,16 @@ export class BibliographyManager {
               .join("")
           : "";
 
-        if (node.type === "heading") {
+        if (node.type === "heading" || node.attrs?.level) {
           const text = textContent.toLowerCase();
           if (
-            text.includes("references") ||
+            text.includes("reference") ||
+            text.includes("bibliography") ||
             text.includes("works cited") ||
-            text.includes("bibliography")
+            text.includes("sources")
           ) {
             inRefSection = true;
-          } else if (inRefSection) {
+          } else if (inRefSection && text.trim().length > 0) {
             inRefSection = false;
           }
         } else if (

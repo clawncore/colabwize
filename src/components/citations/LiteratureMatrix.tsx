@@ -6,7 +6,9 @@ import {
   CheckCircle2,
   Maximize2,
   Minimize2,
+  ArrowLeft,
 } from "lucide-react";
+import { useEffect } from "react";
 import { CitationService } from "../../services/citationService";
 
 interface LiteratureMatrixProps {
@@ -30,6 +32,19 @@ export const LiteratureMatrix: React.FC<LiteratureMatrixProps> = ({
 }) => {
   const [localIsAnalyzing, setLocalIsAnalyzing] = useState(false);
   const isAnalyzing = externalIsAnalyzing || localIsAnalyzing;
+
+  // Handle Escape key to close full screen
+  useEffect(() => {
+    if (viewMode === "full" && onToggleViewMode) {
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          onToggleViewMode();
+        }
+      };
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
+    }
+  }, [viewMode, onToggleViewMode]);
 
   const isPremium = userPlan === "Premium";
 
@@ -68,11 +83,21 @@ export const LiteratureMatrix: React.FC<LiteratureMatrixProps> = ({
         <div
           className={`flex ${viewMode === "split" ? "flex-col gap-3" : "items-center justify-between"} mb-4`}>
           <div>
-            <h2
-              className={`${viewMode === "split" ? "text-lg" : "text-xl"} font-bold text-slate-900 flex items-center gap-2 mb-1`}>
-              <FileText className="w-5 h-5 text-teal-600" />
-              Literature Matrix
-            </h2>
+            <div className="flex items-center gap-3">
+              {viewMode === "full" && onToggleViewMode && (
+                <button
+                  onClick={onToggleViewMode}
+                  className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
+                  title="Back to Panel">
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              )}
+              <h2
+                className={`${viewMode === "split" ? "text-lg" : "text-xl"} font-bold text-slate-900 flex items-center gap-2 mb-1`}>
+                <FileText className="w-5 h-5 text-teal-600" />
+                Literature Matrix
+              </h2>
+            </div>
             {viewMode === "full" && (
               <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
                 Synthesize your research by identifying recurring patterns

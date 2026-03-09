@@ -28,7 +28,9 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   workspaceId,
 }) => {
   const navigate = useNavigate();
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "failed">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "failed"
+  >("idle");
   const [projects, setProjects] = useState<Project[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery] = useState("");
@@ -36,22 +38,25 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   const [projectToRename, setProjectToRename] = useState<Project | null>(null);
 
   const { user } = useUser();
- 
+
   const fetchProjects = React.useCallback(async () => {
     if (!user) return;
     try {
       setStatus("loading");
       setError(null);
- 
+
       let result;
       if (workspaceId) {
         // Fetch projects for the specific workspace
-        result = await documentService.getUserProjectsInWorkspace(user.id, workspaceId);
+        result = await documentService.getUserProjectsInWorkspace(
+          user.id,
+          workspaceId,
+        );
       } else {
         // Only fetch personal projects (not in any workspace)
         result = await documentService.getUserPersonalProjects(user.id);
       }
- 
+
       // getUserPersonalProjects returns the projects array directly
       if (Array.isArray(result)) {
         setProjects(result);
@@ -73,7 +78,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
       fetchProjects();
     }
   }, [status, user, fetchProjects]);
- 
+
   const handleRetry = () => {
     setStatus("idle"); // This will trigger the effect to fetch again
   };
@@ -95,7 +100,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   };
 
   const filteredProjects = projects.filter((project) =>
-    project.title.toLowerCase().includes(searchQuery.toLowerCase())
+    project.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleBackButton = () => {
@@ -132,7 +137,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
         newTitle,
         projectToRename.description || "",
         projectToRename.content,
-        projectToRename.word_count
+        projectToRename.word_count,
       );
 
       if (result.success) {
@@ -151,10 +156,12 @@ export const DocumentList: React.FC<DocumentListProps> = ({
 
   if (status === "loading") {
     return (
-      <div className="w-full min-h-screen flex flex-col bg-gray-50">
-        <div className="p-4 border-b border-gray-200">
-          <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
-        </div>
+      <div className="w-full h-full flex flex-col bg-gray-50">
+        {!hideHeader && (
+          <div className="p-4 border-b border-gray-200">
+            <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        )}
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
         </div>
@@ -189,8 +196,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                 className="w-6 h-6 text-yellow-600"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
+                stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -199,14 +205,16 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Service Temporarily Unavailable</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Service Temporarily Unavailable
+            </h3>
             <p className="text-sm text-gray-500 mb-6">
-              We're having trouble connecting to the database. Your documents are safe, but we can't load them right now.
+              We're having trouble connecting to the database. Your documents
+              are safe, but we can't load them right now.
             </p>
             <button
               onClick={handleRetry}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
               Retry Connection
             </button>
             {error && (
@@ -229,10 +237,11 @@ export const DocumentList: React.FC<DocumentListProps> = ({
             {filteredProjects.map((project) => (
               <div
                 key={project.id}
-                className={`relative bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-4 cursor-pointer border ${selectedProjectId === project.id
-                  ? "border-purple-600 bg-purple-50"
-                  : "border-gray-200"
-                  }`}
+                className={`relative bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-4 cursor-pointer border ${
+                  selectedProjectId === project.id
+                    ? "border-purple-600 bg-purple-50"
+                    : "border-gray-200"
+                }`}
                 onClick={() => handleProjectClick(project)}>
                 {/* Menu Icon */}
                 {showActions && (
@@ -245,7 +254,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                           e.stopPropagation();
                           // Toggle dropdown menu
                           const menu = document.getElementById(
-                            `menu-${project.id}`
+                            `menu-${project.id}`,
                           );
                           if (menu) {
                             menu.classList.toggle("hidden");
@@ -284,7 +293,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               const menu = document.getElementById(
-                                `menu-${project.id}`
+                                `menu-${project.id}`,
                               );
                               if (menu) menu.classList.add("hidden");
                               handleRenameClick(project);
@@ -300,13 +309,21 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                               // Lazy load content if missing (performance optimization)
                               if (!contentToUse) {
                                 try {
-                                  const res = await documentService.getProjectById(project.id);
+                                  const res =
+                                    await documentService.getProjectById(
+                                      project.id,
+                                    );
                                   if (res.success && res.data) {
                                     contentToUse = res.data.content;
                                   }
                                 } catch (err) {
-                                  console.error("Failed to fetch content for duplication", err);
-                                  alert("Failed to fetch project content. Please try again.");
+                                  console.error(
+                                    "Failed to fetch content for duplication",
+                                    err,
+                                  );
+                                  alert(
+                                    "Failed to fetch project content. Please try again.",
+                                  );
                                   return;
                                 }
                               }
@@ -317,7 +334,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                                   project.id,
                                   `${project.title} (Copy)`,
                                   project.description || "",
-                                  contentToUse
+                                  contentToUse,
                                 )
                                 .then((result) => {
                                   if (result.success) {
@@ -334,7 +351,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                               // Delete functionality
                               if (
                                 window.confirm(
-                                  `Are you sure you want to delete "${project.title}"?`
+                                  `Are you sure you want to delete "${project.title}"?`,
                                 )
                               ) {
                                 documentService
@@ -360,12 +377,22 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                     <div className="text-xs text-gray-600 h-28 overflow-hidden">
                       {(() => {
                         const getFallback = () => {
-                          if (project.description && project.description.trim().length > 0) return project.description;
-                          const dateStr = new Date(project.updated_at).toLocaleDateString();
-                          if (project.word_count > 0) return `${project.word_count} words • ${dateStr}`;
+                          if (
+                            project.description &&
+                            project.description.trim().length > 0
+                          )
+                            return project.description;
+                          const dateStr = new Date(
+                            project.updated_at,
+                          ).toLocaleDateString();
+                          if (project.word_count > 0)
+                            return `${project.word_count} words • ${dateStr}`;
                           return `Document created on ${dateStr}`;
                         };
-                        const text = extractTextFromContent(project.content, 140);
+                        const text = extractTextFromContent(
+                          project.content,
+                          140,
+                        );
                         return text || getFallback();
                       })()}
                     </div>
@@ -399,10 +426,11 @@ export const DocumentList: React.FC<DocumentListProps> = ({
             {filteredProjects.map((project) => (
               <div
                 key={project.id}
-                className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${selectedProjectId === project.id
-                  ? "bg-purple-100 border border-purple-300"
-                  : "hover:bg-gray-100 border border-gray-200"
-                  }`}
+                className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
+                  selectedProjectId === project.id
+                    ? "bg-purple-100 border border-purple-300"
+                    : "hover:bg-gray-100 border border-gray-200"
+                }`}
                 onClick={() => handleListProjectClick(project)}>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-gray-900 truncate">
@@ -431,7 +459,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                           e.stopPropagation();
                           // Toggle dropdown menu
                           const menu = document.getElementById(
-                            `list-menu-${project.id}`
+                            `list-menu-${project.id}`,
                           );
                           if (menu) {
                             menu.classList.toggle("hidden");
@@ -470,7 +498,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               const menu = document.getElementById(
-                                `list-menu-${project.id}`
+                                `list-menu-${project.id}`,
                               );
                               if (menu) menu.classList.add("hidden");
                               handleRenameClick(project);
@@ -486,12 +514,18 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                               // Lazy load content if missing
                               if (!contentToUse) {
                                 try {
-                                  const res = await documentService.getProjectById(project.id);
+                                  const res =
+                                    await documentService.getProjectById(
+                                      project.id,
+                                    );
                                   if (res.success && res.data) {
                                     contentToUse = res.data.content;
                                   }
                                 } catch (err) {
-                                  console.error("Failed to fetch content for duplication", err);
+                                  console.error(
+                                    "Failed to fetch content for duplication",
+                                    err,
+                                  );
                                   return;
                                 }
                               }
@@ -502,7 +536,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                                   project.id,
                                   `${project.title} (Copy)`,
                                   project.description || "",
-                                  contentToUse
+                                  contentToUse,
                                 )
                                 .then((result) => {
                                   if (result.success) {
@@ -519,7 +553,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                               // Delete functionality
                               if (
                                 window.confirm(
-                                  `Are you sure you want to delete "${project.title}"?`
+                                  `Are you sure you want to delete "${project.title}"?`,
                                 )
                               ) {
                                 documentService
