@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 import useAuth from "../services/useAuth";
+import ConfigService from "../services/ConfigService";
 
-const WEBSOCKET_URL =
-  process.env.NEXT_PUBLIC_COLLABORATION_API_URL || "ws://localhost:9081";
+const WEBSOCKET_URL = ConfigService.getCollabUrl();
 
 export interface PresenceUser {
   clientId: number;

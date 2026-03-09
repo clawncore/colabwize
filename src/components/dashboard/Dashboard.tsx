@@ -15,13 +15,13 @@ import {
   RefreshCw,
   CheckCircle,
   Coins,
+  TrendingUp,
 } from "lucide-react";
 
 import { documentService, Project } from "../../services/documentService";
 import {
-  BarChart,
-  Bar,
-  Cell,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -363,8 +363,7 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Originality */}
-                <div
-                  className={`bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between ${!["premium", "plus"].some((p) => userPlan.toLowerCase().includes(p)) ? "opacity-90" : ""}`}>
+                <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-1.5 bg-green-50 text-green-600 rounded-lg">
                       <ShieldCheck className="w-4 h-4" />
@@ -373,20 +372,12 @@ export const Dashboard: React.FC = () => {
                       Originality
                     </span>
                   </div>
-                  {["premium", "plus"].some((p) =>
-                    userPlan.toLowerCase().includes(p),
-                  ) ? (
-                    <span className="font-bold text-green-600">
-                      {Math.round(
-                        latestProject.originality_scans?.[0]?.overallScore || 0,
-                      )}
-                      %
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded flex items-center pointer-events-none">
-                      <Lock className="w-2.5 h-2.5 mr-1" /> Premium
-                    </span>
-                  )}
+                  <span className="font-bold text-green-600">
+                    {Math.round(
+                      latestProject.originality_scans?.[0]?.overallScore || 0,
+                    )}
+                    %
+                  </span>
                 </div>
 
                 {/* Citations */}
@@ -399,22 +390,14 @@ export const Dashboard: React.FC = () => {
                       Citations
                     </span>
                   </div>
-                  {["premium", "plus"].some((p) =>
-                    userPlan.toLowerCase().includes(p),
-                  ) ? (
-                    <div className="flex flex-col items-end">
-                      <span className="font-bold text-gray-900">
-                        {dashboardData.citationCount || 0}
-                      </span>
-                      <span className="text-[10px] text-gray-500 uppercase font-bold">
-                        {dashboardData.citationStatus || "-"}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded flex items-center pointer-events-none">
-                      <Lock className="w-2.5 h-2.5 mr-1" /> Premium
+                  <div className="flex flex-col items-end">
+                    <span className="font-bold text-gray-900">
+                      {dashboardData.citationCount || 0}
                     </span>
-                  )}
+                    <span className="text-[10px] text-gray-500 uppercase font-bold">
+                      {dashboardData.citationStatus || "-"}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Verification */}
@@ -427,17 +410,9 @@ export const Dashboard: React.FC = () => {
                       Authorship
                     </span>
                   </div>
-                  {["premium", "plus"].some((p) =>
-                    userPlan.toLowerCase().includes(p),
-                  ) ? (
-                    <span className="font-bold text-gray-900">
-                      {dashboardData.authorshipVerified ? "Verified" : "-"}
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase rounded flex items-center pointer-events-none">
-                      <Lock className="w-2.5 h-2.5 mr-1" /> Premium
-                    </span>
-                  )}
+                  <span className="font-bold text-gray-900">
+                    {dashboardData.authorshipVerified ? "Verified" : "-"}
+                  </span>
                 </div>
               </div>
 
@@ -463,17 +438,12 @@ export const Dashboard: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center">
             Advanced Document Analytics
-            <span className="ml-3 px-3 py-1 rounded-full bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 text-xs font-bold flex items-center shadow-sm border border-amber-200">
-              <Crown className="w-3.5 h-3.5 mr-1" />
-              PREMIUM
-            </span>
           </h2>
         </div>
 
         <div className="relative">
-          {/* Content wrapping for blur effect */}
-          <div
-            className={`${!["premium", "plus"].some((p) => userPlan.toLowerCase().includes(p)) ? "filter blur-sm select-none pointer-events-none opacity-60 transition-all duration-500" : ""}`}>
+          {/* Content wrapping */}
+          <div>
             {/* Key Metrics Row - Redesigned Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {/* Originality Overview */}
@@ -604,17 +574,41 @@ export const Dashboard: React.FC = () => {
                     <p className="text-sm text-gray-500">
                       New documents created per month
                     </p>
+                    <div className="flex items-center gap-2 mt-3">
+                      <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
+                      <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                        Documents
+                      </span>
+                    </div>
                   </div>
                   <div className="p-1.5 bg-gray-50 rounded-lg">
-                    <BarChartIcon className="w-4 h-4 text-gray-400" />
+                    <TrendingUp className="w-4 h-4 text-gray-400" />
                   </div>
                 </div>
                 <div className="h-72 w-full min-h-[300px]">
                   <ResponsiveContainer width="99%" height="100%">
-                    <BarChart
+                    <AreaChart
                       data={dashboardData.trendData || []}
-                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                      barSize={40}>
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient
+                          id="colorDocuments"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1">
+                          <stop
+                            offset="5%"
+                            stopColor="#3B82F6"
+                            stopOpacity={0.3}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#3B82F6"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid
                         strokeDasharray="3 3"
                         vertical={false}
@@ -645,25 +639,24 @@ export const Dashboard: React.FC = () => {
                           boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
                         }}
                         itemStyle={{ color: "#E5E7EB" }}
-                        cursor={{ fill: "#F9FAFB" }}
                       />
-                      <Bar
+                      <Area
+                        type="monotone"
                         dataKey="documents"
                         name="Documents"
-                        radius={[4, 4, 0, 0]}>
-                        {(dashboardData.trendData || []).map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={
-                              index ===
-                              (dashboardData.trendData || []).length - 1
-                                ? "#4F46E5"
-                                : "#C7D2FE"
-                            }
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
+                        stroke="#3B82F6"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#colorDocuments)"
+                        dot={{
+                          r: 4,
+                          fill: "#3B82F6",
+                          strokeWidth: 2,
+                          stroke: "#fff",
+                        }}
+                        activeDot={{ r: 6, strokeWidth: 0 }}
+                      />
+                    </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </div>
@@ -767,45 +760,6 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Premium Overlay */}
-          {!["premium", "plus"].some((p) =>
-            userPlan.toLowerCase().includes(p),
-          ) && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-4">
-              {/* Simplified Overlay - No Box */}
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/90 backdrop-blur rounded-full mb-6 shadow-lg transform hover:scale-110 transition-transform duration-300">
-                  <Lock className="w-8 h-8 text-indigo-600" />
-                </div>
-                <h3 className="text-3xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">
-                  {userPlan?.includes("plus")
-                    ? "Upgrade to Premium"
-                    : "Unlock Advanced Analytics"}
-                </h3>
-                <p className="text-gray-700 font-medium mb-8 max-w-md mx-auto drop-shadow-sm">
-                  {userPlan?.includes("plus")
-                    ? "Get enhanced analytics, unlimited scans, and priority processing."
-                    : "Get full visibility into your Originality, Citation Health, and Authorship Verification status."}
-                </p>
-                <button
-                  onClick={handleUpgradeClick}
-                  className="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold text-base rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center mx-auto transform hover:-translate-y-0.5">
-                  <span>
-                    {userPlan?.includes("plus")
-                      ? "Upgrade to Premium"
-                      : "Unlock Premium Features"}
-                  </span>
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </button>
-                <p className="text-sm text-gray-600 font-semibold mt-4 bg-white/60 inline-block px-3 py-1 rounded-full backdrop-blur-sm">
-                  {userPlan?.includes("plus")
-                    ? "Starting at $12/mo"
-                    : "Starting at $5.99/mo"}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

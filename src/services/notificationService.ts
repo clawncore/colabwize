@@ -1,5 +1,6 @@
 import { apiClient } from "./apiClient";
 import { getAuthToken } from "./auth";
+import { ConfigService } from "./ConfigService";
 
 export interface Notification {
   id: string;
@@ -166,16 +167,9 @@ class NotificationService {
       return;
     }
 
-    // Get WebSocket URL (use wss:// in production) with token as query parameter
-    // Use window.location.hostname to ensure it works even if accessing via IP
-    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsHost = window.location.hostname;
-    // In production, we might use a different port or path, but for now assuming 8081 for separate WS server
-    // or reusing the same port if proxied.
-    // For local dev, explicit 8081 is set.
-    const wsPort = process.env.NODE_ENV === "production" ? "8082" : "8082";
-
-    const wsUrl = `${wsProtocol}//${wsHost}:${wsPort}?token=${encodeURIComponent(token)}`;
+    // Get WebSocket URL from centralized config
+    const baseWsUrl = ConfigService.getNotificationUrl();
+    const wsUrl = `${baseWsUrl}?token=${encodeURIComponent(token)}`;
 
     console.log(
       `[NotificationService] Attempting connection to: ${wsUrl.split("?")[0]} (token hidden)`,
