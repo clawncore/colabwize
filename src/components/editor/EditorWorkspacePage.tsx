@@ -1678,156 +1678,139 @@ const EditorWorkspacePage: React.FC = () => {
           </svg>
         </motion.button>
       )}
+      {/* Right Sidebar - Feature-Specific Panels - Hidden in Focus Mode */}
+      {!isFocusMode && isRightSidebarOpen && activePanelType && (
+        <>
+          <div
+            onMouseDown={() => setIsResizingRight(true)}
+            className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors"
+          />
+          <div
+            className="bg-white border-l border-gray-200 flex flex-col relative shadow-xl z-20"
+            style={{ width: `${rightSidebarWidth}px` }}>
+            {/* Panel Header */}
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white flex-shrink-0">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                {getPanelTitle()}
+              </h3>
+              <button
+                onClick={() => setIsRightSidebarOpen(false)}
+                className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-gray-600">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-      {/* Right Sidebar - Feature-Specific Panels - Hidden in Focus Mode. ALLOWED in All display modes. */}
-      {!isFocusMode && (
-        <AnimatePresence>
-          {isRightSidebarOpen && activePanelType && (
-            <motion.div
-              initial={{ x: 400, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 400, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="flex h-full flex-shrink-0 z-[70] bg-white relative">
-              {/* Right Resize Handle */}
-              <div
-                onMouseDown={() => setIsResizingRight(true)}
-                className="w-1 h-full bg-gray-200 hover:bg-purple-400 cursor-col-resize flex-shrink-0 transition-colors"
-              />
-              <div
-                style={{
-                  width: `${activePanelType === "team-chat" ? 400 : rightSidebarWidth}px`,
-                }}
-                className="h-full border-l border-gray-200 flex flex-col bg-white overflow-hidden">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activePanelType}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex-1 overflow-hidden">
-                    {/* Render appropriate panel based on type */}
-                    {activePanelType === "citations" && selectedProject && (
-                      <PaperSuggestionsPanel
-                        projectId={selectedProject.id}
-                        onClose={() => setIsRightSidebarOpen(false)}
-                        onInsertCitation={handleInsertCitation}
-                        onSourceAdded={() => {
-                          reloadProjectCitations();
-                        }}
-                        contextKeywords={panelData?.contextKeywords}
-                      />
-                    )}
-                    {activePanelType === "rephrase" && (
-                      <RephraseSuggestionsPanel
-                        projectId={selectedProject?.id}
-                        panelData={panelData}
-                        onClose={() => setIsRightSidebarOpen(false)}
-                      />
-                    )}
-                    {activePanelType === "reality-check" && panelData && (
-                      <div className="p-4 h-full overflow-y-auto custom-scrollbar">
-                        <AnxietyRealityCheckPanel stats={panelData} />
-                      </div>
-                    )}
-                    {activePanelType === "draft-comparison" && panelData && (
-                      <DraftComparisonPanel
-                        result={panelData}
-                        onClose={() => setIsRightSidebarOpen(false)}
-                      />
-                    )}
-                    {activePanelType === "citation-confidence" &&
-                      selectedProject && (
-                        <div className="p-4 h-full overflow-y-auto custom-scrollbar">
-                          <CitationConfidencePanel
-                            projectId={selectedProject.id}
-                          />
-                        </div>
-                      )}
-                    {activePanelType === "ai-chat" && selectedProject && (
-                      <AIChatPanel
-                        documentContent={JSON.stringify(
-                          selectedProject.content,
-                        )}
-                        selectedText={panelData?.selectedText}
-                        projectId={selectedProject.id}
-                        projectTitle={selectedProject.title}
-                        projectDescription={selectedProject.description}
-                        originalityResults={panelData?.originalityResults}
-                        citationSuggestions={panelData?.citationSuggestions}
-                        initialInput={panelData?.initialInput}
-                        initialHiddenInstruction={
-                          panelData?.initialHiddenInstruction
-                        }
-                        projectSources={selectedProject.citations} // Added prop
-                        onClose={() => setIsRightSidebarOpen(false)}
-                      />
-                    )}
-                    {activePanelType === "ai-results" && panelData && (
-                      <div className="p-4 h-full overflow-y-auto custom-scrollbar">
-                        <AIProbabilityHeatmap
-                          content={editorInstance?.getText() || ""}
-                          results={panelData.sentences}
-                        />
-                      </div>
-                    )}
-                    {activePanelType === "originality-results" && panelData && (
-                      <div className="h-full overflow-y-auto custom-scrollbar bg-gray-50">
-                        <OriginalityMapSidebar
-                          results={panelData}
-                          documentContent={editorInstance?.getText() || ""}
-                          onAskAI={(prompt, hiddenCtx) => {
-                            openPanel("ai-chat", {
-                              initialInput: prompt,
-                              initialHiddenInstruction: hiddenCtx,
-                            });
-                          }}
-                        />
-                      </div>
-                    )}
-                    {activePanelType === "add-citation" && (
-                      <AddCitationModal
-                        isOpen={true}
-                        isPanel={true}
-                        onClose={() => setIsRightSidebarOpen(false)}
-                        projectId={selectedProject?.id}
-                        citations={selectedProject?.citations || []}
-                        onInsertCitation={handleInsertCitation}
-                        onCitationAdded={() => {
-                          reloadProjectCitations();
-                        }}
-                      />
-                    )}
-                    {activePanelType === "collaboration-history" && (
-                      <CollaborationHistoryPanel
-                        editor={editorInstance}
-                        members={workspaceMembers}
-                        isLoading={isMembersLoading}
-                        onClose={() => setIsRightSidebarOpen(false)}
-                      />
-                    )}
-                    {activePanelType === "team-chat" &&
-                      selectedProject?.workspace_id && (
-                        <TeamChat
-                          workspaceId={selectedProject.workspace_id}
-                          className="h-full"
-                        />
-                      )}
-                    {activePanelType === "team-chat" &&
-                      !selectedProject?.workspace_id && (
-                        <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                          <p className="text-sm text-slate-500">
-                            Team Chat is only available for workspace documents.
-                          </p>
-                        </div>
-                      )}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            {/* Panel Content */}
+            <div className="flex-1 overflow-hidden">
+              {activePanelType === "citations" && (
+                <PaperSuggestionsPanel
+                  projectId={selectedProject?.id || ""}
+                  onInsertCitation={handleInsertCitation}
+                  contextKeywords={panelData?.contextKeywords}
+                  onClose={() => setIsRightSidebarOpen(false)}
+                />
+              )}
+              {activePanelType === "rephrase" && (
+                <RephraseSuggestionsPanel
+                  projectId={selectedProject?.id}
+                  panelData={panelData}
+                  onClose={() => setIsRightSidebarOpen(false)}
+                />
+              )}
+              
+              {activePanelType === "reality-check" && (
+                <AnxietyRealityCheckPanel stats={panelData} />
+              )}
+              {activePanelType === "draft-comparison" && panelData && (
+                <DraftComparisonPanel
+                  result={panelData}
+                  onClose={() => setIsRightSidebarOpen(false)}
+                />
+              )}
+              {activePanelType === "citation-confidence" && selectedProject && (
+                <div className="p-4 h-full overflow-y-auto custom-scrollbar">
+                  <CitationConfidencePanel projectId={selectedProject.id} />
+                </div>
+              )}
+              {activePanelType === "ai-chat" && selectedProject && (
+                <AIChatPanel
+                  documentContent={JSON.stringify(selectedProject.content)}
+                  selectedText={panelData?.selectedText}
+                  projectId={selectedProject.id}
+                  projectTitle={selectedProject.title}
+                  projectDescription={selectedProject.description}
+                  originalityResults={panelData?.originalityResults}
+                  citationSuggestions={panelData?.citationSuggestions}
+                  initialInput={panelData?.initialInput}
+                  initialHiddenInstruction={panelData?.initialHiddenInstruction}
+                  projectSources={selectedProject.citations}
+                  onClose={() => setIsRightSidebarOpen(false)}
+                />
+              )}
+              {activePanelType === "ai-results" && panelData && (
+                <div className="p-4 h-full overflow-y-auto custom-scrollbar">
+                  <AIProbabilityHeatmap
+                    content={editorInstance?.getText() || ""}
+                    results={panelData.sentences}
+                  />
+                </div>
+              )}
+              {activePanelType === "originality-results" && panelData && (
+                <div className="h-full overflow-y-auto custom-scrollbar bg-gray-50">
+                  <OriginalityMapSidebar
+                    results={panelData}
+                    documentContent={editorInstance?.getText() || ""}
+                    onAskAI={(prompt, hiddenCtx) => {
+                      openPanel("ai-chat", {
+                        initialInput: prompt,
+                        initialHiddenInstruction: hiddenCtx,
+                      });
+                    }}
+                  />
+                </div>
+              )}
+              {activePanelType === "add-citation" && (
+                <AddCitationModal
+                  isOpen={true}
+                  isPanel={true}
+                  onClose={() => setIsRightSidebarOpen(false)}
+                  projectId={selectedProject?.id}
+                  citations={selectedProject?.citations || []}
+                  onInsertCitation={handleInsertCitation}
+                  onCitationAdded={() => {
+                    reloadProjectCitations();
+                  }}
+                />
+              )}
+              {activePanelType === "collaboration-history" && (
+                <CollaborationHistoryPanel
+                  editor={editorInstance}
+                  members={workspaceMembers}
+                  isLoading={isMembersLoading}
+                  onClose={() => setIsRightSidebarOpen(false)}
+                />
+              )}
+              {activePanelType === "team-chat" &&
+                selectedProject?.workspace_id && (
+                  <TeamChat
+                    workspaceId={selectedProject.workspace_id}
+                    className="h-full"
+                  />
+                )}
+              {activePanelType === "team-chat" &&
+                !selectedProject?.workspace_id && (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                    <p className="text-sm text-slate-500">
+                      Team Chat is only available for workspace documents.
+                    </p>
+                  </div>
+                )}
+            </div>
+          </div>
+        </>
       )}
 
       {/* Editor Onboarding Tour */}
