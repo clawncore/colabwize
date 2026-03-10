@@ -24,11 +24,14 @@ import WorkspaceService from "../../../services/workspaceService";
 import { usePresence } from "../../../hooks/usePresence";
 import { toast } from "../../../hooks/use-toast";
 import { UpgradePromptDialog } from "../../subscription/UpgradePromptDialog";
+import { useSubscriptionStore } from "../../../stores/useSubscriptionStore";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { plan } = useSubscriptionStore();
   const [workspace, setWorkspace] = useState<any>(null);
+  const [allWorkspaces, setAllWorkspaces] = useState<any[]>([]);
   const [metrics, setMetrics] = useState<any>({
     recentTasks: [],
     recentProjects: [],
@@ -140,6 +143,7 @@ export default function AdminDashboard() {
         setLoading(true);
         // 1. Get User's Workspace (assuming single workspace for now)
         const workspaces = await WorkspaceService.getWorkspaces();
+        setAllWorkspaces(workspaces || []);
         if (workspaces && workspaces.length > 0) {
           const currentWs = workspaces[0];
           setWorkspace(currentWs);
@@ -170,6 +174,33 @@ export default function AdminDashboard() {
 
     fetchData();
   }, [user]);
+
+  // Workspace limit based on plan
+  const getWorkspaceLimit = () => {
+    if (!plan) return 1;
+    const p = (
+      typeof plan === "object" && (plan as any)?.id
+        ? (plan as any).id
+        : String(plan ?? "free")
+    ).toLowerCase();
+    if (p.includes("premium") || p.includes("pro") || p.includes("researcher"))
+      return "unlimited" as const;
+    if (p.includes("plus") || p.includes("student")) return 5;
+    return 1;
+  };
+
+  const handleOpenNewWorkspaceModal = () => {
+    const limit = getWorkspaceLimit();
+    if (limit !== "unlimited" && allWorkspaces.length >= limit) {
+      setShowUpgradeDialog(true);
+      return;
+    }
+    setNewWorkspaceName("");
+    setNewWorkspaceDesc("");
+    setNewWorkspaceIcon("💼");
+    setSelectedTemplateId("");
+    setShowCreateWorkspaceModal(true);
+  };
 
   if (loading) {
     return (
@@ -345,6 +376,12 @@ export default function AdminDashboard() {
             onClick={() => setShowInviteModal(true)}
             className="cursor-pointer border-primary text-primary hover:bg-primary/10">
             <Users className="mr-2 h-4 w-4" /> Invite Member
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleOpenNewWorkspaceModal}
+            className="cursor-pointer border-emerald-500 text-emerald-600 hover:bg-emerald-50">
+            <Plus className="mr-2 h-4 w-4" /> New Workspace
           </Button>
           <Button
             className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground"

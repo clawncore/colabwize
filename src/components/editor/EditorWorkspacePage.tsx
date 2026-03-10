@@ -974,6 +974,7 @@ const EditorWorkspacePage: React.FC = () => {
               <button
                 data-tour="visual-map"
                 onClick={() => {
+                  if (userPlan !== "Plus || Student") return;
                   setActiveLeftPanel("visual-map");
                   setIsLeftSidebarOpen(true);
                 }}
@@ -989,6 +990,47 @@ const EditorWorkspacePage: React.FC = () => {
                 {isNavRailOpen && (
                   <div className="flex items-center justify-between w-full">
                     <span className="flex items-center gap-2">Visual Map</span>
+                    {userPlan !== "Plus || Student" && (
+                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
+                        PLUS
+                      </span>
+                    )}
+                  </div>
+                )}
+              </button>
+
+              <button
+                data-tour="research-assistant"
+                onClick={() => {
+                  if (userPlan !== "Premium") return;
+                  setActiveLeftPanel("research-assistant");
+                  setIsLeftSidebarOpen(true);
+                }}
+                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "research-assistant"
+                    ? "bg-purple-100 text-purple-600 border border-purple-200"
+                    : userPlan !== "Premium"
+                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
+                title={
+                  userPlan !== "Premium"
+                    ? "Available on Premium Plan"
+                    : !isNavRailOpen
+                      ? "Research Assistant"
+                      : ""
+                }>
+                <Microscope
+                  className={`w-4 h-4 ${activeLeftPanel === "research-assistant" ? "text-purple-600" : "text-gray-400"}`}
+                />
+                {isNavRailOpen && (
+                  <div className="flex items-center justify-between w-full">
+                    <span>Research Assistant</span>
+                    {userPlan !== "Premium" && (
+                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
+                        PREMIUM
+                      </span>
+                    )}
                   </div>
                 )}
               </button>
@@ -996,19 +1038,19 @@ const EditorWorkspacePage: React.FC = () => {
               <button
                 data-tour="research-gaps"
                 onClick={() => {
-                  if (userPlan !== "Premium") return;
+                  if (userPlan !== "Plus || Student") return;
                   setActiveLeftPanel("research-gaps");
                   setIsLeftSidebarOpen(true);
                 }}
                 className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeLeftPanel === "research-gaps"
                     ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
-                    : userPlan !== "Premium"
+                    : userPlan !== "Plus || Student"
                       ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
                       : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                 }`}
                 title={
-                  userPlan !== "Premium"
+                  userPlan !== "Plus || Student"
                     ? "Available on Premium Plan"
                     : !isNavRailOpen
                       ? "Research Gaps"
@@ -1020,9 +1062,9 @@ const EditorWorkspacePage: React.FC = () => {
                 {isNavRailOpen && (
                   <div className="flex items-center justify-between w-full">
                     <span>Research Gaps</span>
-                    {userPlan !== "Premium" && (
+                    {userPlan !== "Plus || Student" && (
                       <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
-                        PREMIUM
+                        PLUS
                       </span>
                     )}
                   </div>
@@ -1063,42 +1105,6 @@ const EditorWorkspacePage: React.FC = () => {
                 {isNavRailOpen && (
                   <div className="flex items-center justify-between w-full">
                     <span>Search Alerts</span>
-                    {userPlan !== "Premium" && (
-                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
-                        PREMIUM
-                      </span>
-                    )}
-                  </div>
-                )}
-              </button>
-
-              <button
-                data-tour="research-assistant"
-                onClick={() => {
-                  if (userPlan !== "Premium") return;
-                  setActiveLeftPanel("research-assistant");
-                  setIsLeftSidebarOpen(true);
-                }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  activeLeftPanel === "research-assistant"
-                    ? "bg-purple-100 text-purple-600 border border-purple-200"
-                    : userPlan !== "Premium"
-                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                }`}
-                title={
-                  userPlan !== "Premium"
-                    ? "Available on Premium Plan"
-                    : !isNavRailOpen
-                      ? "Research Assistant"
-                      : ""
-                }>
-                <Microscope
-                  className={`w-4 h-4 ${activeLeftPanel === "research-assistant" ? "text-purple-600" : "text-gray-400"}`}
-                />
-                {isNavRailOpen && (
-                  <div className="flex items-center justify-between w-full">
-                    <span>Research Assistant</span>
                     {userPlan !== "Premium" && (
                       <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
                         PREMIUM
@@ -1470,7 +1476,7 @@ const EditorWorkspacePage: React.FC = () => {
                     if (editorInstance) {
                       editorInstance.commands.focus();
                       editorInstance.commands.clearAllHighlights?.();
-                      
+
                       // Highlight with Orange for navigation jump
                       editorInstance.commands.highlightRange?.(
                         location.startPos,
@@ -1502,22 +1508,27 @@ const EditorWorkspacePage: React.FC = () => {
                         description: `"${issue.selectedSource?.title}" has been successfully added.`,
                       });
                     } else if (issue.action === "SEARCH") {
-                      // Extract the best possible search query: 
+                      // Extract the best possible search query:
                       // 1. Explicit citation text if available
                       // 2. The title found by the audit (foundPaper.title)
                       // 3. Fallback to a clipped version of the message
-                      // Extract the best possible search query: 
+                      // Extract the best possible search query:
                       // 1. Explicit citation text if available
                       // 2. The title found by the audit (foundPaper.title)
                       // 3. Fallback to a clipped version of the message, stripping fluff
-                      let query = issue.citationText || 
-                                  issue.metadata?.foundPaper?.title || 
-                                  issue.metadata?.extractedTitle ||
-                                  issue.message.split('match)')[1]?.replace(/[".]/g, '').replace('Closest paper found:', '').trim() || 
-                                  issue.message.substring(0, 50);
-                      
+                      let query =
+                        issue.citationText ||
+                        issue.metadata?.foundPaper?.title ||
+                        issue.metadata?.extractedTitle ||
+                        issue.message
+                          .split("match)")[1]
+                          ?.replace(/[".]/g, "")
+                          .replace("Closest paper found:", "")
+                          .trim() ||
+                        issue.message.substring(0, 50);
+
                       // Final cleanup of the query
-                      query = query.replace(/^[:\s-]+/, '').trim();
+                      query = query.replace(/^[:\s-]+/, "").trim();
 
                       openPanel("citations", {
                         contextKeywords: [query],
@@ -1712,8 +1723,17 @@ const EditorWorkspacePage: React.FC = () => {
               <button
                 onClick={() => setIsRightSidebarOpen(false)}
                 className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-gray-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -1735,7 +1755,7 @@ const EditorWorkspacePage: React.FC = () => {
                   onClose={() => setIsRightSidebarOpen(false)}
                 />
               )}
-              
+
               {activePanelType === "reality-check" && (
                 <AnxietyRealityCheckPanel stats={panelData} />
               )}

@@ -284,6 +284,20 @@ export const documentService = {
     }
   },
 
+  // Delete a document version
+  async deleteDocumentVersion(projectId: string, versionId: string) {
+    try {
+      const response = await apiClient.delete(
+        `/api/editor/versions/${versionId}?projectId=${projectId}`,
+        {},
+      );
+      return response;
+    } catch (error) {
+      console.error("Error deleting document version:", error);
+      throw error;
+    }
+  },
+
   // Get a specific document version - currently not supported by backend
   async getDocumentVersion(projectId: string, versionId: string) {
     try {

@@ -37,6 +37,8 @@ import { apiClient } from "../../services/apiClient";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { InlineLimitMessage } from "../common/InlineLimitMessage";
+import { AIChatUpgradeModal } from "./AIChatUpgradeModal";
+import type { UpgradeReason } from "./AIChatUpgradeModal";
 
 interface AIChatPanelProps {
   documentContent: string;
@@ -87,6 +89,11 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
   const [sessions, setSessions] = useState<any[]>([]);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  // Limit reached state — when set, shows the upgrade modal overlay
+  const [limitState, setLimitState] = useState<{
+    reason: UpgradeReason;
+    message?: string;
+  } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
@@ -226,7 +233,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       });
       if (result.success) {
         setSessions((prev) =>
-          prev.map((s) => (s.id === sid ? { ...s, title: editTitle } : s))
+          prev.map((s) => (s.id === sid ? { ...s, title: editTitle } : s)),
         );
         setEditingSessionId(null);
         toast({ title: "Updated", description: "Chat renamed successfully" });
@@ -272,7 +279,11 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialInput, initialHiddenInstruction]);
 
-  const handleSubmit = async (e?: React.FormEvent, overrideInput?: string, hiddenInstruction?: string) => {
+  const handleSubmit = async (
+    e?: React.FormEvent,
+    overrideInput?: string,
+    hiddenInstruction?: string,
+  ) => {
     e?.preventDefault();
     const textToSend = overrideInput || input;
     if (!textToSend.trim() || isLoading) return;
@@ -299,11 +310,16 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
     try {
       // Prepare messages for API
       // If hiddenInstruction is provided, append it to the LAST message's content
-      const messagesForApi = messages.map(m => ({ role: m.role, content: m.content }));
+      const messagesForApi = messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
       messagesForApi.push({
         role: "user",
-        content: hiddenInstruction ? `${textToSend}\n\n${hiddenInstruction}` : textToSend
+        content: hiddenInstruction
+          ? `${textToSend}\n\n${hiddenInstruction}`
+          : textToSend,
       });
 
       // Use apiClient.download to get raw response for streaming
@@ -326,7 +342,6 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       const reader = response.body?.getReader();
       if (!reader) throw new Error("No response body");
 
-
       setMessages((prev) => [
         ...prev,
         { id: assistantMessageId, role: "assistant", content: "" },
@@ -339,10 +354,8 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       const updateMessage = (content: string) => {
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.id === assistantMessageId
-              ? { ...msg, content }
-              : msg
-          )
+            msg.id === assistantMessageId ? { ...msg, content } : msg,
+          ),
         );
       };
 
@@ -358,29 +371,46 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
     } catch (error: any) {
       console.error("Chat error:", error);
 
-      // Check for structured limit error
-      const backendCode = error.code || error.response?.data?.code || error.response?.code;
-      const backendMsg = error.response?.data?.error || error.message;
+      // Prefer the structured error body that `chat.ts` returns for 403/402
+      let errBody: any = null;
+      try {
+        // apiClient.download throws with `error.response` or `error.data`
+        errBody = error.response?.data || error.data || {};
+        if (typeof errBody === "string") errBody = JSON.parse(errBody);
+      } catch (_) {
+        /* not JSON, ignore */
+      }
 
-      if (backendCode === "PLAN_LIMIT_REACHED" || backendCode === "INSUFFICIENT_CREDITS" || backendCode === "FEATURE_NOT_ALLOWED") {
-        // Remove the loading/empty assistant message
-        setMessages((prev) => prev.filter((m) => m.id !== assistantMessageId));
+      const backendCode: string =
+        errBody?.error ||
+        errBody?.code ||
+        error.code ||
+        error.response?.data?.code ||
+        "";
+      const backendMsg: string =
+        errBody?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "An error occurred.";
 
-        // Add system message with limit info
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            role: "system",
-            content: "Usage Limit Reached",
-            metadata: {
-              type: "limit",
-              code: backendCode,
-              message: backendMsg,
-              data: error.response?.data?.data
-            }
-          }
-        ]);
+      const isLimitError =
+        backendCode === "PLAN_LIMIT_REACHED" ||
+        backendCode === "INSUFFICIENT_CREDITS" ||
+        backendCode === "FEATURE_NOT_ALLOWED" ||
+        error.status === 403 ||
+        error.status === 402;
+
+      // Remove the empty assistant placeholder
+      setMessages((prev) =>
+        prev.filter((m) => m.id !== assistantMessageId || m.content !== ""),
+      );
+
+      if (isLimitError) {
+        // Show the full blocking upgrade modal
+        setLimitState({
+          reason: (backendCode as UpgradeReason) || "PLAN_LIMIT_REACHED",
+          message: backendMsg,
+        });
       } else {
         toast({
           title: "Error",
@@ -408,7 +438,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
               size="icon"
               className={cn(
                 "h-8 w-8 hover:bg-gray-200",
-                showHistory && "bg-gray-200"
+                showHistory && "bg-gray-200",
               )}
               onClick={toggleHistory}
               title="Chat History">
@@ -466,35 +496,58 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden relative">
+        {/* Upgrade overlay: blocks all further interaction when limit is reached */}
+        {limitState && (
+          <AIChatUpgradeModal
+            reason={limitState.reason}
+            message={limitState.message}
+            // No onDismiss — we intentionally make this sticky
+          />
+        )}
+
         {originalityResults && (
           <div className="p-4 bg-slate-50 border-b border-gray-200">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Scan Results</h4>
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                Scan Results
+              </h4>
               {originalityResults.classification && (
-                <span className={cn(
-                  "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-                  originalityResults.classification === 'safe' ? 'bg-emerald-100 text-emerald-700' :
-                    originalityResults.classification === 'action_required' ? 'bg-red-100 text-red-700' :
-                      'bg-amber-100 text-amber-700'
-                )}>
-                  {originalityResults.classification.replace('_', ' ')}
+                <span
+                  className={cn(
+                    "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                    originalityResults.classification === "safe"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : originalityResults.classification === "action_required"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-amber-100 text-amber-700",
+                  )}>
+                  {originalityResults.classification.replace("_", " ")}
                 </span>
               )}
             </div>
             <div className="flex items-center gap-6">
               <div>
-                <div className={cn(
-                  "text-2xl font-black",
-                  originalityResults.overallScore > 20 ? "text-amber-600" : "text-emerald-600"
-                )}>
+                <div
+                  className={cn(
+                    "text-2xl font-black",
+                    originalityResults.overallScore > 20
+                      ? "text-amber-600"
+                      : "text-emerald-600",
+                  )}>
                   {Math.round(originalityResults.overallScore || 0)}%
                 </div>
-                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Plagiarism</div>
+                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">
+                  Plagiarism
+                </div>
               </div>
               <div className="h-8 w-px bg-gray-200"></div>
               <div>
-                <div className="text-2xl font-black text-slate-700">{originalityResults.matches?.length || 0}</div>
-                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Matches</div>
+                <div className="text-2xl font-black text-slate-700">
+                  {originalityResults.matches?.length || 0}
+                </div>
+                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">
+                  Matches
+                </div>
               </div>
             </div>
           </div>
@@ -518,7 +571,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                     "w-full text-left p-3 rounded-lg border hover:bg-gray-100 transition-colors text-sm group relative flex items-center justify-between cursor-pointer",
                     sessionId === session.id
                       ? "border-indigo-500 bg-indigo-50"
-                      : "border-gray-100"
+                      : "border-gray-100",
                   )}>
                   {editingSessionId === session.id ? (
                     <div
@@ -594,18 +647,31 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                     message.role === "user"
                       ? "ml-auto flex-row-reverse"
                       : message.role === "system"
-                        ? "mx-auto max-w-full w-full"  // System messages take full width
-                        : "mr-auto"
+                        ? "mx-auto max-w-full w-full" // System messages take full width
+                        : "mr-auto",
                   )}>
-
-                  {message.role === "system" && message.metadata?.type === "limit" ? (
+                  {message.role === "system" &&
+                  message.metadata?.type === "limit" ? (
                     <div className="w-full my-4">
                       <InlineLimitMessage
                         type={message.metadata.code}
-                        title={message.metadata.code === "INSUFFICIENT_CREDITS" ? "Oops! Credits Required" : "Oops! Limit Reached"}
+                        title={
+                          message.metadata.code === "INSUFFICIENT_CREDITS"
+                            ? "Oops! Credits Required"
+                            : "Oops! Limit Reached"
+                        }
                         message={message.metadata.message}
-                        actionLabel={message.metadata.code === "INSUFFICIENT_CREDITS" ? "Purchase Credits" : "Upgrade Plan"}
-                        onAction={() => window.open(message.metadata.data?.upgrade_url || "/pricing", "_blank")}
+                        actionLabel={
+                          message.metadata.code === "INSUFFICIENT_CREDITS"
+                            ? "Purchase Credits"
+                            : "Upgrade Plan"
+                        }
+                        onAction={() =>
+                          window.open(
+                            message.metadata.data?.upgrade_url || "/pricing",
+                            "_blank",
+                          )
+                        }
                       />
                     </div>
                   ) : (
@@ -615,7 +681,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                           "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
                           message.role === "user"
                             ? "bg-indigo-100 text-indigo-600"
-                            : "bg-gray-100 text-gray-600"
+                            : "bg-gray-100 text-gray-600",
                         )}>
                         {message.role === "user" ? (
                           <User className="w-4 h-4" />
@@ -629,7 +695,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                           "rounded-lg px-3 py-2 text-sm",
                           message.role === "user"
                             ? "bg-indigo-600 text-white"
-                            : "bg-gray-100 text-gray-800"
+                            : "bg-gray-100 text-gray-800",
                         )}>
                         <div className="prose prose-sm max-w-none break-words dark:prose-invert">
                           <ReactMarkdown
@@ -659,24 +725,21 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                               h1: ({ node, ...props }) => (
                                 <h1
                                   className="text-lg font-bold mb-2 mt-4"
-                                  {...props}
-                                >
+                                  {...props}>
                                   {props.children}
                                 </h1>
                               ),
                               h2: ({ node, ...props }) => (
                                 <h2
                                   className="text-base font-bold mb-2 mt-3"
-                                  {...props}
-                                >
+                                  {...props}>
                                   {props.children}
                                 </h2>
                               ),
                               h3: ({ node, ...props }) => (
                                 <h3
                                   className="text-sm font-bold mb-1 mt-2"
-                                  {...props}
-                                >
+                                  {...props}>
                                   {props.children}
                                 </h3>
                               ),
@@ -685,8 +748,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="underline font-medium hover:text-indigo-300 transition-colors"
-                                  {...props}
-                                >
+                                  {...props}>
                                   {props.children}
                                 </a>
                               ),
@@ -739,15 +801,17 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
           <Textarea
             ref={textareaRef}
             placeholder={
-              selectedText
-                ? "Ask about selection..."
-                : "Ask a question (Shift+Enter for new line)..."
+              limitState
+                ? "AI chat limit reached — upgrade to continue"
+                : selectedText
+                  ? "Ask about selection..."
+                  : "Ask a question (Shift+Enter for new line)..."
             }
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={isLoading}
-            className="flex-1 min-h-[44px] max-h-[200px] resize-none py-3 overflow-hidden"
+            disabled={isLoading || !!limitState}
+            className="flex-1 min-h-[44px] max-h-[200px] resize-none py-3 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
             rows={1}
             style={{
               overflowY:
@@ -760,11 +824,11 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
             type="submit"
             className="bg-indigo-600 hover:bg-indigo-700 text-white"
             size="icon"
-            disabled={isLoading || !input.trim()}>
+            disabled={isLoading || !input.trim() || !!limitState}>
             <Send className="w-4 h-4" />
           </Button>
         </form>
       </CardFooter>
-    </Card >
+    </Card>
   );
 };

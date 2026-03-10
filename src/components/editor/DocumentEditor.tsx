@@ -5,6 +5,7 @@ import { EditorProvider } from "./EditorContext";
 import StarterKit from "@tiptap/starter-kit";
 import { CharacterCount } from "@tiptap/extension-character-count";
 import { HighlightExtension } from "../../extensions/HighlightExtension";
+import { UserHighlightExtension } from "../../extensions/UserHighlightExtension";
 import { AuthorBlockExtension } from "../../extensions/AuthorBlockExtension";
 import { AuthorExtension } from "../../extensions/AuthorExtension";
 import { CalloutBlockExtension } from "../../extensions/CalloutBlockExtension";
@@ -350,6 +351,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       editable: !isReadOnly,
       extensions: [
         StarterKit.configure({
+          // @ts-ignore — `history` exists at runtime but is missing from this version's StarterKitOptions types
           history: isCollaborative ? false : {},
         }),
         ...(isCollaborative &&
@@ -383,6 +385,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             ]
           : []),
         HighlightExtension,
+        UserHighlightExtension,
         CharacterCount,
         MathExtension,
         Table.configure({
@@ -1597,7 +1600,23 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           projectId={project.id}
           onRestore={(restoredProject) => {
             if (editor) {
-              editor.commands.setContent(restoredProject.content);
+              // Parse the JSON content into a ProseMirror document
+              const newDoc = editor.schema.nodeFromJSON(
+                restoredProject.content,
+              );
+
+              // Create a transaction that heavily replaces the document
+              const tr = editor.state.tr.replaceWith(
+                0,
+                editor.state.doc.content.size,
+                newDoc.content,
+              );
+
+              // By setting this flag, AuthorshipExtension will ignore this update, preserving historical authorship marks
+              tr.setMeta("skipAuthorship", true);
+
+              // Dispatch the new state
+              editor.view.dispatch(tr);
             }
             if (onProjectUpdate) {
               onProjectUpdate(restoredProject);

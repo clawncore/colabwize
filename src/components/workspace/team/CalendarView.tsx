@@ -13,6 +13,8 @@ import {
   isSameDay,
   addMonths,
   subMonths,
+  addWeeks,
+  subWeeks,
   isToday,
 } from "date-fns";
 import { ChevronLeft, ChevronRight, CheckSquare } from "lucide-react";
@@ -33,19 +35,36 @@ export function CalendarView({
   onToggleSelection,
 }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<"month" | "week">("week");
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart);
-  const endDate = endOfWeek(monthEnd);
+
+  // Calculate grid days based on view mode
+  const startDate =
+    viewMode === "month" ? startOfWeek(monthStart) : startOfWeek(currentDate);
+  const endDate =
+    viewMode === "month" ? endOfWeek(monthEnd) : endOfWeek(currentDate);
 
   const days = eachDayOfInterval({
     start: startDate,
     end: endDate,
   });
 
-  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const nextPeriod = () => {
+    setCurrentDate(
+      viewMode === "month"
+        ? addMonths(currentDate, 1)
+        : addWeeks(currentDate, 1),
+    );
+  };
+  const prevPeriod = () => {
+    setCurrentDate(
+      viewMode === "month"
+        ? subMonths(currentDate, 1)
+        : subWeeks(currentDate, 1),
+    );
+  };
   const goToToday = () => setCurrentDate(new Date());
 
   const getTasksForDay = (day: Date) => {
@@ -60,34 +79,56 @@ export function CalendarView({
       {/* Header */}
       <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <h2 className="text-lg font-bold text-slate-900 font-outfit">
-          {format(currentDate, "MMMM yyyy")}
+          {viewMode === "month"
+            ? format(currentDate, "MMMM yyyy")
+            : `${format(startDate, "MMM d")} - ${format(endDate, "d, yyyy")}`}
         </h2>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToToday}
-            className="h-8 text-xs font-bold border-slate-200 bg-slate-300"
-          >
-            Today
-          </Button>
-          <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div className="flex items-center gap-4">
+          <div className="flex bg-slate-100 p-1 rounded-lg">
+            <button
+              onClick={() => setViewMode("month")}
+              className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                viewMode === "month"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}>
+              Month
+            </button>
+            <button
+              onClick={() => setViewMode("week")}
+              className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                viewMode === "week"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}>
+              Week
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={prevMonth}
-              className="h-8 w-8 p-0 rounded-none border-r border-slate-100"
-            >
-              <ChevronLeft className="w-4 h-4" />
+              onClick={goToToday}
+              className="h-8 text-xs font-bold border-slate-200 bg-slate-300">
+              Today
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={nextMonth}
-              className="h-8 w-8 p-0 rounded-none"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={prevPeriod}
+                className="h-8 w-8 p-0 rounded-none border-r border-slate-100">
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={nextPeriod}
+                className="h-8 w-8 p-0 rounded-none">
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -98,8 +139,7 @@ export function CalendarView({
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div
               key={day}
-              className="py-2 text-center text-[11px] font-bold uppercase tracking-widest text-slate-400"
-            >
+              className="py-2 text-center text-[11px] font-bold uppercase tracking-widest text-slate-400">
               {day}
             </div>
           ))}
@@ -113,60 +153,124 @@ export function CalendarView({
             return (
               <div
                 key={day.toISOString()}
-                className={`min-h-[120px] p-2 border-r border-b border-slate-50 relative group transition-colors ${isPadding ? "bg-slate-50/30" : "bg-white"
-                  } ${idx % 7 === 6 ? "border-r-0" : ""}`}
-              >
-                <div className="flex justify-between items-center mb-2">
+                className={`min-h-[120px] p-1 border-r border-b border-slate-50 relative group transition-colors flex flex-col ${
+                  isPadding && viewMode === "month"
+                    ? "bg-slate-50/30"
+                    : "bg-white"
+                } ${idx % 7 === 6 ? "border-r-0" : ""}`}>
+                <div className="flex justify-between items-center mb-1 px-1">
                   <span
-                    className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full ${isTodayDate ? "bg-teal-600 text-white" : "text-slate-400"
-                      }`}
-                  >
+                    className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full ${
+                      isTodayDate ? "bg-teal-600 text-white" : "text-slate-400"
+                    }`}>
                     {format(day, "d")}
                   </span>
                   {dayTasks.length > 0 && (
                     <Badge
                       variant="secondary"
-                      className="bg-slate-100 text-slate-500 h-4 px-1.5 text-[10px] font-bold border-0"
-                    >
+                      className="bg-slate-100 text-slate-500 h-4 px-1.5 text-[10px] font-bold border-0">
                       {dayTasks.length}{" "}
                       {dayTasks.length === 1 ? "task" : "tasks"}
                     </Badge>
                   )}
                 </div>
 
-                <div className="space-y-1">
-                  {dayTasks.slice(0, 3).map((task) => {
-                    const isSelected = selectedTaskIds.includes(task.id);
-                    return (
-                      <div
-                        key={task.id}
-                        onClick={() => onTaskClick(task)}
-                        className={`px-2 py-1 rounded-md text-[10px] font-semibold flex items-center gap-1.5 border transition-all cursor-pointer truncate ${isSelected
-                          ? "bg-teal-50 border-teal-200 text-teal-700 shadow-sm"
-                          : "bg-white border-slate-100 text-slate-700 hover:border-teal-200 hover:bg-teal-50/50"
-                          }`}
-                        title={task.title}
-                      >
+                <div className="flex-1 overflow-y-auto flex flex-col gap-1 pr-1 custom-scrollbar">
+                  {dayTasks
+                    .slice(0, viewMode === "week" ? dayTasks.length : 3)
+                    .map((task, index) => {
+                      const isSelected = selectedTaskIds.includes(task.id);
+                      // In week view, if it's the only task, let it fill the space.
+                      // If there are multiple, give them a fixed comfortable height so they can stack and scroll.
+                      const isStandaloneInWeek =
+                        viewMode === "week" && dayTasks.length === 1;
+
+                      return (
                         <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleSelection(task.id, !isSelected);
-                          }}
-                          className={`w-3 h-3 rounded-[3px] border flex items-center justify-center transition-all cursor-pointer flex-shrink-0 ${isSelected
-                            ? "bg-teal-500 border-teal-500 text-white"
-                            : "bg-white border-slate-300"
-                            }`}
-                        >
-                          {isSelected && (
-                            <CheckSquare className="w-2.5 h-2.5" />
-                          )}
+                          key={task.id}
+                          onClick={() => onTaskClick(task)}
+                          className={`overflow-hidden rounded-sm border transition-all cursor-pointer flex flex-col ${
+                            isStandaloneInWeek ? "flex-1" : "shrink-0"
+                          } ${
+                            isSelected
+                              ? "bg-teal-50 border-teal-400 shadow-md ring-1 ring-teal-400"
+                              : "bg-white border-slate-200 hover:border-teal-300 hover:shadow-sm"
+                          }`}
+                          title={task.title}>
+                          {/* Top Image Preview */}
+                          <div
+                            className={`w-full bg-slate-100 relative group ${
+                              isStandaloneInWeek
+                                ? "flex-1 min-h-[60px]"
+                                : "h-20"
+                            }`}>
+                            {/* Selection Checkbox overlay */}
+                            <div
+                              className="absolute top-1 left-1 z-10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleSelection(task.id, !isSelected);
+                              }}>
+                              <div
+                                className={`w-4 h-4 rounded-[4px] border flex items-center justify-center shadow-sm transition-all ${
+                                  isSelected
+                                    ? "bg-teal-500 border-teal-500 text-white opacity-100"
+                                    : "bg-white/80 backdrop-blur-sm border-slate-300 text-transparent hover:border-teal-400 opacity-0 group-hover:opacity-100"
+                                }`}>
+                                <CheckSquare className="w-3 h-3" />
+                              </div>
+                            </div>
+                            <img
+                              src="https://www.sweetprocess.com/wp-content/uploads/2022/10/task-management-30-1.png"
+                              alt="Task cover"
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                          </div>
+
+                          {/* Card Content */}
+                          <div className="p-2 flex flex-col gap-1.5 shrink-0">
+                            {/* Task Description/Title */}
+                            <span
+                              className={`text-[11px] font-semibold leading-tight line-clamp-2 ${
+                                isSelected ? "text-teal-900" : "text-slate-700"
+                              }`}>
+                              {task.title}
+                            </span>
+
+                            {/* Meta: Status and Priority */}
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <Badge
+                                variant="secondary"
+                                className={`text-[9px] px-1.5 py-0 h-4 font-medium border-0 truncate max-w-[70px] ${
+                                  task.status.toLowerCase() === "done"
+                                    ? "bg-green-100 text-green-700 hover:bg-green-200"
+                                    : task.status
+                                          .toLowerCase()
+                                          .includes("progress")
+                                      ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                }`}>
+                                {task.status.replace(/_/g, " ")}
+                              </Badge>
+
+                              <Badge
+                                variant="secondary"
+                                className={`text-[9px] px-1.5 py-0 h-4 font-medium border-0 truncate uppercase max-w-[50px] ${
+                                  task.priority === "high"
+                                    ? "bg-red-50 text-red-600"
+                                    : task.priority === "medium"
+                                      ? "bg-orange-50 text-orange-600"
+                                      : "bg-blue-50 text-blue-600"
+                                }`}>
+                                {task.priority}
+                              </Badge>
+                            </div>
+                          </div>
                         </div>
-                        <span className="truncate">{task.title}</span>
-                      </div>
-                    );
-                  })}
-                  {dayTasks.length > 3 && (
-                    <div className="text-[10px] font-bold text-slate-400 pl-1">
+                      );
+                    })}
+                  {viewMode === "month" && dayTasks.length > 3 && (
+                    <div className="text-[10px] font-bold text-slate-400 pl-1 shrink-0">
                       + {dayTasks.length - 3} more
                     </div>
                   )}
