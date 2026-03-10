@@ -292,7 +292,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               <Toggle
                 size="sm"
                 title="Highlight"
-                pressed={editor.isActive("highlight")}
+                pressed={editor.isActive("user-highlight")}
                 className="gap-1 px-2 h-8 w-12 justify-between shrink-0">
                 <Highlighter className="h-[15px] w-[15px]" />
                 <ChevronDown className="h-3 w-3 opacity-50" />
@@ -305,7 +305,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                     editor
                       .chain()
                       .focus()
-                      .toggleHighlight({ color: "yellow" })
+                      .toggleUserHighlight({ color: "#fef08a" })
                       .run()
                   }
                   className="p-1 focus:bg-gray-100 cursor-pointer"
@@ -317,7 +317,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                     editor
                       .chain()
                       .focus()
-                      .toggleHighlight({ color: "#86efac" })
+                      .toggleUserHighlight({ color: "#86efac" })
                       .run()
                   }
                   className="p-1 focus:bg-gray-100 cursor-pointer"
@@ -329,7 +329,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                     editor
                       .chain()
                       .focus()
-                      .toggleHighlight({ color: "#fca5a5" })
+                      .toggleUserHighlight({ color: "#fca5a5" })
                       .run()
                   }
                   className="p-1 focus:bg-gray-100 cursor-pointer"
@@ -341,7 +341,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                     editor
                       .chain()
                       .focus()
-                      .toggleHighlight({ color: "#93c5fd" })
+                      .toggleUserHighlight({ color: "#93c5fd" })
                       .run()
                   }
                   className="p-1 focus:bg-gray-100 cursor-pointer"
@@ -353,7 +353,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                     editor
                       .chain()
                       .focus()
-                      .toggleHighlight({ color: "#d8b4fe" })
+                      .toggleUserHighlight({ color: "#d8b4fe" })
                       .run()
                   }
                   className="p-1 focus:bg-gray-100 cursor-pointer"
@@ -362,7 +362,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                 </DropdownMenuItem>
               </div>
               <DropdownMenuItem
-                onClick={() => editor.chain().focus().unsetHighlight().run()}
+                onClick={() =>
+                  editor.chain().focus().unsetUserHighlight().run()
+                }
                 className="mt-1 text-xs justify-center cursor-pointer">
                 Clear
               </DropdownMenuItem>

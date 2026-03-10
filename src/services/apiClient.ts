@@ -61,9 +61,10 @@ class ApiClient {
       // Since we don't have direct access to user metadata here without another call,
       // we'll try to infer or check local storage if stored during login
       // Determine user provider
-      const authProvider = typeof localStorage !== "undefined" 
-        ? localStorage.getItem("auth_provider") || "organic" 
-        : "organic";
+      const authProvider =
+        typeof localStorage !== "undefined"
+          ? localStorage.getItem("auth_provider") || "organic"
+          : "organic";
 
       if (authProvider === "google") {
         (defaultOptions.headers as any)["X-Auth-Google"] = `Bearer ${token}`;
@@ -353,6 +354,7 @@ class ApiClient {
         `Download failed: ${response.status}`;
       const error = new Error(errorMessage);
       (error as any).data = errorData;
+      (error as any).status = response.status;
       throw error;
     }
 

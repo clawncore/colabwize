@@ -1,5 +1,24 @@
 /* Highlight styles for document editor */
 
+/* =========================================================
+   USER HIGHLIGHT — Toolbar-applied highlights (plain colour only)
+   These carry NO underline, NO tooltip, NO cursor-pointer styling.
+   They are completely separate from .citation-highlight marks
+   used by the originality/citation system.
+   ========================================================= */
+
+.user-highlight {
+  /* The background colour is applied inline via the style attribute */
+  border-radius: 2px;
+  padding: 0 1px;
+  /* No border-bottom, no cursor, no position:relative for tooltips */
+}
+
+/* Keep user highlights visually clean on hover — no overlay */
+.user-highlight:hover {
+  filter: brightness(0.95);
+}
+
 /* Base Highlight - Clear background, thick solid underline */
 /* Base Highlight - Clear background, thick solid underline */
 .citation-highlight {
@@ -49,14 +68,12 @@
   color: #2563eb !important;
 }
 
-
 /* --- Hover Effects --- */
 
 .citation-highlight:hover {
   /* add subtle background opacity on hover */
   background-color: rgba(0, 0, 0, 0.05) !important;
 }
-
 
 /* --- Popup Tooltip Box --- */
 
@@ -87,7 +104,9 @@
   text-align: center;
   padding: 8px 12px;
   border-radius: 6px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
   /* Animation */
   pointer-events: none;

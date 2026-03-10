@@ -132,15 +132,19 @@ export const AuthorshipExtension = Mark.create<AuthorshipOptions>({
 
           // CRITICAL: Skip transactions originating from Yjs sync (remote changes)
           // or initial collaboration synchronization to prevent re-tagging everyone's work as 'me'
+          // Also skip if explicit skipAuthorship meta flag is passed (used for version restores)
           const isRemote = transactions.some(
             (tr) =>
               tr.getMeta("y-sync$") !== undefined ||
               tr.getMeta("yjs-remote") !== undefined ||
-              tr.getMeta("addToHistory") === false,
+              tr.getMeta("addToHistory") === false ||
+              tr.getMeta("skipAuthorship") === true,
           );
 
           if (isRemote) {
-            console.log("[Authorship] Skipping remote/sync transaction");
+            console.log(
+              "[Authorship] Skipping remote/sync/restored transaction",
+            );
             return null;
           }
 

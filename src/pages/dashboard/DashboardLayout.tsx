@@ -14,6 +14,20 @@ import { useIsMobile } from "../../hooks/useIsMobile";
 import MobileRestrictedPage from "../MobileRestrictedPage";
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { Button } from "../../components/ui/button";
+import { toast } from "../../hooks/use-toast";
+import { UpgradePromptDialog } from "../../components/subscription/UpgradePromptDialog";
+import {
   Search,
   Menu,
   X,
@@ -47,6 +61,7 @@ import {
   User,
   HelpCircle,
   Rocket,
+  Loader2,
 } from "lucide-react";
 import {
   Link,
@@ -96,6 +111,15 @@ export default function DashboardLayout({
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
 
+  // Create Workspace from sidebar
+  const [showSidebarCreateModal, setShowSidebarCreateModal] = useState(false);
+  const [showSidebarUpgradeDialog, setShowSidebarUpgradeDialog] =
+    useState(false);
+  const [sidebarWsName, setSidebarWsName] = useState("");
+  const [sidebarWsDesc, setSidebarWsDesc] = useState("");
+  const [sidebarWsIcon, setSidebarWsIcon] = useState("💼");
+  const [isCreatingSidebarWs, setIsCreatingSidebarWs] = useState(false);
+
   const primaryWorkspaceId =
     workspaces.length > 0 ? `workspace-${workspaces[0].id}` : "";
   usePresence(primaryWorkspaceId);
@@ -127,6 +151,57 @@ export default function DashboardLayout({
       setLoadingWorkspaces(false);
     }
   }, [user]);
+
+  // Open create workspace dialog – after checking plan limits
+  const handleOpenCreateWorkspace = () => {
+    const limit = collaborationLimits.workspaces;
+    if (limit !== "unlimited" && workspaces.length >= limit) {
+      setShowSidebarUpgradeDialog(true);
+      return;
+    }
+    setSidebarWsName("");
+    setSidebarWsDesc("");
+    setSidebarWsIcon("💼");
+    setShowSidebarCreateModal(true);
+  };
+
+  const handleCreateWorkspaceFromSidebar = async () => {
+    if (!sidebarWsName.trim()) {
+      toast({
+        title: "Required",
+        description: "Workspace name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsCreatingSidebarWs(true);
+    try {
+      await WorkspaceService.createWorkspace({
+        name: sidebarWsName,
+        description: sidebarWsDesc,
+        icon: sidebarWsIcon,
+      });
+      toast({ title: "Success", description: "Workspace created!" });
+      setShowSidebarCreateModal(false);
+      fetchWorkspaces(); // Refresh sidebar list
+    } catch (error: any) {
+      if (
+        error.error === "WORKSPACE_LIMIT_REACHED" ||
+        error.message?.includes("Workspace limit reached")
+      ) {
+        setShowSidebarCreateModal(false);
+        setShowSidebarUpgradeDialog(true);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create workspace",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingSidebarWs(false);
+    }
+  };
 
   useEffect(() => {
     fetchWorkspaces();
@@ -823,11 +898,12 @@ export default function DashboardLayout({
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center">
                       <Users className="w-3 h-3 mr-1.5" /> Teamspaces
                     </span>
-                    <Link
-                      to="/dashboard/admin"
+                    <button
+                      onClick={handleOpenCreateWorkspace}
+                      title="New Workspace"
                       className="text-muted-foreground hover:text-emerald-500 transition-colors">
                       <Plus className="w-3.5 h-3.5" />
-                    </Link>
+                    </button>
                   </div>
                 )}
                 {loadingWorkspaces ? (
@@ -1204,6 +1280,93 @@ export default function DashboardLayout({
                 })}
               </div>
             </nav>
+
+            {/* Create Workspace Dialog (accessible from sidebar + button) */}
+            <UpgradePromptDialog
+              open={showSidebarUpgradeDialog}
+              onOpenChange={setShowSidebarUpgradeDialog}
+              feature="workspace"
+            />
+            <Dialog
+              open={showSidebarCreateModal}
+              onOpenChange={setShowSidebarCreateModal}>
+              <DialogContent className="sm:max-w-[425px] bg-white border-border">
+                <DialogHeader>
+                  <DialogTitle>Create New Workspace</DialogTitle>
+                  <DialogDescription>
+                    Create a new collaborative space for your team.
+                    {collaborationLimits.workspaces !== "unlimited" && (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        ({workspaces.length}/{collaborationLimits.workspaces}{" "}
+                        workspaces used)
+                      </span>
+                    )}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="sidebar-ws-name">Workspace Name</Label>
+                    <Input
+                      id="sidebar-ws-name"
+                      placeholder="e.g. Engineering Team"
+                      className="bg-background border-border"
+                      value={sidebarWsName}
+                      onChange={(e) => setSidebarWsName(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleCreateWorkspaceFromSidebar()
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="sidebar-ws-icon">Icon (Emoji)</Label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-md border bg-muted text-xl">
+                        {sidebarWsIcon}
+                      </div>
+                      <Input
+                        id="sidebar-ws-icon"
+                        className="max-w-[100px] bg-background border-border"
+                        placeholder="💼"
+                        maxLength={2}
+                        value={sidebarWsIcon}
+                        onChange={(e) => setSidebarWsIcon(e.target.value)}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        Type an emoji
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="sidebar-ws-desc">Description</Label>
+                    <Textarea
+                      id="sidebar-ws-desc"
+                      placeholder="What is this workspace for?"
+                      className="bg-background border-border"
+                      value={sidebarWsDesc}
+                      onChange={(e) => setSidebarWsDesc(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    className="bg-muted hover:bg-muted/80 border-border"
+                    onClick={() => setShowSidebarCreateModal(false)}
+                    disabled={isCreatingSidebarWs}>
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-teal-500 border-teal-200 hover:bg-teal-600 text-white"
+                    onClick={handleCreateWorkspaceFromSidebar}
+                    disabled={isCreatingSidebarWs}>
+                    {isCreatingSidebarWs && (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    )}
+                    Create Workspace
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             {/* Usage meter */}
             {!sidebarCollapsed && (

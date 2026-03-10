@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { X, Clock, RotateCcw, Loader2, Calendar, FileText } from "lucide-react";
+import {
+  X,
+  Clock,
+  RotateCcw,
+  Loader2,
+  Calendar,
+  FileText,
+  Trash2,
+} from "lucide-react";
 import { format } from "date-fns";
 import { documentService } from "../../services/documentService";
 import { Button } from "../ui/button";
@@ -32,6 +40,8 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
   const [versions, setVersions] = useState<Version[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRestoring, setIsRestoring] = useState<string | null>(null);
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchVersions = React.useCallback(async () => {
@@ -92,6 +102,28 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
     }
   };
 
+  const handleDelete = async (version: Version) => {
+    setIsDeletingId(version.id);
+    setConfirmDeleteId(null);
+    try {
+      await documentService.deleteDocumentVersion(projectId, version.id);
+      setVersions((prev) => prev.filter((v) => v.id !== version.id));
+      toast({
+        title: "Deleted",
+        description: `Version ${version.version} has been deleted.`,
+      });
+    } catch (error: any) {
+      console.error("Failed to delete version:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete version.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingId(null);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -113,7 +145,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                 Version History
               </h3>
               <p className="text-sm text-gray-500">
-                View and restore previous document states
+                View, restore, or delete previous document states
               </p>
             </div>
           </div>
@@ -137,63 +169,123 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
               <p>No versions found for this document.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {versions.map((version, index) => (
-                <div
-                  key={version.id}
-                  className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:border-indigo-200 hover:bg-indigo-50/30 transition-all group">
-                  <div className="flex items-start gap-4">
-                    <div className="mt-1 p-2 bg-white border border-gray-100 rounded-lg shadow-sm group-hover:border-indigo-100">
-                      <Clock className="w-4 h-4 text-gray-400 group-hover:text-indigo-500" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-gray-900">
-                          Version {version.version}
-                        </span>
-                        {index === 0 && (
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] uppercase font-heavy rounded-full tracking-wider">
-                            Current
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {format(
-                            new Date(version.created_at),
-                            "MMM d, yyyy • h:mm a",
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <FileText className="w-3 h-3" />
-                          {version.word_count} words
-                        </div>
-                        {version.user && (
-                          <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full" />
-                            {version.user.full_name || version.user.email}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+            <div className="space-y-3">
+              {versions.map((version, index) => {
+                const isCurrent = index === 0;
+                const isBeingDeleted = isDeletingId === version.id;
+                const isConfirming = confirmDeleteId === version.id;
+                const isBusy = isRestoring !== null || isDeletingId !== null;
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={index === 0 || isRestoring !== null}
-                    onClick={() => handleRestore(version)}
-                    className="gap-2 border-gray-200 group-hover:border-indigo-200 group-hover:text-indigo-700">
-                    {isRestoring === version.id ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <RotateCcw className="w-3 h-3" />
+                return (
+                  <div key={version.id} className="space-y-0">
+                    <div
+                      className={`flex items-center justify-between p-4 border rounded-xl transition-all group
+                        ${isCurrent ? "border-indigo-200 bg-indigo-50/40" : "border-gray-100 hover:border-indigo-200 hover:bg-indigo-50/20"}
+                        ${isConfirming ? "border-red-200 bg-red-50/30" : ""}
+                      `}>
+                      {/* Left info */}
+                      <div className="flex items-start gap-4">
+                        <div className="mt-1 p-2 bg-white border border-gray-100 rounded-lg shadow-sm group-hover:border-indigo-100">
+                          <Clock
+                            className={`w-4 h-4 ${isCurrent ? "text-indigo-500" : "text-gray-400 group-hover:text-indigo-500"}`}
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-gray-900">
+                              Version {version.version}
+                            </span>
+                            {isCurrent && (
+                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] uppercase font-semibold rounded-full tracking-wider">
+                                Current
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {format(
+                                new Date(version.created_at),
+                                "MMM d, yyyy • h:mm a",
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              {version.word_count} words
+                            </div>
+                            {version.user && (
+                              <div className="flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full" />
+                                {version.user.full_name || version.user.email}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 ml-4">
+                        {/* Restore button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={isCurrent || isBusy}
+                          onClick={() => handleRestore(version)}
+                          className="gap-1.5 border-gray-200 group-hover:border-indigo-200 group-hover:text-indigo-700 text-xs">
+                          {isRestoring === version.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <RotateCcw className="w-3 h-3" />
+                          )}
+                          Restore
+                        </Button>
+
+                        {/* Delete button — hidden for current version */}
+                        {!isCurrent && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={isBusy}
+                            onClick={() =>
+                              setConfirmDeleteId(
+                                isConfirming ? null : version.id,
+                              )
+                            }
+                            className="text-gray-400 hover:text-red-500 hover:bg-red-50 px-2">
+                            {isBeingDeleted ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Inline confirmation strip */}
+                    {isConfirming && (
+                      <div className="flex items-center justify-between bg-red-50 border border-red-200 border-t-0 rounded-b-xl px-4 py-2.5 animate-in slide-in-from-top-1 duration-150">
+                        <p className="text-xs text-red-700 font-medium">
+                          Delete Version {version.version}? This cannot be
+                          undone.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded transition-colors">
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleDelete(version)}
+                            className="text-xs text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded font-medium transition-colors">
+                            Yes, delete
+                          </button>
+                        </div>
+                      </div>
                     )}
-                    Restore
-                  </Button>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
