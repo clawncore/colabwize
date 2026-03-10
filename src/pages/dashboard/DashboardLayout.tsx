@@ -1416,16 +1416,6 @@ export default function DashboardLayout({
                           />
                         )}
 
-                      {/* Scans Meter */}
-                      <UsageMeter
-                        current={
-                          planUsage?.scan || planUsage?.scans_per_month || 0
-                        }
-                        limit={planLimits?.scans_per_month ?? 3}
-                        planName={userPlan}
-                        featureName="scans"
-                      />
-
                       {/* Citations Meter */}
                       <UsageMeter
                         current={
