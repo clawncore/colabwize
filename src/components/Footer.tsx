@@ -67,6 +67,13 @@ const footerLinks = {
     { name: "Security", href: "/legal/security" },
     { name: "Refund Policy", href: "/legal/refund-policy" },
   ],
+  tools: [
+    { name: "APA Generator", href: "/apa-citation-generator" },
+    { name: "MLA Generator", href: "/mla-citation-generator" },
+    { name: "Chicago Generator", href: "/chicago-citation-generator" },
+    { name: "Plagiarism Checker", href: "/plagiarism-checker" },
+    { name: "Research Organizer", href: "/research-paper-organizer" },
+  ],
 };
 
 const socialLinks = [
@@ -89,7 +96,7 @@ export default function Footer() {
       <div className="container-custom">
         {/* Main Footer Content */}
         <div className="py-16 border-b border-gray-100">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-10">
             {/* Logo and Description */}
             <div className="col-span-2 md:col-span-3 lg:col-span-2">
               <Link to="/" className="flex items-center space-x-2 mb-6">
@@ -183,6 +190,24 @@ export default function Footer() {
               </h3>
               <ul className="space-y-4">
                 {footerLinks.company.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      to={link.href}
+                      className="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-sm font-medium">
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Tools Links */}
+            <div>
+              <h3 className="text-xs font-bold text-black mb-6 uppercase tracking-[0.2em] font-primary">
+                Tools
+              </h3>
+              <ul className="space-y-4">
+                {footerLinks.tools.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}

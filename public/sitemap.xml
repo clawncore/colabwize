@@ -1,236 +1,428 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://colabwize.com/</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/features</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/academic-integrity</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/pricing</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/academic-integrity-guide</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/prove-authorship</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/academic-integrity</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/citation-verification</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/academic-integrity-guide</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/ai-false-positive-problem</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/prove-authorship</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/how-to-prove-your-writing-is-not-ai</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/citation-verification</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/how-to-check-citation-credibility</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/ai-false-positive-problem</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/how-to-collaborate-on-academic-papers</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/how-to-prove-your-writing-is-not-ai</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/false-ai-detection-in-academia</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/how-to-check-citation-credibility</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/what-is-academic-integrity</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/how-to-collaborate-on-academic-papers</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/what-is-citation-verification</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/false-ai-detection-in-academia</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/what-is-authorship-verification</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/what-is-academic-integrity</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/what-is-colabwize</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/what-is-citation-verification</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/academic-integrity-platform</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/what-is-authorship-verification</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/citation-auditor</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/solutions/originality-map</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/proof-of-authorship</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/solutions/citation-confidence</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/academic-collaboration</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/solutions/authorship-certificate</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/apa-citation-generator</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/solutions/collaboration</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/mla-citation-generator</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/avoid-plagiarism-academic-writing</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/chicago-citation-generator</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/plagiarism-checker</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/research-paper-organizer</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/solutions/chat-with-pdfs</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/solutions/citation-confidence</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/solutions/authorship-certificate</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/solutions/unified-dashboard</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/solutions/analytics-metrics</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/solutions/draft-comparison</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/solutions/collaboration</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/solutions/team-workspace</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/features</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/integrations</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/changelog</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/roadmap</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/pricing</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/resources/blogs</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/resources/case-studies</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/resources/help-center</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/resources/documentation</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/resources/schedule-demo</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/company/about</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/company/careers</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/company/partners</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/company/faq</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/legal/cookies</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/legal/gdpr</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/legal/security</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/legal/privacy</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/legal/terms</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/legal/refund-policy</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/contact</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://app.colabwize.com/resources/blogs/avoid-plagiarism-academic-writing</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/rise-of-ai-detection</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/rise-of-ai-detection</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/citation-best-practices-2026</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/citation-best-practices-2026</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/proving-authorship</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/proving-authorship</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/understanding-turnitin-ai-detection</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/understanding-turnitin-ai-detection</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/paraphrasing-effectively</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/paraphrasing-effectively</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/mastering-apa-style-7th-edition</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/mastering-apa-style-7th-edition</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/thesis-formatting-101</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/thesis-formatting-101</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/future-of-academic-research-ai</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/future-of-academic-research-ai</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/psychology-of-writing-anxiety</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/psychology-of-writing-anxiety</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/beyond-green-checkmark</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/beyond-green-checkmark</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/false-positive-nightmare</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/false-positive-nightmare</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/citation-rot-integrity</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/citation-rot-integrity</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/ethics-of-ai-assistance</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/ethics-of-ai-assistance</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/human-vs-ai-writing-patterns</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/human-vs-ai-writing-patterns</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/defensive-documentation</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/defensive-documentation</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/understanding-mosaic-plagiarism</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/understanding-mosaic-plagiarism</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/the-3-year-rule</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/the-3-year-rule</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://colabwize.com/resources/blogs/perfect-submission-workflow</loc>
-    <lastmod>2026-03-07T11:20:48.518Z</lastmod>
+    <loc>https://app.colabwize.com/resources/blogs/perfect-submission-workflow</loc>
+    <lastmod>2026-03-10T13:34:06.507Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

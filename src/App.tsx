@@ -8,6 +8,7 @@ import { BillingProvider } from "./contexts/BillingContext";
 import { Toaster } from "./components/ui/toaster";
 import { CookieConsent } from "./components/common/CookieConsent";
 import { HelmetProvider } from "react-helmet-async";
+import PageMetadata from "./components/PageMetadata";
 
 // Solutions Pages (Marketing)
 import ChatWithPdfsPage from "./pages/solutions/ChatWithPdfsPage";
@@ -39,6 +40,11 @@ import WhatIsAcademicIntegrity from "./pages/seo/definitions/WhatIsAcademicInteg
 import WhatIsCitationVerification from "./pages/seo/definitions/WhatIsCitationVerification";
 import WhatIsAuthorshipVerification from "./pages/seo/definitions/WhatIsAuthorshipVerification";
 import ComparePage from "./pages/seo/ComparePage";
+import ApaGenerator from "./pages/seo/tools/ApaGenerator";
+import MlaGenerator from "./pages/seo/tools/MlaGenerator";
+import ChicagoGenerator from "./pages/seo/tools/ChicagoGenerator";
+import PlagiarismChecker from "./pages/seo/tools/PlagiarismChecker";
+import ResearchOrganizer from "./pages/seo/tools/ResearchOrganizer";
 
 // Product Pages
 import FeaturesPage from "./pages/FeaturesPage";
@@ -138,6 +144,7 @@ function App() {
               <BrowserRouter>
                 <AuthProvider>
                   <AuthInitializer>
+                    <PageMetadata />
                     <Routes>
                       {/* Default Route - Public */}
                       <Route path="/" element={<HomePage />} />
@@ -214,6 +221,27 @@ function App() {
                         path="/academic-collaboration"
                         element={<AcademicCollaborationSEO />}
                       />
+                      {/* SEO Tool Landing Pages */}
+                      <Route
+                        path="/apa-citation-generator"
+                        element={<ApaGenerator />}
+                      />
+                      <Route
+                        path="/mla-citation-generator"
+                        element={<MlaGenerator />}
+                      />
+                      <Route
+                        path="/chicago-citation-generator"
+                        element={<ChicagoGenerator />}
+                      />
+                      <Route
+                        path="/plagiarism-checker"
+                        element={<PlagiarismChecker />}
+                      />
+                      <Route
+                        path="/research-paper-organizer"
+                        element={<ResearchOrganizer />}
+                      />
                       {/* Solutions Routes - Marketing Pages - Public */}
                       <Route
                         path="/solutions/chat-with-pdfs"
@@ -248,14 +276,43 @@ function App() {
                         element={<TeamWorkspacePage />}
                       />
                       {/* Product Routes - Public */}
-                      <Route path="/features" element={<FeaturesPage />} />
+                      <Route
+                        path="/features"
+                        element={
+                          <>
+                            <PageMetadata title="Features" />
+                            <FeaturesPage />
+                          </>
+                        }
+                      />
                       <Route
                         path="/integrations"
-                        element={<IntegrationsPage />}
+                        element={
+                          <>
+                            <PageMetadata title="Integrations" />
+                            <IntegrationsPage />
+                          </>
+                        }
                       />
-                      <Route path="/changelog" element={<ChangelogPage />} />
+                      <Route
+                        path="/changelog"
+                        element={
+                          <>
+                            <PageMetadata title="Changelog" />
+                            <ChangelogPage />
+                          </>
+                        }
+                      />
                       <Route path="/roadmap" element={<RoadmapPage />} />
-                      <Route path="/pricing" element={<PricingPage />} />
+                      <Route
+                        path="/pricing"
+                        element={
+                          <>
+                            <PageMetadata title="Pricing" />
+                            <PricingPage />
+                          </>
+                        }
+                      />
                       <Route
                         path="/workspaces/accept/:token"
                         element={<AcceptInvitationPage />}

@@ -4,7 +4,7 @@ import { Button } from "../../components/ui/button";
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
 import { blogPosts } from "../../data/blogPosts";
-import { Helmet } from "react-helmet-async";
+import PageMetadata from "../../components/PageMetadata";
 
 // Intro Hero Section
 function IntroHero() {
@@ -209,14 +209,10 @@ function ClosingCTA() {
 export default function BlogsPage() {
   return (
     <Layout>
-      <Helmet>
-        <title>Blog | Academic Integrity & Collaboration Insights | ColabWize</title>
-        <meta name="description" content="Discover insights, tips, and best practices for academic writing, authorship verification, and maintaining academic integrity in the AI era." />
-        <meta property="og:title" content="ColabWize Blog | Academic Insights" />
-        <meta property="og:description" content="Discover insights, tips, and best practices for academic writing, authorship verification, and maintaining academic integrity in the AI era." />
-        <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://colabwize.com/resources/blogs" />
-      </Helmet>
+      <PageMetadata 
+        title="Blog | Academic Integrity & Collaboration Insights"
+        description="Discover insights, tips, and best practices for academic writing, authorship verification, and maintaining academic integrity in the AI era."
+      />
       <IntroHero />
       <FeaturesPresentationFlow />
       <ClosingCTA />

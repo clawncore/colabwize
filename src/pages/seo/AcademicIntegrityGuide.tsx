@@ -1,5 +1,5 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import PageMetadata from '../../components/PageMetadata';
 import { Link } from 'react-router-dom';
 import { Shield, BookOpen, AlertTriangle, Users, History, FileSearch, ArrowRight, CheckCircle2 } from 'lucide-react';
 import Layout from '../../components/Layout';
@@ -8,14 +8,11 @@ import { Button } from '../../components/ui/button';
 export default function AcademicIntegrityGuide() {
     return (
         <Layout>
-            <Helmet>
-                <title>The Complete Guide to Academic Integrity in 2026 | ColabWize</title>
-                <meta name="description" content="Master academic integrity in the AI era. Learn plagiarism prevention, authorship verification, citation credibility, and how to combat false AI detection." />
-                <meta property="og:title" content="The Complete Guide to Academic Integrity in 2026" />
-                <meta property="og:description" content="Master academic integrity in the AI era. Learn plagiarism prevention, authorship verification, and citation credibility." />
-                <meta property="og:type" content="article" />
-                <link rel="canonical" href="https://colabwize.com/academic-integrity-guide" />
-            </Helmet>
+            <PageMetadata 
+                title="The Complete Guide to Academic Integrity in 2026"
+                description="Master academic integrity in the AI era. Learn plagiarism prevention, authorship verification, citation credibility, and how to combat false AI detection."
+                ogType="article"
+            />
 
             {/* Hero Section */}
             <header className="bg-slate-900 text-white pt-24 pb-20 relative overflow-hidden">

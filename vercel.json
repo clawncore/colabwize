@@ -18,7 +18,7 @@
                     "value": "colabwize.vercel.app"
                 }
             ],
-            "destination": "https://colabwize.com/:path",
+            "destination": "https://app.colabwize.com/:path",
             "permanent": true
         }
     ],
