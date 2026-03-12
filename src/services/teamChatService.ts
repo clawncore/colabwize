@@ -14,6 +14,7 @@ export interface TeamChatMessage {
     id: string;
     full_name: string | null;
     email: string;
+    avatar_url?: string | null;
   };
   parent?: {
     id: string;
@@ -22,10 +23,12 @@ export interface TeamChatMessage {
       id: string;
       full_name: string | null;
       email: string;
+      avatar_url?: string | null;
     };
   } | null;
   _count?: {
     replies: number;
+    read_by: number;
   };
 }
 
@@ -116,6 +119,20 @@ class TeamChatService {
       `/api/team-chat/clear?${query.toString()}`,
       null,
     );
+  }
+
+  async markAsRead(messageId: string) {
+    return await apiClient.post("/api/team-chat/read", { messageId });
+  }
+
+  sendTypingStatus(params: {
+    workspaceId?: string;
+    projectId?: string;
+    isTyping: boolean;
+  }) {
+    // This is handled via WebSocket directly if we have access to it, 
+    // but the service could provide a way to emit these events.
+    // For now, we'll assume the component will handle the socket.emit("typing", ...)
   }
 }
 

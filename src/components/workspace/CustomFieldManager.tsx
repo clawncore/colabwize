@@ -179,6 +179,7 @@ export default function CustomFieldManager({
                       )}
                     </div>
                     <Button
+                      type="button"
                       variant="ghost"
                       size="icon"
                       className="text-muted-foreground hover:text-destructive h-8 w-8"
@@ -195,6 +196,7 @@ export default function CustomFieldManager({
           {/* Add New Field UI */}
           {!isAdding ? (
             <Button
+              type="button"
               variant="outline"
               className="w-full border-dashed border-2 py-6 h-auto flex flex-col items-center gap-2"
               onClick={() => setIsAdding(true)}
@@ -258,6 +260,7 @@ export default function CustomFieldManager({
                       onKeyDown={(e) => e.key === "Enter" && addOption()}
                     />
                     <Button
+                      type="button"
                       size="sm"
                       className="bg-emerald-600 h-8"
                       onClick={addOption}
@@ -270,6 +273,7 @@ export default function CustomFieldManager({
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsAdding(false)}
@@ -277,6 +281,7 @@ export default function CustomFieldManager({
                   Cancel
                 </Button>
                 <Button
+                  type="button"
                   size="sm"
                   className="bg-emerald-600 hover:bg-emerald-700"
                   onClick={handleAddField}

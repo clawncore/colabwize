@@ -525,8 +525,8 @@ const NotificationBell: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-300 bg-white rounded-lg shadow-lg border border-white z-50">
-          <div className="p-4 border-b border-white">
+        <div className="absolute right-0 sm:right-0 mt-2 w-[calc(100vw-1.5rem)] sm:w-[380px] max-w-[380px] -right-2 sm:translate-x-0 bg-white rounded-lg shadow-xl border border-gray-100 z-50 fixed sm:absolute top-14 sm:top-auto left-1/2 sm:left-auto -translate-x-1/2 sm:translate-x-0">
+          <div className="p-4 border-b border-gray-100">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-medium text-gray-700">
                 Notifications
@@ -547,7 +547,7 @@ const NotificationBell: React.FC = () => {
                 placeholder="Search notifications..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <div className="flex space-x-2">
@@ -698,20 +698,11 @@ const NotificationBell: React.FC = () => {
             )}
           </div>
 
-          <div className="p-4 border-t border-white text-center">
+          <div className="p-4 border-t border-gray-100 text-center">
             <button
               onClick={() => {
                 setIsOpen(false);
-                // Check if we have a workspace context for the notifications page
-                const workspaceId = notifications.find(
-                  (n) => n.data?.workspaceId,
-                )?.data?.workspaceId;
-                if (workspaceId) {
-                  navigate(`/dashboard/workspace/${workspaceId}/notifications`);
-                } else {
-                  // Fallback or generic notifications if possible
-                  navigate("/dashboard/notifications");
-                }
+                navigate("/dashboard/notifications");
               }}
               className="text-sm text-blue-600 hover:text-blue-800">
               View all notifications

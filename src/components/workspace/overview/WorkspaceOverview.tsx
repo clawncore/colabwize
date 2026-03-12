@@ -380,37 +380,42 @@ export default function WorkspaceOverview() {
             </CardHeader>
             <CardContent className="p-0">
               <ScrollArea className="h-[500px] px-6 pb-6">
-                <div className="space-y-6 relative border-l border-slate-100 ml-3">
+                <div className="space-y-8 relative border-l border-slate-100 ml-3 pt-2">
                   {data.recentActivity.map((activity, index) => (
-                    <div key={index} className="relative pl-6">
-                      <span className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white bg-indigo-500 ring-4 ring-indigo-50"></span>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="w-5 h-5">
+                    <div key={index} className="relative pl-7 group">
+                      <span className="absolute -left-1.5 top-1 h-3 w-3 rounded-full border-2 border-white bg-indigo-500 ring-4 ring-indigo-50 transition-transform group-hover:scale-125 z-10"></span>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <Avatar className="w-6 h-6 border border-white shadow-sm">
                             <AvatarImage src={activity.user?.avatar_url} />
-                            <AvatarFallback className="text-[8px]">
-                              {activity.user?.full_name?.substring(0, 2)}
+                            <AvatarFallback className="text-[9px] bg-slate-100 font-bold text-slate-600">
+                              {activity.user?.full_name?.substring(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-sm font-medium text-slate-900">
-                            {activity.user?.full_name}
+                          <span className="text-sm font-semibold text-slate-900">
+                            {activity.user?.full_name || "System"}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-600">
-                          {activity.action.replace(/_/g, " ").toLowerCase()}
-                          {activity.details?.target_name && (
-                            <span className="font-medium">
-                              {" "}
-                              {activity.details.target_name}
+                        <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-100/50">
+                          <p className="text-sm text-slate-600 leading-relaxed">
+                            <span className="capitalize">{activity.action.replace(/_/g, " ").toLowerCase()}</span>
+                            {activity.details?.target_name && (
+                              <span className="font-bold text-slate-800">
+                                {" "}
+                                {activity.details.target_name}
+                              </span>
+                            )}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-2 text-[10px] font-medium text-slate-400">
+                            <Clock className="w-3 h-3" />
+                            <span>
+                              {format(
+                                new Date(activity.created_at),
+                                "MMM d, h:mm a",
+                              )}
                             </span>
-                          )}
-                        </p>
-                        <span className="text-xs text-slate-400">
-                          {format(
-                            new Date(activity.created_at),
-                            "MMM d, h:mm a",
-                          )}
-                        </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}

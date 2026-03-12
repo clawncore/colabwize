@@ -142,6 +142,7 @@ export const DependencySection: React.FC<DependencySectionProps> = ({
               </div>
               {canEdit && (
                 <button
+                  type="button"
                   onClick={() => handleRemoveDependency(dep.depends_on_id)}
                   className="text-slate-400 hover:text-red-500 transition-colors ml-1"
                 >

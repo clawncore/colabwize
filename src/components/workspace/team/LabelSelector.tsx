@@ -63,12 +63,12 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
       if (isSelected) {
         updatedTask = await workspaceTaskService.removeLabelFromTask(
           taskId,
-          label.id
+          label.id,
         );
       } else {
         updatedTask = await workspaceTaskService.addLabelToTask(
           taskId,
-          label.id
+          label.id,
         );
       }
       onUpdate(updatedTask);
@@ -83,7 +83,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
       const label = await workspaceTaskService.createLabel(
         workspaceId,
         newLabelName,
-        newLabelColor
+        newLabelColor,
       );
       setAvailableLabels([...availableLabels, label]);
       setNewLabelName("");
@@ -91,7 +91,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
       // Automatically add it to the task
       const updatedTask = await workspaceTaskService.addLabelToTask(
         taskId,
-        label.id
+        label.id,
       );
       onUpdate(updatedTask);
     } catch (error) {
@@ -111,14 +111,13 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
           <div
             key={label.id}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-white shadow-sm"
-            style={{ backgroundColor: label.color }}
-          >
+            style={{ backgroundColor: label.color }}>
             {label.name}
             {canEdit && (
               <button
+                type="button"
                 onClick={() => handleToggleLabel(label)}
-                className="hover:bg-black/10 rounded-full transition-colors p-0.5"
-              >
+                className="hover:bg-black/10 rounded-full transition-colors p-0.5">
                 <X className="w-3 h-3" />
               </button>
             )}
@@ -128,12 +127,14 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
         {canEdit && (
           <Popover>
             <PopoverTrigger asChild>
-              <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
+              <button 
+                type="button"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
                 <Plus className="w-3 h-3" />
                 Add Label
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-3" align="start">
+            <PopoverContent className="w-64 p-3 bg-white" align="start">
               {!isCreating ? (
                 <div className="space-y-2">
                   <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-1">
@@ -143,14 +144,14 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                     {availableLabels.length > 0 ? (
                       availableLabels.map((label) => {
                         const isSelected = selectedLabels.some(
-                          (l) => l.id === label.id
+                          (l) => l.id === label.id,
                         );
                         return (
                           <button
+                            type="button"
                             key={label.id}
                             onClick={() => handleToggleLabel(label)}
-                            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                          >
+                            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors">
                             <div className="flex items-center gap-2">
                               <div
                                 className="w-3 h-3 rounded-full"
@@ -174,9 +175,9 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                   </div>
                   <hr className="my-2 border-slate-100" />
                   <button
+                    type="button"
                     onClick={() => setIsCreating(true)}
-                    className="w-full text-left text-sm text-indigo-600 font-medium hover:text-indigo-700 p-1 px-2"
-                  >
+                    className="w-full text-left text-sm text-indigo-600 font-medium hover:text-indigo-700 p-1 px-2">
                     + Create New Label
                   </button>
                 </div>
@@ -187,9 +188,9 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                       Create Label
                     </span>
                     <button
+                      type="button"
                       onClick={() => setIsCreating(false)}
-                      className="text-slate-400 hover:text-slate-600"
-                    >
+                      className="text-slate-400 hover:text-slate-600">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -204,12 +205,14 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                   <div className="flex flex-wrap gap-2">
                     {COLORS.map((color) => (
                       <button
+                        type="button"
                         key={color}
                         onClick={() => setNewLabelColor(color)}
-                        className={`w-6 h-6 rounded-full transition-transform ${newLabelColor === color
-                          ? "scale-125 ring-2 ring-indigo-500/50"
-                          : "hover:scale-110"
-                          }`}
+                        className={`w-6 h-6 rounded-full transition-transform ${
+                          newLabelColor === color
+                            ? "scale-125 ring-2 ring-indigo-500/50"
+                            : "hover:scale-110"
+                        }`}
                         style={{ backgroundColor: color }}
                       />
                     ))}
@@ -217,14 +220,14 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                   <Button
                     onClick={handleCreateLabel}
                     size="sm"
-                    className="w-full"
-                  >
+                    className="w-full">
                     Create
                   </Button>
                 </div>
               )}
             </PopoverContent>
-          </Popover>)}
+          </Popover>
+        )}
       </div>
     </div>
   );

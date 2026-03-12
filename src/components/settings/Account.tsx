@@ -42,28 +42,15 @@ const AccountSettingsPage: React.FC = () => {
     newPassword: "",
     confirmPassword: "",
   });
-  const [profileForm, setProfileForm] = useState({
-    full_name: "",
-    phone_number: "",
-    user_type: "",
-    field_of_study: "",
-  });
   const [user, setUser] = useState<UserAccount | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
 
-  // OTP states for profile update
-  const [showProfileOTP, setShowProfileOTP] = useState(false);
-  const [otpStep, setOtpStep] = useState(1); // 1: send OTP, 2: enter OTP
-  const [otpValue, setOtpValue] = useState("");
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [otpSuccess, setOtpSuccess] = useState(false);
-  const [pendingProfileUpdate, setPendingProfileUpdate] = useState<any>(null);
-
   // Email change states
   const [showEmailChangeModal, setShowEmailChangeModal] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [emailChangeStep, setEmailChangeStep] = useState(1); // 1: enter new email, 2: verify OTP
   const [pendingEmailChange, setPendingEmailChange] = useState("");
@@ -83,13 +70,6 @@ const AccountSettingsPage: React.FC = () => {
         }
         const userData = await AccountService.getUserAccount();
         setUser(userData);
-        // Initialize profile form with user data
-        setProfileForm({
-          full_name: userData.full_name || "",
-          phone_number: userData.phone_number || "",
-          user_type: userData.user_type || "",
-          field_of_study: userData.field_of_study || "",
-        });
       } catch (error: any) {
         console.error("Error fetching account details:", error);
         toast({
@@ -106,103 +86,6 @@ const AccountSettingsPage: React.FC = () => {
 
     fetchAccountDetails();
   }, [toast]);
-
-  const handleProfileChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setProfileForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleUpdateProfile = async () => {
-    setProfileLoading(true);
-    try {
-      // Show OTP verification modal instead of directly updating
-      setPendingProfileUpdate(profileForm);
-      setShowProfileOTP(true);
-      setOtpStep(1); // Start with sending OTP
-      setOtpValue("");
-      setOtpSuccess(false);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description:
-          error.message ||
-          "Failed to initiate profile update. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
-  // Send OTP for profile update
-  const handleSendProfileOTP = async () => {
-    setOtpLoading(true);
-    try {
-      await AccountService.sendProfileOTP(pendingProfileUpdate);
-      setOtpStep(2); // Move to enter OTP step
-      toast({
-        title: "OTP Sent",
-        description: pendingProfileUpdate.email
-          ? "Please check your new email address for the verification code."
-          : "Please check your phone for the verification code.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send OTP. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  // Verify OTP for profile update
-  const handleVerifyProfileOTP = async () => {
-    setOtpLoading(true);
-    try {
-      // Instead of verifying OTP separately, directly update the profile with OTP included
-      // This matches how the Profile page works
-      await AccountService.updateProfile({
-        ...pendingProfileUpdate,
-        otp: otpValue,
-      });
-
-      // Update local user state
-      if (user) {
-        setUser({
-          ...user,
-          ...pendingProfileUpdate,
-        });
-      }
-
-      toast({
-        title: "Success",
-        description: "Profile updated successfully.",
-      });
-
-      // Close OTP modal after a short delay
-      setTimeout(() => {
-        setShowProfileOTP(false);
-        setOtpValue("");
-        setPendingProfileUpdate(null);
-      }, 2000);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description:
-          error.message || "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setOtpLoading(false);
-    }
-  };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -235,7 +118,7 @@ const AccountSettingsPage: React.FC = () => {
     try {
       await AccountService.updatePassword(
         passwordForm.currentPassword,
-        passwordForm.newPassword
+        passwordForm.newPassword,
       );
 
       toast({
@@ -260,8 +143,6 @@ const AccountSettingsPage: React.FC = () => {
       setPasswordLoading(false);
     }
   };
-
-
 
   const handleExportData = async () => {
     setExportLoading(true);
@@ -294,14 +175,6 @@ const AccountSettingsPage: React.FC = () => {
     } finally {
       setExportLoading(false);
     }
-  };
-
-  const cancelProfileOTP = () => {
-    setShowProfileOTP(false);
-    setOtpValue("");
-    setPendingProfileUpdate(null);
-    setOtpStep(1);
-    setOtpSuccess(false);
   };
 
   // Handle email change button click
@@ -447,118 +320,6 @@ const AccountSettingsPage: React.FC = () => {
       </div>
 
       <div className="space-y-6 p-6 rounded-2xl bg-white">
-        {/* Profile Information */}
-        <div className="bg-white  rounded-xl shadow-sm border border-gray-200 ">
-          <div className="p-6">
-            <h2 className="text-lg font-medium text-gray-900  mb-4">
-              Profile Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="full_name"
-                  className="block text-sm font-medium text-gray-700  mb-1">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    id="full_name"
-                    name="full_name"
-                    value={profileForm.full_name}
-                    onChange={handleProfileChange}
-                    className="w-full pl-10 pr-3 py-2 rounded-lg bg-white  text-gray-900  shadow-sm border border-gray-300  focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="phone_number"
-                  className="block text-sm font-medium text-gray-700  mb-1">
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    id="phone_number"
-                    name="phone_number"
-                    value={profileForm.phone_number}
-                    onChange={handleProfileChange}
-                    className="w-full pl-10 pr-3 py-2 rounded-lg bg-white  text-gray-900  shadow-sm border border-gray-300  focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="user_type"
-                  className="block text-sm font-medium text-gray-700  mb-1">
-                  User Type
-                </label>
-                <select
-                  id="user_type"
-                  name="user_type"
-                  value={profileForm.user_type}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 rounded-lg bg-white  text-gray-900  shadow-sm border border-gray-300  focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Select your type</option>
-                  <option value="Undergraduate Student">
-                    Undergraduate Student
-                  </option>
-                  <option value="Graduate Student">Graduate Student</option>
-                  <option value="Researcher">Researcher</option>
-                  <option value="Professor">Professor</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="field_of_study"
-                  className="block text-sm font-medium text-gray-700  mb-1">
-                  Field of Study
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <BookOpen className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    id="field_of_study"
-                    name="field_of_study"
-                    value={profileForm.field_of_study}
-                    onChange={handleProfileChange}
-                    className="w-full pl-10 pr-3 py-2 rounded-lg bg-white  text-gray-900  shadow-sm border border-gray-300  focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Button
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={handleUpdateProfile}
-                disabled={profileLoading}>
-                {profileLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  "Update Profile"
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-
         {/* Email Management */}
         <div className="bg-white  rounded-xl shadow-sm border border-gray-200 ">
           <div className="p-6">
@@ -727,7 +488,7 @@ const AccountSettingsPage: React.FC = () => {
               // Refresh user data silently to prevent unmounting TwoFactorSetup
               // and losing the backup codes display state
               AccountService.getUserAccount()
-                .then(u => setUser(u))
+                .then((u) => setUser(u))
                 .catch(console.error);
             }}
           />
@@ -771,172 +532,6 @@ const AccountSettingsPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Profile Update OTP Modal */}
-      {showProfileOTP && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4">
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-              onClick={cancelProfileOTP}></div>
-
-            {/* Modal */}
-            <div className="relative bg-white  rounded-lg shadow-xl w-full max-w-md mx-auto">
-              <div className="p-6">
-                {otpStep === 1 && (
-                  <>
-                    <div className="flex items-center justify-center w-12 h-12 mx-auto bg-blue-100 rounded-full">
-                      <svg
-                        className="w-6 h-6 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="mt-4 text-center">
-                      <h3 className="text-lg font-medium text-gray-900 ">
-                        Verify Profile Update
-                      </h3>
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-500 ">
-                          {pendingProfileUpdate?.email
-                            ? "To confirm your email change, we'll send a verification code to your new email address."
-                            : "To confirm your profile update, we'll send a verification code to your registered phone number."}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-6 flex justify-between">
-                      <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
-                        onClick={cancelProfileOTP}>
-                        Cancel
-                      </Button>
-                      <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
-                        onClick={handleSendProfileOTP}
-                        disabled={otpLoading}>
-                        {otpLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Sending...
-                          </>
-                        ) : (
-                          "Send Verification Code"
-                        )}
-                      </Button>
-                    </div>
-                  </>
-                )}
-
-                {otpStep === 2 && !otpSuccess && (
-                  <>
-                    <div className="flex items-center justify-center w-12 h-12 mx-auto bg-blue-100 rounded-full">
-                      <svg
-                        className="w-6 h-6 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="mt-4 text-center">
-                      <h3 className="text-lg font-medium text-gray-900 ">
-                        Enter Verification Code
-                      </h3>
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-500 ">
-                          {pendingProfileUpdate?.email
-                            ? "Please enter the 6-digit code sent to your new email address."
-                            : "Please enter the 6-digit code sent to your phone."}
-                        </p>
-                        <input
-                          type="text"
-                          value={otpValue}
-                          onChange={(e) => setOtpValue(e.target.value)}
-                          className="mt-3 w-full px-3 py-2 rounded-lg bg-white  text-gray-900  shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest"
-                          placeholder="000000"
-                          maxLength={6}
-                        />
-                      </div>
-                    </div>
-                    <div className="mt-6 flex justify-between">
-                      <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
-                        onClick={cancelProfileOTP}>
-                        Cancel
-                      </Button>
-                      <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
-                        onClick={handleVerifyProfileOTP}
-                        disabled={otpLoading || otpValue.length !== 6}>
-                        {otpLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Verifying...
-                          </>
-                        ) : (
-                          "Verify"
-                        )}
-                      </Button>
-                    </div>
-                  </>
-                )}
-
-                {otpSuccess && (
-                  <>
-                    <div className="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full">
-                      <svg
-                        className="w-6 h-6 text-green-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    </div>
-                    <div className="mt-4 text-center">
-                      <h3 className="text-lg font-medium text-gray-900 ">
-                        Profile Updated Successfully
-                      </h3>
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-500 ">
-                          Your profile has been updated successfully.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-6">
-                      <Button
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white mb-2"
-                        onClick={cancelProfileOTP}>
-                        Close
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Email Change Modal */}
       {showEmailChangeModal && (

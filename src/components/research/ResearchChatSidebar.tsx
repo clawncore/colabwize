@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { ResearchService } from "../../services/researchService";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   id: string;
@@ -65,9 +67,11 @@ function AiBubble({ content }: { content: string }) {
         {/* Subtle top-left gradient accent */}
         <div className="absolute inset-0 rounded-2xl rounded-tl-sm bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none" />
 
-        <p className="text-foreground whitespace-pre-wrap relative z-10">
-          {content}
-        </p>
+        <div className="text-foreground relative z-10 prose prose-sm prose-slate dark:prose-invert max-w-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {content}
+          </ReactMarkdown>
+        </div>
 
         {/* Copy button — appears on hover */}
         <button
@@ -100,9 +104,11 @@ function UserBubble({ content }: { content: string }) {
       ">
         {/* Shine overlay */}
         <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none rounded-t-2xl" />
-        <p className="text-white whitespace-pre-wrap relative z-10">
-          {content}
-        </p>
+        <div className="text-white relative z-10 prose prose-sm prose-invert max-w-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {content}
+          </ReactMarkdown>
+        </div>
       </div>
 
       {/* Avatar */}

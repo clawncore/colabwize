@@ -137,7 +137,10 @@ const EditorWorkspacePage: React.FC = () => {
   const { user } = useAuth();
 
   // Navigation Rail state (independently toggleable)
-  const [isNavRailOpen, setIsNavRailOpen] = useState(true);
+  const [isNavRailOpen, setIsNavRailOpen] = useState(false);
+  const [isNavRailHovered, setIsNavRailHovered] = useState(false);
+  
+  const isNavRailExpanded = isNavRailOpen || isNavRailHovered;
 
   // Source Library sub-tab state
   const [activeSourceTab, setActiveSourceTab] = useState<
@@ -790,14 +793,16 @@ const EditorWorkspacePage: React.FC = () => {
           className={`flex-shrink-0 bg-white border-r border-gray-100 flex flex-row z-30 shadow-sm relative overflow-hidden h-full`}>
           {/* Vertical Navigation Rail (The "Display" panel) */}
           <motion.div
+            onMouseEnter={() => setIsNavRailHovered(true)}
+            onMouseLeave={() => setIsNavRailHovered(false)}
             initial={false}
-            animate={{ width: isNavRailOpen ? 240 : 60 }}
+            animate={{ width: isNavRailExpanded ? 240 : 60 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="h-full flex-shrink-0 border-r border-gray-100 flex flex-col bg-[#F9FAFB]/90 overflow-hidden">
+            className="h-full flex-shrink-0 border-r border-gray-100 flex flex-col bg-[#F9FAFB]/90 overflow-hidden absolute lg:relative z-40 shadow-xl lg:shadow-none">
             {/* Header */}
             <div
-              className={`p-4 flex items-center ${isNavRailOpen ? "justify-between" : "justify-center"} border-b border-gray-100 mb-2 h-[60px]`}>
-              {isNavRailOpen ? (
+              className={`p-4 flex items-center ${isNavRailExpanded ? "justify-between" : "justify-center"} border-b border-gray-100 mb-2 h-[60px]`}>
+              {isNavRailExpanded ? (
                 <>
                   <div className="flex items-center gap-3">
                     <button
@@ -806,7 +811,7 @@ const EditorWorkspacePage: React.FC = () => {
                       title="Back to Dashboard">
                       <ArrowLeft className="w-4 h-4 text-gray-600" />
                     </button>
-                    <span className="text-sm font-bold text-gray-900">
+                    <span className="text-sm font-bold text-gray-900 whitespace-nowrap overflow-hidden transition-opacity duration-300">
                       Display
                     </span>
                   </div>
@@ -837,10 +842,14 @@ const EditorWorkspacePage: React.FC = () => {
                       onOpenChange={setShowHelpDialog}
                     />
                     <button
-                      onClick={() => setIsNavRailOpen(false)}
-                      title="Collapse Sidebar"
-                      className="cursor-pointer hover:bg-gray-200 p-1 rounded-md transition-colors">
-                      <ChevronLeft className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                      onClick={() => setIsNavRailOpen(!isNavRailOpen)}
+                      title={isNavRailOpen ? "Unpin Sidebar" : "Pin Sidebar"}
+                      className={`cursor-pointer ${isNavRailOpen ? "bg-gray-200" : ""} hover:bg-gray-200 p-1 rounded-md transition-colors`}>
+                      {isNavRailOpen ? (
+                        <ChevronLeft className="w-4 h-4 text-gray-600" />
+                      ) : (
+                        <svg className="w-4 h-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                      )}
                     </button>
                   </div>
                 </>
@@ -862,16 +871,16 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("documents");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeLeftPanel === "documents"
                     ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                 }`}
-                title={!isNavRailOpen ? "My Documents" : ""}>
+                title={!isNavRailExpanded ? "My Documents" : ""}>
                 <FileText
-                  className={`w-4 h-4 ${activeLeftPanel === "documents" ? "text-[#6366F1]" : "text-gray-400"}`}
+                  className={`w-4 h-4 flex-shrink-0 ${activeLeftPanel === "documents" ? "text-[#6366F1]" : "text-gray-400"}`}
                 />
-                {isNavRailOpen && "My Documents"}
+                <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>My Documents</span>
               </button>
 
               <button
@@ -881,21 +890,21 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveSourceTab("sources");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeLeftPanel === "sources"
                     ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                 }`}
-                title={!isNavRailOpen ? "Source Library" : ""}>
+                title={!isNavRailExpanded ? "Source Library" : ""}>
                 <BookOpen
-                  className={`w-4 h-4 ${activeLeftPanel === "sources" ? "text-[#6366F1]" : "text-gray-400"}`}
+                  className={`w-4 h-4 flex-shrink-0 ${activeLeftPanel === "sources" ? "text-[#6366F1]" : "text-gray-400"}`}
                 />
-                {isNavRailOpen && "Source Library"}
+                <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>Source Library</span>
               </button>
 
               {/* Sub-tabs for Source Library */}
-              {activeLeftPanel === "sources" && isNavRailOpen && (
-                <div className="ml-9 mt-1 space-y-1 border-l-2 border-gray-100 pl-3 mb-4 transition-all">
+              {activeLeftPanel === "sources" && isNavRailExpanded && (
+                <div className="ml-9 mt-1 space-y-1 border-l-2 border-gray-100 pl-3 mb-4 transition-all overflow-hidden whitespace-nowrap">
                   <button
                     onClick={() => setActiveSourceTab("sources")}
                     className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
@@ -904,7 +913,7 @@ const EditorWorkspacePage: React.FC = () => {
                         : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                     }`}>
                     <div
-                      className={`w-1.5 h-1.5 rounded-full ${activeSourceTab === "sources" ? "bg-[#6366F1]" : "bg-gray-300"}`}
+                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeSourceTab === "sources" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                     />
                     Sources
                   </button>
@@ -916,7 +925,7 @@ const EditorWorkspacePage: React.FC = () => {
                         : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                     }`}>
                     <div
-                      className={`w-1.5 h-1.5 rounded-full ${activeSourceTab === "collections" ? "bg-[#6366F1]" : "bg-gray-300"}`}
+                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeSourceTab === "collections" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                     />
                     Collections
                   </button>
@@ -928,7 +937,7 @@ const EditorWorkspacePage: React.FC = () => {
                         : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                     }`}>
                     <div
-                      className={`w-1.5 h-1.5 rounded-full ${activeSourceTab === "matrix" ? "bg-[#6366F1]" : "bg-gray-300"}`}
+                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeSourceTab === "matrix" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                     />
                     Matrix
                   </button>
@@ -941,16 +950,16 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("outline");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeLeftPanel === "outline"
                     ? "bg-[#F59E0B]/10 text-[#D97706] border border-[#F59E0B]/20"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                 }`}
-                title={!isNavRailOpen ? "Outline" : ""}>
+                title={!isNavRailExpanded ? "Outline" : ""}>
                 <PenTool
-                  className={`w-4 h-4 ${activeLeftPanel === "outline" ? "text-[#D97706]" : "text-gray-400"}`}
+                  className={`w-4 h-4 flex-shrink-0 ${activeLeftPanel === "outline" ? "text-[#D97706]" : "text-gray-400"}`}
                 />
-                {isNavRailOpen && "Outline"}
+                <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>Outline</span>
               </button>
 
               <button
@@ -959,56 +968,96 @@ const EditorWorkspacePage: React.FC = () => {
                   setActivePanelType("add-citation");
                   setIsRightSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activePanelType === "add-citation"
                     ? "bg-blue-100 text-blue-600 border border-blue-200"
                     : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                 }`}
-                title={!isNavRailOpen ? "Add Citation" : ""}>
+                title={!isNavRailExpanded ? "Add Citation" : ""}>
                 <PlusSquare
-                  className={`w-4 h-4 ${activePanelType === "add-citation" ? "text-blue-600" : "text-gray-400"}`}
+                  className={`w-4 h-4 flex-shrink-0 ${activePanelType === "add-citation" ? "text-blue-600" : "text-gray-400"}`}
                 />
-                {isNavRailOpen && "Add Citation"}
+                <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>Add Citation</span>
               </button>
 
               <button
                 data-tour="visual-map"
                 onClick={() => {
-                  if (userPlan !== "Plus || Student") return;
+                  if (userPlan === "Free Plan") return;
                   setActiveLeftPanel("visual-map");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeLeftPanel === "visual-map"
                     ? "bg-amber-100 text-amber-600 border border-amber-200"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                    : userPlan === "Free Plan"
+                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                 }`}
-                title={!isNavRailOpen ? "Visual Map" : ""}>
+                title={
+                  userPlan === "Free Plan"
+                    ? "Available on Plus Plan"
+                    : !isNavRailExpanded
+                      ? "Visual Map"
+                      : ""
+                }>
                 <Map
-                  className={`w-4 h-4 ${activeLeftPanel === "visual-map" ? "text-amber-600" : "text-gray-400"}`}
+                  className={`w-4 h-4 flex-shrink-0 ${activeLeftPanel === "visual-map" ? "text-amber-600" : "text-gray-400"}`}
                 />
-                {isNavRailOpen && (
-                  <div className="flex items-center justify-between w-full">
+                 <div className={`flex items-center justify-between w-full whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>
                     <span className="flex items-center gap-2">Visual Map</span>
-                    {userPlan !== "Plus || Student" && (
-                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
+                    {userPlan === "Free Plan" && (
+                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded flex-shrink-0">
                         PLUS
                       </span>
                     )}
                   </div>
-                )}
               </button>
 
               <button
                 data-tour="research-assistant"
                 onClick={() => {
-                  if (userPlan !== "Premium") return;
+                  if (userPlan === "Free Plan") return;
                   setActiveLeftPanel("research-assistant");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeLeftPanel === "research-assistant"
                     ? "bg-purple-100 text-purple-600 border border-purple-200"
+                    : userPlan === "Free Plan"
+                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
+                title={
+                  userPlan === "Free Plan"
+                    ? "Available on Plus Plan"
+                    : !isNavRailExpanded
+                      ? "Research Assistant"
+                      : ""
+                }>
+                <Microscope
+                  className={`w-4 h-4 flex-shrink-0 ${activeLeftPanel === "research-assistant" ? "text-purple-600" : "text-gray-400"}`}
+                />
+                  <div className={`flex items-center justify-between w-full whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>
+                    <span>Research Assistant</span>
+                    {userPlan === "Free Plan" && (
+                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded flex-shrink-0">
+                        PLUS
+                      </span>
+                    )}
+                  </div>
+              </button>
+
+              <button
+                data-tour="research-gaps"
+                onClick={() => {
+                  if (userPlan !== "Premium") return;
+                  setActiveLeftPanel("research-gaps");
+                  setIsLeftSidebarOpen(true);
+                }}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "research-gaps"
+                    ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
                     : userPlan !== "Premium"
                       ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
                       : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
@@ -1016,59 +1065,21 @@ const EditorWorkspacePage: React.FC = () => {
                 title={
                   userPlan !== "Premium"
                     ? "Available on Premium Plan"
-                    : !isNavRailOpen
-                      ? "Research Assistant"
-                      : ""
-                }>
-                <Microscope
-                  className={`w-4 h-4 ${activeLeftPanel === "research-assistant" ? "text-purple-600" : "text-gray-400"}`}
-                />
-                {isNavRailOpen && (
-                  <div className="flex items-center justify-between w-full">
-                    <span>Research Assistant</span>
-                    {userPlan !== "Premium" && (
-                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
-                        PREMIUM
-                      </span>
-                    )}
-                  </div>
-                )}
-              </button>
-
-              <button
-                data-tour="research-gaps"
-                onClick={() => {
-                  if (userPlan !== "Plus || Student") return;
-                  setActiveLeftPanel("research-gaps");
-                  setIsLeftSidebarOpen(true);
-                }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  activeLeftPanel === "research-gaps"
-                    ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
-                    : userPlan !== "Plus || Student"
-                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                }`}
-                title={
-                  userPlan !== "Plus || Student"
-                    ? "Available on Premium Plan"
-                    : !isNavRailOpen
+                    : !isNavRailExpanded
                       ? "Research Gaps"
                       : ""
                 }>
                 <Lightbulb
-                  className={`w-4 h-4 ${activeLeftPanel === "research-gaps" ? "text-[#f59e0b]" : "text-gray-400"}`}
+                  className={`w-4 h-4 flex-shrink-0 ${activeLeftPanel === "research-gaps" ? "text-[#f59e0b]" : "text-gray-400"}`}
                 />
-                {isNavRailOpen && (
-                  <div className="flex items-center justify-between w-full">
+                  <div className={`flex items-center justify-between w-full whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>
                     <span>Research Gaps</span>
-                    {userPlan !== "Plus || Student" && (
-                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
-                        PLUS
+                    {userPlan !== "Premium" && (
+                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded flex-shrink-0">
+                        PREMIUM
                       </span>
                     )}
                   </div>
-                )}
               </button>
 
               <button
@@ -1078,7 +1089,7 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("search-alerts");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
                   activeLeftPanel === "search-alerts"
                     ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
                     : userPlan !== "Premium"
@@ -1088,11 +1099,11 @@ const EditorWorkspacePage: React.FC = () => {
                 title={
                   userPlan !== "Premium"
                     ? "Available on Premium Plan"
-                    : !isNavRailOpen
+                    : !isNavRailExpanded
                       ? "Search Alerts"
                       : ""
                 }>
-                <div className="relative">
+                <div className="relative flex-shrink-0">
                   <Bell
                     className={`w-4 h-4 ${activeLeftPanel === "search-alerts" ? "text-indigo-600" : "text-gray-400"}`}
                   />
@@ -1102,16 +1113,14 @@ const EditorWorkspacePage: React.FC = () => {
                     </span>
                   )}
                 </div>
-                {isNavRailOpen && (
-                  <div className="flex items-center justify-between w-full">
+                  <div className={`flex items-center justify-between w-full whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 pl-3 w-0"}`}>
                     <span>Search Alerts</span>
                     {userPlan !== "Premium" && (
-                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded">
+                      <span className="text-[10px] bg-gray-100 text-gray-500 px-1 rounded flex-shrink-0">
                         PREMIUM
                       </span>
                     )}
                   </div>
-                )}
               </button>
 
               {selectedProject?.workspace_id && (
@@ -1121,23 +1130,23 @@ const EditorWorkspacePage: React.FC = () => {
                     setActivePanelType("collaboration-history");
                     setIsRightSidebarOpen(true);
                   }}
-                  className={`w-full flex items-center ${isNavRailOpen ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
                     activePanelType === "collaboration-history"
                       ? "bg-blue-100 text-blue-600 border border-blue-200"
                       : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                   }`}
-                  title={!isNavRailOpen ? "Edit History" : ""}>
+                  title={!isNavRailExpanded ? "Edit History" : ""}>
                   <History
-                    className={`w-4 h-4 ${activePanelType === "collaboration-history" ? "text-blue-600" : "text-gray-400"}`}
+                    className={`w-4 h-4 flex-shrink-0 ${activePanelType === "collaboration-history" ? "text-blue-600" : "text-gray-400"}`}
                   />
-                  {isNavRailOpen && "Collaboration Log"}
+                  <span className={`whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>Collaboration Log</span>
                 </button>
               )}
             </div>
 
             {/* Credit Meter Fixed at Bottom of Rail */}
             <AnimatePresence>
-              {isNavRailOpen && (
+              {isNavRailExpanded && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
@@ -1714,15 +1723,13 @@ const EditorWorkspacePage: React.FC = () => {
           <div
             className="bg-white border-l border-gray-200 flex flex-col relative shadow-xl z-[72]"
             style={{ width: `${rightSidebarWidth}px` }}>
-            {/* Panel Header */}
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white flex-shrink-0">
-              <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-indigo-500" />
-                {getPanelTitle()}
-              </h3>
+            {/* Panel Content */}
+            <div className="flex-1 overflow-hidden relative">
+              {/* Universal Close Button for Panels that don't have their own */}
               <button
                 onClick={() => setIsRightSidebarOpen(false)}
-                className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-gray-600">
+                className="absolute top-4 right-4 z-40 p-1 bg-white/50 backdrop-blur-sm border border-gray-200 hover:bg-gray-100 rounded-md transition-colors text-gray-500 hover:text-gray-700 shadow-sm"
+                title="Close Panel">
                 <svg
                   className="w-4 h-4"
                   fill="none"
@@ -1736,10 +1743,6 @@ const EditorWorkspacePage: React.FC = () => {
                   />
                 </svg>
               </button>
-            </div>
-
-            {/* Panel Content */}
-            <div className="flex-1 overflow-hidden">
               {activePanelType === "citations" && (
                 <PaperSuggestionsPanel
                   projectId={selectedProject?.id || ""}
@@ -1833,6 +1836,7 @@ const EditorWorkspacePage: React.FC = () => {
                   <TeamChat
                     workspaceId={selectedProject.workspace_id}
                     className="h-full"
+                    isPanel={true}
                   />
                 )}
               {activePanelType === "team-chat" &&

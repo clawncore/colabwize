@@ -442,6 +442,31 @@ class NotificationService {
     }
   }
 
+  // Send typing status
+  static sendTypingStatus(channel: string, isTyping: boolean) {
+    if (this.ws?.readyState === WebSocket.OPEN && this.isAuthenticated) {
+      this.ws.send(
+        JSON.stringify({
+          type: "typing",
+          channel,
+          isTyping,
+        }),
+      );
+    }
+  }
+
+  // Send message read status
+  static sendMessageRead(messageId: string) {
+    if (this.ws?.readyState === WebSocket.OPEN && this.isAuthenticated) {
+      this.ws.send(
+        JSON.stringify({
+          type: "message_read",
+          messageId,
+        }),
+      );
+    }
+  }
+
   // Event listener methods
   static on(event: string, callback: Function) {
     if (!this.listeners.has(event)) {
@@ -614,6 +639,7 @@ class NotificationService {
       priority?: "high" | "medium" | "low";
       search?: string;
       read?: boolean;
+      workspaceId?: string;
     },
   ): Promise<{ notifications: Notification[]; unreadCount: number }> {
     try {
@@ -629,6 +655,8 @@ class NotificationService {
       if (filters?.search) params.append("search", filters.search);
       if (filters?.read !== undefined)
         params.append("read", filters.read.toString());
+      if (filters?.workspaceId)
+        params.append("workspaceId", filters.workspaceId);
 
       const response = await apiClient.get(
         `/api/notifications?${params.toString()}`,
