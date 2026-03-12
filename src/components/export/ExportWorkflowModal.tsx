@@ -56,22 +56,15 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat | null>(
     null,
   );
-  const [exportMode, setExportMode] = useState<ExportMode>("standard");
   const [downloading, setDownloading] = useState(false);
-  const [isStyleDialogOpen, setIsStyleDialogOpen] = useState(false);
-
-  const [includeAuthorshipCertificate, setIncludeAuthorshipCertificate] =
-    useState(true);
 
   // Audit State
-  const [isAuditing, setIsAuditing] = useState(false);
   const [auditResult, setAuditResult] = useState<any>(null);
   const [citationPolicy, setCitationPolicy] = useState({
     mode: "annotate",
     excludeOrphanReferences: false,
     markUnsupportedClaims: true,
   });
-  const [showAllIssues, setShowAllIssues] = useState(false);
 
   // Metadata State (Abstract removed per user request)
   const [author, setAuthor] = useState("");
@@ -134,184 +127,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     }
   }, [isOpen, initialAuditReport]);
 
-  // --- Step 1: Compliance Logic (formerly Audit) ---
-
-  const healCitations = React.useCallback(
-    (results: any[]) => {
-      if (!editor || !results || results.length === 0) return;
-
-      console.log(
-        `[HealCitations] Processing ${results.length} verification results...`,
-      );
-
-      // 1. Update Registry with rich data
-      results.forEach((ver) => {
-        if (ver.status === "VERIFIED" && ver.foundPaper) {
-          // Find existing entry by text matching to sync metadata
-          const allCitations = CitationRegistryService.getAllCitations();
-          const matchedEntry = allCitations.find(
-            (c) => c.raw_reference_text === ver.inlineLocation.text,
-          );
-
-          const citationId = ver.referenceId || matchedEntry?.ref_key;
-
-          if (citationId) {
-            CitationRegistryService.updateCitationMetadata(citationId, {
-              sourceTitle: ver.foundPaper.title,
-              authors: ver.foundPaper.authors,
-              year: ver.foundPaper.year,
-              url: ver.foundPaper.url,
-              metadata: {
-                ...ver.foundPaper,
-                database: ver.foundPaper.database,
-              },
-            });
-
-            // Persist the healed data to the database so it survives page reloads
-            import("../../services/citationService").then(
-              ({ CitationService }) => {
-                CitationService.updateCitation(project.id, citationId, {
-                  title: ver.foundPaper.title,
-                  authors: ver.foundPaper.authors,
-                  year: ver.foundPaper.year,
-                  url: ver.foundPaper.url,
-                  doi: ver.foundPaper.doi,
-                  journal: ver.foundPaper.journal,
-                  volume: ver.foundPaper.volume,
-                  issue: ver.foundPaper.issue,
-                  pages: ver.foundPaper.pages,
-                  publisher: ver.foundPaper.publisher,
-                  type: ver.foundPaper.type,
-                  abstract: ver.foundPaper.abstract,
-                }).catch(console.error);
-              },
-            );
-          }
-        }
-      });
-
-      // 2. Update Editor Nodes (Atomic Transaction)
-      import("../../utils/citationFormatter").then(({ formatCitation }) => {
-        editor
-          .chain()
-          .command(({ tr, state }) => {
-            let hasChanges = false;
-            state.doc.descendants((node, pos) => {
-              if (node.type.name === "citation") {
-                const mid = node.attrs.citationId;
-                if (mid) {
-                  const meta = CitationRegistryService.getCitation(mid);
-                  if (meta) {
-                    // Use the centralized formatter instead of hardcoded APA
-                    const style = (project.citation_style?.toUpperCase() ||
-                      "APA") as any;
-                    const newText = formatCitation(
-                      {
-                        title: meta.sourceTitle || "",
-                        authors: meta.authors || [],
-                        year: meta.year,
-                        journal: meta.metadata?.journal,
-                        doi: meta.doi,
-                        ...meta.metadata,
-                      },
-                      style,
-                      "in-text",
-                    );
-
-                    if (node.attrs.text !== newText) {
-                      tr.setNodeMarkup(pos, undefined, {
-                        ...node.attrs,
-                        text: newText,
-                        status: "resolved",
-                      });
-                      hasChanges = true;
-                    }
-                  }
-                }
-              }
-              return true;
-            });
-            return hasChanges;
-          })
-          .run();
-      });
-    },
-    [editor],
-  );
-
-  const performAudit = React.useCallback(async () => {
-    if (auditResult) return; // Already audited
-
-    setAuditStarted(true);
-    setIsAuditing(true);
-    try {
-      // SILENT NORMALIZATION (User Request)
-      // Ensure editor nodes are converted to Citation Nodes properly before auditing
-      if (editor) {
-        try {
-          const { detectAndNormalizeBibliography } =
-            await import("../editor/utils/normalization");
-          await Promise.all([
-            detectAndNormalizeCitations(
-              editor,
-              project.id,
-              project.citations || [],
-            ),
-            detectAndNormalizeBibliography(editor, project.id),
-          ]);
-        } catch (e) {
-          console.error("[ExportAudit] Silent normalization failed:", e);
-        }
-      }
-
-      // Get fresh content if editor is available (since normalization changed it)
-      const contentToAudit = editor ? editor.getJSON() : currentContent;
-
-      if (!contentToAudit || !contentToAudit.content) {
-        console.warn("[ExportAudit] Aborting: No content available to audit.");
-        return;
-      }
-
-      const result = await BibliographyManager.auditDocument(
-        contentToAudit as any,
-        project.id,
-      );
-      // Map flags to violations for UI consistency
-      const violations = (result.flags || []).map((f: any) => ({
-        id: f.id || Math.random().toString(36),
-        ruleId: f.ruleId,
-        message: f.message,
-        context: f.context || f.anchor?.text,
-        severity: f.ruleId?.includes("UNVERIFIED") ? "CRITICAL" : "MAJOR",
-        location: f.anchor || { startPos: f.start, endPos: f.end },
-      }));
-
-      setAuditResult({
-        ...result,
-        violations,
-      });
-
-      // HEAL CITATIONS: Update "Unknown" placeholders with real data from forensic audit
-      if (result.verificationResults && result.verificationResults.length > 0) {
-        healCitations(result.verificationResults);
-      }
-    } catch (error) {
-      console.error("Audit failed", error);
-      // Non-blocking error for now
-    } finally {
-      setIsAuditing(false);
-    }
-  }, [
-    auditResult,
-    editor,
-    project.citations,
-    project.citation_style,
-    currentContent,
-    project.id,
-    healCitations,
-  ]);
-
-  // --- Step 4: Format Logic ---
+  // --- Step 2: Format Logic ---
   const formats = [
     {
       id: "docx",
@@ -487,7 +303,6 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             content: currentContent,
             htmlContent: preparedHtml,
             citations: citationsToSend,
-            includeAuthorshipCertificate,
             metadata: {
               author,
               institution: affiliation,
@@ -544,38 +359,6 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     } finally {
       setDownloading(false);
     }
-  };
-
-  const handleNavigateToIssue = (v: any) => {
-    if (!editor || !v.location) return;
-
-    const start =
-      v.location.startPos !== undefined
-        ? v.location.startPos
-        : v.location.start;
-    const end =
-      v.location.endPos !== undefined ? v.location.endPos : v.location.end;
-
-    if (start === undefined) return;
-
-    // Severity mapping
-    let color = "rgba(234, 179, 8, 0.2)"; // yellow
-    if (v.severity === "CRITICAL") color = "rgba(239, 68, 68, 0.2)"; // red
-    if (v.severity === "MAJOR") color = "rgba(245, 158, 11, 0.2)"; // orange
-
-    onClose(); // Close modal
-
-    setTimeout(() => {
-      editor.commands.focus();
-
-      // Highlight the range
-      editor
-        .chain()
-        .setTextSelection({ from: start, to: end })
-        .setHighlight({ color: color, type: "violation", message: v.message })
-        .scrollIntoView()
-        .run();
-    }, 200);
   };
 
   // --- Navigation ---
@@ -713,33 +496,6 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             )}
           </button>
         ))}
-      </div>
-
-      {/* Smart Export Options */}
-      <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-        <h4 className="font-semibold text-gray-900 mb-3">
-          Smart Export Options
-        </h4>
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={includeAuthorshipCertificate}
-              onChange={(e) =>
-                setIncludeAuthorshipCertificate(e.target.checked)
-              }
-              className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <div>
-              <p className="font-medium text-gray-900">
-                Include Authorship Certificate
-              </p>
-              <p className="text-xs text-gray-500">
-                Append verifiable proof of authorship to your document.
-              </p>
-            </div>
-          </label>
-        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   User,
   Settings,
@@ -34,32 +34,7 @@ const SettingsLayout: React.FC = () => {
 
   const transitionClasses = getTransitionClasses();
 
-  // Determine sidebar position classes based on user preference
-  const getSidebarPositionClasses = () => {
-    // Only apply custom sidebar position if user has enabled it for this layout
-    const sidebarPosition = shouldApplyCustomLayout
-      ? settings.sidebarPosition
-      : "left"; // Default to left if not enabled
 
-    if (sidebarPosition === "right") {
-      return {
-        sidebar:
-          "lg:block lg:w-64 xl:w-80 flex-shrink-0 border-l border-gray-200  bg-white ",
-        sidebarTransform: mobileMenuOpen ? "block" : "hidden",
-        // Removed excessive margins, using flex-based layout instead
-      };
-    } else {
-      // Default to left position
-      return {
-        sidebar:
-          "lg:block lg:w-64 xl:w-80 flex-shrink-0 border-r border-gray-200  bg-white ",
-        sidebarTransform: mobileMenuOpen ? "block" : "hidden",
-        // Removed excessive margins, using flex-based layout instead
-      };
-    }
-  };
-
-  const positionClasses = getSidebarPositionClasses();
 
   // Define all navigation items with feature requirements
   const allNavigationItems = [
@@ -107,8 +82,16 @@ const SettingsLayout: React.FC = () => {
 
   const currentSection = getCurrentSection();
 
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Close mobile menu and collapse sidebar on navigation
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setIsHovered(false);
+  }, [location.pathname]);
+
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-white">
+    <div className="flex flex-col lg:flex-row min-h-full bg-white">
       {/* Mobile menu button */}
       <div className="lg:hidden p-4 border-b border-gray-200 ">
         <button
@@ -135,22 +118,36 @@ const SettingsLayout: React.FC = () => {
 
       {/* Sidebar Navigation */}
       <div
-        className={`${positionClasses.sidebar} ${positionClasses.sidebarTransform}`}>
-        <div className="lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] overflow-y-auto">
-          <nav className="p-4 space-y-1">
+        className={`sticky top-0 z-10 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transition-all duration-300 ease-in-out ${
+          isHovered ? "w-64" : "w-16"
+        } ${mobileMenuOpen ? "block w-64" : "hidden lg:block"} flex-shrink-0 ${
+          settings.sidebarPosition === "right" ? "order-last border-l border-r-0" : ""
+        }`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}>
+        <div className="h-full overflow-y-auto overflow-x-hidden">
+          <nav className="p-4 space-y-2 lg:mt-0">
             {allNavigationItems.map((item) => {
               const isActive = currentSection === item.id;
               return (
                 <Link
                   key={item.id}
                   to={item.path}
-                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg ${isActive
-                    ? "bg-blue-50  text-blue-700  border-l-4 border-blue-500 accent-border tab-active"
-                    : "text-gray-700  hover:bg-gray-50 "
-                    } ${transitionClasses}`}
+                  className={`flex items-center text-sm font-medium rounded-lg whitespace-nowrap overflow-hidden transition-all duration-200 ${
+                    isActive
+                      ? `bg-blue-50 text-blue-700 ${isHovered ? "border-l-4 border-blue-500" : ""}`
+                      : "text-gray-700 hover:bg-gray-50"
+                  } ${isHovered ? "p-3" : "py-3 px-0 justify-center"}`}
                   onClick={() => setMobileMenuOpen(false)}>
-                  <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                  <span className="truncate">{item.label}</span>
+                  <div className="flex items-center justify-center w-6 h-6 flex-shrink-0">
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <span
+                    className={`ml-3 transition-opacity duration-300 ${
+                      isHovered || mobileMenuOpen ? "opacity-100" : "opacity-0 w-0"
+                    }`}>
+                    {item.label}
+                  </span>
                 </Link>
               );
             })}
@@ -159,7 +156,7 @@ const SettingsLayout: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0 bg-transparent">
+      <div className="flex-1 min-w-0 bg-transparent transition-all duration-300">
         <div className="p-4 sm:p-6 lg:p-8">
           <Outlet />
         </div>

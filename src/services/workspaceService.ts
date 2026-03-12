@@ -1,5 +1,14 @@
 import { apiClient } from "./apiClient";
 
+export interface Project {
+  id: string;
+  workspace_id?: string;
+  title: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface WorkspaceMember {
   id: string;
   user_id: string;
@@ -22,6 +31,7 @@ export interface Workspace {
   updated_at: string;
   role?: string; // Current user's role
   members?: WorkspaceMember[];
+  projects?: Project[];
   _count?: {
     projects: number;
     members: number;

@@ -136,6 +136,7 @@ export default function CustomFieldsSection({
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       className={cn(
                         "w-full h-9 justify-start text-left font-normal text-sm bg-muted/30 border-transparent hover:border-border",

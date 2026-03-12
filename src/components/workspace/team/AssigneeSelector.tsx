@@ -65,6 +65,7 @@ export function AssigneeSelector({
             </span>
             {!disabled && (
               <button
+                type="button"
                 onClick={() => toggleMember(member.id)}
                 className="ml-1 hover:text-teal-900 rounded-full hover:bg-teal-200 transition-colors">
                 <X className="h-2.5 w-2.5" />

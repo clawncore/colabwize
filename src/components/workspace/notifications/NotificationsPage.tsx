@@ -65,6 +65,7 @@ const NotificationsPage: React.FC = () => {
         else if (filter !== "all") filters.priority = filter;
 
         if (searchQuery) filters.search = searchQuery;
+        if (workspaceId) filters.workspaceId = workspaceId;
 
         const currentOffset = isLoadMore ? notifications.length : 0;
         const result = await NotificationService.getNotifications(

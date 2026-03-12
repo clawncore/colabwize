@@ -61,6 +61,7 @@ import { formatContentForTiptap } from "../../utils/editorUtils";
 import { GrammarExtension } from "../../extensions/GrammarExtension";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
+import Link from "@tiptap/extension-link";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 import { useAuth } from "../../hooks/useAuth";
@@ -388,6 +389,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         UserHighlightExtension,
         CharacterCount,
         MathExtension,
+        Link.configure({
+          openOnClick: false,
+          HTMLAttributes: {
+            class: "editor-link",
+          },
+        }),
         Table.configure({
           resizable: true,
         }),
@@ -1153,7 +1160,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => setIsSynced(true)} // Fallback to local-only (dangerous but allows viewing)
+                onClick={() => {
+                  setIsSynced(true);
+                  setCollabStatus("offline");
+                }} // Fallback to local-only (dangerous but allows viewing)
               >
                 Work Offline
               </Button>

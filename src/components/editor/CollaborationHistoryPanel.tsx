@@ -134,13 +134,42 @@ export const CollaborationHistoryPanel: React.FC<
   }, [editor, refreshHistory]);
 
   const jumpToEdit = (from: number, to: number) => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
+    
+    // First safely set the selection to highlight the text
     editor
       .chain()
       .focus()
       .setTextSelection({ from, to })
-      .scrollIntoView()
       .run();
+
+    // Use a custom smooth scrolling mechanism targeting our document container
+    setTimeout(() => {
+      try {
+        const coords = editor.view.coordsAtPos(from);
+        const scrollContainer = editor.view.dom.closest('.overflow-auto');
+        
+        if (scrollContainer) {
+          const containerRect = scrollContainer.getBoundingClientRect();
+          // Calculate target scroll position to bring the text to the vertical center
+          const targetScrollTop = 
+            scrollContainer.scrollTop + 
+            (coords.top - containerRect.top) - 
+            (containerRect.height / 2);
+            
+          scrollContainer.scrollTo({
+            top: targetScrollTop,
+            behavior: "smooth"
+          });
+        } else {
+          // Fallback
+          editor.commands.scrollIntoView();
+        }
+      } catch (err) {
+        console.error("Scroll to edit failed:", err);
+        editor.commands.scrollIntoView();
+      }
+    }, 50);
   };
 
   const filteredGroups = editGroups.filter(

@@ -36,13 +36,18 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useUser();
-  const { activeTimer, elapsedTime, startTimer, stopTimer: globalStopTimer } = useTimeTracking();
+  const {
+    activeTimer,
+    elapsedTime,
+    startTimer,
+    stopTimer: globalStopTimer,
+  } = useTimeTracking();
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 
   // Manual entry form
   const [manualDate, setManualDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [manualDuration, setManualDuration] = useState("");
   const [manualDescription, setManualDescription] = useState("");
@@ -117,7 +122,8 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
 
   const handleDeleteEntry = async (entryId: string) => {
     // eslint-disable-next-line no-restricted-globals
-    if (!window.confirm("Are you sure you want to delete this time entry?")) return;
+    if (!window.confirm("Are you sure you want to delete this time entry?"))
+      return;
     try {
       await timeTrackingService.deleteTimeEntry(entryId);
       fetchTimeData();
@@ -142,7 +148,7 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
 
   const totalMinutes = entries.reduce(
     (acc, curr) => acc + (curr.duration || 0),
-    0
+    0,
   );
   const totalHours = (totalMinutes / 60).toFixed(1);
 
@@ -156,14 +162,13 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
           </span>
         </Label>
 
-        {canEdit && (
-          isCurrentTaskActive ? (
+        {canEdit &&
+          (isCurrentTaskActive ? (
             <Button
               size="sm"
               variant="destructive"
               onClick={handleStopTimer}
-              className="h-7 text-xs bg-red-100 text-red-600 hover:bg-red-200 border-red-200 border shadow-none animate-pulse"
-            >
+              className="h-7 text-xs bg-red-100 text-red-600 hover:bg-red-200 border-red-200 border shadow-none animate-pulse">
               <Square className="h-3 w-3 mr-1.5 fill-current" />
               Stop ({formatDuration(elapsedTime)})
             </Button>
@@ -173,21 +178,18 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
               variant="outline"
               onClick={handleStartTimer}
               disabled={!!activeTimer}
-              className="h-7 text-xs border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
-            >
+              className="h-7 text-xs border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800">
               <Play className="h-3 w-3 mr-1.5 fill-current" />
               Start Timer
             </Button>
-          )
-        )}
+          ))}
       </div>
 
       <div className="space-y-2">
         {entries.slice(0, 3).map((entry) => (
           <div
             key={entry.id}
-            className="flex items-center justify-between text-xs bg-muted/30 p-2 rounded-md border border-border/50 group"
-          >
+            className="flex items-center justify-between text-xs bg-muted/30 p-2 rounded-md border border-border/50 group">
             <div className="flex items-center gap-2">
               <div className="w-8 text-center font-mono text-muted-foreground">
                 {format(new Date(entry.start_time), "MMM d")}
@@ -204,9 +206,9 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
             </div>
             {user?.id === entry.user_id && canEdit && (
               <button
+                type="button"
                 onClick={() => handleDeleteEntry(entry.id)}
-                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-opacity"
-              >
+                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-opacity">
                 <Trash2 className="h-3 w-3" />
               </button>
             )}
@@ -219,27 +221,30 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
           <DialogTrigger asChild>
             <div className="flex justify-start">
               {entries.length === 0 && !activeTimer ? (
-                <button className="text-[10px] text-muted-foreground italic pl-1 hover:underline hover:text-primary">
+                <button 
+                  type="button"
+                  className="text-[10px] text-muted-foreground italic pl-1 hover:underline hover:text-primary">
                   No time tracked yet. Log manual time
                 </button>
               ) : (
                 <Button
                   variant="link"
-                  className="h-auto p-0 text-[10px] text-muted-foreground hover:text-primary"
-                >
+                  className="h-auto p-0 text-[10px] text-muted-foreground hover:text-primary">
                   View all entries / Log manual time
                 </Button>
               )}
             </div>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] bg-white">
             <DialogHeader>
               <DialogTitle>Time Entries</DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4">
               <div className="p-4 bg-muted rounded-lg space-y-3">
-                <Label className="text-xs font-semibold">Log Manual Entry</Label>
+                <Label className="text-xs font-semibold">
+                  Log Manual Entry
+                </Label>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-[10px] text-muted-foreground">
@@ -274,8 +279,7 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
                 <Button
                   onClick={handleLogTime}
                   size="sm"
-                  className="w-full h-8 text-xs"
-                >
+                  className="w-full h-8 text-xs">
                   Log Time
                 </Button>
               </div>
@@ -301,11 +305,12 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
                   {entries.map((entry) => (
                     <div
                       key={entry.id}
-                      className="flex items-center justify-between text-sm p-2 rounded hover:bg-muted/50 border border-transparent hover:border-border transition-colors group"
-                    >
+                      className="flex items-center justify-between text-sm p-2 rounded hover:bg-muted/50 border border-transparent hover:border-border transition-colors group">
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold">{entry.duration}m</span>
+                          <span className="font-semibold">
+                            {entry.duration}m
+                          </span>
                           <span className="text-muted-foreground text-xs">
                             {format(new Date(entry.start_time), "PP p")}
                           </span>
@@ -322,9 +327,9 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
                         </span>
                         {user?.id === entry.user_id && (
                           <button
+                            type="button"
                             onClick={() => handleDeleteEntry(entry.id)}
-                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-opacity"
-                          >
+                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-opacity">
                             <Trash2 className="h-3 w-3" />
                           </button>
                         )}

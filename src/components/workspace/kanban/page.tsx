@@ -1113,9 +1113,13 @@ export function KanbanBoard() {
           setSelectedTask(null);
         }}
         onUpdate={(updatedTask) => {
-          setTasks((prev) =>
-            prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)),
-          );
+          setTasks((prev) => {
+            const exists = prev.some((t) => t.id === updatedTask.id);
+            if (exists) {
+              return prev.map((t) => (t.id === updatedTask.id ? updatedTask : t));
+            }
+            return [updatedTask, ...prev];
+          });
           loadTasks();
         }}
         onDelete={handleDeleteTask}

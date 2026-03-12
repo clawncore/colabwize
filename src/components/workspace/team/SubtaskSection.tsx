@@ -98,6 +98,7 @@ export const SubtaskSection: React.FC<SubtaskSectionProps> = ({
               className="group flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors"
             >
               <button
+                type="button"
                 onClick={() => handleToggleSubtask(subtask.id, subtask.is_done)}
                 className="text-slate-400 hover:text-indigo-500 transition-colors"
               >
@@ -117,6 +118,7 @@ export const SubtaskSection: React.FC<SubtaskSectionProps> = ({
               </span>
               {canEdit && (
                 <button
+                  type="button"
                   onClick={() => handleDeleteSubtask(subtask.id)}
                   className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all p-1"
                 >

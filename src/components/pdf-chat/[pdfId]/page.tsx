@@ -14,6 +14,10 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ResearchChatSidebar } from "../../research/ResearchChatSidebar";
 import { ResearchService } from "../../../services/researchService";
 import { supabase } from "../../../lib/supabase/client";
+import { apiClient } from "../../../services/apiClient";
+import ConfigService from "../../../services/ConfigService";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function PdfChatViewerPage() {
   const { pdfId } = useParams();
@@ -95,34 +99,34 @@ export default function PdfChatViewerPage() {
 
         // Fetch Metadata based on source type
         if (sourceType === "pdf") {
-          const res = await fetch(`/api/pdf/${pdfId}`, { headers });
-          if (res.ok) {
-            const data = await res.json();
+          try {
+            const data = await apiClient.get(`/api/pdf/${pdfId}`);
             setPdfData(data);
-          } else {
-            console.error("Failed to fetch PDF data");
+          } catch (err) {
+            console.error("Failed to fetch PDF data:", err);
           }
         } else {
           // For projects, fetch from documents API
-          const res = await fetch(`/api/documents/${pdfId}`, { headers });
-          if (res.ok) {
-            const data = await res.json();
-            const projectData = data.data;
+          try {
+            const data = await apiClient.get(`/api/documents/${pdfId}`);
+            // apiClient usually returns the nested data if it follows the { success, data } pattern,
+            // but let's be robust based on what we saw in documentService
+            const projectData = data.data || data;
             setPdfData(projectData);
 
             // Store raw Tiptap JSON for structured rendering
             if (projectData?.content) {
               setProjectContent(projectData.content);
             }
-          } else {
-            console.error("Failed to fetch project data");
+          } catch (err) {
+            console.error("Failed to fetch project data:", err);
           }
         }
 
         // Fetch PDF Blob for Viewer (only for PDFs, not projects)
         if (sourceType === "pdf") {
           try {
-            const blobRes = await fetch(`/api/pdf/${pdfId}/download`, {
+            const blobRes = await fetch(`${ConfigService.getApiUrl()}/api/pdf/${pdfId}/download`, {
               headers,
             });
             if (blobRes.ok) {
@@ -201,15 +205,8 @@ export default function PdfChatViewerPage() {
             return;
           }
 
-          const res = await fetch(`/api/pdf/${pdfId}/related`, {
-            headers: {
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setRelatedPapers(data);
-          }
+          const data = await apiClient.get(`/api/pdf/${pdfId}/related`);
+          setRelatedPapers(data.data || data);
         } catch (err) {
           console.error("Error fetching related papers:", err);
         } finally {
@@ -325,8 +322,11 @@ export default function PdfChatViewerPage() {
         );
       case "horizontalRule":
         return <hr key={key} className="border-border my-4" />;
+      case "hardBreak":
+        return <br key={key} />;
       default:
-        return <div key={key}>{children}</div>;
+        // Use span instead of div for unknown nodes to avoid validateDOMNesting (div inside p)
+        return <span key={key}>{children}</span>;
     }
   };
 
@@ -555,8 +555,8 @@ export default function PdfChatViewerPage() {
           )}
 
           {activeTab === "summary" && (
-            <div className="w-full h-full overflow-y-auto p-8 flex justify-center">
-              <div className="w-full max-w-3xl bg-card rounded-2xl p-8 shadow-sm border border-border min-h-[500px]">
+            <div className="w-full h-full overflow-y-auto p-8 flex justify-center bg-muted/20">
+              <div className="w-full max-w-3xl bg-card h-fit rounded-2xl p-8 shadow-sm border border-border min-h-fit self-start mb-8">
                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
                   <Sparkles className="w-6 h-6 text-purple-500" />
                   <h2 className="text-xl font-bold text-foreground">
@@ -572,8 +572,10 @@ export default function PdfChatViewerPage() {
                     <div className="h-4 bg-muted rounded w-2/3"></div>
                   </div>
                 ) : summary ? (
-                  <div className="prose prose-blue dark:prose-invert max-w-none text-foreground leading-relaxed whitespace-pre-wrap">
-                    {summary}
+                  <div className="prose prose-blue dark:prose-invert max-w-none text-foreground leading-relaxed">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {summary}
+                    </ReactMarkdown>
                   </div>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
