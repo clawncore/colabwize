@@ -872,8 +872,8 @@ const EditorWorkspacePage: React.FC = () => {
                   setIsLeftSidebarOpen(true);
                 }}
                 className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "documents"
-                    ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                   }`}
                 title={!isNavRailExpanded ? "My Documents" : ""}>
                 <FileText
@@ -890,8 +890,8 @@ const EditorWorkspacePage: React.FC = () => {
                   setIsLeftSidebarOpen(true);
                 }}
                 className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "sources"
-                    ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                   }`}
                 title={!isNavRailExpanded ? "Source Library" : ""}>
                 <BookOpen
@@ -946,8 +946,8 @@ const EditorWorkspacePage: React.FC = () => {
                   setIsLeftSidebarOpen(true);
                 }}
                 className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "outline"
-                    ? "bg-[#F59E0B]/10 text-[#D97706] border border-[#F59E0B]/20"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  ? "bg-[#F59E0B]/10 text-[#D97706] border border-[#F59E0B]/20"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                   }`}
                 title={!isNavRailExpanded ? "Outline" : ""}>
                 <PenTool
@@ -963,8 +963,8 @@ const EditorWorkspacePage: React.FC = () => {
                   setIsRightSidebarOpen(true);
                 }}
                 className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activePanelType === "add-citation"
-                    ? "bg-blue-100 text-blue-600 border border-blue-200"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  ? "bg-blue-100 text-blue-600 border border-blue-200"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                   }`}
                 title={!isNavRailExpanded ? "Add Citation" : ""}>
                 <PlusSquare
@@ -981,10 +981,10 @@ const EditorWorkspacePage: React.FC = () => {
                   setIsLeftSidebarOpen(true);
                 }}
                 className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "visual-map"
-                    ? "bg-amber-100 text-amber-600 border border-amber-200"
-                    : userPlan === "Free Plan"
-                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  ? "bg-amber-100 text-amber-600 border border-amber-200"
+                  : userPlan === "Free Plan"
+                    ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                   }`}
                 title={
                   userPlan === "Free Plan"
@@ -1014,10 +1014,10 @@ const EditorWorkspacePage: React.FC = () => {
                   setIsLeftSidebarOpen(true);
                 }}
                 className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "research-assistant"
-                    ? "bg-purple-100 text-purple-600 border border-purple-200"
-                    : userPlan === "Free Plan"
-                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  ? "bg-purple-100 text-purple-600 border border-purple-200"
+                  : userPlan === "Free Plan"
+                    ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                   }`}
                 title={
                   userPlan === "Free Plan"
@@ -1047,10 +1047,10 @@ const EditorWorkspacePage: React.FC = () => {
                   setIsLeftSidebarOpen(true);
                 }}
                 className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "research-gaps"
-                    ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
-                    : userPlan !== "Premium"
-                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
+                  : userPlan !== "Premium"
+                    ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                   }`}
                 title={
                   userPlan !== "Premium"
@@ -1080,10 +1080,10 @@ const EditorWorkspacePage: React.FC = () => {
                   setIsLeftSidebarOpen(true);
                 }}
                 className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "search-alerts"
-                    ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
-                    : userPlan !== "Premium"
-                      ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                  : userPlan !== "Premium"
+                    ? "opacity-50 cursor-not-allowed text-gray-400 grayscale"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                   }`}
                 title={
                   userPlan !== "Premium"
@@ -1116,12 +1116,12 @@ const EditorWorkspacePage: React.FC = () => {
                 <button
                   data-tour="collaboration-history"
                   onClick={() => {
-                    setActivePanelType("collaboration-hisktory");
+                    setActivePanelType("collaboration-history");
                     setIsRightSidebarOpen(true);
                   }}
                   className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activePanelType === "collaboration-history"
-                      ? "bg-blue-100 text-blue-600 border border-blue-200"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                    ? "bg-blue-100 text-blue-600 border border-blue-200"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
                     }`}
                   title={!isNavRailExpanded ? "Edit History" : ""}>
                   <History
