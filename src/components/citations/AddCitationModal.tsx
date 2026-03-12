@@ -322,9 +322,9 @@ const AddCitationModal: React.FC<AddCitationModalProps> = ({
     );
 
     return (
-      <div className="flex flex-col h-full bg-[#f9fafb]">
-        {/* Main Tabs - Pill Style */}
-        <div className="px-4 py-4">
+      <div className="flex flex-col h-full bg-[#f9fafb] min-w-0">
+        {/* Main Tabs - Pill Style - Add right padding to avoid close button overlap */}
+        <div className="px-4 pr-12 py-4">
           <div className="flex bg-gray-100 p-1 rounded-xl">
             <button
               onClick={() => setMainTab("library")}

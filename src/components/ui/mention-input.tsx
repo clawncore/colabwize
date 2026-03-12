@@ -74,8 +74,8 @@ export function MentionInput({
         const beforeMention = value.slice(0, mentionStart);
         const afterMention = value.slice(cursorPosition);
 
-        // Markdown-style mention: @[Name](UserId)
-        const mentionText = `@[${user.name}](${user.id}) `;
+        // Markdown-style mention: @[Name] (ID will be resolved on submit by parent)
+        const mentionText = `@[${user.name}] `;
         const newValue = beforeMention + mentionText + afterMention;
 
         onChange(newValue);

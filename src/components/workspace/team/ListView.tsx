@@ -17,6 +17,8 @@ interface ListViewProps {
   onTaskClick: (task: WorkspaceTask) => void;
   selectedTaskIds: string[];
   onToggleSelection: (id: string, selected: boolean) => void;
+  onSelectAll: (selected: boolean) => void;
+  allSelected: boolean;
 }
 
 export function ListView({
@@ -24,6 +26,8 @@ export function ListView({
   onTaskClick,
   selectedTaskIds,
   onToggleSelection,
+  onSelectAll,
+  allSelected,
 }: ListViewProps) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -31,7 +35,19 @@ export function ListView({
         <thead>
           <tr className="bg-slate-50/50 border-bottom border-slate-100">
             <th className="w-12 p-4">
-              <div className="w-4 h-4 rounded border border-slate-300" />
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectAll(!allSelected);
+                }}
+                className={`w-4 h-4 rounded border flex items-center justify-center transition-all cursor-pointer ${
+                  allSelected
+                    ? "bg-teal-500 border-teal-500 text-white"
+                    : "bg-white border-slate-300 hover:border-teal-400"
+                }`}
+              >
+                {allSelected && <CheckSquare className="w-3 h-3" />}
+              </div>
             </th>
             <th className="text-left py-4 px-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
               Task

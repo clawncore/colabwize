@@ -42,6 +42,7 @@ import { DependencySection } from "./DependencySection";
 import RecurrencePatternPicker from "./RecurrencePatternPicker";
 import { TimeTracker } from "./TimeTracker";
 import CustomFieldsSection from "../CustomFieldsSection";
+import workspaceService from "../../../services/workspaceService";
 import { useWorkspacePermissions } from "../../../hooks/useWorkspacePermissions";
 
 interface User {
@@ -136,12 +137,7 @@ export function TaskDetailsModal({
   // Fetch workspace projects for project linking
   React.useEffect(() => {
     if (isOpen && workspaceId) {
-      fetch(`/api/workspaces/${workspaceId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-        },
-      })
-        .then((res) => res.json())
+      workspaceService.getWorkspace(workspaceId)
         .then((workspace) => {
           setWorkspaceProjects(workspace.projects || []);
         })
@@ -211,6 +207,8 @@ export function TaskDetailsModal({
             <div className="flex-1 space-y-1">
               <Input
                 readOnly={!canEdit}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 className={cn(
                   "text-xl font-bold bg-transparent border-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-auto",
                   !canEdit && "cursor-default"
@@ -430,6 +428,7 @@ export function TaskDetailsModal({
           <div className="flex gap-2">
             {canEdit && (
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 onClick={handleDelete}
@@ -441,6 +440,7 @@ export function TaskDetailsModal({
 
             {canEdit && (
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 onClick={async () => {
@@ -476,6 +476,7 @@ export function TaskDetailsModal({
             </Button>
             {canEdit && (
               <Button
+                type="button"
                 size="sm"
                 onClick={handleSave}
                 disabled={isSaving}

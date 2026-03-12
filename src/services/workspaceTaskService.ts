@@ -294,6 +294,12 @@ class WorkspaceTaskService {
     );
   }
 
+  async downloadAttachment(attachmentId: string): Promise<Blob> {
+    return await apiClient.getBlob(
+      `/api/workspaces/tasks/attachments/${attachmentId}/download`,
+    );
+  }
+
   async cloneTask(taskId: string) {
     const response = await apiClient.post(
       `/api/workspaces/tasks/${taskId}/clone`,

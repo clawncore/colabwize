@@ -27,9 +27,11 @@ import {
 const SubscriptionStatus = ({
   subscription,
   plan,
+  onUpdate,
 }: {
   subscription: Subscription;
   plan: Plan | null;
+  onUpdate?: () => void;
 }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -41,7 +43,7 @@ const SubscriptionStatus = ({
       await SubscriptionService.cancelSubscription(
         "User requested cancellation"
       );
-      window.location.reload();
+      onUpdate?.();
       toast({
         title: "Subscription Canceled",
         description:
@@ -65,7 +67,7 @@ const SubscriptionStatus = ({
     setLoading(true);
     try {
       await SubscriptionService.reactivateSubscription();
-      window.location.reload();
+      onUpdate?.();
     } catch (error) {
       console.error("Reactivate error:", error);
     } finally {
@@ -673,7 +675,7 @@ export default function BillingPage() {
         <p className="text-gray-500">Manage your subscription plan and billing history.</p>
       </div>
 
-      <SubscriptionStatus subscription={data.subscription} plan={activePlan} />
+      <SubscriptionStatus subscription={data.subscription} plan={activePlan} onUpdate={loadData} />
 
       <UsageChart usage={data.usage} limits={data.limits} />
 

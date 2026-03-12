@@ -5,6 +5,9 @@ import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "../../lib/utils";
 import { WorkspaceMember } from "../../services/workspaceService";
+import { PlanRestrictionCover } from "../subscription/PlanRestrictionCover";
+import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
+import { Lock } from "lucide-react";
 
 interface EditGroup {
   authorId: string;
@@ -32,6 +35,8 @@ export const CollaborationHistoryPanel: React.FC<
     string | null
   >(null);
   const [presenceIds, setPresenceIds] = useState<string[]>([]);
+  const { plan: userPlan } = useSubscriptionStore();
+  const isPlus = userPlan === "Plus" || userPlan === "Premium";
 
   const getUserColor = (userId: string) => {
     const colors = [
@@ -180,7 +185,14 @@ export const CollaborationHistoryPanel: React.FC<
   );
 
   return (
-    <div className="h-full flex flex-col bg-white border-l shadow-xl animate-in slide-in-from-right duration-300">
+    <div className="h-full flex flex-col bg-white border-l shadow-xl animate-in slide-in-from-right duration-300 relative">
+      {!isPlus && (
+        <PlanRestrictionCover
+          requiredPlan="Plus"
+          featureName="Collaboration Log"
+          featureDescription="Track every edit, authorship change, and teammate contribution in real-time."
+        />
+      )}
       {/* Header */}
       <div className="px-4 py-4 border-b bg-slate-50 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">

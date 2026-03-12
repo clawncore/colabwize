@@ -73,6 +73,7 @@ interface ProjectCardsProps {
   onProjectSelect?: (projectId: string) => void; // For batch export
   isPremiumPlan?: boolean; // For batch export
   currentUserId?: string; // Correct property name
+  onRefresh?: () => void;
 }
 
 export default function ProjectCards({
@@ -84,7 +85,8 @@ export default function ProjectCards({
   onProjectSelect, // For batch export
   isPremiumPlan = false, // Restored prop
   currentUserId,
-}: Omit<ProjectCardsProps, "onViewModeChange"> & { currentUserId?: string }) {
+  onRefresh,
+}: Omit<ProjectCardsProps, "onViewModeChange"> & { currentUserId?: string, onRefresh?: () => void }) {
   const navigate = useNavigate();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [sortBy] = useState<"lastUpdated" | "name" | "dueDate" | "progress">(
@@ -290,7 +292,7 @@ export default function ProjectCards({
         <div className="mt-6">
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={() => onRefresh ? onRefresh() : window.location.reload()}
             className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <svg
               className="-ml-1 mr-2 h-5 w-5"

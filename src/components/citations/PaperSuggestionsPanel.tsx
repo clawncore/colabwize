@@ -49,8 +49,9 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
     creditBalance,
     fetchSubscription,
   } = useSubscriptionStore();
-  // const { user } = useAuth(); // Unused
 
+  const planName = plan?.toLowerCase() || "free";
+  const isFree = planName.includes("free");
   const [suggestedPapers, setSuggestedPapers] =
     useState<SuggestedPaper[]>(initialSuggestions);
   const [searchQuery, setSearchQuery] = useState("");
@@ -148,7 +149,6 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
       // Check Limits BEFORE searching (Client-side pre-check)
       const limit = planLimits?.paper_search ?? 25;
       const used = planUsage?.paper_search ?? 0;
-      const isFree = plan?.toLowerCase().includes("free");
 
       // If free plan and limit reached/exceeded, and NOT forcing
       if (isFree && used >= limit && !force) {
@@ -313,15 +313,22 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
                       <div className="flex items-center gap-2 mb-2">
                         {/* Credibility Badge */}
                         {credibilityScores.has(paper.title) && (
-                          <CredibilityBadge
-                            level={
-                              credibilityScores.get(paper.title)?.level ||
-                              "medium"
-                            }
-                            score={credibilityScores.get(paper.title)?.score}
-                            flags={credibilityScores.get(paper.title)?.flags}
-                            size="sm"
-                          />
+                          <div className="flex items-center gap-1.5">
+                            <CredibilityBadge
+                              level={
+                                credibilityScores.get(paper.title)?.level ||
+                                "medium"
+                              }
+                              score={credibilityScores.get(paper.title)?.score}
+                              flags={credibilityScores.get(paper.title)?.flags}
+                              size="sm"
+                            />
+                            {isFree && (
+                              <span className="text-[10px] bg-blue-50 text-blue-600 px-1 py-0.5 rounded font-bold uppercase tracking-wider">
+                                Plus
+                              </span>
+                            )}
+                          </div>
                         )}
 
                         {/* Peer Review Badge */}

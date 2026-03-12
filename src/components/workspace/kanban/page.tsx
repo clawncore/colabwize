@@ -18,6 +18,7 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 import { SortableTask } from "../team/SortableTask";
 import { TaskDetailsModal } from "../team/TaskDetailsModal";
+import TemplateGallery from "../templates/TemplateGallery";
 import { BulkActionToolbar } from "../team/BulkActionToolbar";
 import { ListView } from "../team/ListView";
 import { CalendarView } from "../team/CalendarView";
@@ -67,7 +68,6 @@ import {
 import { KeyboardShortcutsHelper } from "./KeyboardShortcutsHelper";
 import { useRecentTasks } from "../../../hooks/useRecentTasks";
 import { RecentTasksDropdown } from "../RecentTasksDropdown";
-import TaskTemplateCards from "../tasks/TaskTemplateCards";
 import {
   Dialog,
   DialogContent,
@@ -78,6 +78,7 @@ import {
 import { Library } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useWorkspacePermissions } from "../../../hooks/useWorkspacePermissions";
+import { useAuth } from "../../../hooks/useAuth";
 import { useToast } from "../../../hooks/use-toast";
 
 const COLUMNS = [
@@ -89,6 +90,8 @@ const COLUMNS = [
 
 export function KanbanBoard() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const userId = user?.id;
   const { id: workspaceId } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [workspaceName, setWorkspaceName] = useState<string>("");
@@ -146,8 +149,6 @@ export function KanbanBoard() {
 
   // Task Template States
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  const [templates, setTemplates] = useState<WorkspaceTask[]>([]);
-  const [templatesLoading, setTemplatesLoading] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -258,6 +259,26 @@ export function KanbanBoard() {
     }
   };
 
+  // Handle deep-linking to a specific task via taskId query param
+  useEffect(() => {
+    const taskId = searchParams.get("taskId");
+    if (taskId && tasks.length > 0) {
+      const task = tasks.find((t) => t.id === taskId);
+      if (task) {
+        setSelectedTask(task);
+        setIsModalOpen(true);
+        // Clear the param after opening to avoid re-opening if the user closes it
+        setSearchParams(
+          (prev) => {
+            prev.delete("taskId");
+            return prev;
+          },
+          { replace: true },
+        );
+      }
+    }
+  }, [searchParams, tasks, setSearchParams]);
+
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
       const matchesSearch =
@@ -298,7 +319,11 @@ export function KanbanBoard() {
       const matchesProject =
         projectFilter === "all" || task.project_id === projectFilter;
 
+      const isParentRecurring =
+        task.is_recurring && !task.parent_recurring_task_id;
+
       return (
+        !isParentRecurring &&
         matchesSearch &&
         matchesPriority &&
         matchesAssignee &&
@@ -589,31 +614,53 @@ export function KanbanBoard() {
     );
   };
 
-  const handleOpenLibrary = async () => {
-    setIsLibraryOpen(true);
-    setTemplatesLoading(true);
-    try {
-      const data = await WorkspaceTaskService.getTemplates(workspaceId);
-      setTemplates(data);
-    } catch (err) {
-      console.error("Failed to load templates:", err);
-    } finally {
-      setTemplatesLoading(false);
+  const handleSelectAll = (selected: boolean) => {
+    if (selected) {
+      setSelectedTaskIds(filteredTasks.map((t) => t.id));
+    } else {
+      setSelectedTaskIds([]);
     }
   };
 
   const handleCreateFromTemplate = async (template: any) => {
     try {
-      const newTask = await WorkspaceTaskService.createFromTemplate(
-        template.id,
-      );
-      setTasks((prev) => {
-        if (prev.some((t) => t.id === newTask.id)) return prev;
-        return [newTask, ...prev];
-      });
+      let newTask;
+      if (template.is_task_template) {
+        newTask = await WorkspaceTaskService.createFromTemplate(
+          template.id,
+          userId as string,
+        );
+      } else {
+        // Create a regular task from a document template
+        newTask = await WorkspaceTaskService.createTask(workspaceId, {
+          title: template.name || template.title,
+          description:
+            typeof template.content === "string"
+              ? template.content
+              : JSON.stringify(template.content),
+          status: "todo",
+          priority: "medium",
+        });
+      }
+
+      if (newTask) {
+        setTasks((prev) => {
+          if (prev.some((t) => t.id === newTask!.id)) return prev;
+          return [newTask!, ...prev];
+        });
+        toast({
+          title: "Task Created",
+          description: `Created task from template: ${template.name || template.title}`,
+        });
+      }
       setIsLibraryOpen(false);
     } catch (err) {
       console.error("Failed to create task from template:", err);
+      toast({
+        title: "Error",
+        description: "Failed to create task from template.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -1085,6 +1132,11 @@ export function KanbanBoard() {
           onTaskClick={handleTaskClick}
           selectedTaskIds={selectedTaskIds}
           onToggleSelection={handleToggleSelection}
+          onSelectAll={handleSelectAll}
+          allSelected={
+            filteredTasks.length > 0 &&
+            filteredTasks.every((t) => selectedTaskIds.includes(t.id))
+          }
         />
       )}
 
@@ -1113,14 +1165,16 @@ export function KanbanBoard() {
           setSelectedTask(null);
         }}
         onUpdate={(updatedTask) => {
+          setSelectedTask(updatedTask); // Ensure the modal sees the latest data immediately
           setTasks((prev) => {
             const exists = prev.some((t) => t.id === updatedTask.id);
             if (exists) {
-              return prev.map((t) => (t.id === updatedTask.id ? updatedTask : t));
+              return prev.map((t) =>
+                t.id === updatedTask.id ? updatedTask : t,
+              );
             }
             return [updatedTask, ...prev];
           });
-          loadTasks();
         }}
         onDelete={handleDeleteTask}
         workspaceId={workspaceId}
@@ -1149,10 +1203,10 @@ export function KanbanBoard() {
           </DialogHeader>
 
           <div className="py-4">
-            <TaskTemplateCards
-              templates={templates as any}
+            <TemplateGallery
+              workspaceId={workspaceId}
               onSelect={handleCreateFromTemplate}
-              isLoading={templatesLoading}
+              isSelectionMode={true}
             />
           </div>
         </DialogContent>

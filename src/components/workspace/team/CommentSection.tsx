@@ -70,9 +70,15 @@ export function CommentSection({ taskId, workspaceId, currentUserId, canEdit = t
 
     setSubmitting(true);
     try {
+      // Resolve @[Name] mentions to @[Name](UserId) using our members list
+      const resolvedContent = newComment.replace(/@\[([^\]]+)\](?!\()/g, (match, name) => {
+        const member = members.find(m => m.name === name);
+        return member ? `@[${name}](${member.id})` : match;
+      });
+
       const data = await apiClient.post("/api/workspaces/tasks/comments", {
         taskId,
-        content: newComment,
+        content: resolvedContent,
       });
       setComments((prev) => [...prev, data.comment]);
       setNewComment("");
@@ -157,7 +163,7 @@ export function CommentSection({ taskId, workspaceId, currentUserId, canEdit = t
                     )}
                   </div>
                   <div className="text-sm text-slate-600 bg-slate-50 border border-slate-100/50 rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm inline-block max-w-full break-words">
-                    {comment.content}
+                    {renderCommentContent(comment.content)}
                   </div>
                 </div>
               </div>
@@ -205,7 +211,51 @@ export function CommentSection({ taskId, workspaceId, currentUserId, canEdit = t
         </div>
       )}
     </div>
-  );
+    );
+}
+
+// Helper to render comments with clickable mentions
+function renderCommentContent(content: string) {
+  if (!content) return "";
+
+  const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
+  const matches = Array.from(content.matchAll(mentionRegex));
+
+  if (matches.length === 0) return content;
+
+  const parts = [];
+  let lastIndex = 0;
+
+  matches.forEach((match, i) => {
+    const fullMatch = match[0];
+    const name = match[1];
+    // const id = match[2]; // We can use the ID for links if needed later
+    const startIndex = match.index || 0;
+
+    // Add text before the mention
+    if (startIndex > lastIndex) {
+      parts.push(content.substring(lastIndex, startIndex));
+    }
+
+    // Add mention badge
+    parts.push(
+      <span
+        key={`mention-${i}`}
+        className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-700 text-[12px] font-bold border border-teal-100/50 mx-0.5"
+      >
+        @{name}
+      </span>
+    );
+
+    lastIndex = startIndex + fullMatch.length;
+  });
+
+  // Add remaining text
+  if (lastIndex < content.length) {
+    parts.push(content.substring(lastIndex));
+  }
+
+  return parts;
 }
 
 // Helper to convert DB member to MentionUser

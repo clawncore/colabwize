@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -79,9 +80,9 @@ export default function MiniEditor({
   placeholder,
   readOnly = false,
 }: MiniEditorProps) {
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
+  const extensions = React.useMemo(
+    () => [
+      StarterKit.configure(),
       Placeholder.configure({
         placeholder: placeholder || "Add a detailed description...",
       }),
@@ -89,6 +90,11 @@ export default function MiniEditor({
         openOnClick: false,
       }),
     ],
+    [placeholder],
+  );
+
+  const editor = useEditor({
+    extensions,
     content: value,
     editable: !readOnly,
     onUpdate: ({ editor }) => {

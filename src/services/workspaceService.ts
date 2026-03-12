@@ -38,6 +38,27 @@ export interface Workspace {
   };
 }
 
+export interface WorkspaceOverviewData {
+  stats: {
+    projects: {
+      active: number;
+      completed: number;
+      total: number;
+    };
+    tasks: {
+      todo: number;
+      in_progress: number;
+      done: number;
+      total: number;
+    };
+    members: number;
+  };
+  myTasks: any[];
+  recentActivity: any[];
+  projectStats?: any[];
+  recentProjects: any[];
+}
+
 class WorkspaceService {
   /**
    * Get all workspaces for the current user
@@ -275,6 +296,23 @@ class WorkspaceService {
       );
     } catch (error) {
       console.error("Failed to revoke invitation:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get workspace overview data
+   */
+  async getWorkspaceOverview(
+    workspaceId: string,
+  ): Promise<WorkspaceOverviewData> {
+    try {
+      const response = await apiClient.get(
+        `/api/workspaces/${workspaceId}/overview`,
+      );
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch workspace overview:", error);
       throw error;
     }
   }

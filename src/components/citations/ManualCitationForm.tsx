@@ -207,41 +207,41 @@ export const ManualCitationForm: React.FC<ManualCitationFormProps> = ({
               </div>
             </div>
             <div
-              className={`grid gap-4 ${isPanel ? "grid-cols-1" : "grid-cols-2"}`}>
+              className={`grid gap-3 ${isPanel ? "grid-cols-1" : "grid-cols-2"}`}>
               <div>
-                <label className="block text-sm font-medium text-black mb-1">
+                <label className="block text-xs font-medium text-black mb-1">
                   Issue
                 </label>
                 <input
                   type="text"
                   value={data.issue || ""}
                   onChange={(e) => updateField("issue", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter issue"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-black mb-1">
+                <label className="block text-xs font-medium text-black mb-1">
                   Pages
                 </label>
                 <input
                   type="text"
                   value={data.pages || ""}
                   onChange={(e) => updateField("pages", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., 123-145"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-black mb-1">
+              <label className="block text-xs font-medium text-black mb-1">
                 DOI
               </label>
               <input
                 type="text"
                 value={data.doi || ""}
                 onChange={(e) => updateField("doi", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter DOI"
               />
             </div>

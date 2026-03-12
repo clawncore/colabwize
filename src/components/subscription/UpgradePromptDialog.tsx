@@ -145,7 +145,7 @@ export const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({
   open,
   onOpenChange,
   feature,
-  limit = 3,
+  limit = 1,
 }) => {
   const navigate = useNavigate();
   const config = FEATURE_MESSAGES[feature];
@@ -181,7 +181,7 @@ export const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({
           <div className="text-2xl font-bold text-gray-900">
             {limit}{" "}
             <span className="text-base font-normal text-gray-600">
-              scans/month
+              workspace/month
             </span>
           </div>
         </div>
@@ -202,27 +202,17 @@ export const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-2 w-full">
+        <div className="flex gap-3 w-full">
           <button
             onClick={handleUpgrade}
-            className="w-full px-4 py-3 sm:py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all font-semibold shadow-md hover:shadow-lg">
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all font-semibold shadow-md hover:shadow-lg text-sm sm:text-base">
             Upgrade Plan
           </button>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                onOpenChange(false);
-                navigate("/credits");
-              }}
-              className="flex-1 px-4 py-2 border border-purple-200 text-purple-700 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors font-medium">
-              Buy Credits
-            </button>
-            <button
-              onClick={() => onOpenChange(false)}
-              className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
-              Wait
-            </button>
-          </div>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm sm:text-base">
+            Wait
+          </button>
         </div>
 
         {/* Plan Comparison */}
@@ -234,13 +224,13 @@ export const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({
             </div>
             <div className="border-l border-r border-gray-200">
               <div className="font-semibold text-indigo-600">Plus</div>
-              <div className="text-gray-600">50/month</div>
-              <div className="text-xs text-gray-500">$12.99/mo</div>
+              <div className="text-gray-600">5/month</div>
+              <div className="text-xs text-gray-500">$5.99/mo</div>
             </div>
             <div>
               <div className="font-semibold text-purple-600">Premium</div>
               <div className="text-gray-600">Unlimited</div>
-              <div className="text-xs text-gray-500">$18.99/mo</div>
+              <div className="text-xs text-gray-500">$12.99/mo</div>
             </div>
           </div>
         </div>

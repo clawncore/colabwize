@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ArrowRight,
-  BarChart as BarChartIcon,
   ShieldCheck,
   Zap,
   BookOpen,
@@ -14,21 +13,19 @@ import {
   AlertTriangle,
   RefreshCw,
   CheckCircle,
-  Coins,
   TrendingUp,
 } from "lucide-react";
 
 import { documentService, Project } from "../../services/documentService";
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
 import { OnboardingTour } from "../onboarding/OnboardingTour";
 import { DocumentUploadModal } from "./DocumentUploadModal";
 import AnalyticsService, {
@@ -48,7 +45,7 @@ export const Dashboard: React.FC = () => {
     skipOnboarding,
     loading: onboardingLoading,
   } = useOnboarding();
-  // Use global subscription store for accurate plan status
+
   // Use global subscription store for accurate plan status
   const {
     plan,
@@ -66,11 +63,7 @@ export const Dashboard: React.FC = () => {
     citationStatus: undefined,
     authorshipVerified: undefined,
   });
-  // const [loading, setLoading] = useState(true);
-  // const [uploadingProject, setUploadingProject] = useState(false);
   const [latestProject, setLatestProject] = useState<Project | null>(null);
-
-  // Trend data is now handled via dashboardData.trendData
 
   // Helper to ensure consistency with sidebar logic
   const userPlan = plan || "free";
@@ -254,12 +247,6 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={() => navigate("/purchase-credits")}
-            className="flex items-center px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
-            <Coins className="w-3.5 h-3.5 mr-1.5 text-indigo-500" />
-            Buy Credits
-          </button>
           {!["premium", "plus"].some((p) =>
             userPlan.toLowerCase().includes(p),
           ) && (
@@ -365,16 +352,32 @@ export const Dashboard: React.FC = () => {
                 {/* Originality */}
                 <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-1.5 bg-green-50 text-green-600 rounded-lg">
+                    <div
+                      className={`p-1.5 rounded-lg ${
+                        (dashboardData.originalityScore || 0) >= 20
+                          ? "bg-red-50 text-red-600"
+                          : (dashboardData.originalityScore || 0) >= 10
+                            ? "bg-amber-50 text-amber-600"
+                            : "bg-green-50 text-green-600"
+                      }`}>
                       <ShieldCheck className="w-4 h-4" />
                     </div>
                     <span className="text-sm font-semibold text-gray-700">
                       Originality
                     </span>
                   </div>
-                  <span className="font-bold text-green-600">
+                  <span
+                    className={`font-bold ${
+                      (dashboardData.originalityScore || 0) >= 20
+                        ? "text-red-600"
+                        : (dashboardData.originalityScore || 0) >= 10
+                          ? "text-amber-600"
+                          : "text-green-600"
+                    }`}>
                     {Math.round(
-                      latestProject.originality_scans?.[0]?.overallScore || 0,
+                      dashboardData.originalityScore ??
+                        latestProject?.originality_scans?.[0]?.overallScore ??
+                        0,
                     )}
                     %
                   </span>
@@ -569,10 +572,10 @@ export const Dashboard: React.FC = () => {
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      Document Creation Activity
+                      Weekly Document Activity
                     </h3>
                     <p className="text-sm text-gray-500">
-                      New documents created per month
+                      New documents created per week
                     </p>
                     <div className="flex items-center gap-2 mt-3">
                       <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
@@ -587,28 +590,9 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div className="h-72 w-full min-h-[300px]">
                   <ResponsiveContainer width="99%" height="100%">
-                    <AreaChart
+                    <BarChart
                       data={dashboardData.trendData || []}
                       margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient
-                          id="colorDocuments"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1">
-                          <stop
-                            offset="5%"
-                            stopColor="#3B82F6"
-                            stopOpacity={0.3}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor="#3B82F6"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
                       <CartesianGrid
                         strokeDasharray="3 3"
                         vertical={false}
@@ -631,6 +615,7 @@ export const Dashboard: React.FC = () => {
                         tick={{ fill: "#9CA3AF", fontSize: 12 }}
                       />
                       <Tooltip
+                        cursor={{ fill: "#F9FAFB" }}
                         contentStyle={{
                           backgroundColor: "#1F2937",
                           borderRadius: "8px",
@@ -640,23 +625,14 @@ export const Dashboard: React.FC = () => {
                         }}
                         itemStyle={{ color: "#E5E7EB" }}
                       />
-                      <Area
-                        type="monotone"
+                      <Bar
                         dataKey="documents"
                         name="Documents"
-                        stroke="#3B82F6"
-                        strokeWidth={3}
-                        fillOpacity={1}
-                        fill="url(#colorDocuments)"
-                        dot={{
-                          r: 4,
-                          fill: "#3B82F6",
-                          strokeWidth: 2,
-                          stroke: "#fff",
-                        }}
-                        activeDot={{ r: 6, strokeWidth: 0 }}
+                        fill="#3B82F6"
+                        radius={[4, 4, 0, 0]}
+                        barSize={32}
                       />
-                    </AreaChart>
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
@@ -672,12 +648,21 @@ export const Dashboard: React.FC = () => {
                       Track document completion status
                     </p>
                   </div>
-                  <Link
-                    to="/dashboard/analytics"
-                    className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center">
-                    View All
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </Link>
+                  {userPlan === "free" ? (
+                    <Link
+                      to="/pricing"
+                      className="text-sm font-semibold text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 group">
+                      <Lock className="w-3.5 h-3.5 group-hover:text-indigo-500 transition-colors" />
+                      View All
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/dashboard/analytics"
+                      className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center">
+                      View All
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </Link>
+                  )}
                 </div>
 
                 <div className="flex-1 overflow-auto">
@@ -701,7 +686,11 @@ export const Dashboard: React.FC = () => {
                             : null;
                           const isDueSoon =
                             dueDate &&
-                            dueDate.getTime() - Date.now() < 172800000; // 2 days
+                            dueDate.getTime() - Date.now() < 172800000 && // 2 days
+                            dueDate.getTime() - Date.now() > 0;
+                          const isOverdue =
+                            dueDate && dueDate.getTime() < Date.now();
+
                           // Mock progress
                           const progress = Math.min(
                             100,
@@ -737,8 +726,18 @@ export const Dashboard: React.FC = () => {
                               </td>
                               <td className="px-6 py-4 text-right">
                                 <span
-                                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${isDueSoon ? "bg-red-50 text-red-600 border border-red-100" : "bg-green-50 text-green-600 border border-green-100"}`}>
-                                  {isDueSoon ? "Urgent" : "On Track"}
+                                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${
+                                    isOverdue
+                                      ? "bg-red-100 text-red-700 border border-red-200"
+                                      : isDueSoon
+                                        ? "bg-amber-50 text-amber-700 border border-amber-100"
+                                        : "bg-green-50 text-green-600 border border-green-100"
+                                  }`}>
+                                  {isOverdue
+                                    ? "Overdue"
+                                    : isDueSoon
+                                      ? "Urgent"
+                                      : "On Track"}
                                 </span>
                               </td>
                             </tr>

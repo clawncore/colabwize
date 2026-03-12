@@ -75,7 +75,7 @@ export function CalendarView({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[600px]">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[500px] lg:min-h-[600px]">
       {/* Header */}
       <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <h2 className="text-lg font-bold text-slate-900 font-outfit">
@@ -144,7 +144,7 @@ export function CalendarView({
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 flex-1 min-h-[500px]">
+        <div className="grid grid-cols-7 flex-1 min-h-[300px] lg:min-h-[450px]">
           {days.map((day, idx) => {
             const dayTasks = getTasksForDay(day);
             const isPadding = !isSameMonth(day, monthStart);
@@ -153,7 +153,7 @@ export function CalendarView({
             return (
               <div
                 key={day.toISOString()}
-                className={`min-h-[120px] p-1 border-r border-b border-slate-50 relative group transition-colors flex flex-col ${
+                className={`min-h-[80px] lg:min-h-[120px] p-1 border-r border-b border-slate-50 relative group transition-colors flex flex-col ${
                   isPadding && viewMode === "month"
                     ? "bg-slate-50/30"
                     : "bg-white"
@@ -202,7 +202,7 @@ export function CalendarView({
                             className={`w-full bg-slate-100 relative group ${
                               isStandaloneInWeek
                                 ? "flex-1 min-h-[60px]"
-                                : "h-20"
+                                : "h-12 lg:h-20"
                             }`}>
                             {/* Selection Checkbox overlay */}
                             <div
