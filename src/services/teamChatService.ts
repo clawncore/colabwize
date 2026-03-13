@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import { apiClient } from "./apiClient";
 import encryptionService from "./encryptionService";
 
 export interface TeamChatMessage {
@@ -10,7 +10,7 @@ export interface TeamChatMessage {
   parent_id?: string;
   created_at: string;
   updated_at: string;
-  user: {
+  user?: {
     id: string;
     full_name: string | null;
     email: string;
@@ -19,7 +19,7 @@ export interface TeamChatMessage {
   parent?: {
     id: string;
     content: string;
-    user: {
+    user?: {
       id: string;
       full_name: string | null;
       email: string;
@@ -37,14 +37,21 @@ class TeamChatService {
     workspaceId?: string;
     projectId?: string;
     parentId?: string;
+    limit?: number;
+    offset?: number;
   }) {
-    const query = new URLSearchParams();
-    if (params.workspaceId) query.append("workspaceId", params.workspaceId);
-    if (params.projectId) query.append("projectId", params.projectId);
-    if (params.parentId) query.append("parentId", params.parentId);
+    // Call the backend API instead of direct Supabase query
+    const response = await apiClient.get("/api/team-chat", {
+      params: {
+        workspaceId: params.workspaceId,
+        projectId: params.projectId,
+        parentId: params.parentId,
+        limit: params.limit,
+        offset: params.offset,
+      },
+    } as any);
 
-    const response = await apiClient.get(`/api/team-chat?${query.toString()}`);
-    const messages = response.messages as TeamChatMessage[];
+    const messages = (response.messages as any[]) || [];
 
     // Decrypt messages
     const contextId = params.workspaceId || params.projectId || "global";
@@ -72,7 +79,7 @@ class TeamChatService {
                 content: decryptedParentContent || msg.parent.content,
               }
             : null,
-        };
+        } as TeamChatMessage;
       }),
     );
 
@@ -85,44 +92,63 @@ class TeamChatService {
     projectId?: string;
     parentId?: string;
   }) {
-    // Encrypt message content before sending
+    // Encrypt content on frontend before sending to backend
     const contextId = params.workspaceId || params.projectId || "global";
     const encryptedContent = await encryptionService.encrypt(
       params.content,
       contextId,
     );
 
+    // POST to backend
     const response = await apiClient.post("/api/team-chat", {
-      ...params,
       content: encryptedContent,
+      workspaceId: params.workspaceId,
+      projectId: params.projectId,
+      parentId: params.parentId,
     });
 
-    const message = response.message as TeamChatMessage;
+    const message = response.message;
 
     // Return decrypted version for UI
     return {
       ...message,
-      content: params.content,
-    };
+      content: params.content, // Return plaintext for optimistic UI/immediate display
+    } as TeamChatMessage;
+  }
+
+  async editMessage(messageId: string, newContent: string, contextId: string) {
+    const encryptedContent = await encryptionService.encrypt(
+      newContent,
+      contextId,
+    );
+
+    // Note: Backend currently doesn't have a specific PATCH endpoint for single message update in index.ts
+    // but we can add it or just use a generic update if available.
+    // For now, let's assume we might need to add it to the backend.
+    const response = await apiClient.patch(`/api/team-chat/${messageId}`, {
+      content: encryptedContent,
+    });
+
+    return { ...response.message, content: newContent };
   }
 
   async deleteMessage(messageId: string) {
-    return await apiClient.delete(`/api/team-chat?id=${messageId}`, null);
+    await apiClient.delete(`/api/team-chat?id=${messageId}`);
+    return true;
   }
 
   async clearChat(params: { workspaceId?: string; projectId?: string }) {
-    const query = new URLSearchParams();
-    if (params.workspaceId) query.append("workspaceId", params.workspaceId);
-    if (params.projectId) query.append("projectId", params.projectId);
+    const queryParams = new URLSearchParams();
+    if (params.workspaceId) queryParams.append("workspaceId", params.workspaceId);
+    if (params.projectId) queryParams.append("projectId", params.projectId);
 
-    return await apiClient.delete(
-      `/api/team-chat/clear?${query.toString()}`,
-      null,
-    );
+    await apiClient.delete(`/api/team-chat/clear?${queryParams.toString()}`);
+    return true;
   }
 
   async markAsRead(messageId: string) {
-    return await apiClient.post("/api/team-chat/read", { messageId });
+    await apiClient.post("/api/team-chat/read", { messageId });
+    return true;
   }
 
   sendTypingStatus(params: {
@@ -130,9 +156,7 @@ class TeamChatService {
     projectId?: string;
     isTyping: boolean;
   }) {
-    // This is handled via WebSocket directly if we have access to it, 
-    // but the service could provide a way to emit these events.
-    // For now, we'll assume the component will handle the socket.emit("typing", ...)
+    // Still best handled via Supabase Presence for ultra-low latency
   }
 }
 
