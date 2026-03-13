@@ -323,7 +323,6 @@ export function KanbanBoard() {
         task.is_recurring && !task.parent_recurring_task_id;
 
       return (
-        !isParentRecurring &&
         matchesSearch &&
         matchesPriority &&
         matchesAssignee &&
