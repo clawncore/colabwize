@@ -142,6 +142,11 @@ export default function ProjectCards({
         classes:
           "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
       },
+      active: {
+        label: "Active",
+        classes:
+          "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+      },
       draft: {
         label: "Draft",
         classes:
@@ -150,17 +155,27 @@ export default function ProjectCards({
       completed: {
         label: "Completed",
         classes:
+          "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+      },
+      planning: {
+        label: "Planning",
+        classes:
           "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+      },
+      archived: {
+        label: "Archived",
+        classes:
+          "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
       },
     };
 
     const config: StatusConfig = statusConfig[status] || {
-      label: status,
-      classes: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+      label: status.charAt(0).toUpperCase() + status.slice(1).replace("-", " "),
+      classes: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
     };
     return (
       <span
-        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.classes}`}>
+        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider ${config.classes}`}>
         {config.label}
       </span>
     );

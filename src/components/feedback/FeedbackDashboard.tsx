@@ -71,7 +71,7 @@ const FeedbackDashboard: React.FC = () => {
   const fetchData = React.useCallback(async () => {
     try {
       const feedback = await FeedbackService.getUserFeedback();
-      setFeedbackItems(feedback);
+      setFeedbackItems(Array.isArray(feedback) ? feedback : []);
     } catch (error) {
       toast({
         title: "Error",

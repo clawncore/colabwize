@@ -14,7 +14,6 @@ import { CitationAuditReportPanel } from "../audit/CitationAuditReportPanel";
 import { Project, documentService } from "../../services/documentService";
 // Custom hook usage instead of direct service
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
-import { UsageMeter } from "../../components/subscription/UsageMeter";
 import { useAuth } from "../../hooks/useAuth";
 import {
   ChevronLeft,
@@ -278,7 +277,7 @@ const EditorWorkspacePage: React.FC = () => {
 
     const updatedCitations = selectedProject.citations.map((c: any) =>
       (c.id && updatedSource.id && c.id === updatedSource.id) ||
-        c.title === updatedSource.title
+      c.title === updatedSource.title
         ? updatedSource
         : c,
     );
@@ -892,10 +891,11 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("documents");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "documents"
-                  ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "documents"
+                    ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={!isNavRailExpanded ? "My Documents" : ""}>
                 <FileText
                   className={`w-4 h-4 flex-shrink-0 ${activeLeftPanel === "documents" ? "text-[#6366F1]" : "text-gray-400"}`}
@@ -913,10 +913,11 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveSourceTab("sources");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "sources"
-                  ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "sources"
+                    ? "bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={!isNavRailExpanded ? "Source Library" : ""}>
                 <BookOpen
                   className={`w-4 h-4 flex-shrink-0 ${activeLeftPanel === "sources" ? "text-[#6366F1]" : "text-gray-400"}`}
@@ -932,10 +933,11 @@ const EditorWorkspacePage: React.FC = () => {
                 <div className="ml-9 mt-1 space-y-1 border-l-2 border-gray-100 pl-3 mb-4 transition-all overflow-hidden whitespace-nowrap">
                   <button
                     onClick={() => setActiveSourceTab("sources")}
-                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${activeSourceTab === "sources"
-                      ? "text-[#6366F1] bg-white shadow-sm"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                      }`}>
+                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
+                      activeSourceTab === "sources"
+                        ? "text-[#6366F1] bg-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    }`}>
                     <div
                       className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeSourceTab === "sources" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                     />
@@ -943,10 +945,11 @@ const EditorWorkspacePage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setActiveSourceTab("collections")}
-                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${activeSourceTab === "collections"
-                      ? "text-[#6366F1] bg-white shadow-sm"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                      }`}>
+                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
+                      activeSourceTab === "collections"
+                        ? "text-[#6366F1] bg-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    }`}>
                     <div
                       className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeSourceTab === "collections" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                     />
@@ -954,10 +957,11 @@ const EditorWorkspacePage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setActiveSourceTab("matrix")}
-                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${activeSourceTab === "matrix"
-                      ? "text-[#6366F1] bg-white shadow-sm"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                      }`}>
+                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
+                      activeSourceTab === "matrix"
+                        ? "text-[#6366F1] bg-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    }`}>
                     <div
                       className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeSourceTab === "matrix" ? "bg-[#6366F1]" : "bg-gray-300"}`}
                     />
@@ -972,10 +976,11 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("outline");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "outline"
-                  ? "bg-[#F59E0B]/10 text-[#D97706] border border-[#F59E0B]/20"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "outline"
+                    ? "bg-[#F59E0B]/10 text-[#D97706] border border-[#F59E0B]/20"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={!isNavRailExpanded ? "Outline" : ""}>
                 <PenTool
                   className={`w-4 h-4 flex-shrink-0 ${activeLeftPanel === "outline" ? "text-[#D97706]" : "text-gray-400"}`}
@@ -992,10 +997,11 @@ const EditorWorkspacePage: React.FC = () => {
                   setActivePanelType("add-citation");
                   setIsRightSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activePanelType === "add-citation"
-                  ? "bg-blue-100 text-blue-600 border border-blue-200"
-                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activePanelType === "add-citation"
+                    ? "bg-blue-100 text-blue-600 border border-blue-200"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={!isNavRailExpanded ? "Add Citation" : ""}>
                 <PlusSquare
                   className={`w-4 h-4 flex-shrink-0 ${activePanelType === "add-citation" ? "text-blue-600" : "text-gray-400"}`}
@@ -1017,12 +1023,13 @@ const EditorWorkspacePage: React.FC = () => {
                     setActivePanelType("collaboration-history");
                     setIsRightSidebarOpen(true);
                   }}
-                  className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activePanelType === "collaboration-history"
-                    ? "bg-blue-100 text-blue-600 border border-blue-200"
-                    : !isPlus
-                      ? "opacity-60 text-gray-400 hover:bg-gray-50"
-                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                    }`}
+                  className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activePanelType === "collaboration-history"
+                      ? "bg-blue-100 text-blue-600 border border-blue-200"
+                      : !isPlus
+                        ? "opacity-60 text-gray-400 hover:bg-gray-50"
+                        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                  }`}
                   title={
                     !isPlus
                       ? "Available on Plus Plan"
@@ -1060,12 +1067,13 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("visual-map");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "visual-map"
-                  ? "bg-amber-100 text-amber-600 border border-amber-200"
-                  : userPlan === "Free Plan"
-                    ? "opacity-60 text-gray-400 hover:bg-gray-50"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "visual-map"
+                    ? "bg-amber-100 text-amber-600 border border-amber-200"
+                    : userPlan === "Free Plan"
+                      ? "opacity-60 text-gray-400 hover:bg-gray-50"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={
                   userPlan === "Free Plan"
                     ? "Available on Plus Plan"
@@ -1102,12 +1110,13 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("research-assistant");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "research-assistant"
-                  ? "bg-purple-100 text-purple-600 border border-purple-200"
-                  : userPlan === "Free Plan"
-                    ? "opacity-60 text-gray-400 hover:bg-gray-50"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "research-assistant"
+                    ? "bg-purple-100 text-purple-600 border border-purple-200"
+                    : userPlan === "Free Plan"
+                      ? "opacity-60 text-gray-400 hover:bg-gray-50"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={
                   userPlan === "Free Plan"
                     ? "Available on Plus Plan"
@@ -1144,12 +1153,13 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("research-gaps");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "research-gaps"
-                  ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
-                  : !isPremium
-                    ? "opacity-60 text-gray-400 hover:bg-gray-50"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "research-gaps"
+                    ? "bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/20"
+                    : !isPremium
+                      ? "opacity-60 text-gray-400 hover:bg-gray-50"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={
                   !isPremium
                     ? "Available on Premium Plan"
@@ -1186,12 +1196,13 @@ const EditorWorkspacePage: React.FC = () => {
                   setActiveLeftPanel("search-alerts");
                   setIsLeftSidebarOpen(true);
                 }}
-                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${activeLeftPanel === "search-alerts"
-                  ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
-                  : !isPremium
-                    ? "opacity-60 text-gray-400 hover:bg-gray-50"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                  }`}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "search-alerts"
+                    ? "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                    : !isPremium
+                      ? "opacity-60 text-gray-400 hover:bg-gray-50"
+                      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
                 title={
                   !isPremium
                     ? "Available on Premium Plan"
@@ -1223,25 +1234,6 @@ const EditorWorkspacePage: React.FC = () => {
                 </div>
               </button>
             </div>
-
-            {/* Credit Meter Fixed at Bottom of Rail */}
-            <AnimatePresence>
-              {isNavRailExpanded && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="flex-shrink-0 w-full p-4 border-t border-gray-200/50">
-                  <UsageMeter
-                    current={creditBalance}
-                    limit={0}
-                    planName={userPlan}
-                    featureName="credits"
-                    mode="credits"
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
           </motion.div>
 
           {/* Sidebar Content Area */}
@@ -1485,32 +1477,32 @@ const EditorWorkspacePage: React.FC = () => {
           animate={{
             opacity:
               selectedAuditReport ||
-                selectedLibrarySource ||
-                (activeLeftPanel === "sources" &&
-                  activeSourceTab === "matrix" &&
-                  matrixMode === "full") ||
-                (activeLeftPanel === "visual-map" && visualMapMode === "full") ||
-                isEditorLoading
+              selectedLibrarySource ||
+              (activeLeftPanel === "sources" &&
+                activeSourceTab === "matrix" &&
+                matrixMode === "full") ||
+              (activeLeftPanel === "visual-map" && visualMapMode === "full") ||
+              isEditorLoading
                 ? 0
                 : 1,
             scale:
               selectedAuditReport ||
-                selectedLibrarySource ||
-                (activeLeftPanel === "sources" &&
-                  activeSourceTab === "matrix" &&
-                  matrixMode === "full") ||
-                (activeLeftPanel === "visual-map" && visualMapMode === "full") ||
-                isEditorLoading
+              selectedLibrarySource ||
+              (activeLeftPanel === "sources" &&
+                activeSourceTab === "matrix" &&
+                matrixMode === "full") ||
+              (activeLeftPanel === "visual-map" && visualMapMode === "full") ||
+              isEditorLoading
                 ? 0.98
                 : 1,
             display:
               selectedAuditReport ||
-                selectedLibrarySource ||
-                (activeLeftPanel === "sources" &&
-                  activeSourceTab === "matrix" &&
-                  matrixMode === "full") ||
-                (activeLeftPanel === "visual-map" && visualMapMode === "full") ||
-                isEditorLoading
+              selectedLibrarySource ||
+              (activeLeftPanel === "sources" &&
+                activeSourceTab === "matrix" &&
+                matrixMode === "full") ||
+              (activeLeftPanel === "visual-map" && visualMapMode === "full") ||
+              isEditorLoading
                 ? "none"
                 : "block",
           }}

@@ -464,10 +464,13 @@ export default function DashboardLayout({
       return;
     }
 
+    if (!user) return;
+
     try {
       // Fetch documents and certificates in parallel
-      const [documentsResponse, certificatesResponse] = await Promise.all([
-        documentService.getProjects(),
+      // documentService.getUserProjects(user.id) fetches all projects (personal + workspace)
+      const [documents, certificatesResponse] = await Promise.all([
+        documentService.getUserProjects(user.id),
         certificateService.getCertificates(1, 100), // Fetch top 100 for search
       ]);
 
@@ -475,15 +478,15 @@ export default function DashboardLayout({
       const query = searchQuery.toLowerCase();
 
       // Process documents
-      if (documentsResponse.success && documentsResponse.data) {
-        const matchedDocs = documentsResponse.data
+      if (Array.isArray(documents)) {
+        const matchedDocs = documents
           .filter(
-            (doc) =>
+            (doc: any) =>
               doc.title.toLowerCase().includes(query) ||
               (doc.description &&
                 doc.description.toLowerCase().includes(query)),
           )
-          .map((doc) => ({
+          .map((doc: any) => ({
             id: doc.id,
             title: doc.title,
             description: doc.description || "Document",
@@ -1327,21 +1330,36 @@ export default function DashboardLayout({
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="sidebar-ws-icon">Icon (Emoji)</Label>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-md border bg-muted text-xl">
-                        {sidebarWsIcon}
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-md border bg-muted text-xl">
+                          {sidebarWsIcon}
+                        </div>
+                        <Input
+                          id="sidebar-ws-icon"
+                          className="max-w-[100px] bg-background border-border"
+                          placeholder="💼"
+                          maxLength={4}
+                          value={sidebarWsIcon}
+                          onChange={(e) => setSidebarWsIcon(e.target.value)}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          Select or type
+                        </span>
                       </div>
-                      <Input
-                        id="sidebar-ws-icon"
-                        className="max-w-[100px] bg-background border-border"
-                        placeholder="💼"
-                        maxLength={2}
-                        value={sidebarWsIcon}
-                        onChange={(e) => setSidebarWsIcon(e.target.value)}
-                      />
-                      <span className="text-xs text-muted-foreground">
-                        Type an emoji
-                      </span>
+                      
+                      <div className="flex flex-wrap gap-1.5 p-2 border rounded-md bg-slate-50/50">
+                        {["💼", "📁", "📊", "📝", "💻", "🚀", "🤝", "👥", "💬", "📢", "🌐", "🎓", "📖", "🔬", "🧪", "🎨", "✨", "💡", "🔥", "⭐", "📍", "🛠️", "🏠", "🏢", "🏫"].map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => setSidebarWsIcon(emoji)}
+                            className={`flex items-center justify-center w-8 h-8 rounded hover:bg-white hover:shadow-sm transition-all text-lg ${sidebarWsIcon === emoji ? 'bg-white shadow-sm border border-emerald-100' : ''}`}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   <div className="grid gap-2">

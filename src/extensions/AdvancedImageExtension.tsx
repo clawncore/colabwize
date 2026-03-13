@@ -59,7 +59,15 @@ const ImageComponent = (props: any) => {
     };
 
     return (
-        <NodeViewWrapper className={`image-view-wrapper flex ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'}`} draggable="true" data-drag-handle>
+        <NodeViewWrapper 
+            className={`image-view-wrapper ${
+                align === 'center' ? 'align-center' : 
+                align === 'right' ? 'align-right' : 
+                'align-left'
+            }`} 
+            draggable="true" 
+            data-drag-handle
+        >
             <div
                 className={`relative group inline-block transition-all ${selected ? 'ring-2 ring-blue-500 rounded-lg' : ''}`}
                 onClick={() => setSelected(!selected)}

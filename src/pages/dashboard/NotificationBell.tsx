@@ -165,12 +165,6 @@ const NotificationBell: React.FC = () => {
         navigate(`/dashboard/workspace/${workspaceId}/chat`);
         return;
       }
-
-      // Workspace related
-      if (workspaceId) {
-        navigate(`/dashboard/workspace/${workspaceId}/overview`);
-        return;
-      }
     }
   };
 
@@ -525,7 +519,7 @@ const NotificationBell: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="fixed sm:absolute top-[70px] sm:top-full sm:mt-2 left-4 right-4 sm:left-auto sm:right-0 w-[calc(100vw-2rem)] sm:w-[420px] max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+        <div className="fixed top-[10px] right-4 sm:right-[150px] w-[calc(100vw-2rem)] sm:w-[420px] max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-medium text-gray-700">

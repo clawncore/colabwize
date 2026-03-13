@@ -1,5 +1,4 @@
 import { apiClient } from "./apiClient";
-import ConfigService from "./ConfigService";
 
 interface UserFeedback {
   id: string;
@@ -36,7 +35,6 @@ interface FeedbackComment {
 }
 
 class FeedbackService {
-  // Create a new feedback item
   async createFeedback(feedbackData: {
     type: string;
     category?: string;
@@ -49,39 +47,15 @@ class FeedbackService {
     screen_size?: string;
     user_plan?: string;
   }): Promise<UserFeedback> {
-    // For feature requests, use the public endpoint to allow anonymous submissions
-    if (feedbackData.type === "feature_request") {
-      const response = await fetch(
-        `${ConfigService.getApiUrl()}/api/feedback/public`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(feedbackData),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.message || "Failed to submit feature request"
-        );
-      }
-
-      const result = await response.json();
-      return result.feedback;
-    } else {
-      // For other feedback types, use the authenticated endpoint
-      const response = await apiClient.post("/api/feedback", feedbackData);
-      return response.feedback;
-    }
+    const response = await apiClient.post("/api/feedback", feedbackData);
+    return response.feedback || response.data || response;
   }
 
   // Get feedback items for the current user
   async getUserFeedback(): Promise<UserFeedback[]> {
     const response = await apiClient.get("/api/feedback/my");
-    return response.feedback;
+    const feedback = response.feedback || response.data || response;
+    return Array.isArray(feedback) ? feedback : [];
   }
 
   // Get a specific feedback item by ID
@@ -96,11 +70,11 @@ class FeedbackService {
     commentData: {
       content: string;
       is_internal?: boolean;
-    }
+    },
   ): Promise<FeedbackComment> {
     const response = await apiClient.post(
       `/api/feedback/${feedbackId}/comments`,
-      commentData
+      commentData,
     );
     return response.comment;
   }
@@ -108,7 +82,7 @@ class FeedbackService {
   // Get comments for a feedback item
   async getFeedbackComments(feedbackId: string): Promise<FeedbackComment[]> {
     const response = await apiClient.get(
-      `/api/feedback/${feedbackId}/comments`
+      `/api/feedback/${feedbackId}/comments`,
     );
     return response.comments;
   }

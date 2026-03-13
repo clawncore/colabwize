@@ -294,17 +294,48 @@ li.ProseMirror-selectednode:after {
   margin-bottom: 1rem !important;
 }
 
-/* Blockquote styles */
-.ProseMirror blockquote {
-  border-left: 3px solid hsl(var(--cw-blue));
-  margin-left: 0;
-  margin-right: 0;
-  padding-left: 1rem;
-  font-style: italic;
-  color: hsl(var(--muted-foreground));
-  background: hsla(var(--cw-blue), 0.05);
-  padding: 0.5rem 0.5rem 0.5rem 1rem;
+/* Blockquote styles - Generalized for Editor and Live Views */
+.ProseMirror blockquote,
+.prose blockquote,
+blockquote {
+  border-left: 3px solid hsl(var(--cw-blue)) !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 1rem !important;
+  font-style: italic !important;
+  color: hsl(var(--muted-foreground)) !important;
+  background: hsla(var(--cw-blue), 0.05) !important;
+  padding: 0.5rem 0.5rem 0.5rem 1rem !important;
   border-radius: 0 0.5rem 0.5rem 0 !important;
+}
+
+/* List styles */
+.ProseMirror ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.ProseMirror li {
+  margin-bottom: 0.25rem !important;
+}
+
+.ProseMirror li p {
+  margin-bottom: 0 !important;
+}
+
+.ProseMirror ul ul, 
+.ProseMirror ul ol, 
+.ProseMirror ol ul, 
+.ProseMirror ol ol {
+  margin-top: 0.25rem !important;
+  margin-bottom: 0 !important;
 }
 
 /* Ensure subsection titles are bold */
@@ -2892,7 +2923,27 @@ mark.citation-highlight[data-type="violation"] {
   opacity: 0.8;
 }
 
+
 /* Ensure data attributes can be used for style-specific styling if needed */
 [data-citation-style="ieee"].citation-scan-linked {
   font-family: inherit;
 }
+
+/* Custom scrollbar for horizontal toolbars */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+

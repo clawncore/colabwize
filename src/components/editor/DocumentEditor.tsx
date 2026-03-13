@@ -25,6 +25,10 @@ import { PlaceholderMarkExtension } from "../../extensions/PlaceholderMarkExtens
 import { MathExtension } from "../../extensions/MathExtension";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
+import BulletList from "@tiptap/extension-bullet-list";
+import OrderedList from "@tiptap/extension-ordered-list";
+import ListItem from "@tiptap/extension-list-item";
+import Blockquote from "@tiptap/extension-blockquote";
 import { BibliographyEntry } from "../../extensions/BibliographyNode";
 import { NodeSelection } from "@tiptap/pm/state";
 import { documentService, Project } from "../../services/documentService";
@@ -142,8 +146,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const { plan: rawPlan } = useSubscriptionStore();
   const userPlanName = rawPlan?.toLowerCase() || "free";
   const isFreePlan = userPlanName.includes("free");
-  const isPremiumPlan = userPlanName.includes("premium");
-  const isPlusPlan = userPlanName.includes("plus") || isPremiumPlan;
 
   const hslToHex = (h: number, s: number, l: number) => {
     l /= 100;
@@ -436,6 +438,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         PlaceholderMarkExtension,
         Superscript,
         Subscript,
+        BulletList,
+        OrderedList,
+        ListItem,
+        Blockquote,
         CitationNode,
         BibliographyEntry,
         CitationLifecycleExtension,
@@ -1250,7 +1256,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   placeholder="Untitled Document"
                 />
               </div>
-              <div className="flex items-center space-x-2 flex-wrap">
+              <div className="flex items-center space-x-2 flex-nowrap overflow-x-auto pb-1 custom-scrollbar min-w-0 flex-1 justify-end">
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
                   className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
@@ -1381,11 +1387,29 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 {/* Team Chat Button */}
                 {isCollaborative && onOpenPanel && (
                   <button
-                    onClick={() => onOpenPanel("team-chat")}
-                    className="p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-                    title="Open Team Chat">
-                    <MessageSquare className="w-4 h-4" />
+                    onClick={() => {
+                      if (isFreePlan) {
+                        setShowUpgradeModal(true);
+                        return;
+                      }
+                      onOpenPanel("team-chat");
+                    }}
+                    className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFreePlan ? "opacity-70" : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"}`}
+                    title={
+                      isFreePlan ? "Available on Plus Plan" : "Open Team Chat"
+                    }>
+                    <div className="relative">
+                      <MessageSquare className="w-4 h-4 text-emerald-600" />
+                      {isFreePlan && (
+                        <Lock className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 text-red-600" />
+                      )}
+                    </div>
                     <span className="hidden sm:inline">Chat</span>
+                    {isFreePlan && (
+                      <span className="ml-1 text-[10px] bg-indigo-50 text-indigo-600 px-1 rounded font-bold uppercase tracking-wider">
+                        PLUS
+                      </span>
+                    )}
                   </button>
                 )}
 

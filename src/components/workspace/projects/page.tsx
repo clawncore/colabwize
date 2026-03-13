@@ -106,7 +106,12 @@ export default function WorkspaceProjectsPage() {
 
     // Apply status filter
     if (activeFilter !== "all" && activeFilter !== "archived") {
-      filtered = filtered.filter((project) => project.status === activeFilter);
+      filtered = filtered.filter((project) => {
+        if (activeFilter === "in-progress") {
+          return project.status === "in-progress" || project.status === "active";
+        }
+        return project.status === activeFilter;
+      });
     }
 
     setFilteredProjects(filtered);

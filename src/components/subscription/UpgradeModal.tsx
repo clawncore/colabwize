@@ -30,7 +30,6 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
 
       {/* Modal Content */}
       <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 overflow-hidden animate-in fade-in zoom-in duration-200 z-[101]">
-
         <button
           type="button"
           onClick={(e) => {
@@ -39,8 +38,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
             onClose();
           }}
           className="absolute top-4 right-4 p-2 text-gray-300 hover:text-gray-500 rounded-full hover:bg-gray-50 transition-colors z-[120]"
-          aria-label="Close modal"
-        >
+          aria-label="Close modal">
           <X className="w-5 h-5" />
         </button>
 
@@ -49,9 +47,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
             <HeartCrack className="w-8 h-8" />
           </div>
 
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            {title}
-          </h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
 
           <p className="text-gray-500 mb-6 text-sm leading-relaxed px-2">
             {message}
@@ -60,18 +56,16 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           <div className="grid grid-cols-1 gap-3 w-full">
             <Link
               to="/pricing"
-              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm hover:shadow transition-all duration-200"
-            >
+              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm hover:shadow transition-all duration-200">
               <Crown className="w-4 h-4" />
               Upgrade Plan
             </Link>
 
             <Link
               to="/dashboard/billing/subscription"
-              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-white border border-gray-200 hover:border-indigo-300 text-gray-700 hover:text-indigo-700 font-medium rounded-lg transition-all duration-200 hover:bg-indigo-50/50"
-            >
+              className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-white border border-gray-200 hover:border-indigo-300 text-gray-700 hover:text-indigo-700 font-medium rounded-lg transition-all duration-200 hover:bg-indigo-50/50">
               <Zap className="w-4 h-4" />
-              Buy Credits
+              Billing Dashboard
             </Link>
           </div>
         </div>

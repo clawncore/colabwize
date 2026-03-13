@@ -218,7 +218,14 @@ export const documentService = {
       const response = await apiClient.get(
         `/api/projects?${queryParams.toString()}`,
       );
-      return response.projects || response;
+      
+      const projects = response.projects || response.data || response;
+      
+      if (Array.isArray(projects)) {
+        return projects.map((p: any) => this.normalizeProject(p));
+      }
+      
+      return projects;
     } catch (error) {
       console.error("Error fetching user projects:", error);
       throw error;

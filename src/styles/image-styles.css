@@ -8,6 +8,36 @@
   margin: 1rem auto;
 }
 
+/* New alignment classes for text wrapping */
+.image-view-wrapper.align-left {
+  float: left;
+  margin-right: 1.5rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.image-view-wrapper.align-right {
+  float: right;
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.image-view-wrapper.align-center {
+  display: flex !important;
+  justify-content: center;
+  width: 100%;
+  margin: 1.5rem 0;
+  clear: both;
+}
+
+/* Add a clear fix to the editor container if needed */
+.ProseMirror::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
 .editor-image.float-left {
   float: left;
   margin: 0.5rem 1rem 0.5rem 0;

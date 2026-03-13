@@ -39,8 +39,8 @@ export const AIChatUpgradeModal: React.FC<AIChatUpgradeModalProps> = ({
         description:
           message ||
           "Purchase more credits to continue chatting with your AI Research Assistant.",
-        primaryLabel: "Buy Credits",
-        primaryPath: "/dashboard/settings/billing?tab=credits",
+        primaryLabel: "Billing Dashboard",
+        primaryPath: "/dashboard/billing/subscription",
         primaryClass: "bg-violet-600 hover:bg-violet-700 text-white",
         secondaryLabel: "View Plans",
         secondaryPath: "/pricing",

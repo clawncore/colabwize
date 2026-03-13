@@ -5,9 +5,6 @@ import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "../../lib/utils";
 import { WorkspaceMember } from "../../services/workspaceService";
-import { PlanRestrictionCover } from "../subscription/PlanRestrictionCover";
-import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
-import { Lock } from "lucide-react";
 
 interface EditGroup {
   authorId: string;
@@ -35,8 +32,6 @@ export const CollaborationHistoryPanel: React.FC<
     string | null
   >(null);
   const [presenceIds, setPresenceIds] = useState<string[]>([]);
-  const { plan: userPlan } = useSubscriptionStore();
-  const isPlus = userPlan === "Plus" || userPlan === "Premium";
 
   const getUserColor = (userId: string) => {
     const colors = [
@@ -140,31 +135,27 @@ export const CollaborationHistoryPanel: React.FC<
 
   const jumpToEdit = (from: number, to: number) => {
     if (!editor || editor.isDestroyed) return;
-    
+
     // First safely set the selection to highlight the text
-    editor
-      .chain()
-      .focus()
-      .setTextSelection({ from, to })
-      .run();
+    editor.chain().focus().setTextSelection({ from, to }).run();
 
     // Use a custom smooth scrolling mechanism targeting our document container
     setTimeout(() => {
       try {
         const coords = editor.view.coordsAtPos(from);
-        const scrollContainer = editor.view.dom.closest('.overflow-auto');
-        
+        const scrollContainer = editor.view.dom.closest(".overflow-auto");
+
         if (scrollContainer) {
           const containerRect = scrollContainer.getBoundingClientRect();
           // Calculate target scroll position to bring the text to the vertical center
-          const targetScrollTop = 
-            scrollContainer.scrollTop + 
-            (coords.top - containerRect.top) - 
-            (containerRect.height / 2);
-            
+          const targetScrollTop =
+            scrollContainer.scrollTop +
+            (coords.top - containerRect.top) -
+            containerRect.height / 2;
+
           scrollContainer.scrollTo({
             top: targetScrollTop,
-            behavior: "smooth"
+            behavior: "smooth",
           });
         } else {
           // Fallback
@@ -186,13 +177,6 @@ export const CollaborationHistoryPanel: React.FC<
 
   return (
     <div className="h-full flex flex-col bg-white border-l shadow-xl animate-in slide-in-from-right duration-300 relative">
-      {!isPlus && (
-        <PlanRestrictionCover
-          requiredPlan="Plus"
-          featureName="Collaboration Log"
-          featureDescription="Track every edit, authorship change, and teammate contribution in real-time."
-        />
-      )}
       {/* Header */}
       <div className="px-4 py-4 border-b bg-slate-50 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
