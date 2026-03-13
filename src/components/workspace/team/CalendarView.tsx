@@ -75,7 +75,7 @@ export function CalendarView({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[500px] lg:min-h-[600px]">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[300px] lg:min-h-[400px]">
       {/* Header */}
       <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <h2 className="text-lg font-bold text-slate-900 font-outfit">
