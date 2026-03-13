@@ -309,7 +309,13 @@ export function TeamChat({
     if (!inputValue.trim() || !user || !activeChannel) return;
 
     try {
-      const content = inputValue;
+      // Resolve @[Name] mentions to @[Name](UserId) using our members list
+      const resolvedContent = inputValue.replace(/@\[([^\]]+)\](?!\()/g, (match, name) => {
+        const member = members.find(m => m.name === name);
+        return member ? `@[${name}](${member.id})` : match;
+      });
+
+      const content = resolvedContent;
       setInputValue("");
 
       // Broadcast typing stop immediately

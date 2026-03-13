@@ -65,6 +65,7 @@ import Link from "@tiptap/extension-link";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 import { useAuth } from "../../hooks/useAuth";
+import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import { GrammarBubbleMenu } from "./GrammarBubbleMenu";
 import { AuditReportModal } from "../audit/AuditReportModal";
 import { EditorToolbar } from "./editor-toolbar";
@@ -86,6 +87,7 @@ import {
   Download,
   Bot,
   GitCompare,
+  Lock,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import ConfigService from "../../services/ConfigService";
@@ -135,6 +137,13 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [collabError, setCollabError] = useState<string | null>(null);
   const isSyncedRef = useRef(false);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const { plan: rawPlan } = useSubscriptionStore();
+  const userPlanName = rawPlan?.toLowerCase() || "free";
+  const isFreePlan = userPlanName.includes("free");
+  const isPremiumPlan = userPlanName.includes("premium");
+  const isPlusPlan = userPlanName.includes("plus") || isPremiumPlan;
 
   const hslToHex = (h: number, s: number, l: number) => {
     l /= 100;
@@ -273,7 +282,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       providerRef.current = null;
       ydocRef.current = null;
     };
-  }, [project.id, isCollaborative]);
+  }, [project.id, isCollaborative, retryCount]);
 
   useEffect(() => {
     if (isCollaborative && !isSynced) {
@@ -325,6 +334,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   // Dialog / Modal States
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showUpgradeDraftModal, setShowUpgradeDraftModal] = useState(false);
   const [isComparisonSelectorOpen, setIsComparisonSelectorOpen] =
     useState(false);
   const [isExportWorkflowOpen, setIsExportWorkflowOpen] = useState(false);
@@ -686,14 +696,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       try {
         const { detectAndNormalizeBibliography, detectAndNormalizeCitations } =
           await import("./utils/normalization");
-        await Promise.all([
-          detectAndNormalizeCitations(
-            editor,
-            project.id,
-            project.citations || [],
-          ),
-          detectAndNormalizeBibliography(editor, project.id),
-        ]);
+        // MUST BE SEQUENTIAL — running concurrently causes position-shift conflicts
+        // where one transaction invalidates the other's calculated positions,
+        // potentially leading to duplicated or misplaced nodes.
+        await detectAndNormalizeBibliography(editor, project.id);
+        await detectAndNormalizeCitations(
+          editor,
+          project.id,
+          project.citations || [],
+        );
       } catch (err) {
         console.error("Debounced normalization failed", err);
       }
@@ -1130,11 +1141,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       if (hasAccess) {
         setIsComparisonSelectorOpen(true);
       } else {
-        setShowUpgradeModal(true);
+        setShowUpgradeDraftModal(true);
       }
     } catch (error) {
       console.error("Failed to check feature access", error);
-      setShowUpgradeModal(true);
+      setShowUpgradeDraftModal(true);
     }
   };
 
@@ -1155,7 +1166,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             <div className="flex gap-3">
               <Button
                 variant="outline"
-                onClick={() => window.location.reload()}>
+                onClick={() => setRetryCount((prev) => prev + 1)}>
                 Retry Connection
               </Button>
               <Button
@@ -1219,8 +1230,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         )}
 
         <UpgradeModal
-          isOpen={showUpgradeModal}
-          onClose={() => setShowUpgradeModal(false)}
+          isOpen={showUpgradeDraftModal}
+          onClose={() => setShowUpgradeDraftModal(false)}
           feature="Draft Comparison"
           title="Premium Feature"
           message="Draft Comparison is available on paid plans. Upgrade to unlock accurate version comparison."
@@ -1283,6 +1294,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={async () => {
+                      if (isFreePlan) {
+                        setShowUpgradeModal(true);
+                        return;
+                      }
                       if (!editor || !project.id) return;
                       try {
                         try {
@@ -1310,10 +1325,24 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                         console.error("Failed to save version:", error);
                       }
                     }}
-                    className="gap-2 h-9 border-green-400 text-green-800 bg-white hover:bg-green-50 hover:text-green-900 transition-colors shadow-sm px-3"
-                    title="Create a named version checkpoint">
-                    <Save className="w-4 h-4 text-green-600" />
+                    className={`gap-2 h-9 border-green-400 text-green-800 bg-white hover:bg-green-50 hover:text-green-900 transition-colors shadow-sm px-3 ${isFreePlan ? "opacity-70" : ""}`}
+                    title={
+                      isFreePlan
+                        ? "Available on Plus Plan"
+                        : "Create a named version checkpoint"
+                    }>
+                    <div className="relative">
+                      <Save className="w-4 h-4 text-green-600" />
+                      {isFreePlan && (
+                        <Lock className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 text-red-600" />
+                      )}
+                    </div>
                     <span className="font-bold text-xs">Save Version</span>
+                    {isFreePlan && (
+                      <span className="ml-1 text-[10px] bg-green-50 text-green-600 px-1 rounded font-bold uppercase tracking-wider">
+                        PLUS
+                      </span>
+                    )}
                   </Button>
                 )}
 
@@ -1321,11 +1350,31 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setIsHistoryModalOpen(true)}
-                    className="gap-2 h-9 border-indigo-400 text-indigo-800 bg-white hover:bg-indigo-50 hover:text-indigo-900 transition-colors shadow-sm px-3"
-                    title="View version history">
-                    <History className="w-4 h-4 text-indigo-600" />
+                    onClick={() => {
+                      if (isFreePlan) {
+                        setShowUpgradeModal(true);
+                        return;
+                      }
+                      setIsHistoryModalOpen(true);
+                    }}
+                    className={`gap-2 h-9 border-indigo-400 text-indigo-800 bg-white hover:bg-indigo-50 hover:text-indigo-900 transition-colors shadow-sm px-3 ${isFreePlan ? "opacity-70" : ""}`}
+                    title={
+                      isFreePlan
+                        ? "Available on Plus Plan"
+                        : "View version history"
+                    }>
+                    <div className="relative">
+                      <History className="w-4 h-4 text-indigo-600" />
+                      {isFreePlan && (
+                        <Lock className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 text-red-600" />
+                      )}
+                    </div>
                     <span className="font-bold text-xs">History</span>
+                    {isFreePlan && (
+                      <span className="ml-1 text-[10px] bg-indigo-50 text-indigo-600 px-1 rounded font-bold uppercase tracking-wider">
+                        PLUS
+                      </span>
+                    )}
                   </Button>
                 )}
 
@@ -1418,23 +1467,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                     }
                   }}
                 />
-
-                <button
-                  className="p-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-                  title="More Options">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                    />
-                  </svg>
-                </button>
               </div>
             </div>
           </div>
@@ -1591,6 +1623,12 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             }
           }}
           excludeProjectId={project.id}
+        />
+
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          feature="citations"
         />
 
         <ExportWorkflowModal

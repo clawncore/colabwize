@@ -30,13 +30,12 @@ export function RecentTasksDropdown({
           variant="ghost"
           size="sm"
           className="h-10 px-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all gap-2"
-          title="Recent Tasks"
-        >
+          title="Recent Tasks">
           <History className="w-4 h-4" />
           <span className="hidden sm:inline">Recent</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[300px]">
+      <DropdownMenuContent align="end" className="w-[300px] bg-slate-50">
         <DropdownMenuLabel className="text-xs font-normal text-slate-500">
           Recently Viewed
         </DropdownMenuLabel>
@@ -45,8 +44,7 @@ export function RecentTasksDropdown({
           <DropdownMenuItem
             key={task.id}
             onClick={() => onSelectTask(task.id)}
-            className="flex flex-col items-start gap-1 py-3 cursor-pointer"
-          >
+            className="flex flex-col items-start gap-1 py-3 cursor-pointer">
             <div className="font-medium text-sm line-clamp-1 w-full">
               {task.title}
             </div>

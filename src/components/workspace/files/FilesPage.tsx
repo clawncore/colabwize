@@ -18,6 +18,7 @@ import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { format } from "date-fns";
 import WorkspaceService from "../../../services/workspaceService";
+import workspaceTaskService from "../../../services/workspaceTaskService";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +27,7 @@ import {
 } from "../../ui/dropdown-menu";
 import { PDFAnnotator } from "../../research/PDFAnnotator";
 import { useAuth } from "../../../hooks/useAuth";
+import { apiClient } from "../../../services/apiClient";
 
 interface WorkspaceFile {
   id: string;
@@ -168,34 +170,50 @@ export default function FilesPage() {
   };
 
   /** Open file in the PDF Annotator (PDF) or a new browser tab (other types) */
-  const handleViewDetails = (file: WorkspaceFile) => {
-    const streamUrl = `${process.env.REACT_APP_API_URL || "http://localhost:3001"}/api/workspaces/tasks/attachments/${file.id}/stream`;
+  const handleViewDetails = async (file: WorkspaceFile) => {
     if (isPdf(file)) {
       openFilewithAnnotations(file);
     } else {
-      // For Word docs, images, etc. — open via backend stream URL
-      window.open(streamUrl, "_blank", "noopener,noreferrer");
+      try {
+        const blobFromStream = await apiClient.getBlob(
+          `/api/workspaces/tasks/attachments/${file.id}/stream`,
+        );
+        const url = window.URL.createObjectURL(blobFromStream);
+        const newTab = window.open(url, "_blank");
+        if (!newTab) {
+          alert("Please allow popups to view this file.");
+        }
+      } catch (error) {
+        console.error("Failed to view file:", error);
+        alert("Failed to open file. Please try again.");
+      }
     }
   };
 
-  /** Delete a file attachment via the API */
+  const handleDownload = async (file: WorkspaceFile) => {
+    try {
+      const blob = await workspaceTaskService.downloadAttachment(file.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download failed", error);
+      alert("Failed to download file. Please try again.");
+    }
+  };
+
   const handleDeleteFile = async (file: WorkspaceFile) => {
     if (!window.confirm(`Delete "${file.name}"? This action cannot be undone.`))
       return;
 
     setDeletingFileId(file.id);
     try {
-      const res = await fetch(
-        `${process.env.REACT_APP_API_URL || ""}/api/workspaces/tasks/attachments/${file.id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          },
-        },
-      );
-      if (!res.ok) throw new Error("Failed to delete file");
-      // Remove from local state
+      await workspaceTaskService.deleteAttachment(file.id);
       setFiles((prev) => prev.filter((f) => f.id !== file.id));
     } catch (err) {
       console.error("Error deleting file:", err);
@@ -384,14 +402,12 @@ export default function FilesPage() {
                       <td className="px-6 py-3 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           {/* Download */}
-                          <a
-                            href={`${process.env.REACT_APP_API_URL || ""}/api/workspaces/tasks/attachments/${file.id}/download`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={() => handleDownload(file)}
                             className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-indigo-600 transition-colors"
                             title="Download">
                             <Download className="w-4 h-4" />
-                          </a>
+                          </button>
 
                           {/* Actions Dropdown */}
                           <DropdownMenu>

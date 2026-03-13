@@ -69,35 +69,35 @@ export default function WorkspaceProjectsPage() {
     };
   }, [user]);
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      if (!user || !workspaceId) return;
+  const loadProjects = async () => {
+    if (!user || !workspaceId) return;
 
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const fetchArchived = activeFilter === "archived";
-        const projectsData = await documentService.getUserProjectsInWorkspace(
-          user.id,
-          workspaceId,
-          fetchArchived,
+    try {
+      const fetchArchived = activeFilter === "archived";
+      const projectsData = await documentService.getUserProjectsInWorkspace(
+        user.id,
+        workspaceId,
+        fetchArchived,
+      );
+      setProjects(projectsData);
+    } catch (error: any) {
+      console.error("Failed to load workspace projects:", error);
+      if (error.message && error.message.includes("fetch")) {
+        setError(
+          "Unable to connect to the server. Please make sure the backend API is running.",
         );
-        setProjects(projectsData);
-      } catch (error: any) {
-        console.error("Failed to load workspace projects:", error);
-        if (error.message && error.message.includes("fetch")) {
-          setError(
-            "Unable to connect to the server. Please make sure the backend API is running.",
-          );
-        } else {
-          setError("Failed to load projects. Please try again later.");
-        }
-      } finally {
-        setIsLoading(false);
+      } else {
+        setError("Failed to load projects. Please try again later.");
       }
-    };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadProjects();
   }, [user, workspaceId, activeFilter]);
 
@@ -672,7 +672,7 @@ export default function WorkspaceProjectsPage() {
               <div className="mt-4">
                 <button
                   type="button"
-                  onClick={() => window.location.reload()}
+                  onClick={() => loadProjects()}
                   className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-destructive bg-destructive/10 hover:bg-destructive/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive">
                   <svg
                     className="-ml-0.5 mr-2 h-4 w-4"

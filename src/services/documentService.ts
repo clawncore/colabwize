@@ -57,9 +57,30 @@ export const documentService = {
     }
   },
 
+  normalizeProject(project: any): Project {
+    if (!project) return project;
+    return {
+      ...project,
+      originality_scans: (project.originality_scans || []).map((scan: any) => ({
+        ...scan,
+        overallScore: scan.overall_score ?? scan.overallScore,
+        scanStatus: scan.scan_status ?? scan.scanStatus,
+        matchCount: scan.match_count ?? scan.matchCount,
+        scannedAt: scan.scanned_at ?? scan.scannedAt,
+        wordsScanned: scan.words_scanned ?? scan.wordsScanned,
+        costAmount: scan.cost_amount ?? scan.costAmount,
+        projectId: scan.project_id ?? scan.projectId,
+        userId: scan.user_id ?? scan.userId,
+      })),
+    };
+  },
+
   async getProjects(): Promise<GetProjectsResponse> {
     try {
       const response = await apiClient.get("/api/documents");
+      if (response.success && response.data) {
+        response.data = response.data.map((p: any) => this.normalizeProject(p));
+      }
       return response;
     } catch (error: any) {
       console.error("Fetch projects error:", error);
@@ -88,6 +109,9 @@ export const documentService = {
         citation_style: citationStyle,
         ...updates,
       });
+      if (response.success && response.data) {
+        response.data = this.normalizeProject(response.data);
+      }
       return response;
     } catch (error: any) {
       console.error("Update project error:", error);
@@ -103,6 +127,9 @@ export const documentService = {
   ): Promise<{ success: boolean; data?: Project; error?: string }> {
     try {
       const response = await apiClient.get(`/api/documents/${projectId}`);
+      if (response.success && response.data) {
+        response.data = this.normalizeProject(response.data);
+      }
       return response;
     } catch (error: any) {
       console.error("Fetch project error:", error);
@@ -128,6 +155,9 @@ export const documentService = {
         projectId,
         workspace_id: workspaceId || null,
       });
+      if (response.success && response.data) {
+        response.data = this.normalizeProject(response.data);
+      }
       return response;
     } catch (error: any) {
       console.error("Create project error:", error);

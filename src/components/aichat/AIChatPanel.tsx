@@ -469,30 +469,6 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
           </span>
         </div>
 
-        {/* Quick Explanation Buttons */}
-        <div className="mt-2 flex flex-wrap gap-1">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs px-2 py-1 h-7 bg-blue-500 text-white"
-            onClick={() => setInput("Explain why this sentence is marked red")}>
-            Explain Red Flag
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs px-2 py-1 h-7 bg-blue-500 text-white"
-            onClick={() => setInput("Do I need to cite common knowledge?")}>
-            Common Knowledge
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs px-2 py-1 h-7 bg-blue-500 text-white"
-            onClick={() => setInput("Explain proper citation format")}>
-            Citation Format
-          </Button>
-        </div>
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden relative">

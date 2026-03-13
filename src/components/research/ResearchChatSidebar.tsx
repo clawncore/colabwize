@@ -37,6 +37,15 @@ interface ResearchChatSidebarProps {
   onClose: () => void;
   pendingMessage?: string | null;
   onQueryConsumed?: () => void;
+  // Enhancements for PDF Annotator
+  isAnnotatorMode?: boolean;
+  annotatorContext?: {
+    documentContent: string;
+    pdfAnnotations: any[];
+    projectTitle?: string;
+    projectDescription?: string;
+  };
+  onAnnotatorChat?: (messages: any[], sessionId: string | null) => Promise<Response>;
 }
 
 // Individual AI message bubble with copy support
@@ -146,6 +155,9 @@ export function ResearchChatSidebar({
   onClose,
   pendingMessage,
   onQueryConsumed,
+  isAnnotatorMode,
+  annotatorContext,
+  onAnnotatorChat,
 }: ResearchChatSidebarProps) {
   const selectedPaperCount = papers.length;
   const [messages, setMessages] = useState<Message[]>([
@@ -153,14 +165,17 @@ export function ResearchChatSidebar({
       id: "1",
       role: "assistant",
       content:
-        selectedPaperCount > 0
-          ? `I'm ready to answer questions about this document. Click a suggestion below or ask anything!`
-          : "Select papers from the matrix to ask specific questions, or ask me general research questions.",
+        isAnnotatorMode
+          ? "Hello! I'm your PDF Research Assistant. I'm aware of your highlights and notes. How can I help you analyze this document today?"
+          : selectedPaperCount > 0
+            ? `I'm ready to answer questions about this document. Click a suggestion below or ask anything!`
+            : "Select papers from the matrix to ask specific questions, or ask me general research questions.",
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [questionsFetched, setQuestionsFetched] = useState(false);
@@ -225,6 +240,57 @@ export function ResearchChatSidebar({
         role: m.role,
         content: m.content,
       }));
+
+      if (isAnnotatorMode && annotatorContext) {
+        // Special handling for Annotator Mode (Streaming)
+        const messagesForApi = history.concat([{ role: "user", content: text }]);
+        
+        let response: Response;
+        if (onAnnotatorChat) {
+          response = await onAnnotatorChat(messagesForApi, sessionId);
+        } else {
+          response = await ResearchService.chatWithAnnotator(
+            messagesForApi,
+            annotatorContext,
+            sessionId
+          );
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error("No response body");
+
+        const assistantMsgId = (Date.now() + 1).toString();
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: assistantMsgId,
+            role: "assistant",
+            content: "",
+            timestamp: new Date(),
+          },
+        ]);
+
+        const decoder = new TextDecoder();
+        let done = false;
+        let accumulatedContent = "";
+
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          done = readerDone;
+          if (value) {
+            const chunk = decoder.decode(value, { stream: true });
+            accumulatedContent += chunk;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMsgId
+                  ? { ...msg, content: accumulatedContent }
+                  : msg
+              )
+            );
+          }
+        }
+        return;
+      }
 
       let responseText = "";
 
@@ -314,11 +380,12 @@ export function ResearchChatSidebar({
           </div>
           <div>
             <h3 className="font-semibold text-sm text-foreground leading-tight">
-              Research Assistant
+              {isAnnotatorMode ? "PDF AI Assistant" : "Research Assistant"}
             </h3>
             <p className="text-[11px] text-muted-foreground">
-              {selectedPaperCount} source{selectedPaperCount !== 1 ? "s" : ""}{" "}
-              selected
+              {isAnnotatorMode 
+                ? "Document + Annotations Context" 
+                : `${selectedPaperCount} source${selectedPaperCount !== 1 ? "s" : ""} selected`}
             </p>
           </div>
         </div>

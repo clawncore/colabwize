@@ -266,6 +266,42 @@ class ApiClient {
     return this.request(url, { ...options, method: "GET" }, retries);
   }
 
+  async getBlob(url: string, options: RequestInit = {}) {
+    const fullUrl = `${this.baseUrl}${url}`;
+    let token = await this.getAuthToken();
+    
+    const authProvider =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("auth_provider") || "organic"
+        : "organic";
+
+    const headers: Record<string, string> = {
+      ...options.headers as any,
+    };
+
+    if (token) {
+      if (authProvider === "google") {
+        headers["X-Auth-Google"] = `Bearer ${token}`;
+      } else if (authProvider === "azure" || authProvider === "microsoft") {
+        headers["X-Auth-Microsoft"] = `Bearer ${token}`;
+      } else {
+        headers["X-Auth-Organic"] = `Bearer ${token}`;
+      }
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(fullUrl, {
+      ...options,
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch blob: ${response.statusText}`);
+    }
+
+    return await response.blob();
+  }
+
   async post(url: string, data: any, options: RequestInit = {}) {
     // IMPORTANT: Dynamic routes like /api/projects and /api/subscription/current must NOT retry
     // Mutations should never retry to prevent duplicate operations

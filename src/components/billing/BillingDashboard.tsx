@@ -60,12 +60,9 @@ const BillingSettingsPage: React.FC = () => {
   );
   const [surveyReason, setSurveyReason] = useState<string>("");
 
-  useEffect(() => {
-    let isMounted = true;
-
     const fetchData = async () => {
       try {
-        if (isMounted) setLoading(true);
+        setLoading(true);
 
         const [subscriptionData, paymentMethodsData, plansData] =
           await Promise.all([
@@ -83,27 +80,23 @@ const BillingSettingsPage: React.FC = () => {
             }),
           ]);
 
-        if (isMounted) {
-          if (subscriptionData) {
-            setSubscription(subscriptionData.subscription);
-            setLimits(subscriptionData.limits || {});
-            setUsage(subscriptionData.usage || {});
-            setTotalDocuments((subscriptionData as any).totalDocuments || 0);
+        if (subscriptionData) {
+          setSubscription(subscriptionData.subscription);
+          setLimits(subscriptionData.limits || {});
+          setUsage(subscriptionData.usage || {});
+          setTotalDocuments((subscriptionData as any).totalDocuments || 0);
 
-            // NEW STATE UPDATE
-            setCreditBalance((subscriptionData as any).creditBalance || 0);
-            setAutoUseCredits((subscriptionData as any).autoUseCredits ?? true);
-          }
-          setPaymentMethods(paymentMethodsData);
-          setPlans(plansData || []);
+          // NEW STATE UPDATE
+          setCreditBalance((subscriptionData as any).creditBalance || 0);
+          setAutoUseCredits((subscriptionData as any).autoUseCredits ?? true);
         }
+        setPaymentMethods(paymentMethodsData);
+        setPlans(plansData || []);
       } catch (err: any) {
         console.error("Error fetching billing data:", err);
-        if (isMounted) {
-          setError(err.message || "Failed to load billing data");
-        }
+        setError(err.message || "Failed to load billing data");
       } finally {
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
     };
 
@@ -112,15 +105,14 @@ const BillingSettingsPage: React.FC = () => {
         setInvoicesLoading(true);
         setInvoicesError(null);
         const data = await SubscriptionService.getBillingHistory();
-        if (isMounted) setInvoices(data);
+        setInvoices(data);
       } catch (err) {
         console.error("Error fetching invoices:", err);
-        if (isMounted)
-          setInvoicesError(
-            "We couldn’t load your invoices right now. Please try again.",
-          );
+        setInvoicesError(
+          "We couldn’t load your invoices right now. Please try again.",
+        );
       } finally {
-        if (isMounted) setInvoicesLoading(false);
+        setInvoicesLoading(false);
       }
     };
 
@@ -129,22 +121,19 @@ const BillingSettingsPage: React.FC = () => {
       try {
         setHistoryLoading(true);
         const history = await SubscriptionService.getCreditHistory();
-        if (isMounted) setCreditHistory(history);
+        setCreditHistory(history);
       } catch (err) {
         console.error("Error fetching credit history", err);
       } finally {
-        if (isMounted) setHistoryLoading(false);
+        setHistoryLoading(false);
       }
     };
 
-    fetchData();
-    fetchInvoices();
-    fetchCreditHistory();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    useEffect(() => {
+      fetchData();
+      fetchInvoices();
+      fetchCreditHistory();
+    }, []);
 
   // FRONTEND RECONCILIATION: Handle return from Lemon Squeezy Portal
   useEffect(() => {
@@ -158,7 +147,10 @@ const BillingSettingsPage: React.FC = () => {
         // Re-fetch data immediately
         setTimeout(() => {
           // In a real app, you might want to force a harder refresh or wait a bit for webhook
-          window.location.href = window.location.pathname; // Clean URL and refresh
+          // window.location.href = window.location.pathname; // Clean URL and refresh
+          navigate(window.location.pathname, { replace: true });
+          fetchData();
+          fetchInvoices();
         }, 1000);
       } else if (statusParam === "cancelled") {
         toast({
@@ -328,11 +320,11 @@ const BillingSettingsPage: React.FC = () => {
               Unable to load billing info
             </h3>
             <p className="text-red-600 mt-1">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm transition-colors">
-              Retry Connection
-            </button>
+              <button
+                onClick={() => fetchData()}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm transition-colors">
+                Retry Connection
+              </button>
           </div>
         </div>
       </div>

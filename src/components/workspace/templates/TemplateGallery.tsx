@@ -22,6 +22,7 @@ import { Skeleton } from "../../ui/skeleton";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import WorkspaceService from "../../../services/workspaceService";
+import WorkspaceTaskService from "../../../services/workspaceTaskService";
 import { documentService } from "../../../services/documentService";
 import { formatContentForTiptap } from "../../../utils/editorUtils";
 import {
@@ -36,8 +37,17 @@ import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 import { Textarea } from "../../ui/textarea";
 
-export default function TemplateGallery() {
-  const { id: workspaceId } = useParams<{ id: string }>();
+export default function TemplateGallery({
+  workspaceId: propsWorkspaceId,
+  onSelect,
+  isSelectionMode = false,
+}: {
+  workspaceId?: string;
+  onSelect?: (template: any) => void;
+  isSelectionMode?: boolean;
+}) {
+  const { id: paramId } = useParams<{ id: string }>();
+  const workspaceId = propsWorkspaceId || paramId;
   const navigate = useNavigate();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -152,6 +162,12 @@ export default function TemplateGallery() {
   };
 
   const handleOpenUse = (template: Template) => {
+    // If we're in selection mode, simply call the onSelect callback
+    if (onSelect) {
+      onSelect(template);
+      return;
+    }
+
     setSelectedTemplate(template);
     setUseTemplateData({
       title: `${template.name} - New Project`,
@@ -217,8 +233,26 @@ export default function TemplateGallery() {
   const loadTemplates = async () => {
     try {
       setIsLoading(true);
-      const data = await TemplateService.getTemplates({ workspaceId });
-      setTemplates(data);
+      // Load document templates
+      const docTemplates = await TemplateService.getTemplates({ workspaceId });
+      
+      // Load task templates (if we have a workspace ID)
+      let taskTemplates: any[] = [];
+      if (workspaceId) {
+        try {
+          const workspaceTasks = await WorkspaceTaskService.getTasks(workspaceId, true);
+          taskTemplates = workspaceTasks.filter(t => t.is_template).map(t => ({
+            ...t,
+            name: t.template_name || t.title,
+            type: 'task',
+            is_task_template: true
+          }));
+        } catch (err) {
+          console.error("Failed to load task templates:", err);
+        }
+      }
+
+      setTemplates([...docTemplates, ...taskTemplates]);
     } catch (error) {
       console.error("Failed to load templates:", error);
       toast.error("Failed to load templates");
@@ -266,27 +300,33 @@ export default function TemplateGallery() {
 
   return (
     <div className="space-y-6">
-      <div className="p-8 bg-background min-h-screen">
+      <div className={`${isSelectionMode ? 'p-0' : 'p-8'} bg-background min-h-screen`}>
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-6 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500 flex items-center gap-2">
-              {isLoading ? (
-                <div className="h-8 w-32 bg-muted animate-pulse rounded" />
-              ) : (
-                workspaceName
-              )}{" "}
-              Workspace Templates
-            </h1>
+            {!isSelectionMode && (
+              <h1 className="text-3xl font-bold tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500 flex items-center gap-2">
+                {isLoading ? (
+                  <div className="h-8 w-32 bg-muted animate-pulse rounded" />
+                ) : (
+                  workspaceName
+                )}{" "}
+                Workspace Templates
+              </h1>
+            )}
             <p className="text-muted-foreground">
-              Manage custom templates for your workspace.
+              {isSelectionMode 
+                ? "Select a template to quickly create your next task."
+                : "Manage custom templates for your workspace."}
             </p>
           </div>
-          <Button
-            className="bg-teal-500 border-border hover:bg-teal-600 hover:border-teal-600"
-            onClick={handleOpenCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Template
-          </Button>
+          {!isSelectionMode && (
+            <Button
+              className="bg-teal-500 border-border hover:bg-teal-600 hover:border-teal-600"
+              onClick={handleOpenCreate}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Template
+            </Button>
+          )}
         </div>
 
         {templates.length === 0 ? (

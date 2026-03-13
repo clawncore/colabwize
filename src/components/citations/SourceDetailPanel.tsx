@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   ArrowLeft,
   ExternalLink,
@@ -54,6 +54,20 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
   onUpdate,
   isPremium = false, // Default to false if not provided
 }) => {
+  // Add Escape key listener to close panel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onBack();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onBack]);
+
   // Normalize authors
   const getAuthors = () => {
     if (Array.isArray(source.authors)) return source.authors.join(", ");
@@ -180,8 +194,8 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
         },
       );
 
-      if (response.data.success) {
-        setConsensusResult(response.data.consensus);
+      if (response.success) {
+        setConsensusResult(response.consensus);
       }
     } catch (error: any) {
       console.error("Consensus analysis failed", error);
@@ -350,13 +364,18 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
             </div>
           )}
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-gray-700">
+            <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
               Literature Matrix Tags
+              {!isPremium && (
+                <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                  Plus
+                </span>
+              )}
             </h3>
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing || !isPremium}
-              className="text-[10px] text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 hover:text-blue-800 disabled:opacity-50 transition-colors"
+              className="text-[10px] text-blue-600 font-bold uppercase tracking-wider flex items-center gap-1 hover:text-blue-800 disabled:opacity-50 transition-colors bg-blue-50 px-2 py-1 rounded"
               title={
                 !source.abstract
                   ? "Abstract required for analysis"
@@ -366,6 +385,9 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
                 className={`w-3 h-3 ${isAnalyzing ? "animate-spin" : ""}`}
               />
               {isAnalyzing ? "Analyzing..." : "Auto-Analyze"}
+              {!isPremium && (
+                <Lock className="w-2.5 h-2.5 ml-1" />
+              )}
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -420,8 +442,13 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
           )}
           <div className="flex items-center gap-2 mb-3">
             <Activity className="w-4 h-4 text-gray-600" />
-            <h3 className="text-sm font-bold text-gray-700">
+            <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
               Consensus Analysis
+              {!isPremium && (
+                <span className="text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                  Premium
+                </span>
+              )}
             </h3>
           </div>
           <p className="text-xs text-gray-500 mb-3 leading-relaxed">

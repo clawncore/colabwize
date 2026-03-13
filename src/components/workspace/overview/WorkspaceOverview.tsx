@@ -24,27 +24,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { format } from "date-fns";
 import { Badge } from "../../ui/badge";
 import { ScrollArea } from "../../ui/scroll-area";
-import WorkspaceService from "../../../services/workspaceService";
+import WorkspaceService, {
+  WorkspaceOverviewData,
+} from "../../../services/workspaceService";
 import { OnlineMembers } from "./OnlineMembers";
 import { useWorkspacePermissions } from "../../../hooks/useWorkspacePermissions";
 import { InviteMemberModal } from "../InviteMemberModal";
-
-interface OverviewData {
-  stats: {
-    projects: { active: number; completed: number; total: number };
-    tasks: { todo: number; in_progress: number; done: number; total: number };
-    members: number;
-  };
-  myTasks: any[];
-  recentProjects: any[];
-  recentActivity: any[];
-}
 
 export default function WorkspaceOverview() {
   const { id: workspaceId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, token, loading: authLoading } = useAuth();
-  const [data, setData] = useState<OverviewData | null>(null);
+  const [data, setData] = useState<WorkspaceOverviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [workspaceName, setWorkspaceName] = useState<string>("");
   const [workspaceDescription, setWorkspaceDescription] = useState<
@@ -70,18 +61,10 @@ export default function WorkspaceOverview() {
   }, [workspaceId, token]);
 
   const fetchOverview = async () => {
-    if (!token) return;
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL || ""}/api/workspaces/${workspaceId}/overview`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const jsonData = await WorkspaceService.getWorkspaceOverview(
+        workspaceId!,
       );
-      if (!response.ok) throw new Error("Failed to fetch overview");
-      const jsonData = await response.json();
       setData(jsonData);
     } catch (error) {
       console.error("Error fetching overview:", error);
@@ -330,7 +313,13 @@ export default function WorkspaceOverview() {
                   {data.myTasks.map((task) => (
                     <div
                       key={task.id}
-                      className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors">
+                      onClick={() =>
+                        navigate(
+                          `/dashboard/workspace/${workspaceId}/kanban?view=list&taskId=${task.id}`,
+                        )
+                      }
+                      className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group"
+                    >
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-2 h-2 rounded-full ${
@@ -371,34 +360,38 @@ export default function WorkspaceOverview() {
 
         {/* Right Column: Activity Feed */}
         <div className="lg:col-span-1">
-          <Card className="shadow-sm border-slate-200 h-full max-h-[calc(100vh-12rem)]">
-            <CardHeader>
+          <Card className="shadow-sm border-slate-200 flex flex-col min-h-[400px]">
+            <CardHeader className="py-4">
               <CardTitle className="text-lg font-semibold text-slate-900 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-indigo-500" />
                 Latest Activity
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[500px] px-6 pb-6">
-                <div className="space-y-8 relative border-l border-slate-100 ml-3 pt-2">
+            <CardContent className="p-0 flex-1 overflow-hidden">
+              <ScrollArea className="h-[400px] lg:h-[500px] px-4 sm:px-6 pb-6 w-full">
+                <div className="space-y-6 relative border-l border-slate-100 ml-3 pt-2">
                   {data.recentActivity.map((activity, index) => (
-                    <div key={index} className="relative pl-7 group">
-                      <span className="absolute -left-1.5 top-1 h-3 w-3 rounded-full border-2 border-white bg-indigo-500 ring-4 ring-indigo-50 transition-transform group-hover:scale-125 z-10"></span>
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2.5">
-                          <Avatar className="w-6 h-6 border border-white shadow-sm">
+                    <div key={index} className="relative pl-6 sm:pl-7 group">
+                      <span className="absolute -left-1.5 top-1 h-3 w-3 rounded-full border-2 border-white bg-indigo-500 ring-2 ring-indigo-50 transition-transform group-hover:scale-125 z-10"></span>
+                      <div className="flex flex-col gap-2 overflow-hidden">
+                        <div className="flex items-center gap-2.5 overflow-hidden">
+                          <Avatar className="w-6 h-6 border border-white shadow-sm shrink-0">
                             <AvatarImage src={activity.user?.avatar_url} />
                             <AvatarFallback className="text-[9px] bg-slate-100 font-bold text-slate-600">
-                              {activity.user?.full_name?.substring(0, 2).toUpperCase()}
+                              {activity.user?.full_name
+                                ?.substring(0, 2)
+                                .toUpperCase() || "SY"}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="text-sm font-semibold text-slate-900">
+                          <span className="text-sm font-semibold text-slate-900 truncate">
                             {activity.user?.full_name || "System"}
                           </span>
                         </div>
-                        <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-100/50">
-                          <p className="text-sm text-slate-600 leading-relaxed">
-                            <span className="capitalize">{activity.action.replace(/_/g, " ").toLowerCase()}</span>
+                        <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-100/50 w-full overflow-hidden">
+                          <p className="text-sm text-slate-600 leading-relaxed break-words">
+                            <span className="capitalize">
+                              {activity.action.replace(/_/g, " ").toLowerCase()}
+                            </span>
                             {activity.details?.target_name && (
                               <span className="font-bold text-slate-800">
                                 {" "}
@@ -407,8 +400,8 @@ export default function WorkspaceOverview() {
                             )}
                           </p>
                           <div className="flex items-center gap-1.5 mt-2 text-[10px] font-medium text-slate-400">
-                            <Clock className="w-3 h-3" />
-                            <span>
+                            <Clock className="w-3 h-3 shrink-0" />
+                            <span className="truncate">
                               {format(
                                 new Date(activity.created_at),
                                 "MMM d, h:mm a",

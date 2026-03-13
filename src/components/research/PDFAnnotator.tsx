@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo, useCallback } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { Document, Page, pdfjs } from "react-pdf";
 import {
@@ -18,17 +18,18 @@ import {
   RotateCw,
   MessageSquare,
   Pen,
-  FileText,
   AlignLeft,
   Check,
+  Sparkles,
+  PanelLeft,
 } from "lucide-react";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import { ResearchChatSidebar } from "./ResearchChatSidebar";
+import { ResearchService } from "../../services/researchService";
+import { cn } from "../../lib/utils";
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface Annotation {
   id?: string;
@@ -141,10 +142,23 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
   const [isIndexing, setIsIndexing] = useState(false);
   const pdfDocRef = useRef<any>(null);
   const textIndexRef = useRef<string[]>([]); // index[i] = text of page i+1
+  const indexingSessionRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const noteInputRef = useRef<HTMLInputElement>(null);
+  const [showAiChat, setShowAiChat] = useState(false);
+  const [showLeftSidebar, setShowLeftSidebar] = useState(true);
+  const [pendingAiQuery, setPendingAiQuery] = useState<string | null>(null);
+
+  // Memoize options to prevent unnecessary re-renders of the Document component
+  const documentOptions = useMemo(
+    () => ({
+      cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+      cMapPacked: true,
+      standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+    }),
+    [],
+  );
 
   const documentFile = React.useMemo(() => {
     if (authToken && typeof fileUrl === "string") {
@@ -157,14 +171,20 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
     return fileUrl;
   }, [fileUrl, authToken]);
 
-  const onDocumentLoadSuccess = async (pdf: any) => {
+  const onDocumentLoadSuccess = useCallback(async (pdf: any) => {
     setNumPages(pdf.numPages);
     pdfDocRef.current = pdf;
+
     // Build text index in background
+    const currentSession = ++indexingSessionRef.current;
     setIsIndexing(true);
+
     try {
       const pages: string[] = [];
       for (let i = 1; i <= pdf.numPages; i++) {
+        // Stop if a new document has started loading
+        if (currentSession !== indexingSessionRef.current) return;
+
         const page = await pdf.getPage(i);
         const tc = await page.getTextContent();
         const pageText = tc.items
@@ -173,13 +193,20 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
           .toLowerCase();
         pages.push(pageText);
       }
-      textIndexRef.current = pages;
+
+      if (currentSession === indexingSessionRef.current) {
+        textIndexRef.current = pages;
+      }
     } catch (err) {
-      console.warn("Failed to index PDF text:", err);
+      if (currentSession === indexingSessionRef.current) {
+        console.warn("Failed to index PDF text:", err);
+      }
     } finally {
-      setIsIndexing(false);
+      if (currentSession === indexingSessionRef.current) {
+        setIsIndexing(false);
+      }
     }
-  };
+  }, []);
 
   const handlePrevPage = () => setPageNumber((p) => Math.max(1, p - 1));
   const handleNextPage = () =>
@@ -201,6 +228,17 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
       setJumpPage("");
     }
   };
+
+  // Close on Escape
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   // window.find is non-standard — cast to any to silence TypeScript
   const browserFind = (q: string, backwards = false) =>
@@ -738,6 +776,18 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
             className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all flex-shrink-0">
             <X className="w-4 h-4" />
           </button>
+          <div className="w-px h-6 bg-gray-200" />
+          <button
+            onClick={() => setShowLeftSidebar(!showLeftSidebar)}
+            className={cn(
+              "p-1.5 rounded-lg transition-all flex-shrink-0",
+              showLeftSidebar
+                ? "bg-indigo-100 text-indigo-600"
+                : "text-gray-400 hover:bg-gray-100",
+            )}
+            title={showLeftSidebar ? "Hide Annotations" : "Show Annotations"}>
+            <PanelLeft className="w-4 h-4" />
+          </button>
           <div className="min-w-0">
             <p className="text-xs font-bold text-gray-900 truncate max-w-xs">
               {title}
@@ -790,6 +840,22 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
             )}
             title="Pin Comment (click on page)">
             <MessageSquare className="w-4 h-4" />
+          </button>
+
+          <div className="w-px h-5 bg-gray-200 mx-0.5" />
+
+          {/* Ask AI */}
+          <button
+            onClick={() => setShowAiChat(!showAiChat)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs font-bold",
+              showAiChat
+                ? "bg-purple-600 text-white shadow-md"
+                : "text-purple-600 hover:bg-purple-50 hover:text-purple-700 border border-purple-200",
+            )}
+            title="Ask AI Assistant">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Ask AI</span>
           </button>
 
           {/* Color swatches */}
@@ -993,8 +1059,9 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
 
       {/* Body */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-72 bg-white border-r border-gray-100 flex flex-col">
+        {/* Left Sidebar: Annotations List (Conditional or fixed) */}
+        {showLeftSidebar && (
+          <div className="w-72 bg-white border-r border-gray-100 flex flex-col animate-in slide-in-from-left duration-200">
           {/* Sidebar header */}
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <div>
@@ -1005,21 +1072,6 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
                 {annotations.length} total · {currentPageAnns} on this page
               </p>
             </div>
-            {annotations.length > 0 && (
-              <button
-                onClick={() => setAnnotations([])}
-                className="text-[10px] text-red-500 hover:text-red-700 font-bold transition-colors"
-                title="Clear all annotations">
-                Clear all
-              </button>
-            )}
-          </div>
-
-          {/* Page filter tabs */}
-          <div className="flex border-b border-gray-100">
-            <button className="flex-1 py-2 text-[10px] font-bold text-indigo-700 border-b-2 border-indigo-600 uppercase tracking-wider">
-              All Pages
-            </button>
           </div>
 
           {/* Annotation list */}
@@ -1032,161 +1084,82 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
                 <p className="text-xs font-semibold text-gray-500">
                   No annotations yet
                 </p>
-                <p className="text-[10px] text-gray-400 mt-1 max-w-[160px] leading-relaxed">
-                  Use the toolbar to highlight text, pin notes, or add comments
-                </p>
               </div>
             ) : (
-              annotations.map((ann, idx) => {
-                const colorDot =
-                  ANNOTATION_COLORS.find((c) => c.value === ann.color)?.dot ||
-                  "#FACC15";
-                const isCurrentPage = ann.coordinates.page === pageNumber;
-                const authorInitial = (ann.authorName || "?")[0].toUpperCase();
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => {
-                      const samePage = ann.coordinates.page === pageNumber;
-                      jumpToAnnotation(ann);
-
-                      // Use a small delay if changing pages to let the new Page component mount
-                      const delay = samePage ? 0 : 300;
-                      setTimeout(() => {
-                        if (ann.type === "note" || ann.type === "comment") {
-                          setEditingAnnotation({
-                            idx,
-                            text: ann.content || "",
-                          });
-                        }
-                      }, delay);
-                    }}
-                    className={`p-3 rounded-xl border cursor-pointer transition-all group hover:shadow-md ${
-                      isCurrentPage
-                        ? "border-indigo-200 bg-indigo-50/50"
-                        : "border-gray-100 bg-white hover:border-gray-200"
-                    }`}>
-                    {/* Type badge + color + page */}
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: colorDot }}
-                        />
-                        <span
-                          className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
-                            ann.type === "highlight"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : ann.type === "comment"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-amber-100 text-amber-700"
-                          }`}>
-                          {ann.type}
-                        </span>
-                        <span className="text-[9px] text-gray-400 font-bold">
-                          Pg {ann.coordinates.page}
-                        </span>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteAnnotation(idx);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all p-0.5 rounded">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                    {/* Content */}
-                    <p className="text-xs text-gray-700 leading-relaxed line-clamp-3 italic">
-                      {ann.type === "highlight"
-                        ? `"${ann.content}"`
-                        : ann.content || "—"}
-                    </p>
-                    {/* Author row */}
-                    {ann.authorName && (
-                      <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
-                        <div
-                          className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0 ${
-                            ann.type === "comment"
-                              ? "bg-blue-500"
-                              : ann.type === "highlight"
-                                ? "bg-yellow-500"
-                                : "bg-amber-400"
-                          }`}>
-                          {authorInitial}
-                        </div>
-                        <span className="text-[9px] text-gray-500 font-medium truncate">
-                          {ann.authorName}
-                        </span>
-                        {ann.createdAt && (
-                          <span className="text-[9px] text-gray-400 ml-auto flex-shrink-0">
-                            {new Date(ann.createdAt).toLocaleDateString(
-                              "en-US",
-                              { month: "short", day: "numeric" },
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    {/* Jump hint */}
-                    {!isCurrentPage && (
-                      <p className="text-[9px] text-indigo-500 mt-1.5 font-bold">
-                        Click to jump to page {ann.coordinates.page}
-                      </p>
-                    )}
+              annotations.map((ann, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => jumpToAnnotation(ann)}
+                  className={`p-3 rounded-xl border cursor-pointer transition-all group hover:shadow-md ${
+                    ann.coordinates.page === pageNumber
+                      ? "border-indigo-200 bg-indigo-50/50"
+                      : "border-gray-100 bg-white hover:border-gray-200"
+                  }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-gray-100">
+                      {ann.type}
+                    </span>
+                    <span className="text-[9px] text-gray-400 font-bold">
+                      Pg {ann.coordinates.page}
+                    </span>
                   </div>
-                );
-              })
+                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-2">
+                    {ann.content}
+                  </p>
+                </div>
+              ))
             )}
           </div>
-
-          {/* Sidebar footer stats */}
-          <div className="border-t border-gray-100 px-4 py-2 bg-gray-50/50 space-y-1">
-            {[
-              {
-                label: "Highlights",
-                count: annotations.filter((a) => a.type === "highlight").length,
-                color: "text-yellow-600",
-                icon: <Highlighter className="w-3 h-3" />,
-              },
-              {
-                label: "Notes",
-                count: annotations.filter((a) => a.type === "note").length,
-                color: "text-amber-600",
-                icon: <StickyNote className="w-3 h-3" />,
-              },
-              {
-                label: "Comments",
-                count: annotations.filter((a) => a.type === "comment").length,
-                color: "text-blue-600",
-                icon: <MessageSquare className="w-3 h-3" />,
-              },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="flex items-center justify-between text-[10px]">
-                <div
-                  className={`flex items-center gap-1 font-bold ${stat.color}`}>
-                  {stat.icon}
-                  {stat.label}
-                </div>
-                <span className="text-gray-500 font-bold">{stat.count}</span>
-              </div>
-            ))}
-          </div>
         </div>
+        )}
 
-        {/* PDF Viewer */}
+        {/* PDF Viewer Central Area */}
         <div
           ref={containerRef}
           onMouseUp={handleTextSelection}
-          className="flex-1 overflow-auto p-8 flex justify-center"
-          style={{
-            backgroundColor: "#e8ecf0",
-            backgroundImage: `radial-gradient(circle, rgba(148,163,184,0.4) 1px, transparent 1px)`,
-            backgroundSize: "20px 20px",
-          }}>
-          <div className="shadow-2xl shadow-gray-400/30 relative">
+          className="flex-1 overflow-auto p-8 flex justify-center relative bg-gray-200/50">
+          {/* Selection Tooltip for AI */}
+          {activeTool === "view" &&
+            window.getSelection()?.toString().trim() && (
+              <div
+                className="fixed z-[100] bg-white border border-purple-100 shadow-xl rounded-full px-3 py-1.5 flex items-center gap-2 animate-in fade-in zoom-in duration-200"
+                style={{
+                  top:
+                    (window
+                      .getSelection()
+                      ?.getRangeAt(0)
+                      .getBoundingClientRect().top || 0) - 45,
+                  left:
+                    (window
+                      .getSelection()
+                      ?.getRangeAt(0)
+                      .getBoundingClientRect().left || 0) +
+                    (window
+                      .getSelection()
+                      ?.getRangeAt(0)
+                      .getBoundingClientRect().width || 0) /
+                      2,
+                  transform: "translateX(-50%)",
+                }}>
+                <button
+                  onClick={() => {
+                    const text = window.getSelection()?.toString().trim();
+                    if (text) {
+                      setPendingAiQuery(
+                        `Analyze this part of the document: "${text}"`,
+                      );
+                      setShowAiChat(true);
+                      window.getSelection()?.removeAllRanges();
+                    }
+                  }}
+                  className="flex items-center gap-1.5 text-purple-600 hover:text-purple-700 font-bold text-xs">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Ask AI</span>
+                </button>
+              </div>
+            )}
+
+          <div className="shadow-2xl shadow-gray-400/30 relative h-fit">
             {/* Pending note popup */}
             {pendingNotePos && (
               <div
@@ -1198,36 +1171,23 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
                 }}
                 onClick={(e) => e.stopPropagation()}>
                 <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-3 w-64">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">
-                    {activeTool === "comment"
-                      ? "💬 Add Comment"
-                      : "📌 Add Note"}
-                  </p>
                   <textarea
-                    ref={noteInputRef as any}
                     value={pendingNoteText}
                     onChange={(e) => setPendingNoteText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        confirmNote();
-                      }
-                      if (e.key === "Escape") setPendingNotePos(null);
-                    }}
-                    placeholder="Type your note... (Enter to save)"
+                    placeholder="Type your note..."
                     rows={3}
-                    className="w-full text-sm border border-gray-200 rounded-lg p-2 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 text-gray-700"
+                    className="w-full text-sm border border-gray-200 rounded-lg p-2 resize-none"
                     autoFocus
                   />
                   <div className="flex gap-2 mt-2">
                     <button
                       onClick={confirmNote}
-                      className="flex-1 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1">
-                      <Check className="w-3 h-3" /> Save
+                      className="flex-1 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg">
+                      Save
                     </button>
                     <button
                       onClick={() => setPendingNotePos(null)}
-                      className="flex-1 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-all">
+                      className="flex-1 py-1.5 bg-gray-100 text-xs font-bold rounded-lg">
                       Cancel
                     </button>
                   </div>
@@ -1241,69 +1201,64 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
               onClick={handlePageClick}>
               <Document
                 file={documentFile}
-                onLoadSuccess={onDocumentLoadSuccess}
-                onLoadError={(error) => console.error("PDF Load Error:", error)}
+                options={documentOptions}
                 loading={
-                  <div className="flex flex-col items-center justify-center p-20 bg-white rounded-xl border border-gray-100 shadow-xl min-w-[600px] min-h-[800px]">
-                    <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
-                    <p className="text-gray-900 font-bold">Loading PDF...</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Preparing document
+                  <div className="flex flex-col items-center justify-center p-12 min-h-[400px]">
+                    <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-4" />
+                    <p className="text-slate-500 font-medium animate-pulse">
+                      Preparing document...
                     </p>
                   </div>
                 }
-                error={
-                  <div className="p-10 bg-red-50 border border-red-200 rounded-xl text-center min-w-[400px]">
-                    <FileText className="w-10 h-10 text-red-400 mx-auto mb-3" />
-                    <p className="text-red-700 font-bold">Failed to load PDF</p>
-                    <p className="text-xs text-red-500 mt-2 mb-4">
-                      The file may be corrupted or inaccessible.
-                    </p>
-                    <button
-                      onClick={onClose}
-                      className="text-sm font-bold text-red-600 hover:text-red-800 underline">
-                      Close Viewer
-                    </button>
-                  </div>
-                }>
+                onLoadSuccess={onDocumentLoadSuccess}>
                 <Page
                   pageNumber={pageNumber}
                   scale={scale}
                   rotate={rotation}
                   renderAnnotationLayer={true}
                   renderTextLayer={true}
-                  className="relative">
-                  {/* Highlight overlay */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    {renderHighlights()}
-                  </div>
-                  {/* Note / comment markers */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    {renderNoteMarkers()}
-                  </div>
-                  {/* Click-capture overlay — only active in note/comment mode */}
-                  {(activeTool === "note" || activeTool === "comment") && (
-                    <div
-                      className="absolute inset-0 z-20 cursor-crosshair"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (pendingNotePos) {
-                          setPendingNotePos(null);
-                          return;
-                        }
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const x = ((e.clientX - rect.left) / rect.width) * 100;
-                        const y = ((e.clientY - rect.top) / rect.height) * 100;
-                        setPendingNotePos({ page: pageNumber, x, y });
-                        setPendingNoteText("");
-                      }}
-                    />
-                  )}
+                  loading={
+                    <div className="flex items-center justify-center p-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+                    </div>
+                  }>
+                  {renderHighlights()}
+                  {renderNoteMarkers()}
                 </Page>
               </Document>
             </div>
           </div>
         </div>
+
+        {/* AI Chat Sidebar */}
+        {showAiChat && (
+          <div className="w-[400px] max-w-[80%] border-l border-gray-200 bg-white flex flex-col shadow-xl z-30 animate-in slide-in-from-right duration-300">
+            <ResearchChatSidebar
+              isOpen={showAiChat}
+              onClose={() => setShowAiChat(false)}
+              isAnnotatorMode={true}
+              annotatorContext={{
+                documentContent: textIndexRef.current.join("\n"),
+                pdfAnnotations: annotations,
+                projectTitle: title,
+              }}
+              papers={[]}
+              pendingMessage={pendingAiQuery}
+              onQueryConsumed={() => setPendingAiQuery(null)}
+              onAnnotatorChat={async (messages, sessionId) => {
+                return ResearchService.chatWithAnnotator(
+                  messages,
+                  {
+                    documentContent: textIndexRef.current.join("\n"),
+                    pdfAnnotations: annotations,
+                    projectTitle: title,
+                  },
+                  sessionId,
+                );
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Footer / Pagination */}

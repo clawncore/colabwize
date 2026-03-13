@@ -62,6 +62,17 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // PDF Only Validation
+    if (!file.type.includes("pdf") && !file.name.toLowerCase().endsWith(".pdf")) {
+      toast({
+        title: "Invalid file type",
+        description: "Only PDF files are allowed in this section.",
+        variant: "destructive",
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
     // Client-side size validation based on plan
     const sizeMB = file.size / (1024 * 1024);
     let sizeLimit = 100;
@@ -83,7 +94,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
       onAttachmentChange([...attachments, newAttachment]);
       toast({
         title: "Success",
-        description: "File uploaded successfully.",
+        description: "PDF uploaded successfully.",
       });
     } catch (error: any) {
       console.error("Upload failed", error);
@@ -130,6 +141,27 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
     }
   };
 
+  const handleDownload = async (attachment: WorkspaceAttachment) => {
+    try {
+      const blob = await workspaceTaskService.downloadAttachment(attachment.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = attachment.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download failed", error);
+      toast({
+        title: "Download failed",
+        description: "Could not download the file.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-3">
       <UpgradePromptDialog
@@ -164,6 +196,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
           type="file"
           ref={fileInputRef}
           className="hidden"
+          accept=".pdf,application/pdf"
           onChange={handleFileSelect}
         />
       </div>
@@ -187,14 +220,12 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
             </div>
 
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <a
-                href={`${process.env.REACT_APP_API_URL || ""}/api/workspaces/tasks/attachments/${file.id}/download`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => handleDownload(file)}
                 className="p-1 hover:bg-white rounded text-slate-400 hover:text-indigo-600"
                 title="Download">
                 <Download className="w-3 h-3" />
-              </a>
+              </button>
               {canEdit && (
                 <button
                   onClick={() => handleDelete(file.id)}

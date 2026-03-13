@@ -188,6 +188,36 @@ export class ResearchService {
     }
   }
 
+  // Chat specifically for the PDF Annotator with full context
+  static async chatWithAnnotator(
+    messages: any[],
+    context: {
+      documentContent: string;
+      pdfAnnotations: any[];
+      projectTitle?: string;
+      projectDescription?: string;
+      selectedText?: string;
+    },
+    sessionId?: string | null,
+  ): Promise<Response> {
+    try {
+      // Use apiClient.download to get raw response for streaming
+      const response = await apiClient.download("/api/chat", {
+        messages,
+        context: {
+          ...context,
+          isPdfAnnotator: true,
+        },
+        sessionId,
+      });
+
+      return response;
+    } catch (error) {
+      console.error("Error chatting with PDF Annotator:", error);
+      throw error;
+    }
+  }
+
   // Generate AI-suggested questions for an uploaded document or project
   static async getSuggestedQuestions(
     documentId: string,

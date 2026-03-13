@@ -218,6 +218,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                     ))}
                   </div>
                   <Button
+                    type="button"
                     onClick={handleCreateLabel}
                     size="sm"
                     className="w-full">

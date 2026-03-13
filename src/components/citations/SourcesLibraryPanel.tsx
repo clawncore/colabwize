@@ -392,7 +392,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                     </button>
 
                     {/* Action Footer */}
-                    <div className="flex items-center gap-4 pt-2 border-t border-gray-50">
+                    <div className="flex flex-wrap items-center gap-3 gap-y-2 pt-2 border-t border-gray-50">
                       {/* Interactive Cite Button Logic */}
                       {(() => {
                         const authors = Array.isArray(source.authors)
@@ -453,7 +453,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                               setPendingCiteSource(pendingSource);
                               setShowStylePanel(true);
                             }}
-                            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
                             <Quote className="w-3.5 h-3.5 fill-current" />
                             Cite
                           </button>
@@ -472,7 +472,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                                 });
                               }
                             }}
-                            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
                             <Quote className="w-3.5 h-3.5 fill-current" />
                             Cite
                           </button>
@@ -481,7 +481,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
 
                       <button
                         onClick={() => onSourceSelect(source)}
-                        className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors">
+                        className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
                         <MoreHorizontal className="w-3.5 h-3.5" />
                         Details
                       </button>
@@ -499,7 +499,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                                 e.stopPropagation();
                                 handleOpenViewer(source);
                               }}
-                              className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors ml-auto">
+                              className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors whitespace-nowrap">
                               <FileText className="w-3.5 h-3.5" />
                               Read Paper
                             </button>
@@ -511,7 +511,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                                 e.stopPropagation();
                                 window.open(url, "_blank");
                               }}
-                              className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors ml-auto">
+                              className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
                               <FileText className="w-3.5 h-3.5" />
                               Visit Website
                             </button>

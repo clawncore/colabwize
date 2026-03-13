@@ -220,7 +220,7 @@ function PolicyContent() {
             <Button
               onClick={() => {
                 localStorage.removeItem("cookie-consent");
-                window.location.reload();
+                alert("Cookie preferences have been reset.");
               }}
               className="bg-green-700 hover:bg-green-800 text-white">
               Reset Cookie Preferences
