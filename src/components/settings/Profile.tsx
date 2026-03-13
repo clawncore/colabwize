@@ -34,9 +34,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showOTPModal, setShowOTPModal] = useState(false);
-  const [showMethodModal, setShowMethodModal] = useState(false); // New modal for method selection
   const [otp, setOtp] = useState("");
-  const [otpMethod, setOtpMethod] = useState<"email" | "sms">("email"); // Default to email
   const [otpLoading, setOtpLoading] = useState(false);
   const [pendingProfileData, setPendingProfileData] = useState<any>(null);
 
@@ -86,33 +84,25 @@ export default function Profile() {
   };
 
   const handleSaveClick = () => {
-    // Check if user has phone number to offer choice
-    // If we have both, show selector. If only email, default to email.
-    // For now, let's always show selector if we want to be explicit,
-    // or just checking if phone exists to enable that option.
-
-    // Logic:
-    // 1. Store pending data
+    // Store pending data
     setPendingProfileData(profile);
-    // 2. Open Method Selection Modal
-    setShowMethodModal(true);
+    // Request OTP directly
+    handleRequestOTP();
   };
-
   const handleRequestOTP = async () => {
     setSaving(true);
     try {
-      // Request OTP with selected method
+      // Request OTP with email method
       const response = await apiClient.post("/api/users/request-otp", {
         action: "profile_update",
-        delivery_method: otpMethod,
+        delivery_method: "email",
       });
 
       if (response.success) {
-        setShowMethodModal(false);
         setShowOTPModal(true);
         toast({
           title: "Code Sent",
-          description: `Verification code sent to your ${otpMethod === "email" ? "email" : "phone"}.`,
+          description: `Verification code sent to your email.`,
         });
       } else {
         throw new Error(response.message || "Failed to request OTP");
@@ -519,9 +509,8 @@ export default function Profile() {
             <DialogHeader>
               <DialogTitle>Verify Profile Update</DialogTitle>
               <DialogDescription>
-                We've sent a 6-digit verification code to your{" "}
-                {otpMethod === "sms" ? "phone number" : "email address"}. Please
-                enter it below to confirm your profile update.
+                We've sent a 6-digit verification code to your email address.
+                Please enter it below to confirm your profile update.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
@@ -564,46 +553,6 @@ export default function Profile() {
         </Dialog>
       )}
 
-      {/* Verification Method Selection Modal */}
-      <Dialog open={showMethodModal} onOpenChange={setShowMethodModal}>
-        <DialogContent className="sm:max-w-md bg-white text-gray-900">
-          <DialogHeader>
-            <DialogTitle>Verify Profile Update</DialogTitle>
-            <DialogDescription>
-              To confirm your profile update, we'll send a verification code.
-              Please choose how you'd like to receive it.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4">
-            <div className="flex items-center space-x-2 border p-3 rounded-lg bg-gray-50">
-              <div className="flex-1">
-                <div className="font-medium text-gray-900">Email</div>
-                <div className="text-sm text-gray-500">{profile.email}</div>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="sm:justify-end">
-            <Button variant="outline" onClick={() => setShowMethodModal(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleRequestOTP}
-              disabled={saving}
-              className="bg-blue-600 text-white">
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                "Send Verification Code"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -3,9 +3,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, User, Calendar, Clock, Share2 } from "lucide-react";
 import Layout from "../../components/Layout";
 import { Button } from "../../components/ui/button";
+import PageMetadata from "../../components/PageMetadata";
 import { blogPosts } from "../../data/blogPosts";
-
-import { Helmet } from "react-helmet-async";
 
 export default function BlogPostPage() {
   const { id } = useParams<{ id: string }>();
@@ -47,22 +46,20 @@ export default function BlogPostPage() {
       name: "ColabWize",
     },
     datePublished: post.date,
-    mainEntityOfPage: `https://colabwize.com/resources/blogs/${post.id}`,
+    mainEntityOfPage: `https://app.colabwize.com/resources/blogs/${post.id}`,
   };
 
   return (
     <Layout>
-      <Helmet>
-        <title>{post.title} | ColabWize Blog</title>
-        <meta name="description" content={post.excerpt} />
-        <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={post.excerpt} />
-        <meta property="og:type" content="article" />
-        <link rel="canonical" href={`https://colabwize.com/resources/blogs/${post.id}`} />
+      <PageMetadata 
+        title={post.title} 
+        description={post.excerpt}
+        ogType="article"
+      >
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>
-      </Helmet>
+      </PageMetadata>
       <article className="min-h-screen bg-white">
         {/* Header / Hero */}
         <div className="relative h-[400px] w-full bg-gray-900">

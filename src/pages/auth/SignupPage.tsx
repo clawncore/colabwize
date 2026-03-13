@@ -96,7 +96,7 @@ const signupSchema = z
     email: z.string().email("Please enter a valid email address"),
     countryCode: z.string().optional(),
     phoneNumber: z.string().optional(),
-    otpMethod: z.union([z.literal("sms"), z.literal("email")]), // Default handled by useForm
+    otpMethod: z.literal("email"), // Forced to email
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -746,7 +746,7 @@ const SignupPage: React.FC = () => {
           // Don't continue to survey if login fails - this will cause survey submission to fail
           throw new Error(
             loginError.message ||
-              "Failed to sign you in after verification. Please try signing in manually from the login page.",
+            "Failed to sign you in after verification. Please try signing in manually from the login page.",
           );
         }
 
@@ -934,7 +934,7 @@ const SignupPage: React.FC = () => {
       }
       subtitle={
         showOtpStep
-          ? `We've sent a code to your ${otpMethod === "sms" ? "phone number" : "email"}`
+          ? `We've sent a code to your email`
           : showSurveyStep
             ? "Help us personalize your ColabWize experience"
             : selectedPlan
@@ -1018,7 +1018,7 @@ const SignupPage: React.FC = () => {
                 leftIcon={<User className="h-4 w-4" />}
                 error={
                   watchedFields.fullName !== undefined &&
-                  watchedFields.fullName !== ""
+                    watchedFields.fullName !== ""
                     ? errors.fullName?.message || validationErrors.fullName
                     : undefined
                 }
@@ -1040,7 +1040,7 @@ const SignupPage: React.FC = () => {
                 leftIcon={<Mail className="h-4 w-4" />}
                 error={
                   watchedFields.email !== undefined &&
-                  watchedFields.email !== ""
+                    watchedFields.email !== ""
                     ? errors.email?.message || validationErrors.email
                     : undefined
                 }
@@ -1064,7 +1064,7 @@ const SignupPage: React.FC = () => {
                   showPasswordToggle
                   error={
                     watchedFields.password !== undefined &&
-                    watchedFields.password !== ""
+                      watchedFields.password !== ""
                       ? errors.password?.message
                       : undefined
                   }
@@ -1086,7 +1086,7 @@ const SignupPage: React.FC = () => {
                 showPasswordToggle
                 error={
                   watchedFields.confirmPassword !== undefined &&
-                  watchedFields.confirmPassword !== ""
+                    watchedFields.confirmPassword !== ""
                     ? errors.confirmPassword?.message
                     : undefined
                 }
@@ -1178,8 +1178,7 @@ const SignupPage: React.FC = () => {
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <p className="text-gray-400 mb-2">
-                  Enter the 6-digit code we sent to your{" "}
-                  {otpMethod === "sms" ? "phone number" : "email"}
+                  Enter the 6-digit code we sent to your email
                 </p>
                 <p className="text-sm text-gray-500">
                   Didn't receive it?{" "}

@@ -1,13 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = 'https://colabwize.com';
+const BASE_URL = 'https://app.colabwize.com';
 
 const staticRoutes = [
   '/',
-  '/features',
-  '/pricing',
-  '/resources/blogs',
   '/academic-integrity',
   '/academic-integrity-guide',
   '/prove-authorship',
@@ -20,10 +17,45 @@ const staticRoutes = [
   '/what-is-academic-integrity',
   '/what-is-citation-verification',
   '/what-is-authorship-verification',
-  '/solutions/originality-map',
+  '/what-is-colabwize',
+  '/academic-integrity-platform',
+  '/citation-auditor',
+  '/proof-of-authorship',
+  '/academic-collaboration',
+  '/apa-citation-generator',
+  '/mla-citation-generator',
+  '/chicago-citation-generator',
+  '/plagiarism-checker',
+  '/research-paper-organizer',
+  '/solutions/chat-with-pdfs',
   '/solutions/citation-confidence',
   '/solutions/authorship-certificate',
-  '/solutions/collaboration'
+  '/solutions/unified-dashboard',
+  '/solutions/analytics-metrics',
+  '/solutions/draft-comparison',
+  '/solutions/collaboration',
+  '/solutions/team-workspace',
+  '/features',
+  '/integrations',
+  '/changelog',
+  '/roadmap',
+  '/pricing',
+  '/resources/blogs',
+  '/resources/case-studies',
+  '/resources/help-center',
+  '/resources/documentation',
+  '/resources/schedule-demo',
+  '/company/about',
+  '/company/careers',
+  '/company/partners',
+  '/company/faq',
+  '/legal/cookies',
+  '/legal/gdpr',
+  '/legal/security',
+  '/legal/privacy',
+  '/legal/terms',
+  '/legal/refund-policy',
+  '/contact'
 ];
 
 function generateSitemap() {

@@ -1,5 +1,7 @@
-# https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Allow: /resources/blogs/
-Sitemap: https://colabwize.com/sitemap.xml
-Disallow:
+Allow: /
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /signup
+
+Sitemap: https://app.colabwize.com/sitemap.xml
