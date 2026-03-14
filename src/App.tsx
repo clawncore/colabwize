@@ -114,7 +114,7 @@ import AuthInitializer from "./components/auth/AuthInitializer";
 
 // Add imports for workspace pages or members components here
 import WorkspaceAnalytics from "./components/workspace/analytics/page";
-import { TeamChat } from "./components/workspace/team/TeamChat";
+import TeamChat from "./components/workspace/chat/page";
 import { KanbanBoard } from "./components/workspace/kanban/page";
 import WorkspaceProjectsPage from "./components/workspace/projects/page";
 import FilesPage from "./components/workspace/files/FilesPage";
@@ -138,12 +138,12 @@ function App() {
   return (
     <HelmetProvider>
       <ThemeProvider>
-        <TimeTrackingProvider>
-          <BillingProvider>
-            <TooltipProvider>
-              <BrowserRouter>
-                <AuthProvider>
-                  <AuthInitializer>
+        <BillingProvider>
+          <TooltipProvider>
+            <BrowserRouter>
+              <AuthProvider>
+                <AuthInitializer>
+                  <TimeTrackingProvider>
                     <PageMetadata />
                     <Routes>
                       {/* Default Route - Public */}
@@ -584,14 +584,14 @@ function App() {
                       {/* 404 Catch-All Route */}
                       <Route path="*" element={<NotFoundPage />} />
                     </Routes>
-                  </AuthInitializer>
-                </AuthProvider>
-                <CookieConsent />
-              </BrowserRouter>
-              <Toaster />
-            </TooltipProvider>
-          </BillingProvider>
-        </TimeTrackingProvider>
+                  </TimeTrackingProvider>
+                </AuthInitializer>
+              </AuthProvider>
+              <CookieConsent />
+            </BrowserRouter>
+            <Toaster />
+          </TooltipProvider>
+        </BillingProvider>
       </ThemeProvider>
     </HelmetProvider>
   );

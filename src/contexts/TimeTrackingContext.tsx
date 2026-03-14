@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { timeTrackingService, TimeEntry } from "../services/timeTrackingService";
+import { supabase } from "../lib/supabase/client";
 
 interface TimeTrackingContextType {
     activeTimer: TimeEntry | null;
@@ -30,6 +31,13 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const refreshTimer = useCallback(async () => {
         try {
+            // Check if user is authenticated before checking for active timer
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                console.log("Skipping active timer check - no session found");
+                return;
+            }
+
             const timer = await timeTrackingService.getActiveTimer();
             setActiveTimer(timer);
         } catch (error) {

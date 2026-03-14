@@ -13,6 +13,7 @@ import { UsageMeter } from "../../components/subscription/UsageMeter";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import MobileRestrictedPage from "../MobileRestrictedPage";
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
+import { useChatNotifications } from "../../hooks/useChatNotifications";
 import {
   Dialog,
   DialogContent,
@@ -79,6 +80,7 @@ export default function DashboardLayout({
   children,
   activeTab,
 }: DashboardLayoutProps) {
+  useChatNotifications();
   const { isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();

@@ -8,7 +8,7 @@ import { DraftComparisonPanel } from "../originality/DraftComparisonPanel";
 import { CitationConfidencePanel } from "../citations/CitationConfidencePanel";
 import { SourcesLibraryPanel } from "../citations/SourcesLibraryPanel";
 import { AIChatPanel } from "../aichat/AIChatPanel";
-import { TeamChat } from "../workspace/team/TeamChat";
+import TeamChat from "../workspace/chat/page";
 import { SourceDetailPanel } from "../citations/SourceDetailPanel";
 import { CitationAuditReportPanel } from "../audit/CitationAuditReportPanel";
 import { Project, documentService } from "../../services/documentService";
