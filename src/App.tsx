@@ -128,6 +128,8 @@ import WorkspaceMembersPage from "./components/admin/members/page";
 import WorkspaceSettingsPage from "./components/admin/settings/page";
 import WorkspaceActivityPage from "./components/admin/activity/page";
 import { AdminRoute } from "./components/auth/AdminRoute";
+import PlatformAdminGuard from "./components/auth/PlatformAdminGuard";
+import AdminEmailCenter from "./components/admin/email/AdminEmailCenter";
 
 // Add imports for notifications
 import NotificationsPage from "./components/workspace/notifications/NotificationsPage";
@@ -581,6 +583,49 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
+                      
+                      {/* Platform Administration Center Routes */}
+                      <Route
+                        path="/admin"
+                        element={
+                          <PlatformAdminGuard>
+                            <div>Platform Admin Dashboard Placeholder</div>
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/email"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminEmailCenter />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/users"
+                        element={
+                          <PlatformAdminGuard>
+                            <div>Platform Users List Placeholder</div>
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/broadcast"
+                        element={
+                          <PlatformAdminGuard>
+                            <div>Platform Broadcast Placeholder</div>
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/email-logs"
+                        element={
+                          <PlatformAdminGuard>
+                            <div>Platform Email Logs Placeholder</div>
+                          </PlatformAdminGuard>
+                        }
+                      />
+
                       {/* 404 Catch-All Route */}
                       <Route path="*" element={<NotFoundPage />} />
                     </Routes>
