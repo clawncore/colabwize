@@ -36,11 +36,13 @@ const PlatformAdminGuard: React.FC<PlatformAdminGuardProps> = ({ children }) => 
   const userEmail = user.email?.toLowerCase() || "";
   const isWhitelisted = ADMIN_WHITELIST.includes(userEmail);
 
-  if (role !== "admin" || !isWhitelisted) {
-    return <Navigate to="/dashboard" replace />;
+  // Allow if EITHER role is admin OR email is whitelisted
+  if (role === "admin" || isWhitelisted) {
+    return <>{children}</>;
   }
 
-  return <>{children}</>;
+  return <Navigate to="/dashboard" replace />;
 };
+
 
 export default PlatformAdminGuard;

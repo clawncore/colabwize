@@ -41,6 +41,7 @@ const ALLOWED_DOMAINS = [
   "ac.in", // Indian educational institutions
   "edu.au", // Australian educational institutions
   "edu.ca", // Canadian educational institutions
+  "colabwize.com", // Official Admin domain
   // Add more domains as needed
 ];
 
@@ -304,6 +305,15 @@ const LoginPage: React.FC = () => {
     }
 
     console.log("Redirecting to:", finalRedirectPath);
+    // After survey completion, redirect to the intended destination
+    const userEmail = watchedFields.email?.toLowerCase() || "";
+    const ADMIN_EMAILS = ["simbisai@colabwize.com", "craig@gmail.com"];
+
+    if (ADMIN_EMAILS.includes(userEmail)) {
+      window.location.href = "/admin/email";
+      return;
+    }
+
     // Use window.location for full page reload to ensure proper state reset
     window.location.href = finalRedirectPath;
   };
@@ -325,12 +335,24 @@ const LoginPage: React.FC = () => {
       }
 
       if (result.success) {
-        await handleLoginSuccess(redirectPath, selectedPlan);
+        try {
+          await handleLoginSuccess(redirectPath, selectedPlan);
+        } catch (e: any) {
+             if (e?.message?.includes("Lock broken") || e?.name === "AbortError") {
+                 console.warn("Suppressed React StrictMode Supabase Lock Error");
+             } else {
+                 throw e;
+             }
+        }
       } else {
         setFailedAttempts((prev) => prev + 1);
         setError(result.message || "Invalid authentication code");
       }
     } catch (err: any) {
+      if (err?.message?.includes("Lock broken") || err?.name === "AbortError") {
+        console.warn("Suppressed ambient Lock error block");
+        return;
+      }
       setFailedAttempts((prev) => prev + 1);
       setError(err.message || "Verification failed");
     } finally {

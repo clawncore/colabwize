@@ -1,226 +1,528 @@
-import React, { useState } from "react";
-import { useToaster } from "../../hooks/useToaster";
-import { getAuthToken } from "../../services/auth";
-import { Mail, Send, CheckCircle2, AlertCircle, Loader2, Inbox, Users, Activity, Rss } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { AdminLayout } from "../layout/AdminLayout";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Mail, 
+  Send, 
+  Rss, 
+  Activity, 
+  BarChart3, 
+  Users as UsersIcon,
+  ChevronRight,
+  ChevronLeft,
+  ShieldCheck,
+  Search,
+  ArrowRight,
+  AlertTriangle,
+  Loader2,
+  CheckCircle2,
+  Clock,
+  Filter,
+  Inbox,
+  LayoutTemplate
+} from "lucide-react";
+import { useToast } from "../../../hooks/use-toast";
+import { apiClient } from "../../../services/apiClient";
+import DOMPurify from "dompurify";
+import { AdminUserDirectory } from "./AdminUserDirectory";
 import { AdminInboxView } from "./AdminInboxView";
 
+type TabType = "users" | "send" | "broadcast" | "logs" | "analytics" | "inbox" | "templates";
+
 export const AdminEmailCenter: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"send" | "broadcast" | "inbox" | "users" | "logs">("inbox");
+  const [activeTab, setActiveTab] = useState<TabType>("send");
+  const [subSidebarOpen, setSubSidebarOpen] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Basic route sync for deep linking
+    const path = window.location.pathname;
+    if (path.includes("broadcast")) setActiveTab("broadcast");
+    else if (path.includes("logs")) setActiveTab("logs");
+    else if (path.includes("analytics")) setActiveTab("analytics");
+    else if (path.includes("users")) setActiveTab("users");
+    else setActiveTab("send");
+  }, []);
+
+  // Individual Email State
   const [recipient, setRecipient] = useState("");
-  const [senderAlias, setSenderAlias] = useState("HELP");
+  const [senderAlias, setSenderAlias] = useState("SUPPORT");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToaster();
+  const [isSending, setIsSending] = useState(false);
+
+  // Broadcast State
+  const [broadcastTarget, setBroadcastTarget] = useState("all");
+  const [targetCount, setTargetCount] = useState(0);
+  const [confirmText, setConfirmText] = useState("");
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+
+  // Logs & Analytics State
+  const [logs, setLogs] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
   const SENDER_ALIASES = [
-    { value: "HELP", label: "ColabWize Help (help@colabwize.com)" },
     { value: "SUPPORT", label: "ColabWize Support (support@colabwize.com)" },
+    { value: "HELP", label: "ColabWize Help (help@colabwize.com)" },
     { value: "BILLING", label: "ColabWize Billing (billing@colabwize.com)" },
-    { value: "NOTIFICATIONS", label: "ColabWize Notifications (notifications@colabwize.com)" },
     { value: "TEAM", label: "ColabWize Team (team@colabwize.com)" },
+    { value: "INFO", label: "ColabWize Info (info@colabwize.com)" },
+    { value: "MARKETING", label: "ColabWize Marketing (marketing@colabwize.com)" },
+    { value: "PRESS", label: "ColabWize Press (press@colabwize.com)" },
+    { value: "LEGAL", label: "ColabWize Legal (legal@colabwize.com)" },
+    { value: "ENGINEERING", label: "ColabWize Engineering (engineering@colabwize.com)" },
   ];
 
-  const handleSendEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!recipient || !subject || !message) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields to send the email.",
-        variant: "destructive",
-      });
-      return;
-    }
+  useEffect(() => {
+    if (activeTab === "logs") fetchLogs();
+    if (activeTab === "analytics") fetchAnalytics();
+    if (activeTab === "broadcast") fetchUserCount();
+  }, [activeTab]);
 
-    setIsLoading(true);
+  const fetchUserCount = async () => {
     try {
-      const token = await getAuthToken();
-      const response = await fetch("/api/admin/email/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          to: recipient,
-          senderAlias,
-          subject,
-          message,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast({
-          title: "Email Sent Successfully",
-          description: `Dispatched to ${recipient} via ${senderAlias}`,
-        });
-        // Clear form after success
-        setRecipient("");
-        setSubject("");
-        setMessage("");
-      } else {
-        throw new Error(data.error || "Failed to dispatch email");
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error Sending Email",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      const { users } = await apiClient.get("/api/admin/users?limit=1000"); // Simple count fetch
+      setTargetCount(users.length);
+    } catch (err) {
+      console.error("Failed to fetch user count:", err);
     }
   };
 
-  return (
-    <div className="mx-auto max-w-6xl p-6">
-      <div className="mb-6 border-b border-slate-200">
-        <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3 mb-6">
-          <Mail className="h-8 w-8 text-blue-600" />
-          Administrative Center
-        </h1>
-        <nav className="-mb-px flex space-x-8">
-           <button onClick={() => setActiveTab("inbox")} className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 \${activeTab === "inbox" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"}`}>
-             <Inbox className="w-4 h-4" /> Support Inbox
-           </button>
-           <button onClick={() => setActiveTab("send")} className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 \${activeTab === "send" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"}`}>
-             <Send className="w-4 h-4" /> Send Email
-           </button>
-           <button onClick={() => setActiveTab("broadcast")} className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 \${activeTab === "broadcast" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"}`}>
-             <Rss className="w-4 h-4" /> Broadcast
-           </button>
-           <button onClick={() => setActiveTab("users")} className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 \${activeTab === "users" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"}`}>
-             <Users className="w-4 h-4" /> User Directory
-           </button>
-           <button onClick={() => setActiveTab("logs")} className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 \${activeTab === "logs" ? "border-blue-600 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"}`}>
-             <Activity className="w-4 h-4" /> Email Logs
-           </button>
-        </nav>
+  const fetchLogs = async () => {
+    setIsLoadingData(true);
+    try {
+      const response = await apiClient.get(`/api/admin/email/logs`);
+      setLogs(response.logs || []);
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to fetch email logs", variant: "destructive" });
+    } finally {
+        setIsLoadingData(false);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    setIsLoadingData(true);
+    try {
+      const response = await apiClient.get("/api/admin/analytics");
+      setAnalytics(response.data);
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to fetch analytics", variant: "destructive" });
+    } finally {
+        setIsLoadingData(false);
+    }
+  };
+
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSending(true);
+    try {
+      await apiClient.post("/api/admin/email/send", {
+        to: recipient,
+        senderAlias,
+        subject,
+        message
+      });
+      toast({ title: "Success", description: `Email dispatched to ${recipient}` });
+      setRecipient("");
+      setSubject("");
+      setMessage("");
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message || "Email dispatch failed", variant: "destructive" });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleBroadcast = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (confirmText !== "SEND") {
+          toast({ title: "Verification Failed", description: "Type 'SEND' to confirm broadcast", variant: "destructive" });
+          return;
+      }
+      setIsBroadcasting(true);
+      try {
+          // Fetch user IDs for broadcast (mocking all for now)
+          const { users } = await apiClient.get("/api/admin/users?limit=2000");
+          const userIds = users.map((u: any) => u.id);
+
+          await apiClient.post("/api/admin/email/broadcast", {
+              userIds,
+              senderAlias,
+              subject,
+              message
+          });
+          toast({ title: "Broadcast Initialized", description: `Broadcasting to ${userIds.length} users in background.` });
+          setConfirmText("");
+      } catch (err: any) {
+          toast({ title: "Broadcast Failed", description: err.message, variant: "destructive" });
+      } finally {
+          setIsBroadcasting(false);
+      }
+  };
+
+  const subNavContent = (
+    <div className="flex flex-col gap-2 px-4">
+      <div className="px-2 mb-4">
+        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-sky-500 italic">Email Array</h2>
+        <p className="text-xl font-black text-foreground tracking-tighter">Communications</p>
       </div>
 
-      {activeTab === "inbox" && <AdminInboxView />}
+      {[
+        { id: "users", label: "Users Directory", icon: UsersIcon },
+        { id: "send", label: "Direct Email", icon: Send },
+        { id: "broadcast", label: "Mass Broadcast", icon: Rss },
+        { id: "inbox", label: "Support Inbox", icon: Inbox },
+        { id: "logs", label: "Audit Logs", icon: Activity },
+        { id: "analytics", label: "Statistics", icon: BarChart3 },
+        { id: "templates", label: "Email Templates", icon: LayoutTemplate },
+      ].map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => setActiveTab(tab.id as TabType)}
+          className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${
+            activeTab === tab.id 
+            ? "bg-sky-500 text-white shadow-lg shadow-sky-500/30" 
+            : "bg-card border border-border text-muted-foreground hover:text-sky-500 hover:border-sky-500/30 hover:bg-sky-500/5"
+          }`}
+        >
+          <tab.icon size={16} className="shrink-0" />
+          <span className="truncate whitespace-nowrap">{tab.label}</span>
+        </button>
+      ))}
+    </div>
+  );
 
-      {activeTab === "send" && (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-              <Send className="h-5 w-5 text-slate-500" />
-              Compose Email
-            </h2>
-
-            <form onSubmit={handleSendEmail} className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Recipient Email</label>
-                  <input
-                    type="email"
-                    value={recipient}
-                    onChange={(e) => setRecipient(e.target.value)}
-                    required
-                    placeholder="user@university.edu"
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Sender Identity</label>
-                  <select
-                    value={senderAlias}
-                    onChange={(e) => setSenderAlias(e.target.value)}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    {SENDER_ALIASES.map((alias) => (
-                      <option key={alias.value} value={alias.value}>
-                        {alias.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Subject Line</label>
-                <input
-                  type="text"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  required
-                  placeholder="Important update concerning your ColabWize account"
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">HTML Message Body</label>
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  required
-                  rows={10}
-                  placeholder="<p>Dear user...</p>"
-                  className="w-full rounded-md border border-slate-300 font-mono text-sm px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <p className="text-xs text-slate-500">
-                  Tip: Message body resolves strictly as HTML. Plain text fallback is automatically generated.
-                </p>
-              </div>
-
-              <div className="pt-4 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Dispatching...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      Send Email
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <div className="md:col-span-1 space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">
-              Security Notice
-            </h3>
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
-                <p className="text-sm text-slate-600">
-                  You are viewing this panel because your email address is on the administrative whitelist.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <AlertCircle className="h-5 w-5 text-blue-500 shrink-0" />
-                <p className="text-sm text-slate-600">
-                  All outgoing emails are verified through Resend domains against <strong>colabwize.com</strong> records.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <AlertCircle className="h-5 w-5 text-orange-500 shrink-0" />
-                <p className="text-sm text-slate-600">
-                  Please assure compliance with anti-spam legislation. Do not use this panel for unverified marketing outreach.
-                </p>
-              </div>
+  return (
+    <AdminLayout subSidebar={subNavContent}>
+      <div className="space-y-8 pb-20">
+        {/* Header */}
+        <div className="relative overflow-hidden p-10 bg-card/30 border border-border rounded-[2.5rem] group shadow-2xl shadow-black/20 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-sky-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-3 mb-4"
+              >
+                <div className="h-2 w-2 rounded-full bg-sky-500 animate-ping" />
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-sky-500">Transmission Center</span>
+              </motion.div>
+              <h1 className="text-4xl font-black text-foreground tracking-tighter leading-tight">
+                Nexus <span className="text-sky-500">Comm</span>
+              </h1>
+              <p className="text-muted-foreground mt-2 font-medium max-w-xl leading-relaxed text-sm">
+                Orchestrate platform-wide communications and manage user support arrays.
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-4 bg-secondary/50 p-4 rounded-3xl border border-border shrink-0">
+               <div className="text-right">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Authenticated As</p>
+                  <p className="text-sm font-black text-sky-500 uppercase tracking-tight">Lead Administrator</p>
+               </div>
+               <div className="h-12 w-12 rounded-2xl bg-sky-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+                  <ShieldCheck size={24} />
+               </div>
             </div>
           </div>
         </div>
-      </div>
-      )}
-    </div>
+
+        {/* Content Area */}
+        <div className="min-w-0">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="w-full"
+              >
+                {activeTab === "users" && <AdminUserDirectory />}
+                {activeTab === "inbox" && <AdminInboxView />}
+
+                {activeTab === "templates" && (
+                  <div className="p-12 bg-card border border-border rounded-[2.5rem] text-center space-y-6 shadow-xl">
+                    <div className="inline-flex items-center justify-center h-20 w-20 rounded-3xl bg-sky-500/10 border border-sky-500/20 mx-auto">
+                      <LayoutTemplate size={40} className="text-sky-500" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-black text-foreground tracking-tight">Email Templates</h2>
+                      <p className="text-muted-foreground mt-2 text-sm font-medium max-w-md mx-auto">
+                        Create and manage reusable email templates for common communications — welcome emails, announcements, billing notices, and more.
+                      </p>
+                    </div>
+                    <div className="inline-flex items-center gap-2 px-6 py-3 bg-sky-500/10 border border-sky-500/20 rounded-full">
+                      <div className="h-2 w-2 rounded-full bg-sky-500 animate-pulse" />
+                      <span className="text-[11px] font-black text-sky-500 uppercase tracking-widest">Coming Soon — Will be connected when ready</span>
+                    </div>
+                  </div>
+                )}
+
+                {(activeTab === "send" || activeTab === "broadcast") && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Form Matrix */}
+                <div className="p-8 bg-card border border-border rounded-[2.5rem] space-y-8 shadow-xl">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-black text-foreground tracking-tight italic flex items-center gap-3">
+                      {activeTab === "send" ? <Send size={20} className="text-sky-500" /> : <Rss size={20} className="text-sky-500" />}
+                      {activeTab === "send" ? "Direct Transmission" : "Broadcast Array"}
+                    </h3>
+                    {activeTab === "broadcast" && (
+                        <div className="px-4 py-1.5 bg-sky-500/10 border border-sky-500/20 rounded-full">
+                            <span className="text-[10px] font-black text-sky-500 uppercase tracking-widest">
+                                {targetCount} Target Recipients
+                            </span>
+                        </div>
+                    )}
+                  </div>
+
+                  <form className="space-y-6" onSubmit={activeTab === "send" ? handleSendEmail : handleBroadcast}>
+                    {activeTab === "send" ? (
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Recipient Identity</label>
+                        <div className="relative">
+                          <input 
+                            type="email" 
+                            required
+                            value={recipient}
+                            onChange={(e) => setRecipient(e.target.value)}
+                            placeholder="user@colabwize.com"
+                            className="w-full h-14 bg-secondary border border-border rounded-2xl px-6 text-sm font-medium focus:border-sky-500 transition-all outline-none"
+                          />
+                          <Mail className="absolute right-6 top-4 text-muted-foreground/30" size={20} />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Target Audience</label>
+                        <select 
+                          className="w-full h-14 bg-secondary border border-border rounded-2xl px-6 text-sm font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-all appearance-none cursor-pointer"
+                          value={broadcastTarget}
+                          onChange={(e) => setBroadcastTarget(e.target.value)}
+                        >
+                          <option value="all">All Pulse Nodes (All Users)</option>
+                          <option value="paid">Active Subscriptions Only</option>
+                          <option value="free">Standard Nodes (Free Plan)</option>
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Sender Alias</label>
+                        <select 
+                          className="w-full h-14 bg-secondary border border-border rounded-2xl px-6 text-sm font-bold outline-none focus:border-sky-500 transition-all cursor-pointer"
+                          value={senderAlias}
+                          onChange={(e) => setSenderAlias(e.target.value)}
+                        >
+                          {SENDER_ALIASES.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Subject Header</label>
+                        <input 
+                          type="text" 
+                          required
+                          value={subject}
+                          onChange={(e) => setSubject(e.target.value)}
+                          placeholder="Transmission Header..."
+                          className="w-full h-14 bg-secondary border border-border rounded-2xl px-6 text-sm font-medium focus:border-sky-500 transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Payload (HTML Enabled)</label>
+                      <textarea 
+                        required
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="<h1>System Alert</h1><p>Neural pathways synchronized...</p>"
+                        className="w-full h-64 bg-secondary border border-border rounded-[2rem] p-6 text-sm font-mono focus:border-sky-500 transition-all outline-none resize-none"
+                      />
+                    </div>
+
+                    {activeTab === "broadcast" && (
+                        <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-3xl space-y-4">
+                            <div className="flex items-center gap-3 text-red-500">
+                                <AlertTriangle size={20} />
+                                <span className="text-xs font-black uppercase tracking-widest">Broadcast Safety Protocol</span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground font-medium">
+                                You are about to transmit to <span className="text-foreground font-bold">{targetCount}</span> nodes. 
+                                Type <span className="text-red-500 font-bold underline">SEND</span> to authorize the uplink.
+                            </p>
+                            <input 
+                                type="text"
+                                value={confirmText}
+                                onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
+                                placeholder="Type SEND to confirm"
+                                className="w-full h-12 bg-background border border-border rounded-xl px-4 text-xs font-black tracking-[0.3em] text-center focus:border-red-500/50 outline-none transition-all"
+                            />
+                        </div>
+                    )}
+
+                    <button 
+                      type="submit"
+                      disabled={isSending || isBroadcasting}
+                      className={`w-full h-16 rounded-[1.5rem] flex items-center justify-center gap-3 text-xs font-black uppercase tracking-[0.2em] transition-all ${
+                          activeTab === "send" 
+                          ? "bg-sky-500 text-white shadow-xl shadow-sky-500/20 hover:scale-[1.02] active:scale-95" 
+                          : "bg-red-500 text-white shadow-xl shadow-red-500/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale"
+                      }`}
+                    >
+                      {(isSending || isBroadcasting) ? <Loader2 className="animate-spin" size={20} /> : (
+                          <>
+                            {activeTab === "send" ? "Initialize Transmission" : "Execute Global Broadcast"}
+                            <ArrowRight size={16} />
+                          </>
+                      )}
+                    </button>
+                  </form>
+                </div>
+
+                {/* Preview Matrix */}
+                <div className="p-8 bg-card/40 border border-border rounded-[2.5rem] flex flex-col items-center justify-center text-center group border-dashed relative overflow-hidden h-fit sticky top-8">
+                   <div className="w-full text-left mb-6">
+                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Neural Render Preview</p>
+                   </div>
+                   <div className="w-full bg-white rounded-[2rem] overflow-hidden shadow-2xl min-h-[500px] flex flex-col border border-border">
+                        <div className="h-12 bg-secondary border-b border-border flex items-center px-6 gap-2">
+                            <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                            <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                            <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                            <span className="ml-auto text-[10px] font-black text-muted-foreground uppercase">cw-mail-render-v1.0</span>
+                        </div>
+                        <div className="flex-1 p-10 prose prose-sky prose-sm max-w-none text-left overflow-auto">
+                            <h2 className="text-xl font-black text-foreground mb-4">{subject || "Transmission Header..."}</h2>
+                            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message || `<p class="italic text-slate-400">Waiting for payload input...</p>`) }} />
+                        </div>
+                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "logs" && (
+                <div className="bg-card border border-border rounded-[2.5rem] overflow-hidden shadow-xl">
+                    <div className="p-8 border-b border-border flex justify-between items-center">
+                        <h3 className="text-xl font-black text-foreground italic flex items-center gap-3">
+                            <Activity size={20} className="text-sky-500" />
+                            Transmission Audit Logs
+                        </h3>
+                        <button onClick={fetchLogs} className="p-3 bg-secondary rounded-xl hover:text-sky-500 transition-colors">
+                            <Loader2 size={16} className={isLoadingData ? "animate-spin" : ""} />
+                        </button>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-secondary/50">
+                                <tr>
+                                    <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Timestamp</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Recipient</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Sender Alias</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Subject</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {logs.map((log) => (
+                                    <tr key={log.id} className="border-t border-border hover:bg-secondary/30 transition-colors group">
+                                        <td className="px-8 py-5 text-xs font-mono text-muted-foreground">
+                                            {new Date(log.sent_at).toLocaleString()}
+                                        </td>
+                                        <td className="px-8 py-5 text-sm font-bold text-foreground">
+                                            {log.recipient}
+                                        </td>
+                                        <td className="px-8 py-5">
+                                            <span className="text-[10px] font-black text-sky-500/80 uppercase px-2 py-1 bg-sky-500/5 rounded border border-sky-500/10">
+                                                {log.sender}
+                                            </span>
+                                        </td>
+                                        <td className="px-8 py-5 text-sm font-medium text-muted-foreground truncate max-w-xs">
+                                            {log.subject}
+                                        </td>
+                                        <td className="px-8 py-5">
+                                            <span className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${log.status === 'sent' ? 'text-emerald-500' : 'text-red-500'}`}>
+                                                <div className={`h-1.5 w-1.5 rounded-full ${log.status === 'sent' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                                {log.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        {logs.length === 0 && !isLoadingData && (
+                            <div className="p-20 text-center space-y-4">
+                                <ShieldCheck size={48} className="mx-auto text-muted-foreground/20" />
+                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No transmissions recorded in matrix</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === "analytics" && analytics && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="p-8 bg-card border border-border rounded-[2rem] space-y-4 shadow-lg">
+                        <div className="flex justify-between items-center">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Transmissions</p>
+                            <CheckCircle2 size={16} className="text-emerald-500" />
+                        </div>
+                        <h4 className="text-4xl font-black text-foreground tracking-tighter">
+                            {analytics.emails.reduce((acc: any, curr: any) => acc + curr._count, 0)}
+                        </h4>
+                    </div>
+                    <div className="p-8 bg-card border border-border rounded-[2rem] space-y-4 shadow-lg">
+                        <div className="flex justify-between items-center">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Successful Link</p>
+                            <Activity size={16} className="text-sky-500" />
+                        </div>
+                        <h4 className="text-4xl font-black text-foreground tracking-tighter text-sky-500">
+                            {analytics.emails.find((e: any) => e.status === 'sent')?._count || 0}
+                        </h4>
+                    </div>
+                    <div className="p-8 bg-card border border-border rounded-[2rem] space-y-4 shadow-lg">
+                        <div className="flex justify-between items-center">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Node Growth (30D)</p>
+                            <TrendingUpIcon size={16} className="text-emerald-500" />
+                        </div>
+                        <h4 className="text-4xl font-black text-foreground tracking-tighter">
+                            +{analytics.growth.last30Days}
+                        </h4>
+                        <p className="text-[9px] font-bold text-emerald-500">Global Coverage Optimized</p>
+                    </div>
+                    <div className="p-8 bg-card border border-border rounded-[2rem] space-y-4 shadow-lg">
+                        <div className="flex justify-between items-center">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Paid Nodes</p>
+                            <ShieldCheck size={16} className="text-sky-500" />
+                        </div>
+                        <h4 className="text-4xl font-black text-foreground tracking-tighter">
+                            {analytics.distribution.paid}
+                        </h4>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase">/{analytics.growth.total} Total Active Nodes</p>
+                    </div>
+                </div>
+            )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+    </AdminLayout>
   );
 };
+
+// Simple icon duplicate for analytics page
+const TrendingUpIcon = ({ size, className }: { size: number, className: string }) => (
+    <svg 
+        width={size} height={size} viewBox="0 0 24 24" fill="none" 
+        stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" 
+        className={className}
+    >
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+        <polyline points="17 6 23 6 23 12"></polyline>
+    </svg>
+);
 
 export default AdminEmailCenter;

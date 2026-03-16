@@ -122,16 +122,23 @@ import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview
 import TemplateGallery from "./components/workspace/templates/TemplateGallery";
 import AcceptInvitationPage from "./pages/workspaces/AcceptInvitationPage";
 
-// Add imports for admin pages or components here
+// Titan Admin Dashboard Components
+import { AdminDashboardPage } from "./components/admin/dashboard/AdminDashboardPage";
+import { AdminBlogManagerView } from "./components/admin/blog/AdminBlogManagerView";
+import { AdminUserDirectory } from "./components/admin/email/AdminUserDirectory";
+import { AdminInboxView } from "./components/admin/email/AdminInboxView";
+import { AdminMarketingHubView } from "./components/admin/marketing/AdminMarketingHubView";
+import { AdminEmailCenter } from "./components/admin/email/AdminEmailCenter";
+
+// Old Admin Imports (Still used for workspace specific admin pages)
 import AdminDashboard from "./components/admin/dashboard/page";
 import WorkspaceMembersPage from "./components/admin/members/page";
 import WorkspaceSettingsPage from "./components/admin/settings/page";
 import WorkspaceActivityPage from "./components/admin/activity/page";
 import { AdminRoute } from "./components/auth/AdminRoute";
 import PlatformAdminGuard from "./components/auth/PlatformAdminGuard";
-import AdminEmailCenter from "./components/admin/email/AdminEmailCenter";
 
-// Add imports for notifications
+// Other imports
 import NotificationsPage from "./components/workspace/notifications/NotificationsPage";
 import NotificationSettings from "./components/admin/settings/NotificationSettings";
 import { TimeTrackingProvider } from "./contexts/TimeTrackingContext";
@@ -589,7 +596,39 @@ function App() {
                         path="/admin"
                         element={
                           <PlatformAdminGuard>
-                            <div>Platform Admin Dashboard Placeholder</div>
+                            <AdminDashboardPage />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/inbox"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminInboxView />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/users"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminUserDirectory />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/blogs"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminBlogManagerView />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/marketing"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminMarketingHubView />
                           </PlatformAdminGuard>
                         }
                       />
@@ -602,18 +641,18 @@ function App() {
                         }
                       />
                       <Route
-                        path="/admin/users"
+                        path="/admin/broadcast"
                         element={
                           <PlatformAdminGuard>
-                            <div>Platform Users List Placeholder</div>
+                            <AdminEmailCenter />
                           </PlatformAdminGuard>
                         }
                       />
                       <Route
-                        path="/admin/broadcast"
+                        path="/admin/analytics"
                         element={
                           <PlatformAdminGuard>
-                            <div>Platform Broadcast Placeholder</div>
+                            <AdminEmailCenter />
                           </PlatformAdminGuard>
                         }
                       />
@@ -621,7 +660,7 @@ function App() {
                         path="/admin/email-logs"
                         element={
                           <PlatformAdminGuard>
-                            <div>Platform Email Logs Placeholder</div>
+                            <AdminEmailCenter />
                           </PlatformAdminGuard>
                         }
                       />

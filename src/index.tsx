@@ -6,13 +6,43 @@ import ConfigService from "./services/ConfigService";
 
 import reportWebVitals from "./reportWebVitals";
 
+// Suppress known Supabase 'steal' DOMException caused by React StrictMode duplicate renders
+// This prevents the Webpack error overlay from crashing the local development view.
+const blockLockErrors = (message: any) => {
+  if (typeof message === 'string' && message.includes('Lock broken')) return true;
+  if (message && message.message && typeof message.message === 'string' && message.message.includes('Lock broken')) return true;
+  if (message && message.name === 'AbortError') return true;
+  return false;
+};
+
+// Intercept window errors
+window.addEventListener('unhandledrejection', (event) => {
+  if (blockLockErrors(event.reason)) {
+    event.preventDefault();
+  }
+});
+
+window.addEventListener('error', (event) => {
+  if (blockLockErrors(event.error) || blockLockErrors(event.message)) {
+    event.preventDefault();
+  }
+});
+
+// Intercept console.error to prevent CRA's Error Overlay web socket integration from seeing it
+const originalConsoleError = console.error;
+console.error = (...args: any[]) => {
+  if (args.some(arg => blockLockErrors(arg))) {
+    // Optionally log a debug message silently, but do not pass to the original console.error
+    return;
+  }
+  originalConsoleError.apply(console, args);
+};
+
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 root.render(
-  <React.StrictMode>
     <App />
-  </React.StrictMode>
 );
 
 // Register service worker only in production environment

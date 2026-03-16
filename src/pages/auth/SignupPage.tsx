@@ -51,6 +51,7 @@ const ALLOWED_DOMAINS = [
   "ac.uk", // UK educational institutions
   "edu.au", // Australian educational institutions
   "edu.ca", // Canadian educational institutions
+  "colabwize.com", // Official Admin domain
   // Add more domains as needed
 ];
 
@@ -783,9 +784,18 @@ const SignupPage: React.FC = () => {
   };
 
   const handleSurveyComplete = () => {
+    // Override redirect specifically for Admins to access their tools
+    const userEmail = watchedFields.email?.toLowerCase() || "";
+    const ADMIN_EMAILS = ["simbisai@colabwize.com", "craig@gmail.com"];
+
+    if (ADMIN_EMAILS.includes(userEmail)) {
+      window.location.href = "/admin/email";
+      return;
+    }
+
     // After survey completion, redirect to the intended destination
     const finalRedirectPath = redirectPath || "/dashboard";
-    navigate(finalRedirectPath);
+    window.location.href = finalRedirectPath;
   };
 
   // Function to resend OTP
@@ -1201,12 +1211,20 @@ const SignupPage: React.FC = () => {
                   })
                 }
                 onAutoVerify={async (value) => {
-                  // Auto-submit the form when all digits are entered
+                  // Immediatedly bind the completed OTP value into form context
+                  setValue("otp", value, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
+                  // Programmatically dispatch the form submission
                   try {
                     await handleSubmit(onSubmit)();
-                  } catch (error) {
-                    // Error is already handled in onSubmit, no need to do anything here
-                    console.log("Auto-verify error handled in onSubmit");
+                  } catch (e: any) {
+                    if (e?.message?.includes("Lock broken") || e?.name === "AbortError") {
+                      console.warn("Suppressed React StrictMode Supabase Lock Error");
+                    } else {
+                      throw e;
+                    }
                   }
                 }}
                 error={errors.otp?.message}
