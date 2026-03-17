@@ -296,7 +296,7 @@ export const EnhancedFigureNode = Node.create({
     },
 
     renderHTML({ HTMLAttributes }) {
-        return ["figure", mergeAttributes(HTMLAttributes, { class: "figure-node" }), 0];
+        return ["figure", mergeAttributes(HTMLAttributes, { class: "figure-node" })];
     },
 
     addNodeView() {

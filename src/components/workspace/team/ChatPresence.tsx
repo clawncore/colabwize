@@ -3,13 +3,15 @@ import { useUser } from "../../../stores/user";
 import { supabaseBrowser } from "../../../lib/supabase/browser";
 import React, { useEffect, useState } from "react";
 
-export default function ChatPresence() {
+export default function ChatPresence({ workspaceId }: { workspaceId?: string }) {
   const user = useUser((state) => state.user);
   const supabase = supabaseBrowser();
   const [onlineUsers, setOnlineUsers] = useState(0);
 
   useEffect(() => {
-    const channel = supabase.channel("room1");
+    if (!workspaceId) return;
+
+    const channel = supabase.channel(`presence:${workspaceId}`);
     channel
       .on("presence", { event: "sync" }, () => {
         const userIds = [];
@@ -27,7 +29,11 @@ export default function ChatPresence() {
           });
         }
       });
-  }, [user]);
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [user, workspaceId]);
 
   if (!user) {
     return <div className=" h-3 w-1"></div>;

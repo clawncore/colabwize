@@ -64,6 +64,7 @@ export const Dashboard: React.FC = () => {
     authorshipVerified: undefined,
   });
   const [latestProject, setLatestProject] = useState<Project | null>(null);
+  const [selectedWeeks, setSelectedWeeks] = useState(8);
 
   // Helper to ensure consistency with sidebar logic
   const userPlan = plan || "free";
@@ -109,7 +110,7 @@ export const Dashboard: React.FC = () => {
 
     try {
       setConnectionError(false);
-      const data = await AnalyticsService.getDashboardData();
+      const data = await AnalyticsService.getDashboardData(selectedWeeks);
 
       // Only update state if data actually changed or is different (deep compare would be better but this helps)
       setDashboardData((prev) => ({ ...prev, ...data }));
@@ -128,7 +129,7 @@ export const Dashboard: React.FC = () => {
     } finally {
       setIsRetrying(false);
     }
-  }, [user, fetchLatestProject]); // Depend on user
+  }, [user, fetchLatestProject, selectedWeeks]); // Depend on user and selectedWeeks
 
   const handleRetry = () => {
     setIsRetrying(true);
@@ -584,8 +585,20 @@ export const Dashboard: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="p-1.5 bg-gray-50 rounded-lg">
-                    <TrendingUp className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-3">
+                    <select 
+                      value={selectedWeeks} 
+                      onChange={(e) => setSelectedWeeks(parseInt(e.target.value))}
+                      className="text-xs font-semibold text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer"
+                    >
+                      <option value={4}>Last 4 Weeks</option>
+                      <option value={8}>Last 8 Weeks</option>
+                      <option value={12}>Last 12 Weeks</option>
+                      <option value={16}>Last 16 Weeks</option>
+                    </select>
+                    <div className="p-1.5 bg-gray-50 rounded-lg">
+                      <TrendingUp className="w-4 h-4 text-gray-400" />
+                    </div>
                   </div>
                 </div>
                 <div className="h-72 w-full min-h-[300px]">

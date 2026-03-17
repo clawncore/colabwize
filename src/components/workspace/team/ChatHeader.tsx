@@ -1,37 +1,180 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import ChatPresence from "./ChatPresence";
 import { useParams } from "react-router-dom";
 import WorkspaceService from "../../../services/workspaceService";
+import { supabaseBrowser } from "../../../lib/supabase/browser";
+import { useMessage } from "../../../stores/messages";
+import { toast } from "sonner";
+import { Input } from "../../ui/input";
+import { Search, X, Loader2, Eraser } from "lucide-react";
 
-export default function ChatHeader() {
-  const { id: workspaceId } = useParams<{ id: string }>();
+export default function ChatHeader({
+  onSearch,
+  workspaceId: propWorkspaceId,
+  workspaceName: propWorkspaceName,
+  userRole: propUserRole,
+}: {
+  onSearch?: (q: string) => void;
+  workspaceId?: string;
+  workspaceName?: string;
+  userRole?: string;
+}) {
+  const params = useParams<{ id: string }>();
+  // Use prop workspaceId if available, otherwise fallback to params
+  const workspaceId = propWorkspaceId || params.id;
+  
+  const [internalWorkspaceName, setInternalWorkspaceName] = useState<string>("");
+  const [internalUserRole, setInternalUserRole] = useState<string>("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [isClearing, setIsClearing] = useState(false);
 
-  const [workspaceName, setWorkspaceName] = useState<string>("");
+  // Derive final values from props or local state
+  const workspaceName = propWorkspaceName || internalWorkspaceName;
+  const userRole = propUserRole || internalUserRole;
+
+  const resetMessages = useMessage((state) => state.resetMessages);
+  const supabase = supabaseBrowser();
 
   useEffect(() => {
-    if (workspaceId) {
+    // Only fetch if not provided via props
+    if (workspaceId && !propWorkspaceName) {
       WorkspaceService.getWorkspace(workspaceId)
         .then((data) => {
-          if (data) setWorkspaceName(data.name);
+          if (data) {
+            setInternalWorkspaceName(data.name);
+            if (data.role) setInternalUserRole(data.role);
+          }
         })
-        .catch((err) => console.error("Failed to fetch workspace name", err));
+        .catch((err) => console.error("Failed to fetch workspace data", err));
     }
-  }, [workspaceId]);
+  }, [workspaceId, propWorkspaceName]);
+
+  const toggleSearch = () => {
+    const nextState = !isSearching;
+    setIsSearching(nextState);
+    if (!nextState) {
+      setSearchText("");
+      onSearch?.("");
+    }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchText(val);
+    onSearch?.(val);
+  };
+
+  const handleClearChat = async () => {
+    if (!workspaceId) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to clear ALL messages in this workspace? This cannot be undone.",
+      )
+    )
+      return;
+
+    setIsClearing(true);
+    try {
+      const { error } = await supabase
+        .from("TeamChatMessage")
+        .delete()
+        .eq("workspace_id", workspaceId);
+
+      if (error) throw error;
+
+      resetMessages();
+      toast.success("Chat cleared successfully");
+    } catch (err: any) {
+      console.error("Failed to clear chat", err);
+      toast.error(err.message || "Failed to clear chat");
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   return (
-    <div className="h-20">
-      <div className="p-5 border-b flex items-center justify-between h-full">
-        <h1 className="text-3xl font-bold tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500 flex items-center gap-2">
-          {workspaceName ? (
-            workspaceName
-          ) : (
-            <div className="h-8 w-32 bg-muted animate-pulse rounded" />
-          )}{" "}
-          Chat
-        </h1>
-        <ChatPresence />
+    <div className="h-20 border-b flex items-center justify-between px-6 bg-white shrink-0">
+      <div className="flex items-center gap-4 flex-1 min-w-0">
+        {!isSearching ? (
+          <>
+            <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-xl uppercase shrink-0 ring-4 ring-emerald-50">
+              {workspaceName?.[0] || "W"}
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold tracking-tight text-gray-900 truncate uppercase">
+                {workspaceName || "Workspace"}
+              </h1>
+              <p className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
+                Group Chat <span className="opacity-50">•</span>
+                <span className="flex items-center gap-1">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="w-3 h-3 text-emerald-500"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round">
+                    <rect
+                      x="3"
+                      y="11"
+                      width="18"
+                      height="11"
+                      rx="2"
+                      ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0110 0v4"></path>
+                  </svg>
+                  E2E Encrypted
+                </span>
+              </p>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center gap-2 pr-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                autoFocus
+                placeholder="Search messages..."
+                className="pl-9 bg-gray-50 border-none ring-1 ring-gray-200 focus-visible:ring-emerald-500"
+                value={searchText}
+                onChange={handleSearchChange}
+              />
+            </div>
+            <button
+              title="close search"
+              onClick={toggleSearch}
+              className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-4 text-gray-400">
+        {!isSearching && (
+          <button
+            onClick={toggleSearch}
+            className="p-2 hover:bg-emerald-50 hover:text-emerald-600 rounded-full transition-all">
+            <Search className="w-5 h-5" />
+          </button>
+        )}
+        {userRole === "admin" || userRole === "owner" ? (
+          <button
+            title="clear messages"
+            onClick={handleClearChat}
+            disabled={isClearing}
+            className="p-2 hover:bg-red-50 hover:text-red-500 rounded-full transition-all disabled:opacity-50">
+            {isClearing ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Eraser className="w-5 h-5" />
+            )}
+          </button>
+        ) : null}
+        <div className="w-px h-8 bg-gray-100 mx-1" />
+        <ChatPresence workspaceId={workspaceId} />
       </div>
     </div>
   );

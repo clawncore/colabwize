@@ -5,13 +5,22 @@ import { LIMIT_MESSAGE } from "../../../lib/constant";
 import { getFromAndTo } from "../../../lib/utils";
 import { useMessage } from "../../../stores/messages";
 import { toast } from "sonner";
+import { useUser } from "../../../stores/user";
 
-export default function LoadMoreMessages({ workspaceId }: { workspaceId?: string }) {
+export default function LoadMoreMessages({
+  workspaceId,
+  projectId,
+}: {
+  workspaceId?: string;
+  projectId?: string;
+}) {
   const page = useMessage((state) => state.page);
   const setMesssages = useMessage((state) => state.setMesssages);
   const hasMore = useMessage((state) => state.hasMore);
+  const user = useUser((state) => state.user);
 
   const fetchMore = async () => {
+    if (!user) return;
     const { from, to } = getFromAndTo(page, LIMIT_MESSAGE);
 
     const supabase = supabaseBrowser();
@@ -22,8 +31,10 @@ export default function LoadMoreMessages({ workspaceId }: { workspaceId?: string
       .range(from, to)
       .order("created_at", { ascending: false });
 
-    if (workspaceId) {
-      query = query.eq("workspace_id", workspaceId);
+    if (projectId) {
+      query = query.eq("project_id", projectId);
+    } else if (workspaceId) {
+      query = query.eq("workspace_id", workspaceId).is("project_id", null);
     }
 
     const { data, error } = await query;

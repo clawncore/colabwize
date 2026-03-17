@@ -20,7 +20,7 @@ interface MentionInputProps {
     onEnter?: () => void;
 }
 
-export function MentionInput({
+export const MentionInput = React.forwardRef<HTMLTextAreaElement, MentionInputProps>(({
     value,
     onChange,
     users,
@@ -28,10 +28,11 @@ export function MentionInput({
     className,
     disabled,
     onEnter,
-}: MentionInputProps) {
+}, ref) => {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
-    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const internalRef = useRef<HTMLTextAreaElement>(null);
+    const inputRef = (ref as React.RefObject<HTMLTextAreaElement>) || internalRef;
     const [cursorPosition, setCursorPosition] = useState(0);
     const [mentionStart, setMentionStart] = useState(-1);
 
@@ -132,14 +133,16 @@ export function MentionInput({
             />
 
             {open && filteredUsers.length > 0 && (
-                <div className="absolute z-50 w-64 min-w-[200px] bg-popover text-popover-foreground shadow-md rounded-md border animate-in fade-in-80 zoom-in-95"
+                <div className="absolute z-[999] w-64 min-w-[200px] bg-white text-gray-900 shadow-xl rounded-lg border border-gray-200 animate-in fade-in-80 zoom-in-95"
                     style={{
                         bottom: "100%",
                         left: 0,
-                        marginBottom: "8px"
+                        marginBottom: "12px",
+                        maxHeight: "300px",
+                        overflow: "hidden"
                     }}>
-                    <Command>
-                        {/* Hidden input to capture focus for keyboard nav if needed, though we manage manually */}
+                    <Command className="bg-white">
+                        <div className="p-2 border-b text-[10px] uppercase tracking-wider text-gray-400 font-bold bg-gray-50">Members</div>
                         <CommandList>
                             <CommandGroup heading="Suggestions">
                                 {filteredUsers.map((user) => (
@@ -165,4 +168,4 @@ export function MentionInput({
             )}
         </div>
     );
-}
+});

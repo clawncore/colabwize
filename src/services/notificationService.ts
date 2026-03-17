@@ -630,6 +630,61 @@ class NotificationService {
     }
   }
 
+  // Create a new notification via backend API
+  static async createNotification(
+    recipientId: string,
+    type: string,
+    title: string,
+    message: string,
+    data?: Record<string, any>,
+  ): Promise<void> {
+    try {
+      const response = await apiClient.post("/api/notifications", {
+        recipientId,
+        type,
+        title,
+        message,
+        data,
+      });
+
+      if (!response.success) {
+        throw new Error(
+          response.message || "Failed to create notification",
+        );
+      }
+    } catch (error) {
+      console.error("Error creating notification:", error);
+      throw error;
+    }
+  }
+
+  // Broadcast a notification to the entire workspace via backend
+  static async notifyWorkspace(
+    workspaceId: string,
+    type: string,
+    title: string,
+    message: string,
+    data?: Record<string, any>,
+  ): Promise<void> {
+    try {
+      const response = await apiClient.post(`/api/workspaces/${workspaceId}/notify`, {
+        type,
+        title,
+        message,
+        data,
+      });
+
+      if (!response.success) {
+        throw new Error(
+          response.message || "Failed to notify workspace",
+        );
+      }
+    } catch (error) {
+      console.error("Error notifying workspace:", error);
+      throw error;
+    }
+  }
+
   // Get notifications with optional filters
   static async getNotifications(
     limit: number = 20,

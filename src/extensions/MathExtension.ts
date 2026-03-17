@@ -6,7 +6,7 @@ export const MathExtension = Node.create({
     name: 'math',
 
     group: 'inline',
-
+    content: '',
     inline: true,
 
     draggable: true,

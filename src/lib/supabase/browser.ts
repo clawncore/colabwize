@@ -1,8 +1,3 @@
-import { createBrowserClient } from "@supabase/ssr";
-import { Database } from "../../types/supabase";
+import { supabase } from "./client";
 
-export const supabaseBrowser = () =>
-  createBrowserClient<Database>(
-    process.env.REACT_APP_SUPABASE_URL!,
-    process.env.REACT_APP_SUPABASE_ANON_KEY!,
-  );
+export const supabaseBrowser = () => supabase;

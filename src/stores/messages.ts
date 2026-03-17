@@ -6,6 +6,8 @@ export type Imessage = {
 	id: string;
 	user_id: string;
 	content: string;
+	workspace_id?: string | null;
+	project_id?: string | null;
 	users: {
 		avatar_url: string;
 		created_at: string;
@@ -26,6 +28,7 @@ interface MessageState {
 	optimisticUpdateMessage: (message: Imessage) => void;
 	setOptimisticIds: (id: string) => void;
 	setMesssages: (messages: Imessage[]) => void;
+	resetMessages: () => void;
 }
 
 export const useMessage = create<MessageState>()((set) => ({
@@ -34,6 +37,7 @@ export const useMessage = create<MessageState>()((set) => ({
 	messages: [],
 	optimisticIds: [],
 	actionMessage: undefined,
+	resetMessages: () => set(() => ({ messages: [], page: 1, hasMore: true })),
 	setMesssages: (messages) =>
 		set((state) => ({
 			messages: [...messages, ...state.messages],
@@ -43,9 +47,14 @@ export const useMessage = create<MessageState>()((set) => ({
 	setOptimisticIds: (id: string) =>
 		set((state) => ({ optimisticIds: [...state.optimisticIds, id] })),
 	addMessage: (newMessages) =>
-		set((state) => ({
-			messages: [...state.messages, newMessages],
-		})),
+		set((state) => {
+			if (state.messages.some((m) => m.id === newMessages.id)) {
+				return state;
+			}
+			return {
+				messages: [...state.messages, newMessages],
+			};
+		}),
 	setActionMessage: (message) => set(() => ({ actionMessage: message })),
 	optimisticDeleteMessage: (messageId) =>
 		set((state) => {

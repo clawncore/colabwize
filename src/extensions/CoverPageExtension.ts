@@ -5,7 +5,7 @@ export const CoverPageExtension = Node.create({
 
   group: "block",
 
-  content: "block+",
+  content: "block*",
 
   defining: true,
 

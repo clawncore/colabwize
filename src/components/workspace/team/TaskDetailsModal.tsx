@@ -35,6 +35,7 @@ import { AttachmentSection } from "./AttachmentSection";
 import { Priority } from "./PrioritySelector";
 import { toast } from "../../../hooks/use-toast";
 import { CommentSection } from "./CommentSection";
+import NotificationService from "../../../services/notificationService";
 import { useUser } from "../../../services/useUser";
 import { SubtaskSection } from "./SubtaskSection";
 import { LabelSelector } from "./LabelSelector";
@@ -76,7 +77,7 @@ export function TaskDetailsModal({
   const [assigneeIds, setAssigneeIds] = React.useState<string[]>([]);
   const [subtasks, setSubtasks] = React.useState<WorkspaceSubtask[]>([]);
   const [attachments, setAttachments] = React.useState<WorkspaceAttachment[]>(
-    []
+    [],
   );
   const [members, setMembers] = React.useState<User[]>([]);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -94,7 +95,7 @@ export function TaskDetailsModal({
 
   // Project linking state
   const [projectId, setProjectId] = React.useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [workspaceProjects, setWorkspaceProjects] = React.useState<any[]>([]);
 
@@ -116,7 +117,7 @@ export function TaskDetailsModal({
       setRecurrenceEndDate(
         task.recurrence_end_date
           ? new Date(task.recurrence_end_date)
-          : undefined
+          : undefined,
       );
       setRecurrenceMaxOccurrences(task.recurrence_max_occurrences);
 
@@ -137,13 +138,38 @@ export function TaskDetailsModal({
   // Fetch workspace projects for project linking
   React.useEffect(() => {
     if (isOpen && workspaceId) {
-      workspaceService.getWorkspace(workspaceId)
+      workspaceService
+        .getWorkspace(workspaceId)
         .then((workspace) => {
           setWorkspaceProjects(workspace.projects || []);
         })
         .catch((err) => console.error("Failed to fetch projects:", err));
     }
   }, [isOpen, workspaceId]);
+
+  const triggerTaskNotifications = async (
+    type: "task_completed" | "task_deleted",
+    taskData: WorkspaceTask,
+  ) => {
+    try {
+      const title =
+        type === "task_completed" ? "Task Completed" : "Task Deleted";
+      const message =
+        type === "task_completed"
+          ? `Task "${taskData.title}" was completed by ${user?.full_name || "a collaborator"}.`
+          : `Task "${taskData.title}" was deleted by ${user?.full_name || "a collaborator"}.`;
+
+      await NotificationService.notifyWorkspace(
+        workspaceId,
+        "document_change",
+        title,
+        message,
+        { workspaceId, taskId: taskData.id },
+      );
+    } catch (err) {
+      console.error("Failed to send task notifications:", err);
+    }
+  };
 
   const handleSave = async () => {
     if (!task || !canEdit) return;
@@ -174,6 +200,12 @@ export function TaskDetailsModal({
           : undefined,
       });
       onUpdate(updated);
+
+      // Trigger notification if status moved to 'done'
+      if (status === "done" && task.status !== "done") {
+        triggerTaskNotifications("task_completed", task);
+      }
+
       toast({ title: "Success", description: "Task updated successfully" });
       onClose();
     } catch (err) {
@@ -191,7 +223,9 @@ export function TaskDetailsModal({
   const handleDelete = () => {
     if (!task || !canEdit) return;
     if (window.confirm("Are you sure you want to delete this task?")) {
+      const taskToDelete = { ...task };
       onDelete(task.id);
+      triggerTaskNotifications("task_deleted", taskToDelete);
       onClose();
     }
   };
@@ -211,7 +245,7 @@ export function TaskDetailsModal({
                 onChange={(e) => setTitle(e.target.value)}
                 className={cn(
                   "text-xl font-bold bg-transparent border-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-auto",
-                  !canEdit && "cursor-default"
+                  !canEdit && "cursor-default",
                 )}
                 placeholder="Task title..."
               />
@@ -243,9 +277,8 @@ export function TaskDetailsModal({
                     disabled={!canEdit}
                     className={cn(
                       "w-full justify-start text-left font-normal h-9 text-xs border-input bg-white text-gray-600 hover:bg-accent hover:text-accent-foreground",
-                      !canEdit && "opacity-100 cursor-default"
-                    )}
-                  >
+                      !canEdit && "opacity-100 cursor-default",
+                    )}>
                     {dueDate ? (
                       format(dueDate, "PPP p")
                     ) : (
@@ -255,8 +288,7 @@ export function TaskDetailsModal({
                 </PopoverTrigger>
                 <PopoverContent
                   className="w-auto p-0 bg-white shadow-2xl border border-border text-popover-foreground z-[100]"
-                  align="start"
-                >
+                  align="start">
                   <Calendar
                     mode="single"
                     selected={dueDate}
@@ -287,7 +319,11 @@ export function TaskDetailsModal({
               <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <ArrowDownCircle className="h-3 w-3" /> Priority
               </Label>
-              <PrioritySelector value={priority} onChange={setPriority} disabled={!canEdit} />
+              <PrioritySelector
+                value={priority}
+                onChange={setPriority}
+                disabled={!canEdit}
+              />
             </div>
           </div>
 
@@ -325,8 +361,7 @@ export function TaskDetailsModal({
               value={projectId || ""}
               disabled={!canEdit}
               onChange={(e) => setProjectId(e.target.value || undefined)}
-              className="w-full px-3 py-2 text-sm border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-600 disabled:opacity-100 disabled:cursor-default"
-            >
+              className="w-full px-3 py-2 text-sm border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-600 disabled:opacity-100 disabled:cursor-default">
               <option value="">No Project (Workspace-level task)</option>
               {workspaceProjects.map((project) => (
                 <option key={project.id} value={project.id}>
@@ -343,7 +378,11 @@ export function TaskDetailsModal({
 
           {/* Recurrence Section */}
           <div className="space-y-3 pt-2">
-            <label className={cn("flex items-center gap-2 cursor-pointer", !canEdit && "opacity-70 cursor-default")}>
+            <label
+              className={cn(
+                "flex items-center gap-2 cursor-pointer",
+                !canEdit && "opacity-70 cursor-default",
+              )}>
               <input
                 type="checkbox"
                 checked={isRecurring}
@@ -409,7 +448,11 @@ export function TaskDetailsModal({
 
             {/* Time Tracking Section */}
             <div className="border-t border-border pt-4">
-              <TimeTracker taskId={task!.id} onUpdate={onUpdate} canEdit={canEdit} />
+              <TimeTracker
+                taskId={task!.id}
+                onUpdate={onUpdate}
+                canEdit={canEdit}
+              />
             </div>
           </div>
 
@@ -432,8 +475,7 @@ export function TaskDetailsModal({
                 variant="ghost"
                 size="sm"
                 onClick={handleDelete}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs gap-2"
-              >
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs gap-2">
                 <Trash2 className="h-3.5 w-3.5" /> Delete
               </Button>
             )}
@@ -449,7 +491,7 @@ export function TaskDetailsModal({
 
                   try {
                     const clonedTask = await WorkspaceTaskService.cloneTask(
-                      task.id
+                      task.id,
                     );
                     onUpdate(clonedTask);
                     onClose();
@@ -458,8 +500,7 @@ export function TaskDetailsModal({
                     alert("Failed to clone task");
                   }
                 }}
-                className="text-muted-foreground hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 text-xs gap-2"
-              >
+                className="text-muted-foreground hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 text-xs gap-2">
                 <Copy className="h-3.5 w-3.5" /> Clone
               </Button>
             )}
@@ -470,8 +511,7 @@ export function TaskDetailsModal({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="text-xs"
-            >
+              className="text-xs">
               Cancel
             </Button>
             {canEdit && (
@@ -480,8 +520,7 @@ export function TaskDetailsModal({
                 size="sm"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="bg-teal-600 hover:bg-teal-700 text-white text-xs gap-2 min-w-[80px]"
-              >
+                className="bg-teal-600 hover:bg-teal-700 text-white text-xs gap-2 min-w-[80px]">
                 {isSaving ? (
                   <span className="flex items-center gap-1">
                     <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -514,8 +553,7 @@ function ArrowDownCircle(props: React.SVGProps<SVGSVGElement>) {
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+      strokeLinejoin="round">
       <circle cx="12" cy="12" r="10" />
       <path d="M12 8v8" />
       <path d="m8 12 4 4 4-4" />
@@ -535,8 +573,7 @@ function UserIcon(props: React.SVGProps<SVGSVGElement>) {
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+      strokeLinejoin="round">
       <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>

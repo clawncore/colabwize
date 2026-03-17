@@ -58,15 +58,17 @@ export function UserDetailsPanel({ member, onClose }: UserDetailsPanelProps) {
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto bg-slate-50/50">
         <div className="p-6 flex flex-col items-center">
-          <Avatar className="h-24 w-24 border-4 border-white shadow-sm mb-4">
+          <Avatar className="h-24 w-24 border-4 border-white shadow-md mb-4 ring-2 ring-emerald-50">
             <AvatarImage src={undefined} />
-            <AvatarFallback className="bg-emerald-600 text-white text-2xl font-bold">
-              {user.full_name?.charAt(0) || user.email?.charAt(0) || "U"}
+            <AvatarFallback className="bg-emerald-600 text-white text-3xl font-bold">
+              {user.full_name?.charAt(0).toUpperCase() ||
+                user.email?.charAt(0).toUpperCase() ||
+                "U"}
             </AvatarFallback>
           </Avatar>
 
           <h3 className="text-xl font-bold text-slate-800 text-center leading-tight mb-1">
-            {user.full_name || "Team Member"}
+            {user?.full_name || user?.email || "Team Member"}
           </h3>
 
           <div className="flex items-center gap-2 mt-2">

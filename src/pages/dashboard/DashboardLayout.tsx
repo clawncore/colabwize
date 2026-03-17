@@ -548,7 +548,7 @@ export default function DashboardLayout({
         isSidebarExpanded ? "w-64" : "w-20"
       }`,
       sidebarTransform: sidebarOpen ? "translate-x-0" : "-translate-x-full",
-      mainContent: `flex-1 h-full overflow-y-auto transition-all duration-300 ${!isSidebarExpanded && sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"} pt-16 lg:pt-0`,
+      mainContent: `flex-1 h-full flex flex-col overflow-hidden transition-all duration-300 ${!isSidebarExpanded && sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"} pt-16 lg:pt-0`,
       topNav: `sticky top-0 z-50 bg-[#FFFAFA] border-b border-gray-200 shadow-sm transition-all duration-300 ${!isSidebarExpanded && sidebarCollapsed ? "lg:ml-20" : "lg:ml-64"}`,
     };
   };
@@ -1578,20 +1578,22 @@ export default function DashboardLayout({
         {/* Main content */}
         <main className={positionClasses.mainContent}>
           <PendingInvitationsBanner onInvitationAction={fetchWorkspaces} />
-          {subscriptionLoading && !children ? (
-            <div className="flex h-[50vh] items-center justify-center">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-                <p className="text-sm font-medium text-gray-500">
-                  Loading workspace...
-                </p>
+          <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
+            {subscriptionLoading && !children ? (
+              <div className="flex h-[50vh] items-center justify-center">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Loading workspace...
+                  </p>
+                </div>
               </div>
-            </div>
-          ) : children ? (
-            children
-          ) : (
-            <Outlet />
-          )}
+            ) : children ? (
+              children
+            ) : (
+              <Outlet />
+            )}
+          </div>
         </main>
       </div>
     </div>

@@ -402,6 +402,10 @@ export function KanbanBoard() {
       // Update backend
       try {
         await WorkspaceTaskService.updateTask(taskId, { status: newStatus });
+        // Trigger notification if moved to done
+        if (newStatus === "done" && activeTaskData.status !== "done") {
+          triggerTaskNotifications("task_completed", activeTaskData);
+        }
       } catch (err) {
         console.error("Failed to update task status:", err);
         loadTasks(); // Revert
@@ -429,6 +433,29 @@ export function KanbanBoard() {
     }
 
     setActiveTask(null);
+  };
+
+  const triggerTaskNotifications = async (
+    type: "task_completed" | "task_deleted",
+    task: WorkspaceTask,
+  ) => {
+    try {
+      const title = type === "task_completed" ? "Task Completed" : "Task Deleted";
+      const message =
+        type === "task_completed"
+          ? `Task "${task.title}" was completed by ${user?.full_name || "a collaborator"}.`
+          : `Task "${task.title}" was deleted by ${user?.full_name || "a collaborator"}.`;
+
+      await NotificationService.notifyWorkspace(
+        workspaceId!,
+        "document_change",
+        title,
+        message,
+        { workspaceId, taskId: task.id },
+      );
+    } catch (err) {
+      console.error("Failed to send task notifications:", err);
+    }
   };
 
   const handleCreateTask = async () => {
@@ -469,8 +496,12 @@ export function KanbanBoard() {
       return;
     }
     try {
+      const taskToDelete = tasks.find((t) => t.id === id);
       await WorkspaceTaskService.deleteTask(id);
       setTasks((prev) => prev.filter((t) => t.id !== id));
+      if (taskToDelete) {
+        triggerTaskNotifications("task_deleted", taskToDelete);
+      }
     } catch (err) {
       console.error("Failed to delete task:", err);
     }

@@ -6,6 +6,7 @@ import { useUser } from "../../../services/useUser";
 import { documentService } from "../../../services/documentService";
 import WorkspaceService from "../../../services/workspaceService";
 import ExportService from "../../../services/exportService";
+import NotificationService from "../../../services/notificationService";
 import { useToast } from "../../../hooks/use-toast";
 import { SubscriptionService } from "../../../services/subscriptionService";
 
@@ -108,7 +109,9 @@ export default function WorkspaceProjectsPage() {
     if (activeFilter !== "all" && activeFilter !== "archived") {
       filtered = filtered.filter((project) => {
         if (activeFilter === "in-progress") {
-          return project.status === "in-progress" || project.status === "active";
+          return (
+            project.status === "in-progress" || project.status === "active"
+          );
         }
         return project.status === activeFilter;
       });
@@ -343,6 +346,19 @@ export default function WorkspaceProjectsPage() {
         console.log("Delete API result:", result);
 
         if (result && result.success) {
+          // Send notification to workspace collaborators via backend broadcast
+          try {
+            await NotificationService.notifyWorkspace(
+              workspaceId,
+              "document_change",
+              "Project Deleted",
+              `Project "${project.title}" was deleted by ${user?.full_name || "a collaborator"}.`,
+              { workspaceId, projectId: project.id },
+            );
+          } catch (notifyError) {
+            console.error("Failed to send deletion notifications:", notifyError);
+          }
+
           setProjects((prev) => prev.filter((p) => p.id !== project.id));
 
           toast({

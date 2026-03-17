@@ -557,6 +557,12 @@ function FeaturesPresentationFlow() {
                     premium: true,
                   },
                   {
+                    name: "Calendar View",
+                    free: true,
+                    plus: true,
+                    premium: true,
+                  },
+                  {
                     name: "File Sharing",
                     free: true,
                     plus: true,
@@ -567,12 +573,6 @@ function FeaturesPresentationFlow() {
                     free: "5 Attachments",
                     plus: "50 Attachments",
                     premium: "Unlimited",
-                  },
-                  {
-                    name: "Calendar View",
-                    free: true,
-                    plus: true,
-                    premium: true,
                   },
                   {
                     name: "Analytics",
@@ -594,7 +594,13 @@ function FeaturesPresentationFlow() {
                   },
                   {
                     name: "Version History",
-                    free: true,
+                    free: "-",
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "Collaboration Logs",
+                    free: "-",
                     plus: true,
                     premium: true,
                   },
@@ -659,7 +665,13 @@ function FeaturesPresentationFlow() {
                   {
                     name: "Insight Map",
                     free: "-",
-                    plus: "-",
+                    plus: true,
+                    premium: true,
+                  },
+                  {
+                    name: "Advanced Citation Suggestions",
+                    free: "-",
+                    plus: true,
                     premium: true,
                   },
                   {
@@ -670,12 +682,6 @@ function FeaturesPresentationFlow() {
                   },
                   {
                     name: "Search Alerts",
-                    free: "-",
-                    plus: "-",
-                    premium: true,
-                  },
-                  {
-                    name: "Advanced Citation Suggestions",
                     free: "-",
                     plus: "-",
                     premium: true,

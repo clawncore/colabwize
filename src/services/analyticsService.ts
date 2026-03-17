@@ -38,10 +38,10 @@ export class AnalyticsService {
   /**
    * Get dashboard data with transformed metrics
    */
-  static async getDashboardData(): Promise<DashboardData> {
+  static async getDashboardData(weeks: number = 8): Promise<DashboardData> {
     try {
       // Fetch the dashboard-specific analytics data from the backend
-      const response = await apiClient.get("/api/analytics/dashboard");
+      const response = await apiClient.get(`/api/analytics/dashboard?weeks=${weeks}`);
       const dashboardData = response.data;
 
       // Return the actual dashboard metrics from the backend

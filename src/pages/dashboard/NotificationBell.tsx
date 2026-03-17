@@ -19,8 +19,11 @@ import {
 import NotificationService from "../../services/notificationService";
 import { Button } from "../../components/ui/button";
 import NotificationMessage from "../../components/notifications/NotificationMessage";
+import { supabaseBrowser } from "../../lib/supabase/browser";
+import { useUser } from "../../stores/user";
 
 const NotificationBell: React.FC = () => {
+  const { user } = useUser();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "high" | "medium" | "low">(
@@ -203,12 +206,37 @@ const NotificationBell: React.FC = () => {
       }
     })();
 
+    // Setup Supabase Realtime listener as a fallback for direct DB insertions
+    const supabase = supabaseBrowser();
+    const notificationSubscription = supabase
+      .channel("realtime:notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user?.id}`,
+        },
+        (payload) => {
+          console.log("Real-time notification from Supabase:", payload.new);
+          // Refresh notifications list and count
+          const filters: any = {};
+          if (filter !== "all") filters.priority = filter;
+          if (searchQuery) filters.search = searchQuery;
+          void fetchNotifications(5, 0, filters);
+          setUnreadCount((prev) => prev + 1);
+        },
+      )
+      .subscribe();
+
     // Cleanup function
     return () => {
       NotificationService.off("notification", handleNotification);
       NotificationService.off("notification_count", handleUnreadCount);
+      supabase.removeChannel(notificationSubscription);
     };
-  }, [fetchNotifications, filter, searchQuery]);
+  }, [fetchNotifications, filter, searchQuery, user?.id]);
 
   // Fetch notifications when dropdown opens
   useEffect(() => {

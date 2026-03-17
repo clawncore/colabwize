@@ -1909,6 +1909,7 @@ const EditorWorkspacePage: React.FC = () => {
                   selectedProject?.workspace_id && (
                     <TeamChat
                       workspaceId={selectedProject.workspace_id}
+                      projectId={selectedProject.id}
                       className="h-full"
                       isPanel={true}
                     />

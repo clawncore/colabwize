@@ -5,7 +5,7 @@ export const PricingTableExtension = Node.create({
 
   group: "block",
 
-  content: "block+",
+  content: "block*",
 
   defining: true,
 

@@ -25,7 +25,7 @@ export const ColumnLayoutExtension = Node.create({
 
     group: "block",
 
-    content: "block+",
+    content: "block*",
 
     defining: true,
 

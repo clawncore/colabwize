@@ -33,8 +33,11 @@ import {
 import { Badge } from "../../ui/badge";
 import { Skeleton } from "../../ui/skeleton";
 import NotificationMessage from "../../notifications/NotificationMessage";
+import { useUser } from "../../../stores/user";
+import { supabaseBrowser } from "../../../lib/supabase/browser";
 
 const NotificationsPage: React.FC = () => {
+  const { user } = useUser();
   const navigate = useNavigate();
   const { id: workspaceId } = useParams<{ id?: string }>();
   const { isAdmin } = useWorkspacePermissions(workspaceId);
@@ -97,7 +100,33 @@ const NotificationsPage: React.FC = () => {
 
   useEffect(() => {
     fetchNotifications(false);
-  }, [filter, searchQuery]);
+
+    // Setup Supabase Realtime listener for new notifications
+    const supabase = supabaseBrowser();
+    const notificationSubscription = supabase
+      .channel("realtime:notifications_page")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user?.id}`,
+        },
+        (payload) => {
+          console.log("New notification on Page:", payload.new);
+          // If we have filters active (search or specific priority), we might not want to prepend directly 
+          // but for simplicity and better UX, we'll just trigger a refresh or prepend if it matches current filters
+          // For now, let's just refresh to ensure all counts and lists are consistent
+          void fetchNotifications(false);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notificationSubscription);
+    };
+  }, [filter, searchQuery, user?.id]);
 
   const handleLoadMore = () => {
     if (!isFetchingMore && hasMore) {

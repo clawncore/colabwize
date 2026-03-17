@@ -21,7 +21,6 @@ import {
 } from "../../services/subscriptionService";
 import { toast } from "../../hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { CreditUsageHistory } from "./CreditUsageHistory"; // Import the new component
 import {
   Tabs,
   TabsContent,
@@ -29,7 +28,6 @@ import {
   TabsTrigger,
 } from "../../components/ui/tabs";
 import { Badge } from "../../components/ui/badge";
-import { Switch } from "../../components/ui/switch"; // Assuming we have shadcn switch
 
 const BillingSettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -60,80 +58,80 @@ const BillingSettingsPage: React.FC = () => {
   );
   const [surveyReason, setSurveyReason] = useState<string>("");
 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
 
-        const [subscriptionData, paymentMethodsData, plansData] =
-          await Promise.all([
-            SubscriptionService.getCurrentSubscription().catch((err) => {
-              console.error("Error fetching subscription data:", err);
-              return null;
-            }),
-            SubscriptionService.getPaymentMethods().catch((err) => {
-              console.error("Error fetching payment methods:", err);
-              return [];
-            }),
-            SubscriptionService.getPlans().catch((err) => {
-              console.error("Error fetching plans:", err);
-              return [];
-            }),
-          ]);
+      const [subscriptionData, paymentMethodsData, plansData] =
+        await Promise.all([
+          SubscriptionService.getCurrentSubscription().catch((err) => {
+            console.error("Error fetching subscription data:", err);
+            return null;
+          }),
+          SubscriptionService.getPaymentMethods().catch((err) => {
+            console.error("Error fetching payment methods:", err);
+            return [];
+          }),
+          SubscriptionService.getPlans().catch((err) => {
+            console.error("Error fetching plans:", err);
+            return [];
+          }),
+        ]);
 
-        if (subscriptionData) {
-          setSubscription(subscriptionData.subscription);
-          setLimits(subscriptionData.limits || {});
-          setUsage(subscriptionData.usage || {});
-          setTotalDocuments((subscriptionData as any).totalDocuments || 0);
+      if (subscriptionData) {
+        setSubscription(subscriptionData.subscription);
+        setLimits(subscriptionData.limits || {});
+        setUsage(subscriptionData.usage || {});
+        setTotalDocuments((subscriptionData as any).totalDocuments || 0);
 
-          // NEW STATE UPDATE
-          setCreditBalance((subscriptionData as any).creditBalance || 0);
-          setAutoUseCredits((subscriptionData as any).autoUseCredits ?? true);
-        }
-        setPaymentMethods(paymentMethodsData);
-        setPlans(plansData || []);
-      } catch (err: any) {
-        console.error("Error fetching billing data:", err);
-        setError(err.message || "Failed to load billing data");
-      } finally {
-        setLoading(false);
+        // NEW STATE UPDATE
+        setCreditBalance((subscriptionData as any).creditBalance || 0);
+        setAutoUseCredits((subscriptionData as any).autoUseCredits ?? true);
       }
-    };
+      setPaymentMethods(paymentMethodsData);
+      setPlans(plansData || []);
+    } catch (err: any) {
+      console.error("Error fetching billing data:", err);
+      setError(err.message || "Failed to load billing data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchInvoices = async () => {
-      try {
-        setInvoicesLoading(true);
-        setInvoicesError(null);
-        const data = await SubscriptionService.getBillingHistory();
-        setInvoices(data);
-      } catch (err) {
-        console.error("Error fetching invoices:", err);
-        setInvoicesError(
-          "We couldn’t load your invoices right now. Please try again.",
-        );
-      } finally {
-        setInvoicesLoading(false);
-      }
-    };
+  const fetchInvoices = async () => {
+    try {
+      setInvoicesLoading(true);
+      setInvoicesError(null);
+      const data = await SubscriptionService.getBillingHistory();
+      setInvoices(data);
+    } catch (err) {
+      console.error("Error fetching invoices:", err);
+      setInvoicesError(
+        "We couldn’t load your invoices right now. Please try again.",
+      );
+    } finally {
+      setInvoicesLoading(false);
+    }
+  };
 
-    // NEW FETCH: Credit History
-    const fetchCreditHistory = async () => {
-      try {
-        setHistoryLoading(true);
-        const history = await SubscriptionService.getCreditHistory();
-        setCreditHistory(history);
-      } catch (err) {
-        console.error("Error fetching credit history", err);
-      } finally {
-        setHistoryLoading(false);
-      }
-    };
+  // NEW FETCH: Credit History
+  const fetchCreditHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      const history = await SubscriptionService.getCreditHistory();
+      setCreditHistory(history);
+    } catch (err) {
+      console.error("Error fetching credit history", err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
-    useEffect(() => {
-      fetchData();
-      fetchInvoices();
-      fetchCreditHistory();
-    }, []);
+  useEffect(() => {
+    fetchData();
+    fetchInvoices();
+    fetchCreditHistory();
+  }, []);
 
   // FRONTEND RECONCILIATION: Handle return from Lemon Squeezy Portal
   useEffect(() => {
@@ -183,14 +181,13 @@ const BillingSettingsPage: React.FC = () => {
     typeof subscription?.plan === "string"
       ? subscription.plan
       : subscription?.plan?.id;
-  // If no subscription, default to free. If subscription exists but plan not found in list, still use subscription.plan (if object) or fallback.
-  // Actually, backend returns plan as string.
+
   const currentPlan = plans.find((p) => p.id === currentPlanId) ||
     plans.find((p) => p.id === "free") || {
-    name: "Free Plan",
-    price: 0,
-    id: "free",
-  };
+      name: "Free Plan",
+      price: 0,
+      id: "free",
+    };
 
   const handleViewAllInvoices = async () => {
     try {
@@ -320,11 +317,11 @@ const BillingSettingsPage: React.FC = () => {
               Unable to load billing info
             </h3>
             <p className="text-red-600 mt-1">{error}</p>
-              <button
-                onClick={() => fetchData()}
-                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm transition-colors">
-                Retry Connection
-              </button>
+            <button
+              onClick={() => fetchData()}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm transition-colors">
+              Retry Connection
+            </button>
           </div>
         </div>
       </div>
@@ -389,8 +386,8 @@ const BillingSettingsPage: React.FC = () => {
               <div className="text-lg font-bold text-gray-900">
                 {subscription?.current_period_end
                   ? new Date(
-                    subscription.current_period_end,
-                  ).toLocaleDateString()
+                      subscription.current_period_end,
+                    ).toLocaleDateString()
                   : "No payment due"}
               </div>
             </div>
@@ -546,9 +543,9 @@ const BillingSettingsPage: React.FC = () => {
                     Resets{" "}
                     {usage.periodEnd
                       ? new Date(usage.periodEnd).toLocaleDateString(
-                        undefined,
-                        { day: "numeric", month: "short" },
-                      )
+                          undefined,
+                          { day: "numeric", month: "short" },
+                        )
                       : "Monthly"}
                   </span>
                 </div>
@@ -578,16 +575,17 @@ const BillingSettingsPage: React.FC = () => {
                     {/* Progress Bar */}
                     <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${limits.scans_per_month !== -1 &&
-                            (usage.scan || 0) >= (limits.scans_per_month || 0)
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          limits.scans_per_month !== -1 &&
+                          (usage.scan || 0) >= (limits.scans_per_month || 0)
                             ? "bg-red-500" // Exceeded
                             : limits.scans_per_month !== -1 &&
-                              (usage.scan || 0) /
-                              (limits.scans_per_month || 1) >
-                              0.8
+                                (usage.scan || 0) /
+                                  (limits.scans_per_month || 1) >
+                                  0.8
                               ? "bg-amber-400" // Near limit
                               : "bg-green-500" // Normal or Infinite
-                          }`}
+                        }`}
                         style={{
                           width: `${limits.scans_per_month === -1 ? 0 : Math.min(100, ((usage.scan || 0) / (limits.scans_per_month || 1)) * 100)}%`,
                         }} // 0% width for infinite to show "empty" or just use full green? Usually full green or empty. Let's start with 0 or 100.
@@ -662,13 +660,14 @@ const BillingSettingsPage: React.FC = () => {
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${limits.rephrase_suggestions === -1
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          limits.rephrase_suggestions === -1
                             ? "bg-purple-500"
                             : (usage.rephrase_suggestions || 0) >=
-                              (limits.rephrase_suggestions || 0)
+                                (limits.rephrase_suggestions || 0)
                               ? "bg-red-500"
                               : "bg-purple-500"
-                          }`}
+                        }`}
                         style={{
                           width: `${limits.rephrase_suggestions === -1 ? 0 : Math.min(100, ((usage.rephrase_suggestions || 0) / (limits.rephrase_suggestions || 1)) * 100)}%`,
                         }}

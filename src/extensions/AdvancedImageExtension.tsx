@@ -188,6 +188,8 @@ const ImageComponent = (props: any) => {
 
 export const ImageExtension = TiptapImage.extend({
     name: "imageExtension",
+    content: "",
+    atom: true,
 
     addAttributes() {
         return {
