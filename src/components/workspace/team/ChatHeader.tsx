@@ -14,11 +14,13 @@ export default function ChatHeader({
   workspaceId: propWorkspaceId,
   workspaceName: propWorkspaceName,
   userRole: propUserRole,
+  isPanel,
 }: {
   onSearch?: (q: string) => void;
   workspaceId?: string;
   workspaceName?: string;
   userRole?: string;
+  isPanel?: boolean;
 }) {
   const params = useParams<{ id: string }>();
   // Use prop workspaceId if available, otherwise fallback to params
@@ -95,40 +97,42 @@ export default function ChatHeader({
   };
 
   return (
-    <div className="h-20 border-b flex items-center justify-between px-6 bg-white shrink-0">
-      <div className="flex items-center gap-4 flex-1 min-w-0">
+    <div className={`${isPanel ? "h-14 px-3" : "h-20 px-6"} border-b flex items-center justify-between bg-white shrink-0`}>
+      <div className={`flex items-center ${isPanel ? "gap-2" : "gap-4"} flex-1 min-w-0`}>
         {!isSearching ? (
           <>
-            <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-xl uppercase shrink-0 ring-4 ring-emerald-50">
+            <div className={`flex items-center justify-center text-white font-bold uppercase shrink-0 ring-2 ${isPanel ? "w-8 h-8 text-xs rounded-lg bg-emerald-500 ring-emerald-50" : "w-12 h-12 text-xl rounded-full bg-emerald-600 ring-4 ring-emerald-50"}`}>
               {workspaceName?.[0] || "W"}
             </div>
-            <div className="min-w-0">
-              <h1 className="text-xl font-bold tracking-tight text-gray-900 truncate uppercase">
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <h1 className={`font-bold tracking-tight text-gray-900 truncate uppercase ${isPanel ? "text-xs" : "text-xl"}`}>
                 {workspaceName || "Workspace"}
               </h1>
-              <p className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
-                Group Chat <span className="opacity-50">•</span>
-                <span className="flex items-center gap-1">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="w-3 h-3 text-emerald-500"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round">
-                    <rect
-                      x="3"
-                      y="11"
-                      width="18"
-                      height="11"
-                      rx="2"
-                      ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0110 0v4"></path>
-                  </svg>
-                  E2E Encrypted
-                </span>
-              </p>
+              {!isPanel && (
+                <p className="text-xs text-gray-500 font-medium flex items-center gap-1.5 mt-0.5">
+                  Group Chat <span className="opacity-50">•</span>
+                  <span className="flex items-center gap-1">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className="w-3 h-3 text-emerald-500"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round">
+                      <rect
+                        x="3"
+                        y="11"
+                        width="18"
+                        height="11"
+                        rx="2"
+                        ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0110 0v4"></path>
+                    </svg>
+                    E2E Encrypted
+                  </span>
+                </p>
+              )}
             </div>
           </>
         ) : (
@@ -152,7 +156,7 @@ export default function ChatHeader({
           </div>
         )}
       </div>
-      <div className="flex items-center gap-4 text-gray-400">
+      <div className={`flex items-center text-gray-400 shrink-0 ${isPanel ? "gap-1" : "gap-4"}`}>
         {!isSearching && (
           <button
             onClick={toggleSearch}
@@ -173,8 +177,8 @@ export default function ChatHeader({
             )}
           </button>
         ) : null}
-        <div className="w-px h-8 bg-gray-100 mx-1" />
-        <ChatPresence workspaceId={workspaceId} />
+        {!isPanel && <div className="w-px h-8 bg-gray-100 mx-1" />}
+        <ChatPresence workspaceId={workspaceId} isPanel={isPanel} />
       </div>
     </div>
   );

@@ -16,11 +16,13 @@ export default function ListMessages({
   projectId,
   onAvatarClick,
   searchQuery,
+  isPanel,
 }: {
   workspaceId?: string;
   projectId?: string;
   onAvatarClick?: (userId: string, userData?: any) => void;
   searchQuery?: string;
+  isPanel?: boolean;
 }) {
   const scrollRef = useRef() as React.MutableRefObject<HTMLDivElement>;
   const [userScrolled, setUserScrolled] = useState(false);
@@ -167,13 +169,13 @@ export default function ListMessages({
   return (
     <>
       <div
-        className="flex-1 min-h-0 flex flex-col p-6 overflow-y-auto bg-[#F0F2F5] space-y-4"
+        className={`flex-1 min-h-0 flex flex-col ${isPanel ? "p-3 space-y-2" : "p-6 space-y-4"} overflow-y-auto bg-[#F0F2F5]`}
         ref={scrollRef}
         onScroll={handleOnScroll}>
         <div className="flex-1 pb-2">
           <LoadMoreMessages workspaceId={workspaceId} projectId={projectId} />
         </div>
-        <div className="space-y-4 pb-2">
+        <div className={`${isPanel ? "space-y-2" : "space-y-4"} pb-2`}>
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center p-12 text-center space-y-3">
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100">
@@ -232,6 +234,7 @@ export default function ListMessages({
                     workspaceId={workspaceId!}
                     projectId={projectId}
                     onAvatarClick={onAvatarClick}
+                    isPanel={isPanel}
                   />
                 </React.Fragment>
               );

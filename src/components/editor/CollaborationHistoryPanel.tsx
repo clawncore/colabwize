@@ -21,16 +21,17 @@ interface CollaborationHistoryPanelProps {
   members: WorkspaceMember[];
   isLoading: boolean;
   onClose: () => void;
+  initialAuthorId?: string;
 }
 
 export const CollaborationHistoryPanel: React.FC<
   CollaborationHistoryPanelProps
-> = ({ editor, members, isLoading, onClose }) => {
+> = ({ editor, members, isLoading, onClose, initialAuthorId }) => {
   const [editGroups, setEditGroups] = useState<EditGroup[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilterAuthorId, setActiveFilterAuthorId] = useState<
     string | null
-  >(null);
+  >(initialAuthorId || null);
   const [presenceIds, setPresenceIds] = useState<string[]>([]);
 
   const getUserColor = (userId: string) => {
@@ -132,6 +133,12 @@ export const CollaborationHistoryPanel: React.FC<
       };
     }
   }, [editor, refreshHistory]);
+
+  useEffect(() => {
+    if (initialAuthorId) {
+      setActiveFilterAuthorId(initialAuthorId);
+    }
+  }, [initialAuthorId]);
 
   const jumpToEdit = (from: number, to: number) => {
     if (!editor || editor.isDestroyed) return;

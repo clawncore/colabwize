@@ -1903,6 +1903,7 @@ const EditorWorkspacePage: React.FC = () => {
                     members={workspaceMembers}
                     isLoading={isMembersLoading}
                     onClose={() => setIsRightSidebarOpen(false)}
+                    initialAuthorId={panelData?.authorId}
                   />
                 )}
                 {activePanelType === "team-chat" &&

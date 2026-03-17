@@ -18,11 +18,13 @@ export default function Message({
   workspaceId,
   projectId,
   onAvatarClick,
+  isPanel,
 }: {
   message: Imessage;
   workspaceId: string;
   projectId?: string;
   onAvatarClick?: (userId: string, userData?: any) => void;
+  isPanel?: boolean;
 }) {
   const user = useUser((state) => state.user);
   const [decryptedContent, setDecryptedContent] = useState<string>(
@@ -69,9 +71,9 @@ export default function Message({
 
   return (
     <div
-      className={`flex w-full ${isSentByMe ? "justify-end" : "justify-start"} px-2`}>
+      className={`flex w-full ${isSentByMe ? "justify-end" : "justify-start"} ${isPanel ? "px-0" : "px-2"}`}>
       <div
-        className={`flex max-w-[80%] gap-2 ${isSentByMe ? "flex-row-reverse" : "flex-row"}`}>
+        className={`flex ${isPanel ? "max-w-[95%]" : "max-w-[80%]"} gap-2 ${isSentByMe ? "flex-row-reverse" : "flex-row"}`}>
         {!isSentByMe && (
           <div className="mt-auto mb-1 shrink-0">
             <button
@@ -98,7 +100,7 @@ export default function Message({
             </span>
           )}
           <div
-            className={`relative px-4 py-2.5 rounded-2xl shadow-sm text-sm transition-all ${
+            className={`relative ${isPanel ? "px-3 py-2" : "px-4 py-2.5"} rounded-2xl shadow-sm text-sm transition-all ${
               isSentByMe
                 ? isMentioned
                   ? "bg-[#E7FFB5] ring-2 ring-emerald-400/30 text-gray-800 rounded-tr-none"
@@ -107,7 +109,7 @@ export default function Message({
                   ? "bg-emerald-50 ring-2 ring-emerald-500/30 text-gray-800 rounded-tl-none border border-emerald-100"
                   : "bg-white text-gray-800 rounded-tl-none border border-gray-100"
             }`}>
-            <div className="pr-12 min-w-[60px] break-words">
+            <div className={`pr-12 min-w-[60px] break-words ${isPanel ? "text-[13px] leading-relaxed" : ""}`}>
               {renderContentWithMentions(decryptedContent, onAvatarClick)}
             </div>
             <div className="absolute bottom-1 right-2 flex items-center gap-1">

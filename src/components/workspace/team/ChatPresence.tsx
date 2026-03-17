@@ -3,7 +3,7 @@ import { useUser } from "../../../stores/user";
 import { supabaseBrowser } from "../../../lib/supabase/browser";
 import React, { useEffect, useState } from "react";
 
-export default function ChatPresence({ workspaceId }: { workspaceId?: string }) {
+export default function ChatPresence({ workspaceId, isPanel }: { workspaceId?: string; isPanel?: boolean }) {
   const user = useUser((state) => state.user);
   const supabase = supabaseBrowser();
   const [onlineUsers, setOnlineUsers] = useState(0);
@@ -41,8 +41,8 @@ export default function ChatPresence({ workspaceId }: { workspaceId?: string }) 
 
   return (
     <div className="flex items-center gap-1">
-      <div className="h-4 w-4 bg-green-500 rounded-full animate-pulse"></div>
-      <h1 className="text-sm text-gray-400">{onlineUsers} onlines</h1>
+      <div className={`bg-green-500 rounded-full animate-pulse ${isPanel ? "h-2.5 w-2.5" : "h-4 w-4"}`}></div>
+      <h1 className={`text-gray-400 ${isPanel ? "text-xs" : "text-sm"}`}>{onlineUsers} onlines</h1>
     </div>
   );
 }

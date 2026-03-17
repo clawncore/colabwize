@@ -13,11 +13,13 @@ export default function ChatInput({
   workspaceId,
   parentId,
   projectId,
+  isPanel,
   members = [],
 }: {
   workspaceId?: string;
   parentId?: string;
   projectId?: string;
+  isPanel?: boolean;
   members?: MentionUser[];
 }) {
   const [text, setText] = useState("");
@@ -204,8 +206,8 @@ export default function ChatInput({
 
 
   return (
-    <div className="p-4 bg-[#F0F2F5] shrink-0 border-t flex flex-col gap-2">
-      <div className="flex items-center gap-3">
+    <div className={`${isPanel ? "p-2" : "p-4"} bg-[#F0F2F5] shrink-0 border-t flex flex-col gap-2`}>
+      <div className={`flex items-center ${isPanel ? "gap-2" : "gap-3"}`}>
         <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex items-end pr-2 overflow-hidden">
           <div className="flex-1">
             <MentionInput
@@ -215,7 +217,7 @@ export default function ChatInput({
               users={members}
               placeholder="Type a message..."
               onEnter={handleSendMessage}
-              className="border-0 focus-visible:ring-0 min-h-[44px] max-h-[120px] py-3"
+              className={`border-0 focus-visible:ring-0 min-h-[44px] max-h-[120px] ${isPanel ? "py-2" : "py-3"}`}
             />
           </div>
           <div className="pb-1.5 shrink-0">
@@ -224,11 +226,11 @@ export default function ChatInput({
         </div>
         <button
           onClick={handleSendMessage}
-          className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-md hover:bg-emerald-700 transition-all transform active:scale-95 shrink-0">
+          className={`${isPanel ? "w-9 h-9" : "w-12 h-12"} rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-md hover:bg-emerald-700 transition-all transform active:scale-95 shrink-0`}>
           <svg
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="w-6 h-6 rotate-45 mr-1"
+            className={`${isPanel ? "w-4 h-4" : "w-6 h-6"} rotate-45 mr-1`}
             xmlns="http://www.w3.org/2000/svg">
             <path d="M3.4 22c-.2 0-.4-.1-.5-.2-.3-.3-.4-.7-.2-1l2.5-9L2.7 2.8C2.5 2.5 2.6 2.1 2.9 1.8c.3-.3.8-.4 1.1-.2l17.5 9c.4.2.6.5.6.9s-.2.7-.6.9L3.9 21.8c-.1.1-.3.2-.5.2z" />
           </svg>

@@ -11,12 +11,14 @@ export default function ChatMessages({
   projectId,
   onAvatarClick,
   searchQuery,
+  isPanel,
 }: {
   workspaceId?: string;
   parentId?: string;
   projectId?: string;
   onAvatarClick?: (userId: string, userData?: any) => void;
   searchQuery?: string;
+  isPanel?: boolean;
 }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,6 +89,7 @@ export default function ChatMessages({
             projectId={projectId}
             onAvatarClick={onAvatarClick}
             searchQuery={searchQuery}
+            isPanel={isPanel}
           />
           <InitMessages messages={messages} />
         </div>

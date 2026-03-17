@@ -82,7 +82,20 @@ export default function TeamChat({
     console.log("TeamChat: Avatar clicked for user", userId, {
       cachedMembersCount: members.length,
       hasUserDataProp: !!userData,
+      isPanel,
     });
+
+    if (isPanel) {
+      // Redirect to Collaboration History panel with filter
+      const event = new CustomEvent("openSidebarPanel", {
+        detail: {
+          panelType: "collaboration-history",
+          data: { authorId: userId },
+        },
+      });
+      window.dispatchEvent(event);
+      return;
+    }
 
     // Exhaustive ID match: check user object, user_id field, and direct member ID
     let member = members.find((m) => {
@@ -175,6 +188,7 @@ export default function TeamChat({
             workspaceId={workspaceId}
             workspaceName={workspaceName}
             userRole={userRole}
+            isPanel={isPanel}
           />
           <div className="flex-1 min-h-0 flex flex-col">
             <ChatMessages
@@ -183,12 +197,14 @@ export default function TeamChat({
               projectId={projectId}
               onAvatarClick={handleAvatarClick}
               searchQuery={searchQuery}
+              isPanel={isPanel}
             />
           </div>
           <ChatInput
             workspaceId={workspaceId}
             parentId={parentId}
             projectId={projectId}
+            isPanel={isPanel}
             members={members.map((m) => ({
               id: m.user?.id || m.user_id,
               name: m.user?.full_name || m.user?.email || "Unknown User",

@@ -115,7 +115,7 @@ const NotificationsPage: React.FC = () => {
         },
         (payload) => {
           console.log("New notification on Page:", payload.new);
-          // If we have filters active (search or specific priority), we might not want to prepend directly 
+          // If we have filters active (search or specific priority), we might not want to prepend directly
           // but for simplicity and better UX, we'll just trigger a refresh or prepend if it matches current filters
           // For now, let's just refresh to ensure all counts and lists are consistent
           void fetchNotifications(false);
@@ -243,7 +243,7 @@ const NotificationsPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto p-8 w-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center">
