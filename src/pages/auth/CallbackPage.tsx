@@ -119,6 +119,16 @@ const CallbackPage: React.FC = () => {
                     return;
                   }
 
+                  // Admin Redirection
+                  const ADMIN_EMAILS = ["simbisai@colabwize.com", "craig@gmail.com"];
+                  const userEmail = user.email?.toLowerCase() || "";
+                  
+                  if (ADMIN_EMAILS.includes(userEmail)) {
+                    console.log("Admin authenticated, redirecting to admin dashboard");
+                    window.location.href = "/admin/email";
+                    return;
+                  }
+
                   // Default: Go to Dashboard
                   console.log("User authenticated, redirecting to dashboard");
                   navigate("/dashboard", { replace: true });

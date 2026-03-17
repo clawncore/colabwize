@@ -122,14 +122,23 @@ import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview
 import TemplateGallery from "./components/workspace/templates/TemplateGallery";
 import AcceptInvitationPage from "./pages/workspaces/AcceptInvitationPage";
 
-// Add imports for admin pages or components here
+// Titan Admin Dashboard Components
+import { AdminDashboardPage } from "./components/admin/dashboard/AdminDashboardPage";
+import { AdminBlogManagerView } from "./components/admin/blog/AdminBlogManagerView";
+import { AdminUserDirectory } from "./components/admin/email/AdminUserDirectory";
+import { AdminInboxView } from "./components/admin/email/AdminInboxView";
+import { AdminMarketingHubView } from "./components/admin/marketing/AdminMarketingHubView";
+import { AdminEmailCenter } from "./components/admin/email/AdminEmailCenter";
+
+// Old Admin Imports (Still used for workspace specific admin pages)
 import AdminDashboard from "./components/admin/dashboard/page";
 import WorkspaceMembersPage from "./components/admin/members/page";
 import WorkspaceSettingsPage from "./components/admin/settings/page";
 import WorkspaceActivityPage from "./components/admin/activity/page";
 import { AdminRoute } from "./components/auth/AdminRoute";
+import PlatformAdminGuard from "./components/auth/PlatformAdminGuard";
 
-// Add imports for notifications
+// Other imports
 import NotificationsPage from "./components/workspace/notifications/NotificationsPage";
 import NotificationSettings from "./components/admin/settings/NotificationSettings";
 import { TimeTrackingProvider } from "./contexts/TimeTrackingContext";
@@ -581,6 +590,81 @@ function App() {
                           </ProtectedRoute>
                         }
                       />
+                      
+                      {/* Platform Administration Center Routes */}
+                      <Route
+                        path="/admin"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminDashboardPage />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/inbox"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminInboxView />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/users"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminUserDirectory />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/blogs"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminBlogManagerView />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/marketing"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminMarketingHubView />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/email"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminEmailCenter />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/broadcast"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminEmailCenter />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/analytics"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminEmailCenter />
+                          </PlatformAdminGuard>
+                        }
+                      />
+                      <Route
+                        path="/admin/email-logs"
+                        element={
+                          <PlatformAdminGuard>
+                            <AdminEmailCenter />
+                          </PlatformAdminGuard>
+                        }
+                      />
+
                       {/* 404 Catch-All Route */}
                       <Route path="*" element={<NotFoundPage />} />
                     </Routes>

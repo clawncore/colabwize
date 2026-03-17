@@ -17,7 +17,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "Plagiarism can ruin academic careers. Learn the deep strategies for maintaining originality, managing citations, and developing a unique academic voice.",
     content: `
-      <h2>The Gravity of Plagiarism</h2>
+      <h2 className="text-2xl font-bold mb-3">The Gravity of Plagiarism</h2>
       <p>In the academic world, plagiarism is the cardinal sin. It involves presenting someone else's work, ideas, or intellectual property as your own, whether intentionally or accidentally. The consequences range from failing a specific assignment to expulsion from the university and permanent damage to your professional reputation. As digital archives become more interconnected, the likelihood of being caught has increased exponentially.</p>
 
       <h2>Intentional vs. Accidental Plagiarism</h2>
