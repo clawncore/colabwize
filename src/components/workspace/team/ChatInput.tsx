@@ -215,7 +215,7 @@ export default function ChatInput({
               value={text}
               onChange={setText}
               users={members}
-              placeholder="Type a message..."
+              placeholder="Type a message... or use @ to mention someone"
               onEnter={handleSendMessage}
               className={`border-0 focus-visible:ring-0 min-h-[44px] max-h-[120px] ${isPanel ? "py-2" : "py-3"}`}
             />

@@ -434,12 +434,54 @@ export class ResearchService {
     sessionId: string,
   ): Promise<{ session: any; messages: any[] }> {
     try {
-      const response = await apiClient.get(
-        `/api/research/chat/session/${sessionId}`,
-      );
-      return response;
+      const response = await apiClient.get(`/api/chat/session/${sessionId}`);
+      if (!response.success) {
+        throw new Error("Failed to fetch chat session");
+      }
+      return {
+        session: response.data?.session || {},
+        messages: response.data || [],
+      };
     } catch (error) {
       console.error("Error fetching chat session:", error);
+      throw error;
+    }
+  }
+
+  // Get sessions by context (project, file, or external paper)
+  static async getSessionsByContext(filters: {
+    projectId?: string;
+    fileId?: string;
+    externalPaperId?: string;
+  }): Promise<any[]> {
+    try {
+      const params = new URLSearchParams();
+      if (filters.projectId) params.append("projectId", filters.projectId);
+      if (filters.fileId) params.append("fileId", filters.fileId);
+      if (filters.externalPaperId)
+        params.append("externalPaperId", filters.externalPaperId);
+
+      const response = await apiClient.get(`/api/chat/sessions?${params.toString()}`);
+      if (!response.success) return [];
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching sessions by context:", error);
+      return [];
+    }
+  }
+
+  // Create a new session for a context
+  static async startChatSession(context: {
+    projectId?: string;
+    fileId?: string;
+    externalPaperId?: string;
+  }): Promise<any> {
+    try {
+      const response = await apiClient.post("/api/chat/session", context);
+      if (!response.success) throw new Error("Failed to create session");
+      return response.data;
+    } catch (error) {
+      console.error("Error creating chat session:", error);
       throw error;
     }
   }
