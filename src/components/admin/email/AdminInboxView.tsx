@@ -6,7 +6,8 @@ import {
   Search, User, Mail, Star, 
   Archive, Trash2, MoreVertical, 
   ChevronLeft, ChevronRight, CheckCircle2,
-  Clock, Filter
+  Clock, Filter, Shield, CreditCard,
+  Globe, HelpCircle
 } from "lucide-react";
 import DOMPurify from "dompurify";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,13 +22,26 @@ interface Message {
   created_at: string;
   thread_id?: string;
   source_alias?: string;
+  is_read: boolean;
+  folder: string;
+  priority: string;
 }
+
+const FOLDERS = [
+  { id: 'Support', name: 'Support', icon: Inbox },
+  { id: 'Billing', name: 'Billing', icon: CreditCard },
+  { id: 'Security', name: 'Security', icon: Shield },
+  { id: 'Contact', name: 'Contact', icon: HelpCircle },
+  { id: 'Platform', name: 'Platform', icon: Globe },
+];
 
 export const AdminInboxView: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<'open' | 'resolved'>('open');
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [folderCounts, setFolderCounts] = useState<Record<string, number>>({});
   const [selectedThread, setSelectedThread] = useState<string | null>(null);
   const [threadMessages, setThreadMessages] = useState<Message[]>([]);
   const [replyMessage, setReplyMessage] = useState("");
@@ -38,10 +52,14 @@ export const AdminInboxView: React.FC = () => {
   const fetchInbox = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/api/admin/inbox?status=${filterStatus}`);
+      let url = `/api/admin/inbox?status=${filterStatus}`;
+      if (activeFolder) url += `&folder=${activeFolder}`;
+      
+      const response = await apiClient.get(url);
       if (response.success) {
         setMessages(response.messages || []);
       }
+      fetchFolderCounts();
     } catch (error) {
       toast({
         title: "Connection Error",
@@ -53,12 +71,17 @@ export const AdminInboxView: React.FC = () => {
     }
   };
 
-  const fetchThread = async (threadId: string) => {
+  const fetchThread = async (threadId: string, message?: Message) => {
     try {
       const response = await apiClient.get(`/api/admin/inbox/${threadId}`);
       if (response.success) {
         setThreadMessages(response.messages || []);
         setSelectedThread(threadId);
+        
+        // If the first message is unread, mark it as read
+        if (message && !message.is_read) {
+          handleMarkAsRead(message.id);
+        }
       }
     } catch (error) {
        toast({
@@ -66,6 +89,17 @@ export const AdminInboxView: React.FC = () => {
         description: "Failed to load message conversation.",
         variant: "destructive"
       });
+    }
+  };
+
+  const handleMarkAsRead = async (messageId: string) => {
+    try {
+      await apiClient.patch(`/api/admin/inbox/message/${messageId}/read`, { isRead: true });
+      // Update local state to avoid re-fetch unless needed
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, is_read: true } : m));
+      fetchFolderCounts();
+    } catch (err) {
+      console.error("Failed to mark as read", err);
     }
   };
 
@@ -101,7 +135,7 @@ export const AdminInboxView: React.FC = () => {
 
   useEffect(() => {
     fetchInbox();
-  }, [filterStatus]);
+  }, [filterStatus, activeFolder]);
 
   const filteredMessages = messages.filter(m => 
     m.subject.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -119,32 +153,50 @@ export const AdminInboxView: React.FC = () => {
           </button>
         </div>
 
-        <nav className="flex-1 px-2 space-y-0.5 mt-2">
+        <nav className="flex-1 px-2 space-y-0.5 mt-2 overflow-y-auto custom-scrollbar">
           <button 
-            onClick={() => { setFilterStatus('open'); setSelectedThread(null); }}
-            className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium transition-colors ${filterStatus === 'open' ? 'bg-[#e8f0fe] text-[#1967d2]' : 'text-gray-600 hover:bg-gray-100'}`}
+            onClick={() => { setActiveFolder(null); setFilterStatus('open'); setSelectedThread(null); }}
+            className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium transition-colors ${!activeFolder && filterStatus === 'open' ? 'bg-[#e8f0fe] text-[#1967d2]' : 'text-gray-600 hover:bg-gray-100'}`}
           >
             <Inbox size={18} />
-            <span className="flex-1 text-left">Inbox</span>
-            <span className={`text-xs font-bold ${filterStatus === 'open' ? 'text-[#1967d2]' : 'text-gray-500'}`}>{messages.length}</span>
+            <span className="flex-1 text-left">All Inbox</span>
+            {!activeFolder && (
+              <span className={`text-xs font-bold ${filterStatus === 'open' ? 'text-[#1967d2]' : 'text-gray-500'}`}>{messages.length}</span>
+            )}
           </button>
+
+          <div className="py-2 px-4 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mt-4">Folders</div>
           
+          {FOLDERS.map((folder) => {
+            const Icon = folder.icon;
+            const unreadCount = folderCounts[folder.id] || 0;
+            const isActive = activeFolder === folder.id;
+            
+            return (
+              <button 
+                key={folder.id}
+                onClick={() => { setActiveFolder(folder.id); setFilterStatus('open'); setSelectedThread(null); }}
+                className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium transition-colors ${isActive ? 'bg-[#e8f0fe] text-[#1967d2]' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <Icon size={18} />
+                <span className="flex-1 text-left">{folder.name}</span>
+                {unreadCount > 0 && (
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-[#1967d2] text-white' : 'bg-red-50 text-red-600'}`}>
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+          
+          <div className="my-4 border-t border-gray-100" />
+
           <button 
-            onClick={() => { setFilterStatus('resolved'); setSelectedThread(null); }}
+            onClick={() => { setFilterStatus('resolved'); setActiveFolder(null); setSelectedThread(null); }}
             className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium transition-colors ${filterStatus === 'resolved' ? 'bg-[#e8f0fe] text-[#1967d2]' : 'text-gray-600 hover:bg-gray-100'}`}
           >
             <CheckCircle2 size={18} />
             <span className="flex-1 text-left">Resolved</span>
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium text-gray-600 hover:bg-gray-100 italic opacity-50 cursor-not-allowed">
-            <Clock size={18} />
-            <span className="flex-1 text-left">Snoozed</span>
-          </button>
-          
-          <button className="w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium text-gray-600 hover:bg-gray-100 italic opacity-50 cursor-not-allowed">
-            <Star size={18} />
-            <span className="flex-1 text-left">Starred</span>
           </button>
         </nav>
       </div>
@@ -183,20 +235,22 @@ export const AdminInboxView: React.FC = () => {
               {filteredMessages.map((msg) => (
                 <div
                   key={msg.id}
-                  onClick={() => fetchThread(msg.thread_id || msg.id)}
+                  onClick={() => fetchThread(msg.thread_id || msg.id, msg)}
                   className={`px-4 py-3 flex flex-col gap-1 cursor-pointer transition-all border-l-4 ${
                     selectedThread === (msg.thread_id || msg.id) 
                       ? 'bg-blue-50 border-blue-500' 
                       : 'border-transparent hover:bg-gray-50'
-                  }`}
+                  } ${!msg.is_read ? 'bg-[#f2f6fc]' : ''}`}
                 >
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-bold text-gray-900 truncate">{msg.sender_email.split('@')[0]}</span>
-                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                    <span className={`text-sm truncate ${!msg.is_read ? 'text-gray-900 font-bold' : 'text-gray-600 font-medium'}`}>
+                      {msg.sender_email.split('@')[0]}
+                    </span>
+                    <span className={`text-xs whitespace-nowrap ${!msg.is_read ? 'text-blue-600 font-bold' : 'text-gray-500'}`}>
                       {new Date(msg.created_at || msg.received_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                     </span>
                   </div>
-                  <div className="text-sm text-gray-700 font-semibold truncate">{msg.subject}</div>
+                  <div className={`text-sm truncate ${!msg.is_read ? 'text-gray-900 font-bold' : 'text-gray-700'}`}>{msg.subject}</div>
                   <div className="text-xs text-gray-500 line-clamp-1">{msg.message_text.replace(/<[^>]+>/g, '')}</div>
                 </div>
               ))}

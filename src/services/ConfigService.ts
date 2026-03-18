@@ -14,7 +14,8 @@ export class ConfigService {
    * Get the backend API base URL
    */
   static getApiUrl(): string {
-    const url = process.env.REACT_APP_API_URL || "https://api.colabwize.com";
+    const isProd = this.getNodeEnv() === "production";
+    const url = process.env.REACT_APP_API_URL || (isProd ? "https://api.colabwize.com" : "http://localhost:3001");
 
     // Log resolved config once at boot
     if (!this.logged) {

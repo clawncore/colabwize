@@ -70,20 +70,36 @@ export const AdminDashboardPage: React.FC = () => {
   return (
     <AdminLayout>
       <div className="space-y-8">
-        {/* Welcome Section */}
-        <div className="flex justify-between items-end relative overflow-hidden p-8 bg-card border border-border rounded-[2rem] group shadow-2xl shadow-black/10">
+        {/* Header - Nexus Comm (Legacy Style for Overview Only) */}
+        <div className="relative overflow-hidden p-10 bg-card/30 border border-border rounded-[2.5rem] group shadow-2xl shadow-black/20 backdrop-blur-sm">
           <div className="absolute inset-0 bg-sky-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-          <div className="relative z-10">
-            <h2 className="text-5xl font-black text-foreground tracking-tighter leading-tight">
-              {new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening'}, <span className="text-sky-500">{user?.full_name || user?.user_metadata?.full_name || 'Admin'}</span>
-            </h2>
-            <p className="text-muted-foreground mt-4 font-medium flex items-center gap-2 max-w-lg leading-relaxed">
-              <Zap size={16} className="text-sky-500" />
-              Welcome back to the administration panel. All platform systems are operational and reporting nominal capacity.
-            </p>
-          </div>
-          <div className="relative h-40 w-40 flex items-center justify-center opacity-10 group-hover:opacity-30 transition-opacity duration-500">
-            <ShieldCheck size={160} className="text-sky-500" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-3 mb-4"
+              >
+                <div className="h-2 w-2 rounded-full bg-sky-500 animate-ping" />
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-sky-500">System Overview</span>
+              </motion.div>
+              <h1 className="text-4xl font-black text-foreground tracking-tighter leading-tight">
+                Nexus <span className="text-sky-500">Dashboard</span>
+              </h1>
+              <p className="text-muted-foreground mt-2 font-medium max-w-xl leading-relaxed text-sm">
+                Welcome back, <span className="text-sky-500 font-bold">{user?.full_name || 'Admin'}</span>. All platform systems are operational and reporting nominal capacity.
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-4 bg-secondary/50 p-4 rounded-3xl border border-border shrink-0">
+               <div className="text-right">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Authenticated As</p>
+                  <p className="text-sm font-black text-sky-500 uppercase tracking-tight">Lead Administrator</p>
+               </div>
+               <div className="h-12 w-12 rounded-2xl bg-sky-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+                  <ShieldCheck size={24} />
+               </div>
+            </div>
           </div>
         </div>
 

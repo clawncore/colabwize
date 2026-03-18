@@ -196,38 +196,22 @@ export const AdminEmailCenter: React.FC = () => {
   return (
     <AdminLayout subSidebar={subNavContent}>
       <div className="space-y-8 pb-20">
-        {/* Header */}
-        <div className="relative overflow-hidden p-10 bg-card/30 border border-border rounded-[2.5rem] group shadow-2xl shadow-black/20 backdrop-blur-sm">
-          <div className="absolute inset-0 bg-sky-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-3 mb-4"
-              >
-                <div className="h-2 w-2 rounded-full bg-sky-500 animate-ping" />
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-sky-500">Transmission Center</span>
-              </motion.div>
-              <h1 className="text-4xl font-black text-foreground tracking-tighter leading-tight">
-                Nexus <span className="text-sky-500">Comm</span>
-              </h1>
-              <p className="text-muted-foreground mt-2 font-medium max-w-xl leading-relaxed text-sm">
-                Orchestrate platform-wide communications and manage user support arrays.
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-4 bg-secondary/50 p-4 rounded-3xl border border-border shrink-0">
-               <div className="text-right">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Authenticated As</p>
-                  <p className="text-sm font-black text-sky-500 uppercase tracking-tight">Lead Administrator</p>
-               </div>
-               <div className="h-12 w-12 rounded-2xl bg-sky-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
-                  <ShieldCheck size={24} />
-               </div>
-            </div>
+        {/* Header - Simple and Professional */}
+        {activeTab !== "inbox" && (
+          <div className="px-4 py-6 border-b border-border mb-6">
+            <h1 className="text-3xl font-black text-foreground tracking-tight">
+              {activeTab === "users" ? "User Directory" : 
+               activeTab === "send" ? "Direct Email" :
+               activeTab === "broadcast" ? "Mass Broadcast" :
+               activeTab === "logs" ? "Email Audit Logs" :
+               activeTab === "analytics" ? "Email Statistics" :
+               activeTab === "templates" ? "Email Templates" : "Email Communications"}
+            </h1>
+            <p className="text-muted-foreground text-sm font-medium mt-1">
+              Manage platform-wide email communications and user interactions.
+            </p>
           </div>
-        </div>
+        )}
 
         {/* Content Area */}
         <div className="min-w-0">
