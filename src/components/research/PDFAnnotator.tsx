@@ -149,6 +149,8 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
   const [showAiChat, setShowAiChat] = useState(false);
   const [showLeftSidebar, setShowLeftSidebar] = useState(true);
   const [pendingAiQuery, setPendingAiQuery] = useState<string | null>(null);
+  const [selectionRect, setSelectionRect] = useState<DOMRect | null>(null);
+  const [selectedText, setSelectedText] = useState("");
 
   // Memoize options to prevent unnecessary re-renders of the Document component
   const documentOptions = useMemo(
@@ -160,15 +162,28 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
     [],
   );
 
+  // Aggressively memoize the file config for react-pdf to prevent unnecessary re-renders/heavy reloads
+  const fileRef = React.useRef<any>(null);
   const documentFile = React.useMemo(() => {
-    if (authToken && typeof fileUrl === "string") {
-      return {
-        url: fileUrl,
-        httpHeaders: { Authorization: `Bearer ${authToken}` },
-        withCredentials: true,
-      };
+    if (!fileUrl) return null;
+    
+    const config = authToken && typeof fileUrl === "string" 
+      ? {
+          url: fileUrl,
+          httpHeaders: { Authorization: `Bearer ${authToken}` },
+          withCredentials: true,
+        }
+      : fileUrl;
+
+    // Use JSON comparison to check if we really need to update the reference
+    const currentConfigStr = JSON.stringify(config);
+    const lastConfigStr = JSON.stringify(fileRef.current);
+    
+    if (currentConfigStr !== lastConfigStr) {
+      fileRef.current = config;
     }
-    return fileUrl;
+    
+    return fileRef.current;
   }, [fileUrl, authToken]);
 
   const onDocumentLoadSuccess = useCallback(async (pdf: any) => {
@@ -336,7 +351,7 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
     setExportProgress(0);
 
     try {
-      const { jsPDF } = await import("jspdf");
+      const { default: jsPDF } = await import("jspdf");
       // Use "p" for portrait, "pt" for points (matching PDF standard)
       const pdf = new jsPDF("p", "pt", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -473,18 +488,27 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
     }
   };
 
-  // Handle text selection for highlights
+  // Handle text selection for highlights and AI
   const handleTextSelection = () => {
-    if (activeTool !== "highlight") return;
     const selection = window.getSelection();
     if (
       !selection ||
       selection.rangeCount === 0 ||
       selection.toString().trim().length === 0
-    )
+    ) {
+      setSelectionRect(null);
+      setSelectedText("");
       return;
+    }
 
     const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    
+    // Update selection state for AI tooltip
+    setSelectionRect(rect);
+    setSelectedText(selection.toString().trim());
+
+    if (activeTool !== "highlight") return;
     // commonAncestorContainer can be a text node which lacks .closest()
     const ancestor = range.commonAncestorContainer;
     const ancestorEl =
@@ -1119,45 +1143,40 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
           onMouseUp={handleTextSelection}
           className="flex-1 overflow-auto p-8 flex justify-center relative bg-gray-200/50">
           {/* Selection Tooltip for AI */}
-          {activeTool === "view" &&
-            window.getSelection()?.toString().trim() && (
-              <div
-                className="fixed z-[100] bg-white border border-purple-100 shadow-xl rounded-full px-3 py-1.5 flex items-center gap-2 animate-in fade-in zoom-in duration-200"
-                style={{
-                  top:
-                    (window
-                      .getSelection()
-                      ?.getRangeAt(0)
-                      .getBoundingClientRect().top || 0) - 45,
-                  left:
-                    (window
-                      .getSelection()
-                      ?.getRangeAt(0)
-                      .getBoundingClientRect().left || 0) +
-                    (window
-                      .getSelection()
-                      ?.getRangeAt(0)
-                      .getBoundingClientRect().width || 0) /
-                      2,
-                  transform: "translateX(-50%)",
-                }}>
-                <button
-                  onClick={() => {
-                    const text = window.getSelection()?.toString().trim();
-                    if (text) {
-                      setPendingAiQuery(
-                        `Analyze this part of the document: "${text}"`,
-                      );
-                      setShowAiChat(true);
-                      window.getSelection()?.removeAllRanges();
-                    }
-                  }}
-                  className="flex items-center gap-1.5 text-purple-600 hover:text-purple-700 font-bold text-xs">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Ask AI</span>
-                </button>
-              </div>
-            )}
+          {selectedText && selectionRect && (
+            <div
+              className="fixed z-[100] bg-white border border-purple-100 shadow-xl rounded-full px-3 py-1.5 flex items-center gap-2 animate-in fade-in zoom-in duration-200"
+              style={{
+                top: selectionRect.top - 50,
+                left: selectionRect.left + selectionRect.width / 2,
+                transform: "translateX(-50%)",
+              }}>
+              <button
+                onClick={() => {
+                  if (selectedText) {
+                    setPendingAiQuery(
+                      `Analyze this part of the document and perform additional research on this topic to provide a comprehensive explanation: "${selectedText}"`,
+                    );
+                    setShowAiChat(true);
+                    window.getSelection()?.removeAllRanges();
+                    setSelectedText("");
+                    setSelectionRect(null);
+                  }
+                }}
+                className="flex items-center gap-1.5 text-purple-600 hover:text-purple-700 font-bold text-xs">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Ask AI</span>
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedText("");
+                  setSelectionRect(null);
+                }}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-full">
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
 
           <div className="shadow-2xl shadow-gray-400/30 relative h-fit">
             {/* Pending note popup */}
@@ -1242,7 +1261,14 @@ export const PDFAnnotator: React.FC<PDFAnnotatorProps> = ({
                 pdfAnnotations: annotations,
                 projectTitle: title,
               }}
-              papers={[]}
+              papers={[
+                {
+                  id: fileId,
+                  title: title,
+                  source: "pdf_upload",
+                  documentType: "pdf",
+                },
+              ]}
               pendingMessage={pendingAiQuery}
               onQueryConsumed={() => setPendingAiQuery(null)}
               onAnnotatorChat={async (messages, sessionId) => {

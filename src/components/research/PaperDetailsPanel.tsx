@@ -500,7 +500,12 @@ export default function PaperDetailsPanel({
           <ResearchChatSidebar
             isOpen={showChat}
             onClose={() => setShowChat(false)}
-            papers={[paper]}
+            papers={[
+              {
+                ...paper,
+                source: "library",
+              },
+            ]}
           />
         </div>
       </div>

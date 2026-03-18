@@ -200,7 +200,7 @@ export default function PdfUploadPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)] relative overflow-hidden bg-background">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] relative bg-background">
       <UpgradePromptDialog
         open={showUpgradeDialog}
         onOpenChange={setShowUpgradeDialog}

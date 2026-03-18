@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   Send,
   X,
@@ -9,6 +9,10 @@ import {
   Sparkles,
   Copy,
   Check,
+  History,
+  Trash2,
+  PlusCircle,
+  Clock,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { ResearchService } from "../../services/researchService";
@@ -176,6 +180,9 @@ export function ResearchChatSidebar({
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [questionsFetched, setQuestionsFetched] = useState(false);
@@ -184,7 +191,23 @@ export function ResearchChatSidebar({
 
   const isPdfOrProjectChat = papers.some((p) => p.source === "pdf_upload");
   const isProjectChat = papers.some((p) => p.documentType === "project");
-  const documentId = papers.find((p) => p.source === "pdf_upload")?.externalId;
+  
+  // Identify the most relevant ID for persistence
+  const relevantIds = useMemo(() => {
+    const pdfPaper = papers.find((p) => p.source === "pdf_upload");
+    const externalPaper = papers.find((p) => p.source !== "pdf_upload");
+    
+    // Default to 'pdf' if source is pdf_upload but type is missing
+    const docType = pdfPaper?.documentType || (pdfPaper?.source === "pdf_upload" ? "pdf" : undefined);
+    
+    return {
+      fileId: docType === "pdf" ? pdfPaper?.id || pdfPaper?.externalId : undefined,
+      projectId: docType === "project" ? pdfPaper?.id || pdfPaper?.externalId : undefined,
+      externalPaperId: externalPaper?.paperId || externalPaper?.externalId
+    };
+  }, [papers]);
+
+  const documentId = relevantIds.fileId || relevantIds.projectId || relevantIds.externalPaperId;
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -219,6 +242,69 @@ export function ResearchChatSidebar({
     fetch();
   }, [isOpen, documentId, isPdfOrProjectChat, isProjectChat, questionsFetched]);
 
+  // Load chat sessions for this context
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const loadSessions = async () => {
+      setIsLoadingHistory(true);
+      const filters: any = {};
+      if (relevantIds.fileId) filters.fileId = relevantIds.fileId;
+      if (relevantIds.projectId) filters.projectId = relevantIds.projectId;
+      if (relevantIds.externalPaperId && !relevantIds.fileId && !relevantIds.projectId) 
+        filters.externalPaperId = relevantIds.externalPaperId;
+      
+      const sessionList = await ResearchService.getSessionsByContext(filters);
+      setSessions(sessionList);
+      
+      // Auto-load the most recent session if we don't have one active
+      if (sessionList.length > 0 && !sessionId) {
+        handleLoadSession(sessionList[0].id);
+      }
+      setIsLoadingHistory(false);
+    };
+
+    loadSessions();
+  }, [isOpen, papers]);
+
+  const handleLoadSession = async (sid: string) => {
+    setIsLoadingHistory(true);
+    setSessionId(sid);
+    setShowHistory(false);
+    try {
+      const { messages: history } = await ResearchService.getChatSession(sid);
+      const formattedMessages: Message[] = history.map((m: any) => ({
+        id: m.id,
+        role: m.role as "user" | "assistant",
+        content: m.content,
+        timestamp: new Date(m.created_at),
+      }));
+      
+      if (formattedMessages.length > 0) {
+        setMessages(formattedMessages);
+      }
+    } catch (err) {
+      console.error("Failed to load session history:", err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const startNewChat = async () => {
+    setMessages([
+      {
+        id: "1",
+        role: "assistant",
+        content: isAnnotatorMode
+          ? "Hello! I'm your PDF Research Assistant. How can I help you analyze this document today?"
+          : "Hello! ask me anything about these papers.",
+        timestamp: new Date(),
+      },
+    ]);
+    setSessionId(null);
+    setShowHistory(false);
+  };
+
   const handleSend = async (messageText?: string) => {
     const text = messageText ?? input;
     if (!text.trim()) return;
@@ -229,6 +315,22 @@ export function ResearchChatSidebar({
       content: text,
       timestamp: new Date(),
     };
+
+    // Ensure session exists
+    let activeSessionId = sessionId;
+    if (!activeSessionId) {
+      try {
+        const session = await ResearchService.startChatSession({
+          fileId: relevantIds.fileId,
+          projectId: relevantIds.projectId,
+          externalPaperId: relevantIds.externalPaperId,
+        });
+        activeSessionId = session.id;
+        setSessionId(activeSessionId);
+      } catch (err) {
+        console.error("Failed to create session:", err);
+      }
+    }
 
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
@@ -247,12 +349,12 @@ export function ResearchChatSidebar({
         
         let response: Response;
         if (onAnnotatorChat) {
-          response = await onAnnotatorChat(messagesForApi, sessionId);
+          response = await onAnnotatorChat(messagesForApi, activeSessionId);
         } else {
           response = await ResearchService.chatWithAnnotator(
             messagesForApi,
             annotatorContext,
-            sessionId
+            activeSessionId
           );
         }
 
@@ -389,14 +491,85 @@ export function ResearchChatSidebar({
             </p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="h-8 w-8 text-muted-foreground hover:text-foreground">
-          <X className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowHistory(!showHistory)}
+            className={`h-8 w-8 ${showHistory ? "text-purple-600 bg-purple-50" : "text-muted-foreground"}`}
+            title="Chat History">
+            <History className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={startNewChat}
+            className="h-8 w-8 text-muted-foreground hover:text-purple-600"
+            title="New Chat">
+            <PlusCircle className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8 text-muted-foreground hover:text-foreground">
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
+
+      {/* History Panel Overlay */}
+      {showHistory && (
+        <div className="absolute inset-0 top-[57px] bg-background z-20 flex flex-col border-t border-border animate-in slide-in-from-top duration-200">
+          <div className="p-4 border-b border-border bg-white">
+            <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+              <Clock className="w-3 h-3" />
+              Recent Conversations
+            </h4>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {isLoadingHistory ? (
+              <div className="flex items-center justify-center py-8 gap-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading history...
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-sm text-muted-foreground">No recent chats for this document.</p>
+              </div>
+            ) : (
+              sessions.map((session) => (
+                <button
+                  key={session.id}
+                  onClick={() => handleLoadSession(session.id)}
+                  className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 group
+                    ${sessionId === session.id 
+                      ? "bg-purple-500/10 border border-purple-500/20" 
+                      : "hover:bg-muted border border-transparent"}`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0
+                    ${sessionId === session.id ? "bg-purple-500 text-white" : "bg-muted-foreground/10 text-muted-foreground"}`}>
+                    <History className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium truncate ${sessionId === session.id ? "text-purple-600" : "text-foreground"}`}>
+                      {session.title || "Untitled Research Chat"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {new Date(session.updated_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+          <div className="p-4 border-t border-border bg-white">
+            <Button variant="outline" className="w-full text-xs gap-2" onClick={startNewChat}>
+              <PlusCircle className="w-3 h-3" /> Start Fresh Chat
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div
