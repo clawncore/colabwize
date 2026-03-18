@@ -27,21 +27,12 @@ interface Message {
   priority: string;
 }
 
-const FOLDERS = [
-  { id: 'Support', name: 'Support', icon: Inbox },
-  { id: 'Billing', name: 'Billing', icon: CreditCard },
-  { id: 'Security', name: 'Security', icon: Shield },
-  { id: 'Contact', name: 'Contact', icon: HelpCircle },
-  { id: 'Platform', name: 'Platform', icon: Globe },
-];
 
 export const AdminInboxView: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<'open' | 'resolved'>('open');
-  const [activeFolder, setActiveFolder] = useState<string | null>(null);
-  const [folderCounts, setFolderCounts] = useState<Record<string, number>>({});
   const [selectedThread, setSelectedThread] = useState<string | null>(null);
   const [threadMessages, setThreadMessages] = useState<Message[]>([]);
   const [replyMessage, setReplyMessage] = useState("");
@@ -53,13 +44,11 @@ export const AdminInboxView: React.FC = () => {
     try {
       setLoading(true);
       let url = `/api/admin/inbox?status=${filterStatus}`;
-      if (activeFolder) url += `&folder=${activeFolder}`;
       
       const response = await apiClient.get(url);
       if (response.success) {
         setMessages(response.messages || []);
       }
-      fetchFolderCounts();
     } catch (error) {
       toast({
         title: "Connection Error",
@@ -97,7 +86,6 @@ export const AdminInboxView: React.FC = () => {
       await apiClient.patch(`/api/admin/inbox/message/${messageId}/read`, { isRead: true });
       // Update local state to avoid re-fetch unless needed
       setMessages(prev => prev.map(m => m.id === messageId ? { ...m, is_read: true } : m));
-      fetchFolderCounts();
     } catch (err) {
       console.error("Failed to mark as read", err);
     }
@@ -135,7 +123,7 @@ export const AdminInboxView: React.FC = () => {
 
   useEffect(() => {
     fetchInbox();
-  }, [filterStatus, activeFolder]);
+  }, [filterStatus]);
 
   const filteredMessages = messages.filter(m => 
     m.subject.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -155,44 +143,19 @@ export const AdminInboxView: React.FC = () => {
 
         <nav className="flex-1 px-2 space-y-0.5 mt-2 overflow-y-auto custom-scrollbar">
           <button 
-            onClick={() => { setActiveFolder(null); setFilterStatus('open'); setSelectedThread(null); }}
-            className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium transition-colors ${!activeFolder && filterStatus === 'open' ? 'bg-[#e8f0fe] text-[#1967d2]' : 'text-gray-600 hover:bg-gray-100'}`}
+            onClick={() => { setFilterStatus('open'); setSelectedThread(null); }}
+            className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium transition-colors ${filterStatus === 'open' ? 'bg-[#e8f0fe] text-[#1967d2]' : 'text-gray-600 hover:bg-gray-100'}`}
           >
             <Inbox size={18} />
             <span className="flex-1 text-left">All Inbox</span>
-            {!activeFolder && (
-              <span className={`text-xs font-bold ${filterStatus === 'open' ? 'text-[#1967d2]' : 'text-gray-500'}`}>{messages.length}</span>
-            )}
+            <span className={`text-xs font-bold ${filterStatus === 'open' ? 'text-[#1967d2]' : 'text-gray-500'}`}>{messages.length}</span>
           </button>
 
-          <div className="py-2 px-4 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mt-4">Folders</div>
-          
-          {FOLDERS.map((folder) => {
-            const Icon = folder.icon;
-            const unreadCount = folderCounts[folder.id] || 0;
-            const isActive = activeFolder === folder.id;
-            
-            return (
-              <button 
-                key={folder.id}
-                onClick={() => { setActiveFolder(folder.id); setFilterStatus('open'); setSelectedThread(null); }}
-                className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium transition-colors ${isActive ? 'bg-[#e8f0fe] text-[#1967d2]' : 'text-gray-600 hover:bg-gray-100'}`}
-              >
-                <Icon size={18} />
-                <span className="flex-1 text-left">{folder.name}</span>
-                {unreadCount > 0 && (
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-[#1967d2] text-white' : 'bg-red-50 text-red-600'}`}>
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
           
           <div className="my-4 border-t border-gray-100" />
 
           <button 
-            onClick={() => { setFilterStatus('resolved'); setActiveFolder(null); setSelectedThread(null); }}
+            onClick={() => { setFilterStatus('resolved'); setSelectedThread(null); }}
             className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium transition-colors ${filterStatus === 'resolved' ? 'bg-[#e8f0fe] text-[#1967d2]' : 'text-gray-600 hover:bg-gray-100'}`}
           >
             <CheckCircle2 size={18} />
