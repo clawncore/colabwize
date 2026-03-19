@@ -80,6 +80,7 @@ import RefundPolicyPage from "./pages/legal/RefundPolicyPage";
 import ContactPage from "./pages/ContactPage";
 import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
+import UnsubscribePage from "./pages/UnsubscribePage";
 import EditorWorkspacePage from "./components/editor/EditorWorkspacePage";
 
 // Dashboard Components
@@ -664,6 +665,9 @@ function App() {
                           </PlatformAdminGuard>
                         }
                       />
+
+                      {/* Unsubscribe Route - Public */}
+                      <Route path="/unsubscribe" element={<UnsubscribePage />} />
 
                       {/* 404 Catch-All Route */}
                       <Route path="*" element={<NotFoundPage />} />

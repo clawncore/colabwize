@@ -120,7 +120,7 @@ const CallbackPage: React.FC = () => {
                   }
 
                   // Admin Redirection
-                  const ADMIN_EMAILS = ["simbisai@colabwize.com", "craig@gmail.com"];
+                  const ADMIN_EMAILS = ["simbisai@colabwize.com", "craig@colabwize.com"];
                   const userEmail = user.email?.toLowerCase() || "";
                   
                   if (ADMIN_EMAILS.includes(userEmail)) {

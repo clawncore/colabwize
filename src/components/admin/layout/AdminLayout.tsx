@@ -6,7 +6,11 @@ import {
   Bell,
   Zap,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut,
+  Settings,
+  Lock,
+  User as UserIcon
 } from 'lucide-react';
 import useAuth from '../../../services/useAuth';
 import { AdminSidebarComponent } from './AdminSidebarComponent';
@@ -18,7 +22,8 @@ interface AdminLayoutProps {
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, subSidebar }) => {
   const [isSubSidebarOpen, setIsSubSidebarOpen] = useState(true);
-  const { user } = useAuth();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, logout } = useAuth();
   const location = useLocation();
 
   // Show sub-sidebar if explicit subSidebar prop is provided OR we are in specific routes
@@ -26,13 +31,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, subSidebar }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex overflow-hidden selection:bg-sky-500/30 selection:text-white font-inter">
-      {/* Neural Background Layer */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-sky-500/5 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-400/5 rounded-full blur-[120px] animate-pulse" 
-             style={{ animationDelay: '2s' }} />
-        <div className="absolute inset-0 bg-grid-slate-900/[0.02]" />
-      </div>
+      {/* Neural Background Layer removed by user request (clean UI) */}
 
       <AdminSidebarComponent />
 
@@ -43,7 +42,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, subSidebar }
             initial={{ opacity: 0, x: -20, width: 0 }}
             animate={{ opacity: 1, x: 0, width: 280 }}
             exit={{ opacity: 0, x: -20, width: 0 }}
-            className="fixed left-20 top-0 h-full bg-card/50 backdrop-blur-2xl border-r border-border z-40 flex flex-col pt-24 overflow-hidden"
+            className="fixed left-20 top-0 h-full bg-white border-r border-border z-40 flex flex-col pt-24 overflow-hidden shadow-sm"
           >
              {subSidebar}
 
@@ -67,9 +66,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, subSidebar }
       )}
 
       <main className={`flex-1 transition-all duration-500 ease-in-out relative z-10 ${hasSubSidebar && isSubSidebarOpen ? 'ml-[360px]' : 'ml-20'}`}>
-        <header className="h-20 border-b border-border bg-background/50 backdrop-blur-xl sticky top-0 px-8 flex items-center justify-between">
+        <header className="h-20 border-b border-border bg-background sticky top-0 px-8 flex items-center justify-between z-30">
           <div className="flex items-center gap-4">
-            <div className="h-8 w-1 bg-sky-500 rounded-full shadow-[0_0_10px_rgba(14,165,233,0.5)]" />
+            <div className="h-8 w-1 bg-sky-500 rounded-full" />
             <h1 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground">
               <span className="text-foreground">Colabwize Admin</span> <span className="opacity-40">/ {location.pathname.split('/').pop() || 'Dashboard'}</span>
             </h1>
@@ -81,16 +80,54 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, subSidebar }
               <span className="absolute top-2 right-2 h-2 w-2 bg-sky-500 rounded-full border-2 border-background shadow-[0_0_5px_rgba(14,165,233,0.5)]" />
               <div className="absolute inset-0 bg-sky-500/10 rounded-full scale-0 group-hover:scale-150 transition-transform duration-500 opacity-0 group-hover:opacity-100" />
             </button>
-            <div className="flex items-center gap-3 pl-4 border-l border-border">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-black text-foreground uppercase tracking-tight leading-none">{user?.full_name || 'Administrator'}</p>
-                <span className="text-[8px] font-bold text-sky-500 uppercase tracking-widest">Platform Authority</span>
-              </div>
-              <div className="h-10 w-10 rounded-xl bg-secondary border border-border flex items-center justify-center text-sky-500 font-black shadow-lg shadow-black/10 group hover:border-sky-500/50 transition-all cursor-pointer">
-                <span className="group-hover:scale-110 transition-transform">
+            <div className="flex items-center gap-3 pl-4 border-l border-border relative">
+              <button 
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="h-10 w-10 rounded-xl bg-secondary border border-border flex items-center justify-center text-sky-500 font-black shadow-lg shadow-black/10 group hover:border-sky-500/50 transition-all cursor-pointer relative z-50"
+              >
+                <span className="group-hover:scale-110 transition-transform flex items-center justify-center">
                   {user?.full_name?.charAt(0) || <Shield size={20} />}
                 </span>
-              </div>
+              </button>
+
+              <AnimatePresence>
+                {isProfileOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute top-14 right-0 w-64 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col p-2"
+                    >
+                      <div className="px-4 py-3 border-b border-border/50 mb-2">
+                        <p className="text-sm font-black text-foreground tracking-tight">{user?.full_name || 'Administrator'}</p>
+                        <p className="text-xs text-muted-foreground truncate font-medium">{user?.email || 'admin@colabwize.com'}</p>
+                      </div>
+                      
+                      <button className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-foreground hover:bg-secondary hover:text-sky-500 rounded-xl transition-colors w-full text-left">
+                        <UserIcon className="h-4 w-4" /> Administrative Profile
+                      </button>
+                      
+                      <button className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-foreground hover:bg-emerald-500/10 hover:text-emerald-500 rounded-xl transition-colors w-full text-left">
+                        <Lock className="h-4 w-4" /> Security Parameters
+                      </button>
+
+                      <div className="h-px bg-border my-2 mx-2" />
+                      
+                      <button 
+                        onClick={() => {
+                          if (logout) logout();
+                          else window.location.href = '/login';
+                        }}
+                        className="flex items-center gap-3 px-4 py-3 text-sm font-black text-red-500 hover:bg-red-500/10 rounded-xl transition-colors w-full text-left tracking-tight"
+                      >
+                        <LogOut className="h-4 w-4" /> Terminate Session
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </header>

@@ -307,7 +307,7 @@ const LoginPage: React.FC = () => {
     console.log("Redirecting to:", finalRedirectPath);
     // After survey completion, redirect to the intended destination
     const userEmail = watchedFields.email?.toLowerCase() || "";
-    const ADMIN_EMAILS = ["simbisai@colabwize.com", "craig@gmail.com"];
+    const ADMIN_EMAILS = ["simbisai@colabwize.com", "craig@colabwize.com"];
 
     if (ADMIN_EMAILS.includes(userEmail)) {
       window.location.href = "/admin/email";

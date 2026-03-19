@@ -32,10 +32,10 @@ export const AdminSidebarComponent: React.FC<SidebarProps> = ({ onToggleSubSideb
   ];
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-20 bg-card border-r border-border transition-all duration-500 ease-in-out z-50 flex flex-col items-center py-6 shadow-2xl">
+    <aside className="fixed left-0 top-0 h-full w-20 bg-card border-r border-border transition-all duration-500 ease-in-out z-50 flex flex-col items-center py-6 shadow-sm">
       <div className="mb-10 group cursor-pointer" onClick={() => window.location.href = '/'}>
-        <div className="h-10 w-10 flex items-center justify-center bg-sky-500 rounded-2xl shadow-[0_0_20px_rgba(14,165,233,0.3)] group-hover:scale-110 transition-all duration-500 rotate-45 group-hover:rotate-90">
-          <ShieldCheck size={24} className="text-white -rotate-45 group-hover:-rotate-90 transition-all duration-500" />
+        <div className="h-10 w-10 flex items-center justify-center bg-sky-500 rounded-xl transition-all duration-500 group-hover:scale-110">
+          <ShieldCheck size={24} className="text-white" />
         </div>
       </div>
 
@@ -46,10 +46,10 @@ export const AdminSidebarComponent: React.FC<SidebarProps> = ({ onToggleSubSideb
             <Link
               key={item.path}
               to={item.path}
-              className={`w-14 h-14 flex flex-col items-center justify-center rounded-2xl transition-all duration-300 group relative ${
+              className={`w-14 h-14 flex flex-col items-center justify-center rounded-xl transition-all duration-300 group relative ${
                 isActive
-                  ? 'bg-sky-500 text-white shadow-[0_10px_25px_rgba(14,165,233,0.3)] border-transparent'
-                  : 'text-muted-foreground hover:bg-secondary/50 hover:text-sky-500 border border-transparent'
+                  ? 'bg-sky-500 text-white shadow-md border-transparent'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-sky-500 border border-transparent'
               }`}
             >
               <item.icon size={22} className="transition-transform duration-500 group-hover:scale-110" />
@@ -60,7 +60,7 @@ export const AdminSidebarComponent: React.FC<SidebarProps> = ({ onToggleSubSideb
               {isActive && (
                 <motion.div
                   layoutId="activeGlowRail"
-                  className="absolute -right-2 top-1/4 bottom-1/4 w-1 bg-sky-500 rounded-full shadow-[0_0_10px_rgba(14,165,233,0.8)]"
+                  className="absolute -right-2 top-1/4 bottom-1/4 w-1 bg-sky-500 rounded-full"
                 />
               )}
 

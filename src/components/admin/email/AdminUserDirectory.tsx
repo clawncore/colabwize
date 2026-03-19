@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { 
   Users, Search, Filter, Shield, Calendar,
-  ChevronDown, Loader2, X, CreditCard, UserCheck, UserX
+  ChevronDown, Loader2, X, CreditCard, UserCheck, UserX, Mail
 } from "lucide-react";
 import { apiClient } from "../../../services/apiClient";
 import { useToast } from "../../../hooks/use-toast";
@@ -17,7 +17,7 @@ interface AdminUser {
   email: string;
   full_name: string;
   created_at: string;
-  subscription: Subscription[];
+  subscription: Subscription | Subscription[];
 }
 
 // Mask email: show first 3 chars then *** then @domain
@@ -28,7 +28,11 @@ const maskEmail = (email: string): string => {
   return `${visible}***@${domain}`;
 };
 
-export const AdminUserDirectory: React.FC = () => {
+interface AdminUserDirectoryProps {
+  onEmailUser?: (email: string, full_name?: string) => void;
+}
+
+export const AdminUserDirectory: React.FC<AdminUserDirectoryProps> = ({ onEmailUser }) => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -194,18 +198,19 @@ export const AdminUserDirectory: React.FC = () => {
                 <th className="px-6 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">Email</th>
                 <th className="px-6 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">Date Joined</th>
                 <th className="px-6 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">Subscription</th>
+                <th className="px-6 py-4 text-right text-[10px] font-black text-muted-foreground uppercase tracking-widest">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={4} className="px-6 py-4"><div className="h-4 bg-secondary rounded-lg w-3/4" /></td>
+                    <td colSpan={5} className="px-6 py-4"><div className="h-4 bg-secondary rounded-lg w-3/4" /></td>
                   </tr>
                 ))
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-16 text-center">
+                  <td colSpan={5} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <Users size={32} className="text-muted-foreground/30" />
                       <p className="text-sm font-bold text-muted-foreground">No users match the current filters</p>
@@ -213,8 +218,8 @@ export const AdminUserDirectory: React.FC = () => {
                   </td>
                 </tr>
               ) : users.map((user) => {
-                const sub = user.subscription?.[0];
-                const isPaid = sub?.status === "active";
+                const sub = Array.isArray(user.subscription) ? user.subscription[0] : user.subscription;
+                const isPaid = sub?.status?.toLowerCase() === "active";
 
                 return (
                   <tr key={user.id} className="group hover:bg-sky-500/5 transition-all duration-200">
@@ -244,17 +249,56 @@ export const AdminUserDirectory: React.FC = () => {
 
                     {/* Subscription */}
                     <td className="px-6 py-4">
-                      {isPaid ? (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                          <UserCheck size={11} strokeWidth={3} />
-                          {sub?.plan || "Paid"}
-                        </div>
-                      ) : (
+                      {isPaid ? (() => {
+                        const rawPlan = sub?.plan || "Paid";
+                        const lowerPlan = rawPlan.toLowerCase();
+                        
+                        if (lowerPlan.includes("free") || lowerPlan === "free") {
+                          return (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary border border-border text-muted-foreground rounded-full text-[10px] font-black uppercase tracking-widest">
+                              <UserX size={11} strokeWidth={3} />
+                              Free
+                            </div>
+                          );
+                        }
+
+                        let badgeColor = "bg-emerald-500/10 border-emerald-500/20 text-emerald-600";
+                        let displayPlan = rawPlan.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+                        
+                        if (lowerPlan.includes("premium")) {
+                          badgeColor = "bg-fuchsia-500/10 border-fuchsia-500/20 text-fuchsia-600";
+                          displayPlan = "Premium";
+                        } else if (lowerPlan.includes("plus")) {
+                          badgeColor = "bg-sky-500/10 border-sky-500/20 text-sky-600";
+                          displayPlan = "Plus";
+                        } else if (lowerPlan.includes("pro")) {
+                          badgeColor = "bg-violet-500/10 border-violet-500/20 text-violet-600";
+                          displayPlan = "Pro";
+                        }
+
+                        return (
+                          <div className={`inline-flex items-center gap-1.5 px-3 py-1 border rounded-full text-[10px] font-black uppercase tracking-widest ${badgeColor}`}>
+                            <UserCheck size={11} strokeWidth={3} />
+                            {displayPlan}
+                          </div>
+                        );
+                      })() : (
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary border border-border text-muted-foreground rounded-full text-[10px] font-black uppercase tracking-widest">
                           <UserX size={11} strokeWidth={3} />
                           Free
                         </div>
                       )}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-4 text-right">
+                      <button 
+                        onClick={() => onEmailUser?.(user.email, user.full_name)}
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-secondary hover:bg-sky-500 hover:text-white text-muted-foreground transition-all shadow-sm"
+                        title="Send Direct Email"
+                      >
+                        <Mail size={14} strokeWidth={2.5} />
+                      </button>
                     </td>
                   </tr>
                 );
