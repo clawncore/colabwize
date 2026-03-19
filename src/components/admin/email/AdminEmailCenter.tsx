@@ -104,7 +104,7 @@ export const maskEmail = (email: string) => {
   return `${local.substring(0, 3)}***@${domain}`;
 };
 
-const AdminEmailCenter: React.FC = () => {
+export const AdminEmailCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("send");
   const [subSidebarOpen, setSubSidebarOpen] = useState(true);
   const { toast } = useToast();
