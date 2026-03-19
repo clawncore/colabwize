@@ -67,7 +67,7 @@ export const UnsubscribePage: React.FC = () => {
         {/* Step 1: Info */}
         {step === "info" && (
           <>
-            <h1 style={{ fontSize: "24px", fontWeight: "800", color: "#111827", marginBottom: "12px", letter-spacing: "-0.5px" }}>Email Preferences</h1>
+            <h1 style={{ fontSize: "24px", fontWeight: "800", color: "#111827", marginBottom: "12px", letterSpacing: "-0.5px" }}>Email Preferences</h1>
             <p style={{ fontSize: "15px", color: "#64748b", marginBottom: "24px", lineHeight: "1.6" }}>
               Are you sure you want to stop receiving original updates and academic research tips?
             </p>
