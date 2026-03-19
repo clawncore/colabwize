@@ -183,6 +183,7 @@ export const AdminEmailCenter: React.FC = () => {
     if (senderName) profile.name = senderName;
     if (senderTitle) profile.title = senderTitle;
     
+    const currentYear = new Date().getFullYear();
     const sanitizedBody = DOMPurify.sanitize(message || `<p class="italic text-slate-400">Waiting for message input...</p>`);
 
     return `
