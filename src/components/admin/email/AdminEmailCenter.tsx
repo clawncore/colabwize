@@ -97,7 +97,14 @@ const ALIAS_COLORS: Record<string, string> = {
       .join(" ");
   };
 
-export const AdminEmailCenter: React.FC = () => {
+export const maskEmail = (email: string) => {
+  if (!email || !email.includes('@')) return email;
+  const [local, domain] = email.split('@');
+  if (local.length <= 3) return `***@${domain}`;
+  return `${local.substring(0, 3)}***@${domain}`;
+};
+
+const AdminEmailCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("send");
   const [subSidebarOpen, setSubSidebarOpen] = useState(true);
   const { toast } = useToast();
