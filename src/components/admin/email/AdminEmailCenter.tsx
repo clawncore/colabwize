@@ -223,17 +223,36 @@ export const AdminEmailCenter: React.FC = () => {
           </p>
         </div>
 
-        <!-- Minimal Footer -->
-        <div style="margin-top: 48px; text-align: center; color: #6b7280; line-height: 1.6;">
-          <div style="margin-bottom: 24px; text-align: center;">
-              <img src="https://colabwize.com/images/Colabwize-logo.png" alt="ColabWize" style="height: 48px; width: auto; display: inline-block;">
+        <!-- Premium Footer -->
+        <div style="margin-top: 64px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #64748b; line-height: 1.6; padding: 40px 20px; border-top: 1px solid #f1f5f9;">
+          <!-- Footer Branding -->
+          <div style="display: table; margin: 0 auto 24px auto; text-align: left;">
+            <div style="display: table-cell; vertical-align: middle; padding-right: 20px;">
+              <img src="https://colabwize.com/images/Colabwize-logo.png" alt="ColabWize" style="height: 52px; width: auto; display: block;">
+            </div>
+            <div style="display: table-cell; vertical-align: middle; border-left: 1px solid #e5e7eb; padding-left: 20px;">
+              <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #111827; letter-spacing: -0.5px;">ColabWize</h1>
+              <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b; font-weight: 500;">A Platform for Original, Credible, and Human Work.</p>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 32px; font-size: 14px; max-width: 500px; margin-left: auto; margin-right: auto;">
+            <p style="margin: 0 0 12px 0;">If you have any questions, feedback, ideas or problems don't hesitate to <a href="https://colabwize.com/contact" style="color: #0ea5e9; text-decoration: underline;">contact us!</a></p>
+            <p style="margin: 0;">You can <a href="https://colabwize.com/dashboard/settings" style="color: #0ea5e9; text-decoration: underline;">manage</a> which email notifications you receive or <a href="#" style="color: #0ea5e9; text-decoration: underline;">unsubscribe</a> from our communications.</p>
+          </div>
+
+          <div style="margin-bottom: 24px; font-size: 13px; font-weight: 500;">
+            Checkout: <a href="https://colabwize.com/resources/updates" style="color: #0ea5e9; text-decoration: none;">Updates</a>, 
+            <a href="https://colabwize.com/resources/newsletter" style="color: #0ea5e9; text-decoration: none;">Newsletter</a> or 
+            <a href="https://colabwize.com/contact" style="color: #0ea5e9; text-decoration: none;">Support</a>
+          </div>
+
+          <div style="margin-bottom: 32px;">
+            <a href="https://x.com/colabwize" style="color: #111827; text-decoration: none; font-weight: bold; font-size: 14px;">Follow us on X</a>
           </div>
 
           <p style="font-size: 11px; color: #9ca3af; margin: 0;">
             © ${currentYear} ColabWize. All rights reserved.
-          </p>
-          <p style="font-size: 11px; color: #9ca3af; margin: 4px 0 0 0;">
-            <a href="#" style="color: #9ca3af; text-decoration: underline;">Unsubscribe</a> from these communications.
           </p>
         </div>
       </div>
@@ -577,7 +596,7 @@ export const AdminEmailCenter: React.FC = () => {
                             icon: <Sparkles size={20} className="text-purple-500" />,
                              subject: "Sunday Breakfast: The Future of Originality",
                             message: `
-                            <p>Hey!</p>
+                            <p>Hey {{name}}!</p>
                             <p>Before we begin... a big thank you to this week's sponsor:</p>
                             <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 25px; border-radius: 20px; margin: 20px 0;">
                               <p style="margin-top: 0;"><strong>Vanta</strong> automates security and compliance so you can keep scaling instead of drowning in paperwork. Runs continuous checks in the background and keeps all your evidence audit-ready.</p>
@@ -592,7 +611,7 @@ export const AdminEmailCenter: React.FC = () => {
                             <p><strong>Originality in the AI Age.</strong></p>
                             <p>How do we maintain academic integrity when AI is everywhere? We explore new frameworks for defensible writing and the role of human-first collaboration in the research process.</p>
                             <div style="margin: 20px 0; text-align: center;">
-                              <a href="https://colabwize.com/resources/blog/future-of-integrity" style="background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 12px; font-weight: bold;">Read Insight &rarr;</a>
+                              <a href="https://colabwize.com/resources/blogs/future-of-integrity" style="background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 12px; font-weight: bold;">Read Insight &rarr;</a>
                             </div>
 
                             <h3 style="color: #0ea5e9;">The Coffee</h3>
