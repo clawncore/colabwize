@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { AdminLayout } from "../layout/AdminLayout";
 import { motion, AnimatePresence } from "framer-motion";
+import { useOutletContext } from "react-router-dom";
 import { 
   Mail, 
   Send, 
@@ -26,6 +26,7 @@ import {
   Copy,
   ExternalLink,
   MousePointer2,
+  TrendingUp,
   Link as LinkIcon
 } from "lucide-react";
 import { useToast } from "../../../hooks/use-toast";
@@ -35,6 +36,7 @@ import { AdminUserDirectory } from "./AdminUserDirectory";
 import { AdminInboxView } from "./AdminInboxView";
 import { EmailComposerEditor, EmailComposerEditorRef } from "./EmailComposerEditor";
 import { useRef } from "react";
+import { StockPhotoPicker } from "../shared/StockPhotoPicker";
 
 type TabType = "users" | "send" | "broadcast" | "logs" | "analytics" | "inbox" | "templates" | "unsubscribed" | "gallery";
 
@@ -110,6 +112,8 @@ export const AdminEmailCenter: React.FC = () => {
   const { toast } = useToast();
   const [unsubscribedUsers, setUnsubscribedUsers] = useState<any[]>([]);
   const [loadingUnsub, setLoadingUnsub] = useState(false);
+  
+  const { setSubSidebar } = useOutletContext<{ setSubSidebar: (content: React.ReactNode) => void }>();
 
   useEffect(() => {
     const path = window.location.pathname;
@@ -148,6 +152,7 @@ export const AdminEmailCenter: React.FC = () => {
   const [senderTitle, setSenderTitle] = useState("");
   
   const editorRef = useRef<EmailComposerEditorRef>(null);
+  const [isStockPickerOpen, setIsStockPickerOpen] = useState(false);
 
   // Broadcast State
   const [broadcastTarget, setBroadcastTarget] = useState("all");
@@ -191,70 +196,78 @@ export const AdminEmailCenter: React.FC = () => {
     if (senderTitle) profile.title = senderTitle;
     
     const currentYear = new Date().getFullYear();
-    const sanitizedBody = DOMPurify.sanitize(message || `<p class="italic text-slate-400">Waiting for message input...</p>`);
+    const sanitizedBody = DOMPurify.sanitize(message || `<p style="color: #94a3b8; font-style: italic;">Waiting for message input...</p>`);
 
     return `
-      <div style="font-family: Arial, sans-serif; color: #374151;">
-        <!-- Banner Header -->
-        <img src="https://colabwize.com/email_logo.png" alt="ColabWize" style="width: 100%; max-width: 600px; height: auto; display: block; margin: 0 auto 32px auto; border-radius: 8px;">
-        
-        <!-- Body -->
-        <div style="margin-bottom: 40px; padding: 0 20px;">
-          ${sanitizedBody}
-        </div>
+      <div style="background-color: #f8fafc; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#f8fafc">
+          <tr>
+            <td align="center">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); overflow: hidden;">
+                <!-- Banner Header -->
+                <tr>
+                  <td style="padding: 0; text-align: center;">
+                    <img src="https://colabwize.com/email_logo.png" alt="ColabWize" style="width: 100%; max-width: 600px; height: auto; display: block; margin: 0 auto;">
+                  </td>
+                </tr>
 
-        <!-- Signature -->
-        <div style="border-top: 2px solid #e5e7eb; margin: 32px 20px 0 20px; padding-top: 16px;">
-          <table style="border-collapse: collapse;">
-            <tr>
-              <td style="padding-left: 16px; border-left: 3px solid #0ea5e9; vertical-align: top;">
-                <p style="margin: 0 0 2px 0; font-size: 16px; font-weight: bold; color: #111827;">${profile.name}</p>
-                <p style="margin: 0 0 2px 0; font-size: 13px; color: #6b7280;">${profile.title}${profile.dept ? ` &bull; ${profile.dept}` : ""}</p>
-                <p style="margin: 6px 0 0 0; font-size: 13px;">
-                  <a href="mailto:${profile.email}" style="color: #0ea5e9; text-decoration: none;">${profile.email}</a>
-                  &nbsp;&bull;&nbsp;
-                  <a href="https://colabwize.com" style="color: #0ea5e9; text-decoration: none;">colabwize.com</a>
-                </p>
-              </td>
-            </tr>
-          </table>
-          <p style="margin: 10px 0 0 0; font-size: 10px; color: #9ca3af;">
-            This message was sent from the ColabWize secure administration platform. Please do not share its contents externally.
-          </p>
-        </div>
+                <!-- Main Body Content -->
+                <tr>
+                  <td style="padding: 40px 40px 10px 40px; color: #334155; font-size: 16px; line-height: 1.6;">
+                    ${sanitizedBody}
+                  </td>
+                </tr>
 
-        <!-- Premium Footer -->
-        <div style="margin-top: 64px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #64748b; line-height: 1.6; padding: 40px 20px; border-top: 1px solid #f1f5f9;">
-          <!-- Footer Branding -->
-          <div style="display: table; margin: 0 auto 24px auto; text-align: left;">
-            <div style="display: table-cell; vertical-align: middle; padding-right: 20px;">
-              <img src="https://colabwize.com/images/Colabwize-logo.png" alt="ColabWize" style="height: 52px; width: auto; display: block;">
-            </div>
-            <div style="display: table-cell; vertical-align: middle; border-left: 1px solid #e5e7eb; padding-left: 20px;">
-              <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #111827; letter-spacing: -0.5px;">ColabWize</h1>
-              <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b; font-weight: 500;">A Platform for Original, Credible, and Human Work.</p>
-            </div>
-          </div>
+                <!-- Signature & Footer (Inside Card) -->
+                <tr>
+                  <td style="padding: 0 40px 40px 40px;">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-top: 1px solid #f1f5f9; margin-top: 32px; font-family: sans-serif;">
+                      <tr>
+                        <td style="padding-top: 16px; border-left: 2px solid #0ea5e9; padding-left: 16px; vertical-align: top;">
+                          <p style="margin: 0 0 2px 0; font-size: 15px; font-weight: 600; color: #0f172a;">${profile.name}</p>
+                          <p style="margin: 0 0 2px 0; font-size: 12px; color: #64748b;">${profile.title}${profile.dept ? ` &bull; ${profile.dept}` : ""}</p>
+                          <p style="margin: 6px 0 0 0; font-size: 12px;">
+                            <a href="mailto:${profile.email}" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">${profile.email}</a>
+                            &nbsp;&bull;&nbsp;
+                            <a href="https://colabwize.com" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">colabwize.com</a>
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
 
-          <div style="margin-bottom: 32px; font-size: 14px; max-width: 500px; margin-left: auto; margin-right: auto;">
-            <p style="margin: 0 0 12px 0;">If you have any questions, feedback, ideas or problems don't hesitate to <a href="https://colabwize.com/contact" style="color: #0ea5e9; text-decoration: underline;">contact us!</a></p>
-            <p style="margin: 0;">You can <a href="https://colabwize.com/dashboard/settings" style="color: #0ea5e9; text-decoration: underline;">manage</a> which email notifications you receive or <a href="#" style="color: #0ea5e9; text-decoration: underline;">unsubscribe</a> from our communications.</p>
-          </div>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 60px; text-align: center; border-top: 1px solid #f8fafc; font-family: sans-serif;">
+                      <tr>
+                        <td style="padding: 30px 20px;">
+                          <table border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 20px auto; border-collapse: collapse; text-align: left;">
+                            <tr>
+                              <td style="vertical-align: middle; padding-right: 16px;">
+                                <img src="https://colabwize.com/images/Colabwize-logo.png" alt="ColabWize" style="height: 40px; width: auto; display: block;">
+                              </td>
+                              <td style="vertical-align: middle; border-left: 1px solid #e2e8f0; padding-left: 16px;">
+                                <h1 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; tracking-tight: -0.01em; font-family: sans-serif;">ColabWize</h1>
+                                <p style="margin: 1px 0 0 0; font-size: 12px; color: #94a3b8; font-weight: 500; font-family: sans-serif;">A Platform for Original, Credible, and Human Work.</p>
+                              </td>
+                            </tr>
+                          </table>
 
-          <div style="margin-bottom: 24px; font-size: 13px; font-weight: 500;">
-            Checkout: <a href="https://colabwize.com/resources/updates" style="color: #0ea5e9; text-decoration: none;">Updates</a>, 
-            <a href="https://colabwize.com/resources/newsletter" style="color: #0ea5e9; text-decoration: none;">Newsletter</a> or 
-            <a href="https://colabwize.com/contact" style="color: #0ea5e9; text-decoration: none;">Support</a>
-          </div>
+                          <div style="margin-bottom: 24px; font-size: 13px; color: #64748b; line-height: 1.6; max-width: 450px; margin-left: auto; margin-right: auto;">
+                            <p style="margin: 0 0 10px 0;">Have questions? <a href="https://colabwize.com/contact" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">Contact support</a></p>
+                            <p style="margin: 0;">You can <a href="https://colabwize.com/dashboard/settings" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">manage notifications</a> or <a href="#" style="color: #0ea5e9; text-decoration: none; font-weight: 500;">unsubscribe</a>.</p>
+                          </div>
 
-          <div style="margin-bottom: 32px;">
-            <a href="https://x.com/colabwize" style="color: #111827; text-decoration: none; font-weight: bold; font-size: 14px;">Follow us on X</a>
-          </div>
+                          <p style="font-size: 11px; color: #94a3b8; margin: 0;">
+                            © ${currentYear} ColabWize. All rights reserved.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
 
-          <p style="font-size: 11px; color: #9ca3af; margin: 0;">
-            © ${currentYear} ColabWize. All rights reserved.
-          </p>
-        </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       </div>
     `;
   };
@@ -399,9 +412,9 @@ export const AdminEmailCenter: React.FC = () => {
 
   const subNavContent = (
     <div className="flex flex-col gap-2 px-4">
-      <div className="px-2 mb-4">
-        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-sky-500 italic">Email Array</h2>
-        <p className="text-xl font-black text-foreground tracking-tighter">Communications</p>
+      <div className="px-2 mb-6">
+        <h2 className="text-[10px] font-bold uppercase tracking-widest text-sky-600">Email Array</h2>
+        <p className="text-lg font-bold text-slate-900 tracking-tight">Communications</p>
       </div>
 
       {[
@@ -418,21 +431,26 @@ export const AdminEmailCenter: React.FC = () => {
         <button
           key={tab.id}
           onClick={() => setActiveTab(tab.id as TabType)}
-          className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all ${
             activeTab === tab.id 
-            ? "bg-sky-500 text-white shadow-lg shadow-sky-500/30" 
-            : "bg-card border border-border text-muted-foreground hover:text-sky-500 hover:border-sky-500/30 hover:bg-sky-500/5"
+            ? "bg-sky-50 text-sky-600 border border-sky-100" 
+            : "bg-white border border-slate-100 text-slate-500 hover:text-sky-600 hover:border-sky-200 hover:bg-slate-50/50"
           }`}
         >
-          <tab.icon size={16} className="shrink-0" />
+          <tab.icon size={14} className="shrink-0" />
           <span className="truncate whitespace-nowrap">{tab.label}</span>
         </button>
       ))}
     </div>
   );
 
+  useEffect(() => {
+    setSubSidebar(subNavContent);
+    // No cleanup so it stays while we are on this route
+  }, [activeTab, setSubSidebar, subNavContent]);
+
   return (
-    <AdminLayout subSidebar={subNavContent}>
+    <>
       <div className="space-y-8 pb-20">
         {/* Header removed by user request to reduce redundant titles */}
 
@@ -465,8 +483,8 @@ export const AdminEmailCenter: React.FC = () => {
                       </div>
                       
                       <div className="relative z-10">
-                        <h2 className="text-3xl font-black text-foreground tracking-tighter mb-2">Corporate Asset Gallery</h2>
-                        <p className="text-muted-foreground font-medium uppercase tracking-[0.2em] text-[10px] mb-8">Official Branded Imagery for Communications</p>
+                        <h2 className="text-3xl font-black text-foreground tracking-tighter mb-2">Asset Gallery</h2>
+                        <p className="text-muted-foreground font-medium uppercase tracking-[0.2em] text-[10px] mb-8">Manage your branded images and assets</p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {ASSET_IMAGES.map((item) => {
@@ -529,15 +547,15 @@ export const AdminEmailCenter: React.FC = () => {
 
                 {activeTab === "templates" && (
                   <div className="space-y-6">
-                    <div className="p-8 bg-card border border-border rounded-[2.5rem] shadow-xl text-left">
-                      <div className="flex items-center gap-4 mb-2">
-                        <div className="h-12 w-12 rounded-2xl bg-sky-500/10 flex items-center justify-center text-sky-500">
-                          <LayoutTemplate size={24} />
+                    <div className="p-8 bg-white border border-slate-200 rounded-2xl text-left">
+                        <div className="flex items-center gap-4 mb-2">
+                        <div className="h-10 w-10 rounded-xl bg-sky-50 flex items-center justify-center text-sky-500 border border-sky-100">
+                          <LayoutTemplate size={20} />
                         </div>
                         <div>
-                          <h2 className="text-2xl font-black text-foreground tracking-tight">Platform Templates</h2>
-                          <p className="text-sm font-medium text-muted-foreground mt-1">
-                            One-click professional templates curated for each alias. Loads instantly into Compose or Broadcast.
+                          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Platform Templates</h2>
+                          <p className="text-sm font-medium text-slate-400 mt-1">
+                            Curated professional templates. Loads instantly into Compose or Broadcast.
                           </p>
                         </div>
                       </div>
@@ -550,7 +568,7 @@ export const AdminEmailCenter: React.FC = () => {
                             alias: "SUPPORT",
                             name: "Resolution Confirmation",
                             icon: <ShieldCheck size={20} className="text-emerald-500" />,
-                            subject: "Resolved: Your ColabWize Support Request",
+                            thumbnail: "https://images.unsplash.com/photo-1557200134-90327ee9fafa?w=400&h=200&fit=crop",
                             message: `<h2>Issue Resolved Successfully</h2><p>Hello,</p><p>We are pleased to inform you that your recent support inquiry has been fully addressed and resolved by our technical team.</p><p><strong>Resolution Details:</strong> The reported behavior was investigated and a localized patch has been deployed to your workspace environment. All systems are now performing within optimal parameters.</p>
                             <div style="margin: 30px 0; text-align: center;">
                               <a href="https://colabwize.com/contact" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Contact Support Team</a>
@@ -560,7 +578,7 @@ export const AdminEmailCenter: React.FC = () => {
                             alias: "HELP",
                             name: "New User Onboarding Guide",
                             icon: <span className="font-bold text-amber-500 text-lg">?</span>,
-                            subject: "Getting Started with ColabWize: A Quick Guide",
+                            thumbnail: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=200&fit=crop",
                             message: `<h2>Welcome to the Platform</h2><p>We're thrilled to have you onboard! To help you get the most out of ColabWize, we've compiled a few essential resources for your first 48 hours:</p><ul><li><strong>Quick Start Video:</strong> A 3-minute overview of the dashboard.</li><li><strong>Knowledge Base:</strong> Searchable documentation for every feature.</li><li><strong>Community Forum:</strong> Connect with other researchers and power users.</li></ul>
                             <div style="margin: 30px 0; text-align: center;">
                               <a href="https://colabwize.com/resources/help-center" style="background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Start Onboarding Now</a>
@@ -572,8 +590,8 @@ export const AdminEmailCenter: React.FC = () => {
                             alias: "BILLING",
                             name: "Plan Upgrade Confirmation",
                             icon: <Activity size={20} className="text-sky-500" />,
-                            subject: "Confirmation: Your ColabWize Plan Upgrade",
-                            message: `<h2>Upgrade Successful</h2><p>Hello,</p><p>This email confirms that your ColabWize account has been successfully upgraded to the <strong>Premium Tier</strong>.</p><p><strong>New Features Unlocked:</strong></p><ul><li>Unlimited AI Neural Drafting</li><li>Advanced Citation Matrix Exports</li><li>Priority Engineering Support</li></ul><p>Your new billing cycle begins today. You can manage your subscription and download invoices at any time from your billing dashboard.</p>
+                            thumbnail: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=200&fit=crop",
+                            message: `<h2>Upgrade Successful</h2><p>Hello,</p><p>This email confirms that your ColabWize account has been successfully upgraded to the <strong>Premium Tier</strong>.</p><p><strong>New Features Unlocked:</strong></p><ul><li>Unlimited AI Drafting</li><li>Advanced Citation Exports</li><li>Priority Engineering Support</li></ul><p>Your new billing cycle begins today. You can manage your subscription and download invoices at any time from your billing dashboard.</p>
                             <div style="margin: 30px 0; text-align: center;">
                               <a href="https://colabwize.com/dashboard/settings/billing" style="background-color: #0ea5e9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">View Billing Information</a>
                             </div>`
@@ -582,7 +600,7 @@ export const AdminEmailCenter: React.FC = () => {
                             alias: "BILLING",
                             name: "Payment Overdue Notice",
                             icon: <AlertTriangle size={20} className="text-red-500" />,
-                            subject: "URGENT: Payment Overdue for ColabWize Subscription",
+                            thumbnail: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400&h=200&fit=crop",
                             message: `<h2>Action Required: Payment Overdue</h2><p>Hello,</p><p>We were unable to process your most recent subscription payment. To avoid any interruption to your research workspace and AI access, please update your payment information immediately.</p>
                             <div style="margin: 30px 0; text-align: center;">
                               <a href="https://colabwize.com/dashboard/settings/billing" style="background-color: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Update Payment Method</a>
@@ -594,6 +612,7 @@ export const AdminEmailCenter: React.FC = () => {
                             alias: "MARKETING",
                             name: "Weekly Innovation Breakfast",
                             icon: <Sparkles size={20} className="text-purple-500" />,
+                            thumbnail: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=200&fit=crop",
                              subject: "Sunday Breakfast: The Future of Originality",
                             message: `
                             <p>Hey {{name}}!</p>
@@ -629,7 +648,7 @@ export const AdminEmailCenter: React.FC = () => {
                           {
                             alias: "TEAM",
                             name: "Onboarding Check-in",
-                            icon: <CheckCircle2 size={20} className="text-sky-500" />,
+                            thumbnail: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=200&fit=crop",
                             subject: "How is your ColabWize experience so far?",
                             message: `<p>Hello,</p><p>It's been 48 hours since you joined, and we wanted to check in. Our goal is to make your research as seamless as possible.</p><p>Are you finding everything you need? If you're stuck on anything—from AI drafting to citation exports—our success team is here to help.</p>
                             <div style="margin: 30px 0; text-align: center;">
@@ -639,7 +658,7 @@ export const AdminEmailCenter: React.FC = () => {
                           {
                             alias: "TEAM",
                             name: "Inactivity Check-in",
-                            icon: <Clock size={20} className="text-amber-500" />,
+                            thumbnail: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400&h=200&fit=crop",
                             subject: "We haven't seen you in a while!",
                             message: `<p>Hello,</p><p>We noticed you haven't logged into ColabWize in a few days. We've recently added some powerful new AI features that we think you'll love.</p><p>Is there anything we can help you with to get back on track?</p>
                             <div style="margin: 30px 0; text-align: center;">
@@ -660,7 +679,7 @@ export const AdminEmailCenter: React.FC = () => {
                           {
                             alias: "LEGAL",
                             name: "Annual Terms Update",
-                            icon: <ShieldCheck size={20} className="text-slate-500" />,
+                            thumbnail: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=400&h=200&fit=crop",
                             subject: "Legal Notice: Updates to ColabWize Terms of Service",
                             message: `<h2>Policy Update Notice</h2><p>Hello,</p><p>In accordance with new international data protections, we have updated our Global Terms of Service and Privacy Policy.</p><p>By continuing to use ColabWize after April 1st, you agree to these updated terms.</p>
                             <div style="margin: 30px 0; text-align: center;">
@@ -670,30 +689,53 @@ export const AdminEmailCenter: React.FC = () => {
                         ],
                       }).map(([category, items]) => (
                         <div key={category} className="space-y-6">
-                          <div className="flex items-center gap-4">
-                            <h3 className="text-xl font-black text-foreground tracking-tight">{category}</h3>
-                            <div className="h-px flex-1 bg-border/50"></div>
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="h-8 w-1 bg-sky-500 rounded-full" />
+                            <h3 className="text-xl font-black text-foreground tracking-tighter">{category}</h3>
+                            <div className="h-[1px] flex-1 bg-gradient-to-r from-border/50 to-transparent"></div>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {items.map((tpl) => (
-                              <div key={tpl.name} className="bg-card border border-border flex flex-col rounded-[2rem] p-6 shadow-lg hover:border-sky-500/50 hover:shadow-sky-500/10 transition-all group">
-                                <div className="flex items-center justify-between mb-4">
-                                  <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1 bg-secondary rounded-lg text-muted-foreground group-hover:text-sky-500 transition-colors">
-                                    Alias: {tpl.alias}
-                                  </span>
-                                  {tpl.icon}
+                              <div key={tpl.name} className="bg-white border border-slate-200 rounded-xl p-5 hover:border-sky-500/50 hover:shadow-xl hover:shadow-sky-500/5 transition-all duration-300 group flex flex-col h-full">
+                                <div className="mb-4 aspect-video rounded-lg overflow-hidden border border-slate-100 bg-slate-50 relative group/img">
+                                  {tpl.thumbnail ? (
+                                    <img src={tpl.thumbnail} alt="Preview" className="w-full h-full object-cover grayscale-[0.5] group-hover/img:grayscale-0 transition-all duration-500" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-slate-200">
+                                      <ImageIcon size={32} />
+                                    </div>
+                                  )}
+                                  <div className="absolute top-2 right-2 h-6 w-6 rounded-lg bg-white/90 backdrop-blur shadow-sm flex items-center justify-center text-slate-400">
+                                    {tpl.icon}
+                                  </div>
                                 </div>
-                                <h3 className="text-lg font-black text-foreground mb-1">{tpl.name}</h3>
-                                <p className="text-xs text-muted-foreground font-medium mb-6 line-clamp-2 italic">
-                                  "{tpl.subject}"
-                                </p>
-                                <div className="mt-auto grid grid-cols-2 gap-3">
+
+                                <div className="flex items-start justify-between mb-4">
+                                  <div>
+                                      <h3 className="text-sm font-bold text-slate-900 leading-tight">{tpl.name}</h3>
+                                      <span className="text-[10px] font-medium text-slate-400 mt-1 block uppercase tracking-wider">{tpl.alias} Channel</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex-1 space-y-3 mb-6">
+                                  <div className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg">
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight mb-1">Subject Line</p>
+                                    <p className="text-[11px] text-slate-600 font-medium line-clamp-1 italic">
+                                      {tpl.subject}
+                                    </p>
+                                  </div>
+                                  <div className="px-3 py-2 bg-slate-50/50 border border-slate-100/50 rounded-lg">
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight mb-1">Content Snippet</p>
+                                    <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: tpl.message.replace(/<[^>]*>?/gm, ' ') }} />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 pt-4 border-t border-slate-50">
                                     <button 
                                       onClick={() => {
                                         let nameToUse = recipientName || extractNameFromEmail(recipient);
                                         let personalizedMsg = tpl.message;
-                                        
                                         if (nameToUse) {
                                           personalizedMsg = personalizedMsg
                                             .replace(/Hello,/g, `Hello ${nameToUse},`)
@@ -701,18 +743,19 @@ export const AdminEmailCenter: React.FC = () => {
                                             .replace(/Hello\s+([A-Z])/g, `Hello ${nameToUse}, $1`)
                                             .replace(/Hey,/g, `Hey ${nameToUse},`);
                                         }
-
                                         setSenderAlias(tpl.alias);
                                         setSubject(tpl.subject);
                                         setMessage(personalizedMsg);
                                         setIsTemplateLoaded(true);
                                         setActiveTab("send");
-                                        toast({ title: "Template Personalized", description: `Addressed to ${nameToUse || 'User'}.` });
+                                        toast({ title: "Template Loaded", description: `Personalized for ${nameToUse || 'User'}` });
                                       }}
-                                      className="px-3 py-2.5 bg-secondary text-foreground text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-sky-500 hover:text-white transition-all text-center"
+                                      className="px-3 py-2 bg-sky-600 text-white text-[9px] font-bold uppercase tracking-wider rounded-lg hover:bg-sky-700 transition-all flex items-center justify-center gap-2 shadow-sm shadow-sky-600/10"
                                     >
-                                      Target Send
+                                      <Send size={12} />
+                                      Personalize
                                     </button>
+                                    
                                     <button 
                                       onClick={() => {
                                         setSenderAlias(tpl.alias);
@@ -720,10 +763,11 @@ export const AdminEmailCenter: React.FC = () => {
                                         setMessage(tpl.message);
                                         setIsTemplateLoaded(true);
                                         setActiveTab("broadcast");
-                                        toast({ title: "Template Loaded", description: "Ready for mass broadcast." });
+                                        toast({ title: "Template Loaded", description: "Ready for broadcast" });
                                       }}
-                                      className="px-3 py-2.5 bg-secondary text-foreground text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-purple-500 hover:text-white transition-all text-center"
+                                      className="px-3 py-2 bg-white border border-slate-200 text-slate-600 text-[9px] font-bold uppercase tracking-wider rounded-lg hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all flex items-center justify-center gap-2"
                                     >
+                                      <Rss size={12} />
                                       Broadcast
                                     </button>
                                 </div>
@@ -738,16 +782,16 @@ export const AdminEmailCenter: React.FC = () => {
 
                 {(activeTab === "send" || activeTab === "broadcast") && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Form Matrix */}
-                <div className="p-8 bg-card border border-border rounded-[2.5rem] space-y-8 shadow-xl">
+                {/* Form Layout */}
+                <div className="p-8 bg-white border border-slate-200 rounded-2xl space-y-8">
                   <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-black text-foreground tracking-tight italic flex items-center gap-3">
-                      {activeTab === "send" ? <Send size={20} className="text-sky-500" /> : <Rss size={20} className="text-sky-500" />}
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+                      {activeTab === "send" ? <Send size={18} className="text-sky-500" /> : <Rss size={18} className="text-sky-500" />}
                       {activeTab === "send" ? "Compose Email" : "Mass Broadcast"}
                     </h3>
                     {activeTab === "broadcast" && (
-                        <div className="px-4 py-1.5 bg-sky-500/10 border border-sky-500/20 rounded-full">
-                            <span className="text-[10px] font-black text-sky-500 uppercase tracking-widest">
+                        <div className="px-3 py-1 bg-sky-50 border border-sky-100 rounded-full">
+                            <span className="text-[10px] font-bold text-sky-600 uppercase tracking-wider">
                                 {targetCount} Target Recipients
                             </span>
                         </div>
@@ -757,7 +801,7 @@ export const AdminEmailCenter: React.FC = () => {
                   <form className="space-y-6" onSubmit={activeTab === "send" ? handleSendEmail : handleBroadcast}>
                     {activeTab === "send" ? (
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Recipient (To)</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Recipient (To)</label>
                         <div className="relative">
                           <input 
                             type="email" 
@@ -765,16 +809,16 @@ export const AdminEmailCenter: React.FC = () => {
                             value={recipient}
                             onChange={(e) => setRecipient(e.target.value)}
                             placeholder="user@colabwize.com"
-                            className="w-full h-14 bg-secondary border border-border rounded-2xl px-6 text-sm font-medium focus:border-sky-500 transition-all outline-none"
+                            className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-semibold focus:border-sky-500 transition-all outline-none placeholder:text-slate-300"
                           />
-                          <Mail className="absolute right-6 top-4 text-muted-foreground/30" size={20} />
+                          <Mail className="absolute right-4 top-3.5 text-slate-300" size={18} />
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Target Audience</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Target Audience</label>
                         <select 
-                          className="w-full h-14 bg-secondary border border-border rounded-2xl px-6 text-sm font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-all appearance-none cursor-pointer"
+                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold uppercase tracking-wider outline-none focus:border-sky-500 transition-all appearance-none cursor-pointer text-slate-700"
                           value={broadcastTarget}
                           onChange={(e) => setBroadcastTarget(e.target.value)}
                         >
@@ -788,7 +832,7 @@ export const AdminEmailCenter: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between ml-1">
-                          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block">Sender Identity</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Sender Identity</label>
                           {isTemplateLoaded && (
                              <button type="button" onClick={() => setIsTemplateLoaded(false)} className="text-[9px] font-bold uppercase tracking-widest text-red-500 hover:underline">
                                Unlock Alias
@@ -797,7 +841,7 @@ export const AdminEmailCenter: React.FC = () => {
                         </div>
                         <select  
                           disabled={isTemplateLoaded}
-                          className="w-full h-14 bg-secondary border border-border rounded-2xl px-6 text-sm font-bold outline-none focus:border-sky-500 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
+                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold outline-none focus:border-sky-500 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider text-slate-700"
                           value={senderAlias}
                           onChange={(e) => setSenderAlias(e.target.value)}
                         >
@@ -805,52 +849,50 @@ export const AdminEmailCenter: React.FC = () => {
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Transmission Header (Subject)</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Transmission Header (Subject)</label>
                         <input 
                           type="text" 
                           required
                           value={subject}
                           onChange={(e) => setSubject(e.target.value)}
                           placeholder="Enter Subject..."
-                          className="w-full h-14 bg-secondary border border-border rounded-2xl px-6 text-sm font-medium focus:border-sky-500 transition-all outline-none"
+                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-semibold focus:border-sky-500 transition-all outline-none placeholder:text-slate-300"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Professional Sender Name</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Professional Sender Name</label>
                         <input 
                           type="text" 
                           value={senderName}
                           onChange={(e) => setSenderName(e.target.value)}
                           placeholder="Your Full Name..."
-                          className="w-full h-14 bg-secondary border border-border rounded-2xl px-6 text-sm font-medium focus:border-sky-500 transition-all outline-none"
+                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-semibold focus:border-sky-500 transition-all outline-none placeholder:text-slate-300"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Professional Sender Title</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Professional Sender Title</label>
                         <input 
                           type="text" 
                           value={senderTitle}
                           onChange={(e) => setSenderTitle(e.target.value)}
                           placeholder="Your Official Title..."
-                          className="w-full h-14 bg-secondary border border-border rounded-2xl px-6 text-sm font-medium focus:border-sky-500 transition-all outline-none"
+                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-semibold focus:border-sky-500 transition-all outline-none placeholder:text-slate-300"
                         />
                       </div>
                     </div>
-
                     <div className="space-y-2">
                       <div className="flex justify-between items-end mb-2">
-                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 block">Message Content</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 block">Message Content</label>
                       </div>
                       <EmailComposerEditor 
                         ref={editorRef}
                         value={message} 
                         onChange={setMessage} 
                         onImageClick={() => {
-                          setShowAssetSidebar(true);
-                          setShowLinkSidebar(false);
+                          setIsStockPickerOpen(true);
                         }}
                         onLinkClick={() => {
                           setShowLinkSidebar(true);
@@ -861,21 +903,21 @@ export const AdminEmailCenter: React.FC = () => {
                     </div>
 
                     {activeTab === "broadcast" && (
-                        <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-3xl space-y-4">
+                        <div className="p-6 bg-red-50 border border-red-100 rounded-2xl space-y-4">
                             <div className="flex items-center gap-3 text-red-500">
-                                <AlertTriangle size={20} />
-                                <span className="text-xs font-black uppercase tracking-widest">Broadcast Safety Protocol</span>
+                                <AlertTriangle size={18} />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Broadcast Safety Protocol</span>
                             </div>
-                            <p className="text-[11px] text-muted-foreground font-medium">
-                                You are about to transmit to <span className="text-foreground font-bold">{targetCount}</span> nodes. 
-                                Type <span className="text-red-500 font-bold underline">SEND</span> to authorize the uplink.
+                            <p className="text-[11px] text-slate-500 font-medium">
+                                You are about to transmit to <span className="text-slate-900 font-bold">{targetCount}</span> nodes. 
+                                Type <span className="text-red-500 font-bold">SEND</span> to authorize.
                             </p>
                             <input 
                                 type="text"
                                 value={confirmText}
                                 onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
                                 placeholder="Type SEND to confirm"
-                                className="w-full h-12 bg-background border border-border rounded-xl px-4 text-xs font-black tracking-[0.3em] text-center focus:border-red-500/50 outline-none transition-all"
+                                className="w-full h-11 bg-white border border-slate-200 rounded-xl px-4 text-xs font-bold tracking-widest text-center focus:border-red-500 outline-none transition-all placeholder:text-slate-300"
                             />
                         </div>
                     )}
@@ -883,35 +925,35 @@ export const AdminEmailCenter: React.FC = () => {
                     <button 
                       type="submit"
                       disabled={isSending || isBroadcasting}
-                      className={`w-full h-16 rounded-[1.5rem] flex items-center justify-center gap-3 text-xs font-black uppercase tracking-[0.2em] transition-all ${
+                      className={`w-full h-14 rounded-xl flex items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-widest transition-all ${
                           activeTab === "send" 
-                          ? "bg-sky-500 text-white shadow-xl shadow-sky-500/20 hover:scale-[1.02] active:scale-95" 
-                          : "bg-red-500 text-white shadow-xl shadow-red-500/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale"
+                          ? "bg-sky-500 text-white shadow-sm hover:bg-sky-600 active:scale-95" 
+                          : "bg-red-500 text-white shadow-sm hover:bg-red-600 active:scale-95 disabled:opacity-50 disabled:grayscale"
                       }`}
                     >
-                      {(isSending || isBroadcasting) ? <Loader2 className="animate-spin" size={20} /> : (
+                      {(isSending || isBroadcasting) ? <Loader2 className="animate-spin" size={18} /> : (
                           <>
                             {activeTab === "send" ? "Dispatch Email" : "Execute Broadcast"}
-                            <ArrowRight size={16} />
+                            <ArrowRight size={14} />
                           </>
                       )}
                     </button>
                   </form>
                 </div>
 
-                {/* Right Column: Preview Matrix with AI Dropdown */}
-                <div className="p-8 bg-card border border-border rounded-[2.5rem] flex flex-col items-center justify-center text-center group shadow-xl relative h-fit sticky top-8">
+                {/* Right Column: Preview Panel with AI Dropdown */}
+                <div className="p-8 bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center group relative h-fit sticky top-8">
                    <div className="w-full flex justify-between items-center mb-6 relative">
-                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">HTML Render Preview</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">HTML Render Preview</p>
                       
                       {/* AI Toggle Button */}
                       <button 
                          type="button"
                          onClick={() => setShowAIModal(!showAIModal)}
-                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all z-10 ${
+                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all z-10 ${
                             showAIModal 
-                            ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' 
-                            : 'bg-sky-500/10 text-sky-500 hover:bg-sky-500/20'
+                            ? 'bg-sky-500 text-white shadow-sm' 
+                            : 'bg-sky-50 text-sky-600 border border-sky-100 hover:bg-sky-100'
                          }`}
                       >
                          {showAIModal ? <X size={14} /> : <Sparkles size={14} />}
@@ -922,52 +964,52 @@ export const AdminEmailCenter: React.FC = () => {
                       <AnimatePresence>
                          {showAIModal && (
                             <motion.div 
-                               initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                               animate={{ opacity: 1, y: 0, scale: 1 }}
-                               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                               className="absolute top-14 right-0 w-[420px] max-w-[85vw] bg-card border border-border shadow-2xl rounded-[2rem] overflow-hidden z-50 flex flex-col"
+                               initial={{ opacity: 0, scale: 0.98 }}
+                               animate={{ opacity: 1, scale: 1 }}
+                               exit={{ opacity: 0, scale: 0.98 }}
+                               className="absolute top-12 right-0 w-[380px] max-w-[85vw] bg-white border border-slate-200 shadow-xl rounded-2xl overflow-hidden z-50 flex flex-col"
                             >
-                               <div className="p-6 bg-secondary border-b border-border flex items-center gap-3 text-left">
-                                 <div className="h-10 w-10 bg-sky-500/10 rounded-xl flex items-center justify-center text-sky-500 shrink-0">
-                                   <Sparkles size={20} />
+                               <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center gap-3 text-left">
+                                 <div className="h-9 w-9 bg-sky-500 text-white rounded-lg flex items-center justify-center shrink-0">
+                                   <Sparkles size={18} />
                                  </div>
-                                 <div>
-                                   <h2 className="text-sm font-black text-foreground">AI Email Assistant</h2>
-                                   <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-0.5">Automated Neural Drafting</p>
+                                 <div className="flex flex-col">
+                                   <h2 className="text-sm font-bold text-slate-900 leading-tight">AI Email Assistant</h2>
+                                   <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">Automated Drafting</p>
                                  </div>
                                </div>
                                
-                               <div className="p-6 space-y-6 text-left max-h-[60vh] overflow-y-auto custom-scrollbar">
+                               <div className="p-5 space-y-5 text-left max-h-[60vh] overflow-y-auto custom-scrollbar">
                                  {message.trim() && (
-                                   <div className="space-y-4">
-                                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quick Corrections</p>
+                                   <div className="space-y-3">
+                                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Quick Corrections</p>
                                      <div className="grid grid-cols-2 gap-2">
-                                       <button onClick={() => handleGenerateWithAI("Fix all grammar and spelling errors, keep tone exactly the same.")} disabled={isGeneratingAI} className="h-10 rounded-xl bg-background hover:bg-sky-500/5 hover:text-sky-500 text-[10px] font-bold uppercase tracking-wider transition-colors border border-border hover:border-sky-500/30 disabled:opacity-50 text-left px-3">Fix Grammar</button>
-                                       <button onClick={() => handleGenerateWithAI("Refine this draft to be extremely professional, strong, and highly corporate.")} disabled={isGeneratingAI} className="h-10 rounded-xl bg-background hover:bg-sky-500/5 hover:text-sky-500 text-[10px] font-bold uppercase tracking-wider transition-colors border border-border hover:border-sky-500/30 disabled:opacity-50 text-left px-3">Professional Tone</button>
-                                       <button onClick={() => handleGenerateWithAI("Soften the tone of this draft, make it very polite, friendly, and understanding.")} disabled={isGeneratingAI} className="h-10 rounded-xl bg-background hover:bg-sky-500/5 hover:text-sky-500 text-[10px] font-bold uppercase tracking-wider transition-colors border border-border hover:border-sky-500/30 disabled:opacity-50 text-left px-3">Soften Tone</button>
-                                       <button onClick={() => handleGenerateWithAI("Make this message extremely concise and short, getting straight to the point.")} disabled={isGeneratingAI} className="h-10 rounded-xl bg-background hover:bg-sky-500/5 hover:text-sky-500 text-[10px] font-bold uppercase tracking-wider transition-colors border border-border hover:border-sky-500/30 disabled:opacity-50 text-left px-3">Streamline</button>
+                                       <button onClick={() => handleGenerateWithAI("Fix all grammar and spelling errors, keep tone exactly the same.")} disabled={isGeneratingAI} className="h-9 rounded-lg bg-slate-50 hover:bg-sky-50 hover:text-sky-600 text-[10px] font-bold uppercase tracking-wider transition-colors border border-slate-100 hover:border-sky-100 disabled:opacity-50 text-left px-3">Fix Grammar</button>
+                                       <button onClick={() => handleGenerateWithAI("Refine this draft to be extremely professional, strong, and highly corporate.")} disabled={isGeneratingAI} className="h-9 rounded-lg bg-slate-50 hover:bg-sky-50 hover:text-sky-600 text-[10px] font-bold uppercase tracking-wider transition-colors border border-slate-100 hover:border-sky-100 disabled:opacity-50 text-left px-3">Professional Tone</button>
+                                       <button onClick={() => handleGenerateWithAI("Soften the tone of this draft, make it very polite, friendly, and understanding.")} disabled={isGeneratingAI} className="h-9 rounded-lg bg-slate-50 hover:bg-sky-50 hover:text-sky-600 text-[10px] font-bold uppercase tracking-wider transition-colors border border-slate-100 hover:border-sky-100 disabled:opacity-50 text-left px-3">Soften Tone</button>
+                                       <button onClick={() => handleGenerateWithAI("Make this message extremely concise and short, getting straight to the point.")} disabled={isGeneratingAI} className="h-9 rounded-lg bg-slate-50 hover:bg-sky-50 hover:text-sky-600 text-[10px] font-bold uppercase tracking-wider transition-colors border border-slate-100 hover:border-sky-100 disabled:opacity-50 text-left px-3">Streamline</button>
                                      </div>
                                    </div>
                                  )}
 
-                                 <div className="space-y-4">
-                                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                 <div className="space-y-3">
+                                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                      {message.trim() ? "Custom Instructions:" : "Describe what you want to write:"}
                                    </p>
                                    <textarea 
                                      value={aiPrompt}
                                      onChange={(e) => setAiPrompt(e.target.value)}
                                      placeholder={message.trim() ? "e.g. 'Add a paragraph explaining...'" : "e.g. 'Write a welcome email...'"}
-                                     className="w-full h-32 bg-background border border-border rounded-2xl p-4 text-sm font-medium focus:border-sky-500 transition-colors shadow-inner outline-none resize-none placeholder-muted-foreground/50"
+                                     className="w-full h-28 bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm font-medium focus:border-sky-500 transition-colors outline-none resize-none placeholder:text-slate-300"
                                    />
                                  </div>
 
                                  <button 
                                    onClick={() => handleGenerateWithAI()}
                                    disabled={isGeneratingAI || !aiPrompt.trim()}
-                                   className="w-full h-12 shrink-0 flex items-center justify-center gap-2 bg-sky-500 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl hover:bg-sky-600 disabled:opacity-50 disabled:grayscale transition-all shadow-xl shadow-sky-500/20"
+                                   className="w-full h-11 shrink-0 flex items-center justify-center gap-2 bg-sky-500 text-white font-bold text-[11px] uppercase tracking-widest rounded-xl hover:bg-sky-600 disabled:opacity-50 transition-all shadow-sm"
                                  >
-                                   {isGeneratingAI ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <><Sparkles size={16} /> Generate Mail Payload</>}
+                                   {isGeneratingAI ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <><Sparkles size={16} /> Generate Content</>}
                                  </button>
                                </div>
                             </motion.div>
@@ -975,15 +1017,15 @@ export const AdminEmailCenter: React.FC = () => {
                       </AnimatePresence>
                    </div>
                    
-                   <div className="w-full bg-white rounded-[2rem] overflow-hidden shadow-sm min-h-[500px] flex flex-col border border-border relative z-0">
-                        <div className="h-10 bg-secondary border-b border-border flex items-center px-6 gap-2 shrink-0">
-                            <div className="h-2 w-2 rounded-full bg-red-400" />
-                            <div className="h-2 w-2 rounded-full bg-amber-400" />
-                            <div className="h-2 w-2 rounded-full bg-emerald-400" />
+                   <div className="w-full bg-white rounded-2xl overflow-hidden min-h-[500px] flex flex-col border border-slate-100 relative z-0">
+                        <div className="h-8 bg-slate-50 border-b border-slate-100 flex items-center px-4 gap-1.5 shrink-0">
+                            <div className="h-1.5 w-1.5 rounded-full bg-slate-200" />
+                            <div className="h-1.5 w-1.5 rounded-full bg-slate-200" />
+                            <div className="h-1.5 w-1.5 rounded-full bg-slate-200" />
                         </div>
-                        <div className="flex-1 p-10 prose prose-sky prose-sm max-w-none text-left overflow-auto bg-[#fafafa]">
-                            <div className="max-w-[600px] mx-auto bg-white p-12 rounded-xl shadow-sm border border-border">
-                              <h2 className="text-xl font-black text-foreground mb-4 border-b pb-4">{subject || "Transmission Header..."}</h2>
+                        <div className="flex-1 p-6 text-left overflow-auto bg-slate-50/30">
+                            <div className="max-w-[600px] mx-auto bg-white p-8 rounded-xl border border-slate-100">
+                              <h2 className="text-lg font-bold text-slate-800 mb-6 border-b border-slate-50 pb-4">{subject || "Transmission Header..."}</h2>
                               <div dangerouslySetInnerHTML={{ __html: renderFullPreview() }} />
                             </div>
                         </div>
@@ -993,46 +1035,46 @@ export const AdminEmailCenter: React.FC = () => {
             )}
 
             {activeTab === "logs" && (
-                <div className="bg-card border border-border rounded-[2.5rem] overflow-hidden shadow-xl">
-                    <div className="p-8 border-b border-border flex justify-between items-center">
-                        <h3 className="text-xl font-black text-foreground italic flex items-center gap-3">
-                            <Activity size={20} className="text-sky-500" />
-                            Transmission Audit Logs
+                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="p-8 border-b border-slate-100 flex justify-between items-center">
+                        <h3 className="text-xl font-bold text-slate-900 flex items-center gap-3">
+                            <Activity size={18} className="text-sky-500" />
+                            Email Message Logs
                         </h3>
-                        <button onClick={fetchLogs} className="p-3 bg-secondary rounded-xl hover:text-sky-500 transition-colors">
+                        <button onClick={fetchLogs} className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl hover:text-sky-600 transition-colors">
                             <Loader2 size={16} className={isLoadingData ? "animate-spin" : ""} />
                         </button>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-secondary/50">
+                            <thead className="bg-slate-50/50 border-b border-slate-100">
                                 <tr>
-                                    <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Timestamp</th>
-                                    <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Recipient</th>
-                                    <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Sender Alias</th>
-                                    <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Subject</th>
-                                    <th className="px-8 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Status</th>
+                                    <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Timestamp</th>
+                                    <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recipient</th>
+                                    <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sender Alias</th>
+                                    <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subject</th>
+                                    <th className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-slate-50">
                                 {logs.map((log) => (
-                                    <tr key={log.id} className="border-t border-border hover:bg-secondary/30 transition-colors group">
-                                        <td className="px-8 py-5 text-xs font-mono text-muted-foreground">
+                                    <tr key={log.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-8 py-5 text-xs font-mono text-slate-400">
                                             {new Date(log.sent_at).toLocaleString()}
                                         </td>
-                                        <td className="px-8 py-5 text-sm font-bold text-foreground">
+                                        <td className="px-8 py-5 text-sm font-semibold text-slate-700">
                                             {maskEmail(log.recipient)}
                                         </td>
                                         <td className="px-8 py-5">
-                                            <span className="text-[10px] font-black text-sky-500/80 uppercase px-2 py-1 bg-sky-500/5 rounded border border-sky-500/10">
+                                            <span className="text-[10px] font-bold text-sky-600 uppercase px-2 py-1 bg-sky-50 border border-sky-100 rounded-lg">
                                                 {log.sender}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-5 text-sm font-medium text-muted-foreground truncate max-w-xs">
+                                        <td className="px-8 py-5 text-sm font-medium text-slate-500 truncate max-w-xs">
                                             {log.subject}
                                         </td>
                                         <td className="px-8 py-5">
-                                            <span className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${log.status === 'sent' ? 'text-emerald-500' : 'text-red-500'}`}>
+                                            <span className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest ${log.status === 'sent' ? 'text-emerald-500' : 'text-red-500'}`}>
                                                 <div className={`h-1.5 w-1.5 rounded-full ${log.status === 'sent' ? 'bg-emerald-500' : 'bg-red-500'}`} />
                                                 {log.status}
                                             </span>
@@ -1043,8 +1085,8 @@ export const AdminEmailCenter: React.FC = () => {
                         </table>
                         {logs.length === 0 && !isLoadingData && (
                             <div className="p-20 text-center space-y-4">
-                                <ShieldCheck size={48} className="mx-auto text-muted-foreground/20" />
-                                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">No transmissions recorded in matrix</p>
+                                <ShieldCheck size={48} className="mx-auto text-slate-100" />
+                                <p className="text-sm font-bold text-slate-300 uppercase tracking-widest">No transmissions recorded</p>
                             </div>
                         )}
                     </div>
@@ -1053,43 +1095,45 @@ export const AdminEmailCenter: React.FC = () => {
 
             {activeTab === "analytics" && analytics && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="p-8 bg-card border border-border rounded-[2rem] space-y-4 shadow-lg">
-                        <div className="flex justify-between items-center">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Transmissions</p>
-                            <CheckCircle2 size={16} className="text-emerald-500" />
+                    <div className="p-8 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-sm group hover:border-sky-200 transition-all">
+                        <div className="flex justify-between items-center text-slate-400 group-hover:text-emerald-500 transition-colors">
+                            <p className="text-[10px] font-bold uppercase tracking-widest">Total Transmissions</p>
+                            <CheckCircle2 size={16} />
                         </div>
-                        <h4 className="text-4xl font-black text-foreground tracking-tighter">
+                        <h4 className="text-4xl font-bold text-slate-900 tracking-tight">
                             {analytics.emails.reduce((acc: any, curr: any) => acc + curr._count, 0)}
                         </h4>
                     </div>
-                    <div className="p-8 bg-card border border-border rounded-[2rem] space-y-4 shadow-lg">
-                        <div className="flex justify-between items-center">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Successful Link</p>
-                            <Activity size={16} className="text-sky-500" />
+                    <div className="p-8 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-sm group hover:border-sky-200 transition-all">
+                        <div className="flex justify-between items-center text-slate-400 group-hover:text-sky-500 transition-colors">
+                            <p className="text-[10px] font-bold uppercase tracking-widest">Successful Link</p>
+                            <Activity size={16} />
                         </div>
-                        <h4 className="text-4xl font-black text-foreground tracking-tighter text-sky-500">
+                        <h4 className="text-4xl font-bold text-sky-600 tracking-tight">
                             {analytics.emails.find((e: any) => e.status === 'sent')?._count || 0}
                         </h4>
                     </div>
-                    <div className="p-8 bg-card border border-border rounded-[2rem] space-y-4 shadow-lg">
-                        <div className="flex justify-between items-center">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Node Growth (30D)</p>
-                            <TrendingUpIcon size={16} className="text-emerald-500" />
+                    <div className="p-8 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-sm group hover:border-emerald-200 transition-all">
+                        <div className="flex justify-between items-center text-slate-400 group-hover:text-emerald-500 transition-colors">
+                            <p className="text-[10px] font-bold uppercase tracking-widest">Node Growth (30D)</p>
+                            <TrendingUp size={16} />
                         </div>
-                        <h4 className="text-4xl font-black text-foreground tracking-tighter">
+                        <h4 className="text-4xl font-bold text-slate-900 tracking-tight">
                             +{analytics.growth.last30Days}
                         </h4>
-                        <p className="text-[9px] font-bold text-emerald-500">Global Coverage Optimized</p>
+                        <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Global Coverage Base</p>
                     </div>
-                    <div className="p-8 bg-card border border-border rounded-[2rem] space-y-4 shadow-lg">
-                        <div className="flex justify-between items-center">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Paid Nodes</p>
-                            <ShieldCheck size={16} className="text-sky-500" />
+                    <div className="p-8 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-sm group hover:border-sky-200 transition-all">
+                        <div className="flex justify-between items-center text-slate-400 group-hover:text-sky-500 transition-colors">
+                            <p className="text-[10px] font-bold uppercase tracking-widest">Paid Nodes</p>
+                            <ShieldCheck size={16} />
                         </div>
-                        <h4 className="text-4xl font-black text-foreground tracking-tighter">
-                            {analytics.distribution.paid}
-                        </h4>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase">/{analytics.growth.total} Total Active Nodes</p>
+                        <div className="flex flex-col">
+                          <h4 className="text-4xl font-bold text-slate-900 tracking-tight">
+                              {analytics.distribution.paid}
+                          </h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">/ {analytics.growth.total} Total Active</p>
+                        </div>
                     </div>
                 </div>
             )}
@@ -1098,46 +1142,46 @@ export const AdminEmailCenter: React.FC = () => {
             {activeTab === "unsubscribed" && (
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-black text-foreground tracking-tighter">Unsubscribed Users</h2>
-                  <p className="text-sm text-muted-foreground mt-1">Users who have opted out of broadcast and marketing emails. They will not receive mass communications.</p>
+                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Unsubscribed Users</h2>
+                  <p className="text-sm text-slate-500 mt-1">Users who have opted out of communications.</p>
                 </div>
 
-                <div className="p-6 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex gap-4 items-start">
+                <div className="p-6 bg-amber-50 border border-amber-100 rounded-2xl flex gap-4 items-start">
                   <AlertTriangle className="text-amber-500 mt-0.5 shrink-0" size={18} />
                   <div>
-                    <p className="text-sm font-bold text-amber-600">Compliance Notice</p>
-                    <p className="text-xs text-muted-foreground mt-1">These users have explicitly opted out. Sending them marketing broadcasts would violate GDPR and CAN-SPAM regulations. The broadcast system automatically excludes them.</p>
+                    <p className="text-sm font-bold text-amber-700">Compliance Notice</p>
+                    <p className="text-xs text-slate-500 mt-1">The system automatically excludes these recipients from broadcasts.</p>
                   </div>
                 </div>
 
                 {loadingUnsub ? (
                   <div className="flex justify-center py-16"><Loader2 className="animate-spin text-sky-500" size={32} /></div>
                 ) : unsubscribedUsers.length === 0 ? (
-                  <div className="text-center py-16 bg-card border border-border rounded-2xl">
-                    <CheckCircle2 className="mx-auto text-emerald-500 mb-3" size={40} />
-                    <p className="text-lg font-bold text-foreground">No unsubscribed users</p>
-                    <p className="text-sm text-muted-foreground mt-1">All registered users are currently subscribed to platform communications.</p>
+                  <div className="text-center py-20 bg-white border border-slate-200 rounded-2xl">
+                    <CheckCircle2 className="mx-auto text-emerald-500 mb-4" size={40} />
+                    <p className="text-lg font-bold text-slate-900">No unsubscribed users</p>
+                    <p className="text-sm text-slate-400 mt-1">All registered users are currently subscribed.</p>
                   </div>
                 ) : (
-                  <div className="bg-card border border-border rounded-2xl overflow-hidden">
-                    <div className="p-4 border-b border-border flex justify-between items-center">
-                      <p className="text-sm font-bold text-foreground">{unsubscribedUsers.length} user{unsubscribedUsers.length !== 1 ? "s" : ""} opted out</p>
+                  <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="p-5 border-b border-slate-50 flex justify-between items-center">
+                      <p className="text-sm font-bold text-slate-700">{unsubscribedUsers.length} user{unsubscribedUsers.length !== 1 ? "s" : ""} opted out</p>
                     </div>
-                    <div className="divide-y divide-border">
+                    <div className="divide-y divide-slate-50">
                       {unsubscribedUsers.map((u) => (
-                        <div key={u.id} className="flex items-center justify-between px-6 py-4 hover:bg-muted/30 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center">
-                              <X size={14} className="text-red-500" />
+                        <div key={u.id} className="flex items-center justify-between px-8 py-5 hover:bg-slate-50/50 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
+                              <X size={14} className="text-slate-400" />
                             </div>
                             <div>
-                              <p className="text-sm font-semibold text-foreground">{u.full_name || "Unnamed User"}</p>
-                              <p className="text-xs text-muted-foreground">{u.email}</p>
+                              <p className="text-sm font-bold text-slate-800">{u.full_name || "Unnamed User"}</p>
+                              <p className="text-xs text-slate-400 font-medium">{u.email}</p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-red-100 text-red-600 uppercase tracking-widest">Unsubscribed</span>
-                            <p className="text-[10px] text-muted-foreground mt-1">{u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}</p>
+                            <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-red-50 text-red-500 uppercase tracking-widest border border-red-100">Opted Out</span>
+                            <p className="text-[10px] text-slate-400 mt-1.5 font-medium">{u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}</p>
                           </div>
                         </div>
                       ))}
@@ -1148,8 +1192,9 @@ export const AdminEmailCenter: React.FC = () => {
             )}
           </motion.div>
         </AnimatePresence>
+      </div>
 
-        {/* Asset Gallery Sidebar */}
+      {/* Asset Gallery Sidebar */}
         <AnimatePresence>
           {showAssetSidebar && (
             <>
@@ -1211,7 +1256,7 @@ export const AdminEmailCenter: React.FC = () => {
 
                 <div className="p-8 bg-secondary/10 border-t border-border mt-auto text-center">
                   <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] italic mb-0 opacity-50">
-                    ColabWize Global Asset Matrix
+                    ColabWize Global Asset Library
                   </p>
                 </div>
               </motion.div>
@@ -1243,7 +1288,7 @@ export const AdminEmailCenter: React.FC = () => {
                   </div>
                   <div className="relative z-10 text-left">
                     <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Quick Links</h3>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Matrix Resource Shortcuts</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-1">Quick Resource Links</p>
                   </div>
                   <button 
                     onClick={() => setShowLinkSidebar(false)}
@@ -1306,7 +1351,7 @@ export const AdminEmailCenter: React.FC = () => {
                       {[
                         { label: "Click here for more information", phrase: "Click here for more information about your billing info" },
                         { label: "View detailed research report", phrase: "Click here to view your complete academic integrity report" },
-                        { label: "Manage your notification matrix", phrase: "Manage your communication and notification settings" }
+                        { label: "Manage your notification settings", phrase: "Manage your communication and notification settings" }
                       ].map((p, idx) => (
                         <button 
                           key={idx}
@@ -1358,21 +1403,19 @@ export const AdminEmailCenter: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
-    </div>
-  </AdminLayout>
-);
+      <StockPhotoPicker
+        isOpen={isStockPickerOpen}
+        onClose={() => setIsStockPickerOpen(false)}
+        onSelect={(url) => {
+          if (editorRef.current) {
+            editorRef.current.insertImage(url);
+          }
+          setIsStockPickerOpen(false);
+        }}
+        title="Insert Stock Photo into Email"
+      />
+    </>
+  );
 };
-
-// Simple icon duplicate for analytics page
-const TrendingUpIcon = ({ size, className }: { size: number, className: string }) => (
-    <svg 
-        width={size} height={size} viewBox="0 0 24 24" fill="none" 
-        stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" 
-        className={className}
-    >
-        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-        <polyline points="17 6 23 6 23 12"></polyline>
-    </svg>
-);
 
 export default AdminEmailCenter;

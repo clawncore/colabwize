@@ -120,23 +120,23 @@ const NotificationSettings: React.FC = () => {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500 flex items-center gap-2">
-                        <Bell className="h-7 w-7 text-teal-500" /> Notification Settings</h1>
-                    <p className="text-muted-foreground">
-                        Control how you receive notifications.
+                    <h1 className="text-2xl font-bold tracking-tight mb-2 text-slate-900 flex items-center gap-2">
+                        <Bell className="h-6 w-6 text-sky-500" /> Notification Settings</h1>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                        Channel Configuration
                     </p>
                 </div>
             </div>
 
             {/* Channels Section */}
-            <Card className="border-slate-200 shadow-sm overflow-hidden">
-                <CardHeader className="bg-slate-50/50 border-b border-slate-100">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <Bell className="h-5 w-5 text-blue-600" />
+            <Card className="border-slate-200 shadow-sm overflow-hidden rounded-xl">
+                <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-6">
+                    <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <Bell className="h-5 w-5 text-sky-500" />
                         Notification Channels
                     </CardTitle>
-                    <CardDescription>
-                        Choose how you want to receive notifications.
+                    <CardDescription className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+                        Transmission Protocol Selection
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="divide-y divide-slate-100 p-0">

@@ -1,23 +1,73 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, User, Calendar, Clock, Share2 } from "lucide-react";
 import Layout from "../../components/Layout";
 import { Button } from "../../components/ui/button";
 import PageMetadata from "../../components/PageMetadata";
-import { blogPosts } from "../../data/blogPosts";
+import ConfigService from "../../services/ConfigService";
+
+interface ApiBlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  category: string;
+  image: string | null;
+  read_time?: string | null;
+  created_at: string;
+}
 
 export default function BlogPostPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const post = blogPosts.find((p) => p.id === id);
+  const [post, setPost] = useState<ApiBlogPost | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    // Scroll to top when loading a new post
     window.scrollTo(0, 0);
+    if (!id) return;
+
+    const fetchPost = async () => {
+      setLoading(true);
+      try {
+        const apiUrl = ConfigService.getApiUrl();
+        const res = await fetch(`${apiUrl}/api/blogs/${id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.blog) {
+            setPost(data.blog);
+            setLoading(false);
+            return;
+          }
+        }
+        setNotFound(true);
+      } catch (error) {
+        console.error("Fetch error:", error);
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
   }, [id]);
 
-  if (!post) {
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+          <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-500 font-medium">Loading article...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (notFound || !post) {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
@@ -31,6 +81,12 @@ export default function BlogPostPage() {
     );
   }
 
+  const displayDate = new Date(post.created_at).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   // Create article schema JSON
   const articleSchema = {
     "@context": "https://schema.org",
@@ -38,21 +94,21 @@ export default function BlogPostPage() {
     headline: post.title,
     description: post.excerpt,
     author: {
-      "@type": "Organization",
-      name: "ColabWize",
+      "@type": "Person",
+      name: post.author,
     },
     publisher: {
       "@type": "Organization",
       name: "ColabWize",
     },
-    datePublished: post.date,
-    mainEntityOfPage: `https://app.colabwize.com/resources/blogs/${post.id}`,
+    datePublished: post.created_at,
+    mainEntityOfPage: `https://app.colabwize.com/resources/blogs/${post.slug}`,
   };
 
   return (
     <Layout>
-      <PageMetadata 
-        title={post.title} 
+      <PageMetadata
+        title={post.title}
         description={post.excerpt}
         ogType="article"
       >
@@ -64,7 +120,7 @@ export default function BlogPostPage() {
         {/* Header / Hero */}
         <div className="relative h-[400px] w-full bg-gray-900">
           <img
-            src={post.image}
+            src={post.image || ""}
             alt={post.title}
             className="w-full h-full object-cover opacity-60"
           />
@@ -80,9 +136,6 @@ export default function BlogPostPage() {
               <span className="px-3 py-1 bg-green-600 rounded-full text-xs font-semibold">
                 {post.category}
               </span>
-              <span className="flex items-center gap-1 text-sm text-gray-300">
-                <Clock className="h-4 w-4" /> {post.readTime}
-              </span>
             </div>
             <h1 className="text-3xl md:text-5xl font-bold mb-6 max-w-4xl leading-tight">
               {post.title}
@@ -96,7 +149,7 @@ export default function BlogPostPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-gray-400" />
-                <span>{post.date}</span>
+                <span>{displayDate}</span>
               </div>
             </div>
           </div>

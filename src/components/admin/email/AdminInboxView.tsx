@@ -135,20 +135,20 @@ export const AdminInboxView: React.FC = () => {
       {/* Sidebar (Gmail Style) */}
       <div className="w-64 flex flex-col border-r border-gray-100 bg-[#f8f9fa] shrink-0">
         <div className="p-4">
-          <button className="w-full py-3 px-6 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md flex items-center gap-3 transition-all">
-            <Mail className="text-gray-600" size={20} />
-            <span className="font-semibold text-gray-700">Compose</span>
+          <button className="w-full py-3 px-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md flex items-center gap-3 transition-all group">
+            <Mail className="text-slate-500 group-hover:text-sky-500 transition-colors" size={18} />
+            <span className="font-semibold text-slate-700">Compose</span>
           </button>
         </div>
 
         <nav className="flex-1 px-2 space-y-0.5 mt-2 overflow-y-auto custom-scrollbar">
           <button 
             onClick={() => { setFilterStatus('open'); setSelectedThread(null); }}
-            className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium transition-colors ${filterStatus === 'open' ? 'bg-[#e8f0fe] text-[#1967d2]' : 'text-gray-600 hover:bg-gray-100'}`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-r-full text-sm font-medium transition-colors ${filterStatus === 'open' ? 'bg-sky-50 text-sky-600' : 'text-slate-500 hover:bg-slate-100/50'}`}
           >
             <Inbox size={18} />
             <span className="flex-1 text-left">All Inbox</span>
-            <span className={`text-xs font-bold ${filterStatus === 'open' ? 'text-[#1967d2]' : 'text-gray-500'}`}>{messages.length}</span>
+            <span className={`text-[10px] font-bold tracking-wider ${filterStatus === 'open' ? 'text-sky-600' : 'text-slate-400'}`}>{messages.length}</span>
           </button>
 
           
@@ -156,7 +156,7 @@ export const AdminInboxView: React.FC = () => {
 
           <button 
             onClick={() => { setFilterStatus('resolved'); setSelectedThread(null); }}
-            className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-full text-sm font-medium transition-colors ${filterStatus === 'resolved' ? 'bg-[#e8f0fe] text-[#1967d2]' : 'text-gray-600 hover:bg-gray-100'}`}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-r-full text-sm font-medium transition-colors ${filterStatus === 'resolved' ? 'bg-sky-50 text-sky-600' : 'text-slate-500 hover:bg-slate-100/50'}`}
           >
             <CheckCircle2 size={18} />
             <span className="flex-1 text-left">Resolved</span>
@@ -172,7 +172,7 @@ export const AdminInboxView: React.FC = () => {
             <input 
               type="text" 
               placeholder="Search in mail"
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-lg focus:bg-white focus:ring-1 focus:ring-blue-500/20 text-sm transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-lg focus:bg-white focus:ring-1 focus:ring-sky-500/20 text-sm transition-all outline-none"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -206,14 +206,14 @@ export const AdminInboxView: React.FC = () => {
                   } ${!msg.is_read ? 'bg-[#f2f6fc]' : ''}`}
                 >
                   <div className="flex justify-between items-center">
-                    <span className={`text-sm truncate ${!msg.is_read ? 'text-gray-900 font-bold' : 'text-gray-600 font-medium'}`}>
+                    <span className={`text-sm truncate ${!msg.is_read ? 'text-slate-900 font-bold' : 'text-slate-500 font-medium'}`}>
                       {msg.sender_email.split('@')[0]}
                     </span>
-                    <span className={`text-xs whitespace-nowrap ${!msg.is_read ? 'text-blue-600 font-bold' : 'text-gray-500'}`}>
+                    <span className={`text-[10px] uppercase tracking-wider whitespace-nowrap ${!msg.is_read ? 'text-sky-600 font-bold' : 'text-slate-400 font-medium'}`}>
                       {new Date(msg.created_at || msg.received_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                     </span>
                   </div>
-                  <div className={`text-sm truncate ${!msg.is_read ? 'text-gray-900 font-bold' : 'text-gray-700'}`}>{msg.subject}</div>
+                  <div className={`text-sm truncate ${!msg.is_read ? 'text-slate-900 font-bold' : 'text-slate-700 font-medium'}`}>{msg.subject}</div>
                   <div className="text-xs text-gray-500 line-clamp-1">{msg.message_text.replace(/<[^>]+>/g, '')}</div>
                 </div>
               ))}
@@ -268,10 +268,10 @@ export const AdminInboxView: React.FC = () => {
                         <div className="flex-1 space-y-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-gray-900">{msg.sender_email.split('@')[0]}</span>
-                              <span className="text-xs text-gray-400">&lt;{msg.sender_email}&gt;</span>
+                              <span className="font-semibold text-slate-900">{msg.sender_email.split('@')[0]}</span>
+                              <span className="text-[10px] font-medium text-slate-400 tracking-wider"> &lt;{msg.sender_email}&gt;</span>
                             </div>
-                            <span className="text-xs text-gray-500">{new Date(msg.created_at || msg.received_at).toLocaleString()}</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(msg.created_at || msg.received_at).toLocaleString()}</span>
                           </div>
                           <div 
                             className="text-[15px] leading-relaxed text-gray-800 prose prose-blue max-w-none break-words"
@@ -300,9 +300,9 @@ export const AdminInboxView: React.FC = () => {
                         <button 
                           onClick={handleReply}
                           disabled={!replyMessage || isSending}
-                          className="px-6 py-2 bg-[#1a73e8] text-white rounded-md text-sm font-semibold hover:bg-[#185abd] shadow-sm flex items-center gap-2 transition-all disabled:opacity-50"
+                          className="px-6 py-2.5 bg-sky-500 text-white rounded-lg text-[11px] font-bold uppercase tracking-widest hover:bg-sky-600 shadow-sm flex items-center gap-2 transition-all disabled:opacity-50"
                         >
-                          {isSending ? <Loader2 className="animate-spin" size={16} /> : <Reply size={16} />}
+                          {isSending ? <Loader2 className="animate-spin" size={14} /> : <Reply size={14} />}
                           Send Message
                         </button>
                       </div>

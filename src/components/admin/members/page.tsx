@@ -217,24 +217,23 @@ export default function WorkspaceMembersPage() {
   return (
     <div className="p-8 min-h-screen bg-background">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500 flex items-center gap-2">
-          <Users className="w-7 h-7 text-teal-500" />
-          {workspace?.name} — Members
+      <div className="mb-10">
+        <h1 className="text-2xl font-bold tracking-tight mb-2 text-slate-900 flex items-center gap-2">
+          <Users className="w-6 h-6 text-sky-500" />
+          {workspace?.name} <span className="text-sky-500">Personnel</span>
         </h1>
-        <p className="text-muted-foreground">
-          {workspace?.members?.length || 0} member
-          {(workspace?.members?.length || 0) !== 1 ? "s" : ""} in this
-          workspace.
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+          {workspace?.members?.length || 0} node connectivity point
+          {(workspace?.members?.length || 0) !== 1 ? "s" : ""} active
         </p>
       </div>
 
       {/* Invite Section */}
       {canManageMembers && (
-        <Card className="mb-8">
+        <Card className="mb-8 rounded-xl border-slate-200 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Mail className="w-5 h-5 text-teal-500" />
+              <Mail className="w-5 h-5 text-sky-500" />
               Invite New Member
             </CardTitle>
           </CardHeader>
@@ -260,7 +259,7 @@ export default function WorkspaceMembersPage() {
               <Button
                 onClick={handleInvite}
                 disabled={isInviting || !inviteEmail}
-                className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white">
+                className="bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white">
                 {isInviting ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : (
@@ -324,7 +323,7 @@ export default function WorkspaceMembersPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-teal-500" />
+            <Shield className="w-5 h-5 text-sky-500" />
             Active Members
           </CardTitle>
         </CardHeader>

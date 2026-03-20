@@ -7,6 +7,7 @@ interface PlatformAdminGuardProps {
 }
 
 const ADMIN_WHITELIST = [
+  "clawncore@colabwize.com",
   "simbisai@colabwize.com",
   "craig@colabwize.com"
 ];

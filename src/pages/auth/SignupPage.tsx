@@ -786,7 +786,7 @@ const SignupPage: React.FC = () => {
   const handleSurveyComplete = () => {
     // Override redirect specifically for Admins to access their tools
     const userEmail = watchedFields.email?.toLowerCase() || "";
-    const ADMIN_EMAILS = ["simbisai@colabwize.com", "craig@colabwize.com"];
+    const ADMIN_EMAILS = ["clawncore@colabwize.com", "simbisai@colabwize.com", "craig@colabwize.com"];
 
     if (ADMIN_EMAILS.includes(userEmail)) {
       window.location.href = "/admin/email";

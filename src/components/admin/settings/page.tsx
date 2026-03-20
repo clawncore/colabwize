@@ -127,18 +127,18 @@ export default function WorkspaceSettingsPage() {
     return (
         <div className="w-full p-8 min-h-screen bg-background">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500 flex items-center gap-2">
-                    <Settings className="w-7 h-7 text-teal-500" />
-                    Workspace Settings
+            <div className="mb-10">
+                <h1 className="text-2xl font-bold tracking-tight mb-2 text-slate-900 flex items-center gap-2">
+                    <Settings className="w-6 h-6 text-sky-500" />
+                    Workspace Configuration
                 </h1>
-                <p className="text-muted-foreground">
-                    Manage your workspace configuration and preferences.
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Manage global environment variables and preferences.
                 </p>
             </div>
 
             {/* General Settings */}
-            <Card className="mb-6">
+            <Card className="mb-8 rounded-xl border-slate-200 shadow-sm">
                 <CardHeader>
                     <CardTitle className="text-lg">General</CardTitle>
                 </CardHeader>
@@ -197,7 +197,7 @@ export default function WorkspaceSettingsPage() {
                         <Button
                             onClick={handleSave}
                             disabled={isSaving || !hasChanges}
-                            className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white"
+                            className="bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-[10px] uppercase tracking-widest shadow-sm transition-all"
                         >
                             {isSaving ? (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

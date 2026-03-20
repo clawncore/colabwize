@@ -120,12 +120,12 @@ const CallbackPage: React.FC = () => {
                   }
 
                   // Admin Redirection
-                  const ADMIN_EMAILS = ["simbisai@colabwize.com", "craig@colabwize.com"];
+                  const ADMIN_EMAILS = ["clawncore@colabwize.com", "simbisai@colabwize.com", "craig@colabwize.com"];
                   const userEmail = user.email?.toLowerCase() || "";
                   
                   if (ADMIN_EMAILS.includes(userEmail)) {
                     console.log("Admin authenticated, redirecting to admin dashboard");
-                    window.location.href = "/admin/email";
+                    window.location.href = "/admin";
                     return;
                   }
 

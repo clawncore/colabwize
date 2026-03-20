@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Layout from "../../components/Layout";
+import { motion, AnimatePresence } from "framer-motion";
 import { DraftComparisonPanel } from "../../components/originality/DraftComparisonPanel";
 import {
   DraftComparisonService,
@@ -95,42 +96,63 @@ export const DraftComparisonPage: React.FC = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="section-padding bg-slate-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-15">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,#4f46e555_0%,transparent_50%)]"></div>
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-        </div>
+      <section className="pt-24 pb-20 lg:pt-32 lg:pb-32 bg-slate-50 border-b border-slate-200 relative overflow-hidden">
+        <div className="container-custom relative z-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-left"
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 font-bold text-[10px] uppercase mb-8 tracking-widest">
+                <ShieldCheck className="w-3.5 h-3.5" /> Authorship Integrity Protocol
+              </div>
+              <h1 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-[1.05] text-slate-900">
+                Integrity at <br />
+                <span className="text-blue-600">
+                  Every Version.
+                </span>
+              </h1>
+              <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-xl leading-relaxed font-medium">
+                ColabWize’s version comparison engine provides high-resolution
+                insights into your writing evolution, safeguards against
+                self-plagiarism, and builds a defensible history for every
+                manuscript.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  size="lg"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-7 rounded-2xl text-lg shadow-xl shadow-blue-500/10 transition-all active:scale-95">
+                  Start Analysis <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-bold px-8 py-7 rounded-2xl text-lg shadow-sm">
+                  View Workflow
+                </Button>
+              </div>
+            </motion.div>
 
-        <div className="container-custom pt-16 relative z-10 text-center">
-          <div className="max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs uppercase mb-8 tracking-widest backdrop-blur-sm">
-              <ShieldCheck className="w-4 h-4" /> Authorship Integrity Protocol
-            </div>
-            <h1 className="text-4xl md:text-7xl font-black mb-8 tracking-tighter leading-[1.1]">
-              Integrity at <br />
-              <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">
-                Every Version.
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-slate-300 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
-              ColabWize’s version comparison engine provides high-resolution
-              insights into your writing evolution, safeguards against
-              self-plagiarism, and builds a defensible history for every
-              manuscript.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-7 rounded-2xl text-lg shadow-xl shadow-blue-500/20 transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">
-                Start Analysis <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold px-10 py-7 rounded-2xl text-lg backdrop-blur-md">
-                View Certification Workflow
-              </Button>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="relative z-10 rounded-[3rem] overflow-hidden border border-slate-200 shadow-2xl bg-white p-4">
+                <img 
+                  src="/minimal_document_comparison_vector_1773997443325.png" 
+                  alt="Minimal Document Comparison" 
+                  className="w-full h-auto object-cover rounded-[2rem]"
+                />
+              </div>
+              
+              {/* Soft decorative background glow */}
+              <div className="absolute -top-10 -right-10 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl"></div>
+              <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-indigo-200/20 rounded-full blur-[80px]"></div>
+            </motion.div>
           </div>
         </div>
       </section>

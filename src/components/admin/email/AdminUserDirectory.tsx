@@ -95,7 +95,7 @@ export const AdminUserDirectory: React.FC<AdminUserDirectoryProps> = ({ onEmailU
           <input
             type="text"
             placeholder="Search by name..."
-            className="w-full h-11 pl-10 pr-4 bg-card border border-border rounded-2xl text-sm font-medium focus:border-sky-500 transition-all outline-none"
+            className="w-full h-11 pl-10 pr-4 bg-card border border-border rounded-xl text-sm font-medium focus:border-sky-500 transition-all outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -109,10 +109,10 @@ export const AdminUserDirectory: React.FC<AdminUserDirectoryProps> = ({ onEmailU
         {/* Filter Toggle */}
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-2 px-5 h-11 rounded-2xl text-[11px] font-black uppercase tracking-widest border transition-all ${
+          className={`flex items-center gap-2 px-5 h-11 rounded-xl text-[11px] font-bold uppercase tracking-widest border transition-all ${
             showFilters || activeFilterCount > 0
-              ? "bg-sky-500 text-white border-sky-500 shadow-lg shadow-sky-500/20"
-              : "bg-card border-border text-muted-foreground hover:text-foreground"
+              ? "bg-sky-500 text-white border-sky-500 shadow-sm"
+              : "bg-white border-slate-200 text-slate-500 hover:text-slate-900"
           }`}
         >
           <Filter size={14} />
@@ -121,7 +121,7 @@ export const AdminUserDirectory: React.FC<AdminUserDirectoryProps> = ({ onEmailU
         </button>
 
         {activeFilterCount > 0 && (
-          <button onClick={clearFilters} className="flex items-center gap-1 px-4 h-11 rounded-2xl text-[11px] font-black uppercase tracking-widest border border-border bg-card text-muted-foreground hover:text-red-400 hover:border-red-400/30 transition-all">
+          <button onClick={clearFilters} className="flex items-center gap-1 px-4 h-11 rounded-xl text-[11px] font-bold uppercase tracking-widest border border-slate-200 bg-white text-slate-500 hover:text-red-500 hover:border-red-100 transition-all">
             <X size={14} /> Clear
           </button>
         )}
@@ -145,13 +145,13 @@ export const AdminUserDirectory: React.FC<AdminUserDirectoryProps> = ({ onEmailU
                     <button
                       key={p}
                       onClick={() => setPlanFilter(p)}
-                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                      className={`px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest border transition-all ${
                         planFilter === p
                           ? "bg-sky-500 text-white border-sky-500"
-                          : "bg-secondary border-border text-muted-foreground hover:text-foreground"
+                          : "bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-900"
                       }`}
                     >
-                      {p === "all" ? "All" : p === "paid" ? "Paid ✓" : "Free"}
+                      {p === "all" ? "All" : p === "paid" ? "Paid" : "Free"}
                     </button>
                   ))}
                 </div>
@@ -159,7 +159,7 @@ export const AdminUserDirectory: React.FC<AdminUserDirectoryProps> = ({ onEmailU
 
               {/* Date Range */}
               <div className="space-y-1.5">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1"><Calendar size={10} /> Date Joined From</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1"><Calendar size={10} /> Date Joined From</p>
                 <input
                   type="date"
                   value={dateFrom}
@@ -168,7 +168,7 @@ export const AdminUserDirectory: React.FC<AdminUserDirectoryProps> = ({ onEmailU
                 />
               </div>
               <div className="space-y-1.5">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1"><Calendar size={10} /> To</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1"><Calendar size={10} /> To</p>
                 <input
                   type="date"
                   value={dateTo}
@@ -182,23 +182,23 @@ export const AdminUserDirectory: React.FC<AdminUserDirectoryProps> = ({ onEmailU
       </AnimatePresence>
 
       {/* Table */}
-      <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-xl">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-border">
-          <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">
-            Showing <span className="text-foreground">{users.length}</span> of <span className="text-foreground">{total}</span> users
+      <div className="admin-table-container">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-white">
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+            Showing <span className="text-slate-900">{users.length}</span> of <span className="text-slate-900">{total}</span> users
           </p>
           {isLoading && <Loader2 size={14} className="animate-spin text-sky-500" />}
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <table className="admin-table">
             <thead>
-              <tr className="bg-secondary/30">
-                <th className="px-6 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">Name</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">Email</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">Date Joined</th>
-                <th className="px-6 py-4 text-left text-[10px] font-black text-muted-foreground uppercase tracking-widest">Subscription</th>
-                <th className="px-6 py-4 text-right text-[10px] font-black text-muted-foreground uppercase tracking-widest">Actions</th>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Date Joined</th>
+                <th>Subscription</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -226,10 +226,10 @@ export const AdminUserDirectory: React.FC<AdminUserDirectoryProps> = ({ onEmailU
                     {/* Name */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-xl bg-secondary border border-border flex items-center justify-center text-sky-500 font-black text-base shrink-0">
+                        <div className="h-9 w-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-sky-500 font-bold text-base shrink-0">
                           {user.full_name?.charAt(0)?.toUpperCase() || <Shield size={14} />}
                         </div>
-                        <p className="font-bold text-sm text-foreground group-hover:text-sky-500 transition-colors">
+                        <p className="font-semibold text-sm text-slate-800 group-hover:text-sky-600 transition-colors">
                           {user.full_name || "—"}
                         </p>
                       </div>
@@ -255,35 +255,35 @@ export const AdminUserDirectory: React.FC<AdminUserDirectoryProps> = ({ onEmailU
                         
                         if (lowerPlan.includes("free") || lowerPlan === "free") {
                           return (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary border border-border text-muted-foreground rounded-full text-[10px] font-black uppercase tracking-widest">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 text-slate-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
                               <UserX size={11} strokeWidth={3} />
                               Free
                             </div>
                           );
                         }
 
-                        let badgeColor = "bg-emerald-500/10 border-emerald-500/20 text-emerald-600";
+                        let badgeColor = "bg-emerald-50 border-emerald-100 text-emerald-600";
                         let displayPlan = rawPlan.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
                         
                         if (lowerPlan.includes("premium")) {
-                          badgeColor = "bg-fuchsia-500/10 border-fuchsia-500/20 text-fuchsia-600";
+                          badgeColor = "bg-fuchsia-50 border-fuchsia-100 text-fuchsia-600";
                           displayPlan = "Premium";
                         } else if (lowerPlan.includes("plus")) {
-                          badgeColor = "bg-sky-500/10 border-sky-500/20 text-sky-600";
+                          badgeColor = "bg-sky-50 border-sky-100 text-sky-600";
                           displayPlan = "Plus";
                         } else if (lowerPlan.includes("pro")) {
-                          badgeColor = "bg-violet-500/10 border-violet-500/20 text-violet-600";
+                          badgeColor = "bg-violet-50 border-violet-100 text-violet-600";
                           displayPlan = "Pro";
                         }
 
                         return (
-                          <div className={`inline-flex items-center gap-1.5 px-3 py-1 border rounded-full text-[10px] font-black uppercase tracking-widest ${badgeColor}`}>
+                          <div className={`inline-flex items-center gap-1.5 px-3 py-1 border rounded-lg text-[10px] font-bold uppercase tracking-widest ${badgeColor}`}>
                             <UserCheck size={11} strokeWidth={3} />
                             {displayPlan}
                           </div>
                         );
                       })() : (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary border border-border text-muted-foreground rounded-full text-[10px] font-black uppercase tracking-widest">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 text-slate-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
                           <UserX size={11} strokeWidth={3} />
                           Free
                         </div>
@@ -294,10 +294,10 @@ export const AdminUserDirectory: React.FC<AdminUserDirectoryProps> = ({ onEmailU
                     <td className="px-6 py-4 text-right">
                       <button 
                         onClick={() => onEmailUser?.(user.email, user.full_name)}
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-secondary hover:bg-sky-500 hover:text-white text-muted-foreground transition-all shadow-sm"
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-slate-50 hover:bg-sky-500 hover:text-white text-slate-400 transition-all border border-slate-100"
                         title="Send Direct Email"
                       >
-                        <Mail size={14} strokeWidth={2.5} />
+                        <Mail size={14} strokeWidth={2} />
                       </button>
                     </td>
                   </tr>

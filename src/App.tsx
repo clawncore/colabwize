@@ -138,6 +138,10 @@ import WorkspaceSettingsPage from "./components/admin/settings/page";
 import WorkspaceActivityPage from "./components/admin/activity/page";
 import { AdminRoute } from "./components/auth/AdminRoute";
 import PlatformAdminGuard from "./components/auth/PlatformAdminGuard";
+import { AdminSettingsPage } from "./components/admin/settings/AdminSettingsPage";
+import { AdminLayout } from "./components/admin/layout/AdminLayout";
+import { AdminProfilePage } from "./components/admin/settings/AdminProfilePage";
+import { AdminSecurityPage } from "./components/admin/settings/AdminSecurityPage";
 
 // Other imports
 import NotificationsPage from "./components/workspace/notifications/NotificationsPage";
@@ -597,74 +601,23 @@ function App() {
                         path="/admin"
                         element={
                           <PlatformAdminGuard>
-                            <AdminDashboardPage />
+                            <AdminLayout />
                           </PlatformAdminGuard>
                         }
-                      />
-                      <Route
-                        path="/admin/inbox"
-                        element={
-                          <PlatformAdminGuard>
-                            <AdminInboxView />
-                          </PlatformAdminGuard>
-                        }
-                      />
-                      <Route
-                        path="/admin/users"
-                        element={
-                          <PlatformAdminGuard>
-                            <AdminUserDirectory />
-                          </PlatformAdminGuard>
-                        }
-                      />
-                      <Route
-                        path="/admin/blogs"
-                        element={
-                          <PlatformAdminGuard>
-                            <AdminBlogManagerView />
-                          </PlatformAdminGuard>
-                        }
-                      />
-                      <Route
-                        path="/admin/marketing"
-                        element={
-                          <PlatformAdminGuard>
-                            <AdminMarketingHubView />
-                          </PlatformAdminGuard>
-                        }
-                      />
-                      <Route
-                        path="/admin/email"
-                        element={
-                          <PlatformAdminGuard>
-                            <AdminEmailCenter />
-                          </PlatformAdminGuard>
-                        }
-                      />
-                      <Route
-                        path="/admin/broadcast"
-                        element={
-                          <PlatformAdminGuard>
-                            <AdminEmailCenter />
-                          </PlatformAdminGuard>
-                        }
-                      />
-                      <Route
-                        path="/admin/analytics"
-                        element={
-                          <PlatformAdminGuard>
-                            <AdminEmailCenter />
-                          </PlatformAdminGuard>
-                        }
-                      />
-                      <Route
-                        path="/admin/email-logs"
-                        element={
-                          <PlatformAdminGuard>
-                            <AdminEmailCenter />
-                          </PlatformAdminGuard>
-                        }
-                      />
+                      >
+                        <Route index element={<AdminDashboardPage />} />
+                        <Route path="settings" element={<AdminSettingsPage />} />
+                        <Route path="inbox" element={<AdminInboxView />} />
+                        <Route path="email" element={<AdminEmailCenter />} />
+                        <Route path="blogs" element={<AdminBlogManagerView />} />
+                        <Route path="users" element={<AdminUserDirectory />} />
+                        <Route path="marketing" element={<AdminMarketingHubView />} />
+                        <Route path="broadcast" element={<AdminEmailCenter />} />
+                        <Route path="analytics" element={<AdminEmailCenter />} />
+                        <Route path="email-logs" element={<AdminEmailCenter />} />
+                        <Route path="profile" element={<AdminProfilePage />} />
+                        <Route path="security" element={<AdminSecurityPage />} />
+                      </Route>
 
                       {/* Unsubscribe Route - Public */}
                       <Route path="/unsubscribe" element={<UnsubscribePage />} />
