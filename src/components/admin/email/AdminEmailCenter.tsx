@@ -569,6 +569,7 @@ export const AdminEmailCenter: React.FC = () => {
                             name: "Resolution Confirmation",
                             icon: <ShieldCheck size={20} className="text-emerald-500" />,
                             thumbnail: "https://images.unsplash.com/photo-1557200134-90327ee9fafa?w=400&h=200&fit=crop",
+                            subject: "Issue Resolved: Your support ticket has been closed",
                             message: `<h2>Issue Resolved Successfully</h2><p>Hello,</p><p>We are pleased to inform you that your recent support inquiry has been fully addressed and resolved by our technical team.</p><p><strong>Resolution Details:</strong> The reported behavior was investigated and a localized patch has been deployed to your workspace environment. All systems are now performing within optimal parameters.</p>
                             <div style="margin: 30px 0; text-align: center;">
                               <a href="https://colabwize.com/contact" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Contact Support Team</a>
@@ -579,6 +580,7 @@ export const AdminEmailCenter: React.FC = () => {
                             name: "New User Onboarding Guide",
                             icon: <span className="font-bold text-amber-500 text-lg">?</span>,
                             thumbnail: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=200&fit=crop",
+                            subject: "Welcome to ColabWize: Your Quick-Start Guide",
                             message: `<h2>Welcome to the Platform</h2><p>We're thrilled to have you onboard! To help you get the most out of ColabWize, we've compiled a few essential resources for your first 48 hours:</p><ul><li><strong>Quick Start Video:</strong> A 3-minute overview of the dashboard.</li><li><strong>Knowledge Base:</strong> Searchable documentation for every feature.</li><li><strong>Community Forum:</strong> Connect with other researchers and power users.</li></ul>
                             <div style="margin: 30px 0; text-align: center;">
                               <a href="https://colabwize.com/resources/help-center" style="background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Start Onboarding Now</a>
@@ -591,6 +593,7 @@ export const AdminEmailCenter: React.FC = () => {
                             name: "Plan Upgrade Confirmation",
                             icon: <Activity size={20} className="text-sky-500" />,
                             thumbnail: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=200&fit=crop",
+                            subject: "Billing Update: Subscription Upgrade Successful",
                             message: `<h2>Upgrade Successful</h2><p>Hello,</p><p>This email confirms that your ColabWize account has been successfully upgraded to the <strong>Premium Tier</strong>.</p><p><strong>New Features Unlocked:</strong></p><ul><li>Unlimited AI Drafting</li><li>Advanced Citation Exports</li><li>Priority Engineering Support</li></ul><p>Your new billing cycle begins today. You can manage your subscription and download invoices at any time from your billing dashboard.</p>
                             <div style="margin: 30px 0; text-align: center;">
                               <a href="https://colabwize.com/dashboard/settings/billing" style="background-color: #0ea5e9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">View Billing Information</a>
@@ -601,6 +604,7 @@ export const AdminEmailCenter: React.FC = () => {
                             name: "Payment Overdue Notice",
                             icon: <AlertTriangle size={20} className="text-red-500" />,
                             thumbnail: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400&h=200&fit=crop",
+                            subject: "Urgent Action Required: Payment Method Overdue",
                             message: `<h2>Action Required: Payment Overdue</h2><p>Hello,</p><p>We were unable to process your most recent subscription payment. To avoid any interruption to your research workspace and AI access, please update your payment information immediately.</p>
                             <div style="margin: 30px 0; text-align: center;">
                               <a href="https://colabwize.com/dashboard/settings/billing" style="background-color: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Update Payment Method</a>
@@ -727,7 +731,13 @@ export const AdminEmailCenter: React.FC = () => {
                                   </div>
                                   <div className="px-3 py-2 bg-slate-50/50 border border-slate-100/50 rounded-lg">
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight mb-1">Content Snippet</p>
-                                    <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed" dangerouslySetInnerHTML={{ __html: tpl.message.replace(/<[^>]*>?/gm, ' ') }} />
+                                    <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed" 
+                                      dangerouslySetInnerHTML={{ 
+                                        __html: tpl.message.includes('<h2>') 
+                                          ? (tpl.message.match(/<h2>(.*?)<\/h2>/)?.[1] || tpl.message.replace(/<[^>]*>?/gm, ' ')) 
+                                          : tpl.message.replace(/<[^>]*>?/gm, ' ')
+                                      }} 
+                                    />
                                   </div>
                                 </div>
 
