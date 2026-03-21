@@ -102,17 +102,13 @@ export default function ChatWithPdfsPage() {
                 className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in"
                 style={{ animationDelay: "0.4s" }}>
                 <Button
-                  size="lg"
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-7 rounded-2xl text-lg shadow-xl shadow-blue-500/20 transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1"
                   asChild>
                   <RouterLink to="/signup">
                     Start Free Analysis <ArrowRight className="ml-2 w-5 h-5" />
                   </RouterLink>
                 </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold px-10 py-7 rounded-2xl text-lg backdrop-blur-md">
+                <Button className="bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold px-10 py-7 rounded-2xl text-lg backdrop-blur-md">
                   View Security Specs
                 </Button>
               </div>
@@ -371,14 +367,11 @@ export default function ChatWithPdfsPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button
-                    size="lg"
                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-12 py-8 rounded-2xl text-xl shadow-xl border-b-4 border-blue-800 active:border-b-0 active:translate-y-1"
                     asChild>
                     <RouterLink to="/signup">Deploy Your Engine</RouterLink>
                   </Button>
                   <Button
-                    variant="outline"
-                    size="lg"
                     className="bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold px-12 py-8 rounded-2xl text-xl backdrop-blur-sm"
                     asChild>
                     <RouterLink to="/contact">Request Lab Demo</RouterLink>

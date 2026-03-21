@@ -107,25 +107,17 @@ export function CalendarView({
 
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
-              size="sm"
               onClick={goToToday}
               className="h-8 text-xs font-bold border-slate-200 bg-slate-300">
               Today
             </Button>
             <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
               <Button
-                variant="ghost"
-                size="sm"
                 onClick={prevPeriod}
                 className="h-8 w-8 p-0 rounded-none border-r border-slate-100">
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={nextPeriod}
-                className="h-8 w-8 p-0 rounded-none">
+              <Button onClick={nextPeriod} className="h-8 w-8 p-0 rounded-none">
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>

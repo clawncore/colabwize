@@ -131,7 +131,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   lastAuditReport,
 }) => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const ydocRef = useRef<Y.Doc | null>(null);
   const providerRef = useRef<HocuspocusProvider | null>(null);
   const [collabReady, setCollabReady] = useState(false); // Collaboration State
@@ -178,20 +178,22 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     const h = Math.abs(hash) % 360;
     return hslToHex(h, 70, 50);
   }, [user?.id]);
-
   // Handle Hocuspocus Lifecycle
   useEffect(() => {
-    if (!isCollaborative || !project.id) {
-      providerRef.current = null;
-      ydocRef.current = null;
-      setCollabReady(false);
-      setIsSynced(false);
-      isSyncedRef.current = false;
+    if (!isCollaborative || !project.id || !token) {
+      if (!isCollaborative || !project.id) {
+        providerRef.current = null;
+        ydocRef.current = null;
+        setCollabReady(false);
+        setIsSynced(false);
+        isSyncedRef.current = false;
+      }
       return;
     }
 
     console.log(
       `[HP Lifecycle] Initializing provider for project: ${project.id}`,
+      { isCollaborative, projectId: project.id },
     );
     setCollabStatus("connecting");
     setIsSynced(false);
@@ -199,29 +201,8 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     isSyncedRef.current = false;
     setCollabError(null);
 
-    const getSupabaseToken = () => {
-      const auth_token = localStorage.getItem("auth_token");
-      if (auth_token) return auth_token;
-
-      const supabaseKey = Object.keys(localStorage).find(
-        (k) => k.startsWith("sb-") && k.endsWith("-auth-token"),
-      );
-      if (supabaseKey) {
-        try {
-          const sessionData = JSON.parse(
-            localStorage.getItem(supabaseKey) || "{}",
-          );
-          return sessionData?.access_token || "";
-        } catch (e) {
-          console.error("Failed to parse Supabase session", e);
-        }
-      }
-      return "";
-    };
-
-    const authToken = getSupabaseToken();
     console.log(
-      `[HP Auth] Initializing with token length: ${authToken.length}`,
+      `[HP Auth] Initializing with token length: ${token?.length || 0}`,
     );
 
     const freshYdoc = new Y.Doc();
@@ -231,7 +212,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       url: ConfigService.getCollabUrl(),
       name: `project-${project.id}`,
       document: freshYdoc,
-      token: authToken,
+      token: token,
       onStatus: (item) => {
         console.log(`[HP Status] Project ${project.id}:`, item.status);
         setCollabStatus(item.status);
@@ -284,7 +265,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       providerRef.current = null;
       ydocRef.current = null;
     };
-  }, [project.id, isCollaborative, retryCount]);
+  }, [project.id, isCollaborative, retryCount, token]);
 
   useEffect(() => {
     if (isCollaborative && !isSynced) {
@@ -344,6 +325,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const hasInitializedContentRef = useRef(false);
   const currentProjectIdRef = useRef<string | null>(null);
 
+  // Reset initialization flag when collaboration mode or project changes
+  useEffect(() => {
+    console.log("[Collab] Mode or Project changed, resetting init flag", {
+      isCollaborative,
+      projectId: project.id,
+    });
+    hasInitializedContentRef.current = false;
+  }, [isCollaborative, project.id]);
+
   // Layout State
 
   // Sync state when project changes
@@ -385,18 +375,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   color: cursorColor,
                 },
               }),
-              AuthorshipExtension.configure({
-                user: {
-                  id: user?.id,
-                  name:
-                    user?.user_metadata?.full_name ||
-                    user?.email ||
-                    "Anonymous",
-                  color: cursorColor,
-                },
-              } as any),
             ]
           : []),
+        AuthorshipExtension.configure({
+          user: {
+            id: user?.id || "local-user",
+            name: user?.user_metadata?.full_name || user?.email || "Anonymous",
+            color: cursorColor,
+          },
+        } as any),
         HighlightExtension,
         UserHighlightExtension,
         CharacterCount,
@@ -438,10 +425,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         PlaceholderMarkExtension,
         Superscript,
         Subscript,
-        BulletList,
-        OrderedList,
-        ListItem,
         Blockquote,
+        ListItem,
+        OrderedList,
+        BulletList,
         CitationNode,
         BibliographyEntry,
         CitationLifecycleExtension,
@@ -449,9 +436,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         GrammarExtension, // AI Grammar Checker
         CitationScannerExtension,
       ],
-      content: isCollaborative
-        ? undefined
-        : formatContentForTiptap(project.content),
+      content: formatContentForTiptap(project.content),
       onUpdate: ({ editor, transaction }) => {
         if (
           transaction.getMeta("normalization") ||
@@ -659,7 +644,63 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       currentProjectIdRef.current = project.id;
 
       const initCollabRegistry = async () => {
+        console.log("[Collab] initCollabRegistry starting...", {
+          isSynced,
+          hasInitialized: hasInitializedContentRef.current,
+          projectId: project.id,
+        });
         try {
+          // --- SEED CONTENT IF YDOC IS EMPTY ---
+          const ydoc = ydocRef.current;
+          if (ydoc && project.content) {
+            const fragment = ydoc.getXmlFragment("default");
+            console.log("[Collab] Fragment check:", {
+              length: fragment.length,
+              hasContent: !!project.content,
+            });
+            // If the fragment is empty (no content nodes yet), seed it from project.content
+            if (fragment.length === 0) {
+              const tiptapContent = formatContentForTiptap(project.content);
+              console.log(
+                "[Collab] YDoc is empty, seeding with initial project content. Content type:",
+                typeof tiptapContent,
+                "IsDoc:",
+                tiptapContent?.type === "doc",
+              );
+
+              if (tiptapContent) {
+                // Defensive delay to ensure HP provider doesn't immediately overwrite with empty state
+                setTimeout(() => {
+                  console.log("[Collab] Executing deferred setContent...");
+                  editor.chain().setContent(tiptapContent, true).focus().run();
+                  console.log(
+                    "[Collab] setContent command executed successfully",
+                  );
+
+                  // Double check if it actually applied
+                  if (
+                    editor.getText().trim().length === 0 &&
+                    project.word_count > 0
+                  ) {
+                    console.error(
+                      "[Collab] Seeding failed: Editor is still empty despite word_count > 0",
+                    );
+                  }
+                }, 500);
+              }
+            } else {
+              console.log(
+                "[Collab] YDoc is NOT empty, skipping seed. Length:",
+                fragment.length,
+              );
+            }
+          } else {
+            console.warn("[Collab] Missing ydoc or project.content", {
+              hasYdoc: !!ydoc,
+              hasContent: !!project.content,
+            });
+          }
+
           const { CitationRegistryService } =
             await import("../../services/CitationRegistryService");
           await CitationRegistryService.initializeFromBackend(project.id);
@@ -1170,13 +1211,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               {collabError}
             </p>
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setRetryCount((prev) => prev + 1)}>
+              <Button onClick={() => setRetryCount((prev) => prev + 1)}>
                 Retry Connection
               </Button>
               <Button
-                variant="ghost"
                 onClick={() => {
                   setIsSynced(true);
                   setCollabStatus("offline");
@@ -1297,8 +1335,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 {isCollaborative && (
                   <Button
-                    variant="outline"
-                    size="sm"
                     onClick={async () => {
                       if (isFreePlan) {
                         setShowUpgradeModal(true);
@@ -1331,7 +1367,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                         console.error("Failed to save version:", error);
                       }
                     }}
-                    className={`gap-2 h-9 border-green-400 text-green-800 bg-white hover:bg-green-50 hover:text-green-900 transition-colors shadow-sm px-3 ${isFreePlan ? "opacity-70" : ""}`}
+                    className={`gap-2 h-9 border-1 border-green-400 text-green-800 bg-white hover:bg-green-50 hover:text-green-900 transition-colors shadow-sm px-3 ${isFreePlan ? "opacity-70" : ""}`}
                     title={
                       isFreePlan
                         ? "Available on Plus Plan"
@@ -1354,8 +1390,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 {isCollaborative && (
                   <Button
-                    variant="outline"
-                    size="sm"
                     onClick={() => {
                       if (isFreePlan) {
                         setShowUpgradeModal(true);
@@ -1363,7 +1397,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                       }
                       setIsHistoryModalOpen(true);
                     }}
-                    className={`gap-2 h-9 border-indigo-400 text-indigo-800 bg-white hover:bg-indigo-50 hover:text-indigo-900 transition-colors shadow-sm px-3 ${isFreePlan ? "opacity-70" : ""}`}
+                    className={`gap-2 h-9 border-1 border-indigo-400 text-indigo-800 bg-white hover:bg-indigo-50 hover:text-indigo-900 transition-colors shadow-sm px-3 ${isFreePlan ? "opacity-70" : ""}`}
                     title={
                       isFreePlan
                         ? "Available on Plus Plan"
@@ -1388,39 +1422,21 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 {isCollaborative && onOpenPanel && (
                   <button
                     onClick={() => {
-                      if (isFreePlan) {
-                        setShowUpgradeModal(true);
-                        return;
-                      }
                       onOpenPanel("team-chat");
                     }}
                     className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFreePlan ? "opacity-70" : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"}`}
-                    title={
-                      isFreePlan ? "Available on Plus Plan" : "Open Team Chat"
-                    }>
-                    <div className="relative">
-                      <MessageSquare className="w-4 h-4 text-emerald-600" />
-                      {isFreePlan && (
-                        <Lock className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 text-red-600" />
-                      )}
-                    </div>
+                    title="Open Team Chat">
+                    <MessageSquare className="w-4 h-4 text-emerald-600" />
                     <span className="hidden sm:inline">Chat</span>
-                    {isFreePlan && (
-                      <span className="ml-1 text-[10px] bg-indigo-50 text-indigo-600 px-1 rounded font-bold uppercase tracking-wider">
-                        PLUS
-                      </span>
-                    )}
                   </button>
                 )}
 
                 <Button
-                  variant="outline"
-                  size="sm"
                   onClick={() => setIsStyleDialogOpen(true)}
-                  className="gap-2 h-9 border-blue-400 text-blue-800 bg-white hover:bg-blue-50 hover:text-blue-900 transition-colors shadow-sm px-3"
+                  className="gap-2 h-9 border-1 border-gray-400 text-gray-800 bg-white hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm px-3"
                   title={`Current Style: ${project.citation_style || "APA"} - Click to change`}>
                   <div className="flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-blue-600" />
+                    <BookOpen className="w-4 h-4 text-gray-600" />
                     <span className="font-bold text-xs">
                       {project.citation_style || "APA"}
                     </span>

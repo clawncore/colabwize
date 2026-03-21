@@ -93,7 +93,6 @@ export const TableBubbleMenu = ({ editor }: TableBubbleMenuProps) => {
       {/* Row Operations */}
       <div className="flex items-center gap-0.5">
         <Toggle
-          size="sm"
           className="p-1 h-8 w-8 hover:bg-gray-100"
           onClick={() => editor.chain().focus().addRowBefore().run()}
           disabled={!editor.can().addRowBefore()}
@@ -101,7 +100,6 @@ export const TableBubbleMenu = ({ editor }: TableBubbleMenuProps) => {
           <Rows className="w-4 h-4 rotate-180" />
         </Toggle>
         <Toggle
-          size="sm"
           className="p-1 h-8 w-8 hover:bg-gray-100"
           onClick={() => editor.chain().focus().addRowAfter().run()}
           disabled={!editor.can().addRowAfter()}
@@ -109,7 +107,6 @@ export const TableBubbleMenu = ({ editor }: TableBubbleMenuProps) => {
           <Rows className="w-4 h-4" />
         </Toggle>
         <Toggle
-          size="sm"
           className="p-1 h-8 w-8 hover:bg-red-50 hover:text-red-500"
           onClick={() => editor.chain().focus().deleteRow().run()}
           disabled={!editor.can().deleteRow()}
@@ -123,7 +120,6 @@ export const TableBubbleMenu = ({ editor }: TableBubbleMenuProps) => {
       {/* Column Operations */}
       <div className="flex items-center gap-0.5">
         <Toggle
-          size="sm"
           className="p-1 h-8 w-8 hover:bg-gray-100"
           onClick={() => editor.chain().focus().addColumnBefore().run()}
           disabled={!editor.can().addColumnBefore()}
@@ -131,7 +127,6 @@ export const TableBubbleMenu = ({ editor }: TableBubbleMenuProps) => {
           <ColumnsIcon className="w-4 h-4 rotate-180" />
         </Toggle>
         <Toggle
-          size="sm"
           className="p-1 h-8 w-8 hover:bg-gray-100"
           onClick={() => editor.chain().focus().addColumnAfter().run()}
           disabled={!editor.can().addColumnAfter()}
@@ -139,7 +134,6 @@ export const TableBubbleMenu = ({ editor }: TableBubbleMenuProps) => {
           <ColumnsIcon className="w-4 h-4" />
         </Toggle>
         <Toggle
-          size="sm"
           className="p-1 h-8 w-8 hover:bg-red-50 hover:text-red-500"
           onClick={() => editor.chain().focus().deleteColumn().run()}
           disabled={!editor.can().deleteColumn()}
@@ -153,7 +147,6 @@ export const TableBubbleMenu = ({ editor }: TableBubbleMenuProps) => {
       {/* Cell Operations */}
       <div className="flex items-center gap-0.5">
         <Toggle
-          size="sm"
           className="p-1 h-8 w-8 hover:bg-gray-100"
           onClick={() => editor.chain().focus().mergeCells().run()}
           disabled={!editor.can().mergeCells()}
@@ -161,7 +154,6 @@ export const TableBubbleMenu = ({ editor }: TableBubbleMenuProps) => {
           <Combine className="w-4 h-4" />
         </Toggle>
         <Toggle
-          size="sm"
           className="p-1 h-8 w-8 hover:bg-gray-100"
           onClick={() => editor.chain().focus().splitCell().run()}
           disabled={!editor.can().splitCell()}
@@ -174,7 +166,6 @@ export const TableBubbleMenu = ({ editor }: TableBubbleMenuProps) => {
 
       {/* Delete Table */}
       <Toggle
-        size="sm"
         className="p-1 h-8 w-8 hover:bg-red-100 text-red-600"
         onClick={() => editor.chain().focus().deleteTable().run()}
         disabled={!editor.can().deleteTable()}

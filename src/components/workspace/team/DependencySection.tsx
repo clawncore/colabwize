@@ -78,7 +78,8 @@ export const DependencySection: React.FC<DependencySectionProps> = ({
       // Filter out current task and already added dependencies
       const filtered = tasks.filter(
         (t) =>
-          t.id !== taskId && !dependencies.some((d) => d.depends_on_id === t.id)
+          t.id !== taskId &&
+          !dependencies.some((d) => d.depends_on_id === t.id),
       );
       setAllTasks(filtered as ExtendedWorkspaceTask[]);
     } catch (error) {
@@ -125,14 +126,12 @@ export const DependencySection: React.FC<DependencySectionProps> = ({
             <Badge
               key={dep.id}
               variant="secondary"
-              className="bg-slate-100 text-slate-700 hover:bg-slate-200 border-none px-2 py-1 gap-1.5 group flex items-center h-auto py-1.5"
-            >
+              className="bg-slate-100 text-slate-700 hover:bg-slate-200 border-none px-2 py-1 gap-1.5 group flex items-center h-auto py-1.5">
               <div className="flex flex-col items-start gap-0.5">
                 {dep.depends_on?.project?.title && (
                   <span
                     className="text-[9px] uppercase tracking-wider text-teal-600 font-semibold"
-                    title="Cross-project dependency"
-                  >
+                    title="Cross-project dependency">
                     {dep.depends_on.project.title}
                   </span>
                 )}
@@ -144,8 +143,7 @@ export const DependencySection: React.FC<DependencySectionProps> = ({
                 <button
                   type="button"
                   onClick={() => handleRemoveDependency(dep.depends_on_id)}
-                  className="text-slate-400 hover:text-red-500 transition-colors ml-1"
-                >
+                  className="text-slate-400 hover:text-red-500 transition-colors ml-1">
                   <X className="h-3 w-3" />
                 </button>
               )}
@@ -158,21 +156,15 @@ export const DependencySection: React.FC<DependencySectionProps> = ({
               onOpenChange={(open) => {
                 setIsAdding(open);
                 if (open) fetchTasks();
-              }}
-            >
+              }}>
               <PopoverTrigger asChild className="text-slate-700 bg-slate-200">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-[11px] border-dashed border-slate-200 text-slate-500 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 gap-1.5"
-                >
+                <Button className="h-7 text-[11px] border-dashed border-slate-200 text-slate-500 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 gap-1.5">
                   <Plus className="h-3 w-3" /> Add Dependency
                 </Button>
               </PopoverTrigger>
               <PopoverContent
                 className="p-0 w-[350px] bg-slate-100 border-slate-200"
-                align="start"
-              >
+                align="start">
                 <Command>
                   <CommandInput
                     placeholder="Search tasks across workspace..."
@@ -189,14 +181,12 @@ export const DependencySection: React.FC<DependencySectionProps> = ({
                         <CommandEmpty>No tasks found.</CommandEmpty>
                         <CommandGroup
                           heading="Available Tasks"
-                          className="text-slate-700"
-                        >
+                          className="text-slate-700">
                           {allTasks.map((t) => (
                             <CommandItem
                               key={t.id}
                               onSelect={() => handleAddDependency(t.id)}
-                              className="text-xs py-2 text-slate-700 cursor-pointer"
-                            >
+                              className="text-xs py-2 text-slate-700 cursor-pointer">
                               <div className="flex flex-col flex-1 gap-1">
                                 <span className="font-medium">{t.title}</span>
                                 <div className="flex items-center gap-2">
@@ -233,9 +223,7 @@ export const DependencySection: React.FC<DependencySectionProps> = ({
             {blockedBy.map((dep) => (
               <Badge
                 key={dep.id}
-                variant="outline"
-                className="border-slate-200 text-slate-500 px-2 py-1 italic flex flex-col items-start gap-0.5 h-auto py-1.5"
-              >
+                className="border-slate-200 text-slate-500 px-2 py-1 italic flex flex-col items-start gap-0.5 h-auto py-1.5">
                 {dep.task?.project?.title && (
                   <span className="text-[9px] uppercase tracking-wider text-teal-600 font-semibold not-italic">
                     {dep.task.project.title}

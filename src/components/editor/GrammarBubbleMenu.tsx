@@ -144,8 +144,6 @@ export const GrammarBubbleMenu = ({ editor }: GrammarBubbleMenuProps) => {
       <div className="flex items-center gap-2 mt-1">
         {/* Fix It button removed per user request - manual correction only */}
         <Button
-          size="sm"
-          variant="ghost"
           className="w-full text-gray-600 h-8 hover:bg-gray-100"
           onClick={handleIgnore}>
           Ignore

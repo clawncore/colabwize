@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
-import useAuth from "../services/useAuth";
+import { useAuth } from "./useAuth";
 import ConfigService from "../services/ConfigService";
 
 const WEBSOCKET_URL = ConfigService.getCollabUrl();

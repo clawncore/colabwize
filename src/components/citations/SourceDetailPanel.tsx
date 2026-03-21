@@ -385,9 +385,7 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
                 className={`w-3 h-3 ${isAnalyzing ? "animate-spin" : ""}`}
               />
               {isAnalyzing ? "Analyzing..." : "Auto-Analyze"}
-              {!isPremium && (
-                <Lock className="w-2.5 h-2.5 ml-1" />
-              )}
+              {!isPremium && <Lock className="w-2.5 h-2.5 ml-1" />}
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -498,7 +496,6 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
                   consensusLevel={consensusResult.consensusLevel}
                   agreementPercentage={consensusResult.agreementPercentage}
                   showLabel={false}
-                  size="sm"
                 />
               </div>
               <p className="text-xs text-gray-700 mb-2">

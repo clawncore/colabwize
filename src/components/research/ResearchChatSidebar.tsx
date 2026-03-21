@@ -49,7 +49,10 @@ interface ResearchChatSidebarProps {
     projectTitle?: string;
     projectDescription?: string;
   };
-  onAnnotatorChat?: (messages: any[], sessionId: string | null) => Promise<Response>;
+  onAnnotatorChat?: (
+    messages: any[],
+    sessionId: string | null,
+  ) => Promise<Response>;
 }
 
 // Individual AI message bubble with copy support
@@ -81,9 +84,7 @@ function AiBubble({ content }: { content: string }) {
         <div className="absolute inset-0 rounded-2xl rounded-tl-sm bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none" />
 
         <div className="text-foreground relative z-10 prose prose-sm prose-slate dark:prose-invert max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {content}
-          </ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         </div>
 
         {/* Copy button — appears on hover */}
@@ -118,9 +119,7 @@ function UserBubble({ content }: { content: string }) {
         {/* Shine overlay */}
         <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none rounded-t-2xl" />
         <div className="text-white relative z-10 prose prose-sm prose-invert max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {content}
-          </ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         </div>
       </div>
 
@@ -168,12 +167,11 @@ export function ResearchChatSidebar({
     {
       id: "1",
       role: "assistant",
-      content:
-        isAnnotatorMode
-          ? "Hello! I'm your PDF Research Assistant. I'm aware of your highlights and notes. How can I help you analyze this document today?"
-          : selectedPaperCount > 0
-            ? `I'm ready to answer questions about this document. Click a suggestion below or ask anything!`
-            : "Select papers from the matrix to ask specific questions, or ask me general research questions.",
+      content: isAnnotatorMode
+        ? "Hello! I'm your PDF Research Assistant. I'm aware of your highlights and notes. How can I help you analyze this document today?"
+        : selectedPaperCount > 0
+          ? `I'm ready to answer questions about this document. Click a suggestion below or ask anything!`
+          : "Select papers from the matrix to ask specific questions, or ask me general research questions.",
       timestamp: new Date(),
     },
   ]);
@@ -191,23 +189,30 @@ export function ResearchChatSidebar({
 
   const isPdfOrProjectChat = papers.some((p) => p.source === "pdf_upload");
   const isProjectChat = papers.some((p) => p.documentType === "project");
-  
+
   // Identify the most relevant ID for persistence
   const relevantIds = useMemo(() => {
     const pdfPaper = papers.find((p) => p.source === "pdf_upload");
     const externalPaper = papers.find((p) => p.source !== "pdf_upload");
-    
+
     // Default to 'pdf' if source is pdf_upload but type is missing
-    const docType = pdfPaper?.documentType || (pdfPaper?.source === "pdf_upload" ? "pdf" : undefined);
-    
+    const docType =
+      pdfPaper?.documentType ||
+      (pdfPaper?.source === "pdf_upload" ? "pdf" : undefined);
+
     return {
-      fileId: docType === "pdf" ? pdfPaper?.id || pdfPaper?.externalId : undefined,
-      projectId: docType === "project" ? pdfPaper?.id || pdfPaper?.externalId : undefined,
-      externalPaperId: externalPaper?.paperId || externalPaper?.externalId
+      fileId:
+        docType === "pdf" ? pdfPaper?.id || pdfPaper?.externalId : undefined,
+      projectId:
+        docType === "project"
+          ? pdfPaper?.id || pdfPaper?.externalId
+          : undefined,
+      externalPaperId: externalPaper?.paperId || externalPaper?.externalId,
     };
   }, [papers]);
 
-  const documentId = relevantIds.fileId || relevantIds.projectId || relevantIds.externalPaperId;
+  const documentId =
+    relevantIds.fileId || relevantIds.projectId || relevantIds.externalPaperId;
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -251,12 +256,16 @@ export function ResearchChatSidebar({
       const filters: any = {};
       if (relevantIds.fileId) filters.fileId = relevantIds.fileId;
       if (relevantIds.projectId) filters.projectId = relevantIds.projectId;
-      if (relevantIds.externalPaperId && !relevantIds.fileId && !relevantIds.projectId) 
+      if (
+        relevantIds.externalPaperId &&
+        !relevantIds.fileId &&
+        !relevantIds.projectId
+      )
         filters.externalPaperId = relevantIds.externalPaperId;
-      
+
       const sessionList = await ResearchService.getSessionsByContext(filters);
       setSessions(sessionList);
-      
+
       // Auto-load the most recent session if we don't have one active
       if (sessionList.length > 0 && !sessionId) {
         handleLoadSession(sessionList[0].id);
@@ -279,7 +288,7 @@ export function ResearchChatSidebar({
         content: m.content,
         timestamp: new Date(m.created_at),
       }));
-      
+
       if (formattedMessages.length > 0) {
         setMessages(formattedMessages);
       }
@@ -345,8 +354,10 @@ export function ResearchChatSidebar({
 
       if (isAnnotatorMode && annotatorContext) {
         // Special handling for Annotator Mode (Streaming)
-        const messagesForApi = history.concat([{ role: "user", content: text }]);
-        
+        const messagesForApi = history.concat([
+          { role: "user", content: text },
+        ]);
+
         let response: Response;
         if (onAnnotatorChat) {
           response = await onAnnotatorChat(messagesForApi, activeSessionId);
@@ -354,7 +365,7 @@ export function ResearchChatSidebar({
           response = await ResearchService.chatWithAnnotator(
             messagesForApi,
             annotatorContext,
-            activeSessionId
+            activeSessionId,
           );
         }
 
@@ -386,8 +397,8 @@ export function ResearchChatSidebar({
               prev.map((msg) =>
                 msg.id === assistantMsgId
                   ? { ...msg, content: accumulatedContent }
-                  : msg
-              )
+                  : msg,
+              ),
             );
           }
         }
@@ -485,32 +496,26 @@ export function ResearchChatSidebar({
               {isAnnotatorMode ? "PDF AI Assistant" : "Research Assistant"}
             </h3>
             <p className="text-[11px] text-muted-foreground">
-              {isAnnotatorMode 
-                ? "Document + Annotations Context" 
+              {isAnnotatorMode
+                ? "Document + Annotations Context"
                 : `${selectedPaperCount} source${selectedPaperCount !== 1 ? "s" : ""} selected`}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1">
           <Button
-            variant="ghost"
-            size="icon"
             onClick={() => setShowHistory(!showHistory)}
             className={`h-8 w-8 ${showHistory ? "text-purple-600 bg-purple-50" : "text-muted-foreground"}`}
             title="Chat History">
             <History className="w-4 h-4" />
           </Button>
           <Button
-            variant="ghost"
-            size="icon"
             onClick={startNewChat}
             className="h-8 w-8 text-muted-foreground hover:text-purple-600"
             title="New Chat">
             <PlusCircle className="w-4 h-4" />
           </Button>
           <Button
-            variant="ghost"
-            size="icon"
             onClick={onClose}
             className="h-8 w-8 text-muted-foreground hover:text-foreground">
             <X className="w-4 h-4" />
@@ -535,7 +540,9 @@ export function ResearchChatSidebar({
               </div>
             ) : sessions.length === 0 ? (
               <div className="text-center py-10">
-                <p className="text-sm text-muted-foreground">No recent chats for this document.</p>
+                <p className="text-sm text-muted-foreground">
+                  No recent chats for this document.
+                </p>
               </div>
             ) : (
               sessions.map((session) => (
@@ -543,16 +550,19 @@ export function ResearchChatSidebar({
                   key={session.id}
                   onClick={() => handleLoadSession(session.id)}
                   className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 group
-                    ${sessionId === session.id 
-                      ? "bg-purple-500/10 border border-purple-500/20" 
-                      : "hover:bg-muted border border-transparent"}`}
-                >
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0
+                    ${
+                      sessionId === session.id
+                        ? "bg-purple-500/10 border border-purple-500/20"
+                        : "hover:bg-muted border border-transparent"
+                    }`}>
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0
                     ${sessionId === session.id ? "bg-purple-500 text-white" : "bg-muted-foreground/10 text-muted-foreground"}`}>
                     <History className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium truncate ${sessionId === session.id ? "text-purple-600" : "text-foreground"}`}>
+                    <p
+                      className={`text-sm font-medium truncate ${sessionId === session.id ? "text-purple-600" : "text-foreground"}`}>
                       {session.title || "Untitled Research Chat"}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
@@ -564,7 +574,7 @@ export function ResearchChatSidebar({
             )}
           </div>
           <div className="p-4 border-t border-border bg-white">
-            <Button variant="outline" className="w-full text-xs gap-2" onClick={startNewChat}>
+            <Button className="w-full text-xs gap-2" onClick={startNewChat}>
               <PlusCircle className="w-3 h-3" /> Start Fresh Chat
             </Button>
           </div>

@@ -273,7 +273,6 @@ export function TaskDetailsModal({
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant="outline"
                     disabled={!canEdit}
                     className={cn(
                       "w-full justify-start text-left font-normal h-9 text-xs border-input bg-white text-gray-600 hover:bg-accent hover:text-accent-foreground",
@@ -472,8 +471,6 @@ export function TaskDetailsModal({
             {canEdit && (
               <Button
                 type="button"
-                variant="ghost"
-                size="sm"
                 onClick={handleDelete}
                 className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs gap-2">
                 <Trash2 className="h-3.5 w-3.5" /> Delete
@@ -483,8 +480,6 @@ export function TaskDetailsModal({
             {canEdit && (
               <Button
                 type="button"
-                variant="ghost"
-                size="sm"
                 onClick={async () => {
                   if (!task) return;
                   if (!window.confirm("Clone this task?")) return;
@@ -507,17 +502,12 @@ export function TaskDetailsModal({
           </div>
 
           <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-xs">
+            <Button onClick={onClose} className="text-xs">
               Cancel
             </Button>
             {canEdit && (
               <Button
                 type="button"
-                size="sm"
                 onClick={handleSave}
                 disabled={isSaving}
                 className="bg-teal-600 hover:bg-teal-700 text-white text-xs gap-2 min-w-[80px]">

@@ -337,7 +337,6 @@ const AccountSettingsPage: React.FC = () => {
               </div>
               <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white"
-                variant="outline"
                 onClick={handleChangeEmail}>
                 Change Email
               </Button>
@@ -591,8 +590,7 @@ const AccountSettingsPage: React.FC = () => {
                     <div className="mt-6 flex justify-between">
                       <Button
                         className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
-                        onClick={cancelEmailChange}
-                        variant="outline">
+                        onClick={cancelEmailChange}>
                         Cancel
                       </Button>
                       <Button
@@ -653,8 +651,7 @@ const AccountSettingsPage: React.FC = () => {
                     <div className="mt-6 flex justify-between">
                       <Button
                         className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
-                        onClick={cancelEmailChange}
-                        variant="outline">
+                        onClick={cancelEmailChange}>
                         Cancel
                       </Button>
                       <Button

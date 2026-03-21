@@ -70,7 +70,7 @@ export function ImageUploadPopover({ editor }: ImageUploadPopoverProps) {
       });
 
       const response: any = await apiClient.get(
-        `/api/integrations/unsplash/search?${searchParams.toString()}`
+        `/api/integrations/unsplash/search?${searchParams.toString()}`,
       );
 
       // Proxy response structure: { success: true, data: { results: [...] } }
@@ -82,7 +82,6 @@ export function ImageUploadPopover({ editor }: ImageUploadPopoverProps) {
       // Let's assume response is the data object returned by axios/fetch
       const results = response.data?.results || [];
       setUnsplashImages(results);
-
     } catch (error) {
       console.error("Failed to search Unsplash:", error);
       // Silent failure or empty state is better than broken UI for this popover
@@ -100,7 +99,6 @@ export function ImageUploadPopover({ editor }: ImageUploadPopoverProps) {
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Toggle
-          size="sm"
           title="Insert Image"
           pressed={isOpen}
           className="h-8 w-8 data-[state=on]:bg-muted">
@@ -125,9 +123,7 @@ export function ImageUploadPopover({ editor }: ImageUploadPopoverProps) {
                     onChange={(e) => setUploadUrl(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
                   />
-                  <Button size="sm" onClick={handleUrlSubmit}>
-                    Add
-                  </Button>
+                  <Button onClick={handleUrlSubmit}>Add</Button>
                 </div>
               </div>
               <div className="relative">
@@ -172,7 +168,6 @@ export function ImageUploadPopover({ editor }: ImageUploadPopoverProps) {
                   onKeyDown={(e) => e.key === "Enter" && searchUnsplash()}
                 />
                 <Button
-                  size="icon"
                   className="bg-indigo-500 hover:bg-indigo-600"
                   onClick={searchUnsplash}
                   disabled={isLoading}>

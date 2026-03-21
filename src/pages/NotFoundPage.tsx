@@ -27,7 +27,6 @@ export default function NotFoundPage() {
         <div className="flex flex-wrap justify-center gap-4">
           <Button
             asChild
-            size="lg"
             className="bg-gradient-to-r from-blue-600 to-indigo-600">
             <Link to="/dashboard">
               <Home className="mr-2 h-5 w-5" />
@@ -36,7 +35,6 @@ export default function NotFoundPage() {
           </Button>
           <Button
             asChild
-            size="lg"
             className="bg-gradient-to-r from-gray-600 to-green-600"
             onClick={() => window.history.back()}>
             <button>

@@ -127,7 +127,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
         {canEdit && (
           <Popover>
             <PopoverTrigger asChild>
-              <button 
+              <button
                 type="button"
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
                 <Plus className="w-3 h-3" />
@@ -220,7 +220,6 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                   <Button
                     type="button"
                     onClick={handleCreateLabel}
-                    size="sm"
                     className="w-full">
                     Create
                   </Button>

@@ -44,13 +44,11 @@ export default function AuthorshipCertificatePage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
-                size="lg"
                 className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
                 asChild>
                 <RouterLink to="/signup">Get My Certificate</RouterLink>
               </Button>
               <Button
-                size="lg"
                 className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
                 asChild>
                 <RouterLink to="/schedule-demo">View Sample</RouterLink>
@@ -198,7 +196,6 @@ export default function AuthorshipCertificatePage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button
-                size="lg"
                 className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
                 asChild>
                 <RouterLink to="/signup">
@@ -206,7 +203,6 @@ export default function AuthorshipCertificatePage() {
                 </RouterLink>
               </Button>
               <Button
-                size="lg"
                 className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
                 asChild>
                 <RouterLink to="/schedule-demo">Schedule Demo</RouterLink>

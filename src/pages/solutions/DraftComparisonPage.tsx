@@ -119,15 +119,10 @@ export const DraftComparisonPage: React.FC = () => {
               manuscript.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-7 rounded-2xl text-lg shadow-xl shadow-blue-500/20 transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-7 rounded-2xl text-lg shadow-xl shadow-blue-500/20 transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">
                 Start Analysis <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold px-10 py-7 rounded-2xl text-lg backdrop-blur-md">
+              <Button className="bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold px-10 py-7 rounded-2xl text-lg backdrop-blur-md">
                 View Certification Workflow
               </Button>
             </div>
@@ -533,14 +528,11 @@ export const DraftComparisonPage: React.FC = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
-                  size="lg"
                   className="bg-white text-blue-600 hover:bg-blue-50 font-bold px-12 py-8 rounded-2xl text-lg shadow-xl"
                   asChild>
                   <RouterLink to="/signup">Deploy Integrity Engine</RouterLink>
                 </Button>
                 <Button
-                  variant="outline"
-                  size="lg"
                   className="bg-transparent border-white/30 hover:bg-white/10 text-white font-bold px-12 py-8 rounded-2xl text-lg"
                   asChild>
                   <RouterLink to="/contact">Request Audit Demo</RouterLink>

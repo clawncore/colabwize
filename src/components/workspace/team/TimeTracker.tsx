@@ -165,7 +165,6 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
         {canEdit &&
           (isCurrentTaskActive ? (
             <Button
-              size="sm"
               variant="destructive"
               onClick={handleStopTimer}
               className="h-7 text-xs bg-red-100 text-red-600 hover:bg-red-200 border-red-200 border shadow-none animate-pulse">
@@ -174,8 +173,6 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
             </Button>
           ) : (
             <Button
-              size="sm"
-              variant="outline"
               onClick={handleStartTimer}
               disabled={!!activeTimer}
               className="h-7 text-xs border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800">
@@ -221,7 +218,7 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
           <DialogTrigger asChild>
             <div className="flex justify-start">
               {entries.length === 0 && !activeTimer ? (
-                <button 
+                <button
                   type="button"
                   className="text-[10px] text-muted-foreground italic pl-1 hover:underline hover:text-primary">
                   No time tracked yet. Log manual time
@@ -276,10 +273,7 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({
                   onChange={(e) => setManualDescription(e.target.value)}
                   className="h-8 text-xs bg-white"
                 />
-                <Button
-                  onClick={handleLogTime}
-                  size="sm"
-                  className="w-full h-8 text-xs">
+                <Button onClick={handleLogTime} className="w-full h-8 text-xs">
                   Log Time
                 </Button>
               </div>

@@ -302,8 +302,6 @@ export default function WorkspaceMembersPage() {
                     </div>
                   </div>
                   <Button
-                    variant="ghost"
-                    size="sm"
                     className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     onClick={() => handleRevokeInvite(invite.id)}
                     disabled={revokingInviteId === invite.id}>
@@ -444,7 +442,6 @@ export default function WorkspaceMembersPage() {
                         {confirmRemove === member.id ? (
                           <div className="flex items-center gap-1">
                             <Button
-                              size="sm"
                               onClick={() => handleRemoveMember(member.id)}
                               disabled={removingMemberId === member.id}
                               className="bg-red-600 hover:bg-red-700 text-white text-xs h-7 px-2">
@@ -455,8 +452,6 @@ export default function WorkspaceMembersPage() {
                               )}
                             </Button>
                             <Button
-                              size="sm"
-                              variant="outline"
                               onClick={() => setConfirmRemove(null)}
                               className="text-xs h-7 px-2">
                               Cancel
@@ -464,8 +459,6 @@ export default function WorkspaceMembersPage() {
                           </div>
                         ) : (
                           <Button
-                            size="sm"
-                            variant="ghost"
                             onClick={() => setConfirmRemove(member.id)}
                             className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
                             title="Remove member">

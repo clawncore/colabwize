@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
-import { supabase } from "../lib/supabase/client";
 import ConfigService from "../services/ConfigService";
+import { useAuth } from "./useAuth";
 
 interface UseCollaborationProps {
   documentId: string;
@@ -21,6 +21,7 @@ export const useCollaboration = ({
   const [status, setStatus] = useState<
     "disconnected" | "connecting" | "connected"
   >("disconnected");
+  const { user, token, loading: authLoading } = useAuth();
 
   useEffect(() => {
     // 1. Reset state if not collaborative or missing basics
@@ -35,15 +36,11 @@ export const useCollaboration = ({
     let mounted = true;
 
     const initProvider = async () => {
+      if (authLoading || !token) return;
+      
       setStatus("connecting");
 
       try {
-        // 2. Fetch Auth Token
-        const { data } = await supabase.auth.getSession();
-        const token = data.session?.access_token || "";
-
-        if (!mounted) return;
-
         // 3. Initialize Hocuspocus Provider
         const wsUrl = ConfigService.getCollabUrl();
 
@@ -108,7 +105,7 @@ export const useCollaboration = ({
       setIsReady(false);
       setStatus("disconnected");
     };
-  }, [documentId, isCollaborative, username]); // Re-run if these change
+  }, [documentId, isCollaborative, username, token, authLoading]); // Re-run if these change
 
   return {
     provider,

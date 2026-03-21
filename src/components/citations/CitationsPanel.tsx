@@ -27,7 +27,10 @@ import {
   Edit3,
   X,
 } from "lucide-react";
-import { CitationService, type StoredCitation } from "../../services/citationService";
+import {
+  CitationService,
+  type StoredCitation,
+} from "../../services/citationService";
 import AddCitationModal from "./AddCitationModal";
 
 interface Author {
@@ -49,7 +52,9 @@ export function CitationsPanel({
   const [activeTab, setActiveTab] = useState<"existing" | "new">("existing");
   const [searchQuery, setSearchQuery] = useState("");
   const [citations, setCitations] = useState<StoredCitation[]>([]);
-  const [filteredCitations, setFilteredCitations] = useState<StoredCitation[]>([]);
+  const [filteredCitations, setFilteredCitations] = useState<StoredCitation[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [style, setStyle] = useState<"apa" | "mla" | "chicago">("apa");
@@ -92,40 +97,48 @@ export function CitationsPanel({
       setFilteredCitations(citations);
     } else {
       const query = searchQuery.toLowerCase();
-      const filtered = citations.filter(
-        (citation) => {
-          // Search in title
-          if (citation.title.toLowerCase().includes(query)) return true;
+      const filtered = citations.filter((citation) => {
+        // Search in title
+        if (citation.title.toLowerCase().includes(query)) return true;
 
-          // Search in authors (handle both string[] and object[] formats)
-          if (Array.isArray(citation.authors)) {
-            const authorMatch = citation.authors.some((author: string | { firstName?: string; lastName?: string }) => {
-              if (typeof author === 'string') {
+        // Search in authors (handle both string[] and object[] formats)
+        if (Array.isArray(citation.authors)) {
+          const authorMatch = citation.authors.some(
+            (author: string | { firstName?: string; lastName?: string }) => {
+              if (typeof author === "string") {
                 return author.toLowerCase().includes(query);
               }
               return (
-                (author.firstName && author.firstName.toLowerCase().includes(query)) ||
-                (author.lastName && author.lastName.toLowerCase().includes(query))
+                (author.firstName &&
+                  author.firstName.toLowerCase().includes(query)) ||
+                (author.lastName &&
+                  author.lastName.toLowerCase().includes(query))
               );
-            });
-            if (authorMatch) return true;
-          } else if (citation.author && citation.author.toLowerCase().includes(query)) {
-            return true;
-          }
-
-          // Search in journal
-          if (citation.journal && citation.journal.toLowerCase().includes(query)) {
-            return true;
-          }
-
-          // Search in year
-          if (citation.year && citation.year.toString().includes(query)) {
-            return true;
-          }
-
-          return false;
+            },
+          );
+          if (authorMatch) return true;
+        } else if (
+          citation.author &&
+          citation.author.toLowerCase().includes(query)
+        ) {
+          return true;
         }
-      );
+
+        // Search in journal
+        if (
+          citation.journal &&
+          citation.journal.toLowerCase().includes(query)
+        ) {
+          return true;
+        }
+
+        // Search in year
+        if (citation.year && citation.year.toString().includes(query)) {
+          return true;
+        }
+
+        return false;
+      });
       setFilteredCitations(filtered);
     }
   }, [searchQuery, citations]);
@@ -136,7 +149,7 @@ export function CitationsPanel({
 
   const copyCitation = (citation: StoredCitation) => {
     navigator.clipboard.writeText(formatCitation(citation));
-    setCopiedId(citation.id || '');
+    setCopiedId(citation.id || "");
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -149,31 +162,38 @@ export function CitationsPanel({
 
     // Extract last name from whatever format the author comes in as
     const getLastName = (a: any): string => {
-      let extracted = 'Author';
-      if (typeof a === 'string') {
+      let extracted = "Author";
+      if (typeof a === "string") {
         const trimmed = a.trim();
         // "Smith, J." format — comma present, take part before it
-        if (trimmed.includes(',')) extracted = trimmed.split(',')[0].trim();
+        if (trimmed.includes(",")) extracted = trimmed.split(",")[0].trim();
         else {
           // Two-word personal name e.g. "John Smith" — return last word (surname)
-          const parts = trimmed.split(' ').filter(Boolean);
+          const parts = trimmed.split(" ").filter(Boolean);
           if (parts.length === 2) extracted = parts[1];
           // Multi-word without comma = likely an organization name: use as-is
           else extracted = trimmed;
         }
-      } else if (typeof a === 'object' && a !== null) {
-        extracted = a.lastName || a.family || a.literal || a.name || a.firstName || a.given || 'Author';
+      } else if (typeof a === "object" && a !== null) {
+        extracted =
+          a.lastName ||
+          a.family ||
+          a.literal ||
+          a.name ||
+          a.firstName ||
+          a.given ||
+          "Author";
       }
 
       // Safety truncation: if the extracted name is still a massive string (like a title)
       // gracefully truncate it to the first logical word.
       if (extracted.length > 25) {
-        extracted = extracted.split(' ')[0].replace(/[^a-zA-Z\-]/g, '');
+        extracted = extracted.split(" ")[0].replace(/[^a-zA-Z\-]/g, "");
       }
-      return extracted || 'Author';
+      return extracted || "Author";
     };
 
-    let authorText = 'Author';
+    let authorText = "Author";
     if (authors.length === 1) {
       authorText = getLastName(authors[0]);
     } else if (authors.length === 2) {
@@ -182,9 +202,11 @@ export function CitationsPanel({
       authorText = `${getLastName(authors[0])} et al.`;
     }
 
-    const year = citation.year || 'n.d.';
+    const year = citation.year || "n.d.";
     const inTextText = `(${authorText}, ${year})`;
-    const url = citation.url || (citation.doi ? `https://doi.org/${citation.doi}` : undefined);
+    const url =
+      citation.url ||
+      (citation.doi ? `https://doi.org/${citation.doi}` : undefined);
 
     const event = new CustomEvent("insert-citation", {
       detail: {
@@ -314,13 +336,22 @@ export function CitationsPanel({
                           </h4>
                           <p className="text-xs text-gray-500 mt-1 truncate">
                             {Array.isArray(citation.authors)
-                              ? citation.authors.map(
-                                (a: string | { firstName?: string; lastName?: string }) =>
-                                  typeof a === 'string'
-                                    ? a
-                                    : `${a.lastName || ''}, ${a.firstName?.[0] || ''}`.trim(),
-                              ).join("; ")
-                              : citation.author || 'Unknown'}
+                              ? citation.authors
+                                  .map(
+                                    (
+                                      a:
+                                        | string
+                                        | {
+                                            firstName?: string;
+                                            lastName?: string;
+                                          },
+                                    ) =>
+                                      typeof a === "string"
+                                        ? a
+                                        : `${a.lastName || ""}, ${a.firstName?.[0] || ""}`.trim(),
+                                  )
+                                  .join("; ")
+                              : citation.author || "Unknown"}
                           </p>
                           <div className="flex items-center gap-2 mt-1.5 text-[10px] text-gray-400">
                             <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">
@@ -334,8 +365,6 @@ export function CitationsPanel({
                       {/* Actions Row */}
                       <div className="flex items-center justify-end gap-1 mt-3 pt-2 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
-                          variant="ghost"
-                          size="sm"
                           className="h-6 px-2 text-xs text-gray-500 hover:text-blue-600"
                           onClick={() => copyCitation(citation)}
                           title="Copy Citation">
@@ -348,8 +377,6 @@ export function CitationsPanel({
                         </Button>
 
                         <Button
-                          variant="ghost"
-                          size="sm"
                           className="h-6 px-2 text-xs text-gray-500 hover:text-green-600"
                           onClick={() => insertCitation(citation)}
                           title="Insert into document">
@@ -358,10 +385,10 @@ export function CitationsPanel({
                         </Button>
 
                         <Button
-                          variant="ghost"
-                          size="sm"
                           className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 ml-auto"
-                          onClick={() => citation.id && deleteCitation(citation.id)}
+                          onClick={() =>
+                            citation.id && deleteCitation(citation.id)
+                          }
                           title="Delete">
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -397,7 +424,7 @@ export function CitationsPanel({
             projectId={projectId}
             onCitationAdded={handleNewCitationAdded}
             isOpen={true} // Embedded mode
-            onClose={() => { }} // No close needed in panel
+            onClose={() => {}} // No close needed in panel
             isPanel={true} // New prop to style as panel content
           />
         </TabsContent>

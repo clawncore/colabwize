@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@hookform/resolvers/zod/dist/zod";
 import { z } from "zod";
 import { Link } from "react-router-dom";
 import { Mail, KeyRound, CheckCircle, ArrowLeft } from "lucide-react";
@@ -45,7 +45,7 @@ const ForgotPasswordPage: React.FC = () => {
     } catch (error: any) {
       console.error("Password reset failed:", error);
       setError(
-        error.message || "Failed to send reset email. Please try again."
+        error.message || "Failed to send reset email. Please try again.",
       );
     } finally {
       setIsLoading(false);
@@ -62,7 +62,7 @@ const ForgotPasswordPage: React.FC = () => {
     } catch (error: any) {
       console.error("Resend email failed:", error);
       setError(
-        error.message || "Failed to resend reset email. Please try again."
+        error.message || "Failed to resend reset email. Please try again.",
       );
     } finally {
       setIsLoading(false);
@@ -114,9 +114,7 @@ const ForgotPasswordPage: React.FC = () => {
             <Button
               onClick={handleResendEmail}
               disabled={isLoading}
-              variant="outline"
-              className="w-full h-12 rounded-xl bg-white/60 backdrop-blur-sm hover:bg-white/80"
-            >
+              className="w-full h-12 rounded-xl bg-white/60 backdrop-blur-sm hover:bg-white/80">
               {isLoading ? (
                 <div className="h-5 w-5 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin" />
               ) : (
@@ -132,8 +130,7 @@ const ForgotPasswordPage: React.FC = () => {
           {/* Back to Login */}
           <Link
             to="/login"
-            className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium"
-          >
+            className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
             <ArrowLeft className="h-4 w-4" />
             <span>Back to login</span>
           </Link>
@@ -146,8 +143,7 @@ const ForgotPasswordPage: React.FC = () => {
     <AuthLayout
       title="Forgot your password?"
       subtitle="No worries! Enter your email and we'll send you reset instructions."
-      showSidebar={false}
-    >
+      showSidebar={false}>
       <div className="space-y-6">
         {/* Icon */}
         <div className="flex justify-center">
@@ -183,8 +179,7 @@ const ForgotPasswordPage: React.FC = () => {
           <Button
             type="submit"
             className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all duration-200 btn-glow"
-            disabled={!isValid || isLoading}
-          >
+            disabled={!isValid || isLoading}>
             {isLoading ? (
               <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
@@ -197,8 +192,7 @@ const ForgotPasswordPage: React.FC = () => {
         <div className="text-center">
           <Link
             to="/login"
-            className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium"
-          >
+            className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
             <ArrowLeft className="h-4 w-4" />
             <span>Back to login</span>
           </Link>

@@ -45,7 +45,7 @@ const HelpCenterPage = () => {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  to="/dashboard/billing/subscriptions"
+                  to="/dashboard/billing/subscription"
                   className="inline-flex items-center justify-center px-6 py-3.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                   <CreditCard className="h-5 w-5 mr-2" />
                   Billing & Subscriptions
@@ -116,7 +116,7 @@ const HelpCenterPage = () => {
                     Self-serve recommended
                   </p>
                   <Link
-                    to="/dashboard/billing/subscriptions"
+                    to="/dashboard/billing/subscription"
                     className="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
                     Go to Billing & Subscriptions
                   </Link>

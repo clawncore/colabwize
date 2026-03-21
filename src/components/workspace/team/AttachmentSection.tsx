@@ -63,7 +63,10 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
     if (!file) return;
 
     // PDF Only Validation
-    if (!file.type.includes("pdf") && !file.name.toLowerCase().endsWith(".pdf")) {
+    if (
+      !file.type.includes("pdf") &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
       toast({
         title: "Invalid file type",
         description: "Only PDF files are allowed in this section.",
@@ -179,8 +182,6 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
         </div>
         {canEdit && (
           <Button
-            variant="ghost"
-            size="sm"
             className="h-7 text-[10px] gap-1 text-slate-500 hover:text-indigo-600"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}>

@@ -36,13 +36,11 @@ function IntroHero() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
-              size="lg"
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
               onClick={handleGetStarted}>
               Get Started
             </Button>
             <Button
-              size="lg"
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
               asChild>
               <RouterLink to="/contact">Contact Support</RouterLink>
@@ -55,7 +53,6 @@ function IntroHero() {
 }
 
 // Feature Detail Component
-
 
 // Features Presentation Flow
 function FeaturesPresentationFlow() {
@@ -176,15 +173,12 @@ function ClosingCTA() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Button
-              size="lg"
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
               onClick={handleGetStarted}>
               Start Your Free Trial
             </Button>
             <Button
               asChild
-              size="lg"
-              variant="outline"
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
               <RouterLink
                 to="/resources/help-center"

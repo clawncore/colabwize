@@ -6,6 +6,7 @@ export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     // 1. Initial Session Check
@@ -18,11 +19,13 @@ export const useAuth = () => {
           setUser(session.user);
           // Sync with legacy auth service just in case
           if (session.access_token) {
+            setToken(session.access_token);
             localStorage.setItem("auth_token", session.access_token);
           }
         } else {
           setIsAuthenticated(false);
           setUser(null);
+          setToken(null);
           localStorage.removeItem("auth_token");
         }
       } catch (error) {
@@ -43,10 +46,12 @@ export const useAuth = () => {
       if (session) {
         setIsAuthenticated(true);
         setUser(session.user);
+        setToken(session.access_token);
         localStorage.setItem("auth_token", session.access_token);
       } else {
         setIsAuthenticated(false);
         setUser(null);
+        setToken(null);
         localStorage.removeItem("auth_token");
       }
       setLoading(false);
@@ -87,6 +92,7 @@ export const useAuth = () => {
     isAuthenticated: checkAuthStatus,
     loading,
     user,
+    token, // Added token
     login,
     logout,
     register,

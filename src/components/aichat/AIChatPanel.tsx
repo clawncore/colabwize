@@ -434,8 +434,6 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
           </CardTitle>
           <div className="flex items-center gap-1">
             <Button
-              variant="ghost"
-              size="icon"
               className={cn(
                 "h-8 w-8 hover:bg-gray-200",
                 showHistory && "bg-gray-200",
@@ -445,8 +443,6 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
               <History className="w-4 h-4 text-gray-600" />
             </Button>
             <Button
-              variant="ghost"
-              size="icon"
               className="h-8 w-8 hover:bg-gray-200"
               onClick={createNewSession}
               title="New Chat Session">
@@ -468,7 +464,6 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
             rewrite, or edit for you. "Explain Mode" only.
           </span>
         </div>
-
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden relative">
@@ -587,9 +582,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                           <DropdownMenuTrigger
                             asChild
                             onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant="ghost"
-                              className="h-6 w-6 p-0 hover:bg-gray-200">
+                            <Button className="h-6 w-6 p-0 hover:bg-gray-200">
                               <MoreVertical className="w-3 h-3 text-gray-500" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -799,7 +792,6 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
           <Button
             type="submit"
             className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            size="icon"
             disabled={isLoading || !input.trim() || !!limitState}>
             <Send className="w-4 h-4" />
           </Button>

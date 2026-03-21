@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@hookform/resolvers/zod/dist/zod";
 import { z } from "zod";
 import { Link, useSearchParams } from "react-router-dom";
 import { Mail, Lock, AlertCircle, Smartphone, Shield } from "lucide-react";
@@ -53,7 +53,7 @@ const isValidEmailDomain = (email: string): boolean => {
   // Check if domain is in allowed list
   return ALLOWED_DOMAINS.some(
     (allowedDomain) =>
-      domain === allowedDomain || domain.endsWith("." + allowedDomain)
+      domain === allowedDomain || domain.endsWith("." + allowedDomain),
   );
 };
 
@@ -76,7 +76,7 @@ const loginSchema = z
       message:
         "Please use a valid email domain (gmail.com, outlook.com, yahoo.com, etc.)",
       path: ["email"],
-    }
+    },
   );
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -189,7 +189,7 @@ const LoginPage: React.FC = () => {
       const result = await signInWithEmail(
         data.email,
         data.password,
-        data.rememberMe
+        data.rememberMe,
       );
 
       const endTime = performance.now(); // End timer
@@ -197,7 +197,9 @@ const LoginPage: React.FC = () => {
       console.log(`Login completed in ${duration.toFixed(2)}ms`);
 
       if (duration > 3000) {
-        console.warn(`⚠️ Login took longer than 3000ms (${duration.toFixed(2)}ms) - investigating slowness...`);
+        console.warn(
+          `⚠️ Login took longer than 3000ms (${duration.toFixed(2)}ms) - investigating slowness...`,
+        );
       }
 
       if (result.user) {
@@ -241,18 +243,18 @@ const LoginPage: React.FC = () => {
       ) {
         setIsEmailNotConfirmed(true);
         setError(
-          `Email not confirmed for ${watchedFields.email || "your account"}. Please verify your email before signing in.`
+          `Email not confirmed for ${watchedFields.email || "your account"}. Please verify your email before signing in.`,
         );
         // Do not auto-redirect; allow user to choose explicit verification action
       } else {
         if (error.code === "NETWORK_ERROR") {
           setError(
-            "Unable to reach authentication service. Please check your internet connection and try again."
+            "Unable to reach authentication service. Please check your internet connection and try again.",
           );
         } else {
           setError(
             error.message ||
-            "Login failed. Please check your credentials and try again."
+              "Login failed. Please check your credentials and try again.",
           );
         }
       }
@@ -276,21 +278,24 @@ const LoginPage: React.FC = () => {
         await resendVerificationEmail(email);
 
         setError(
-          "Verification email resent successfully. Please check your inbox."
+          "Verification email resent successfully. Please check your inbox.",
         );
       }
     } catch (error: any) {
       console.error("Resend verification failed:", error);
       setError(
         error.message ||
-        "Failed to resend verification email. Please try again."
+          "Failed to resend verification email. Please try again.",
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLoginSuccess = async (redirect: string | null, plan: string | null) => {
+  const handleLoginSuccess = async (
+    redirect: string | null,
+    plan: string | null,
+  ) => {
     // Wait a bit for the auth state to propagate
     await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -338,11 +343,11 @@ const LoginPage: React.FC = () => {
         try {
           await handleLoginSuccess(redirectPath, selectedPlan);
         } catch (e: any) {
-             if (e?.message?.includes("Lock broken") || e?.name === "AbortError") {
-                 console.warn("Suppressed React StrictMode Supabase Lock Error");
-             } else {
-                 throw e;
-             }
+          if (e?.message?.includes("Lock broken") || e?.name === "AbortError") {
+            console.warn("Suppressed React StrictMode Supabase Lock Error");
+          } else {
+            throw e;
+          }
         }
       } else {
         setFailedAttempts((prev) => prev + 1);
@@ -363,7 +368,9 @@ const LoginPage: React.FC = () => {
   // 2FA Form Render
   if (is2FARequired) {
     return (
-      <AuthLayout title="Two-Factor Authentication" subtitle="Enter the code from your app">
+      <AuthLayout
+        title="Two-Factor Authentication"
+        subtitle="Enter the code from your app">
         <div className="flex flex-col items-center justify-center mb-8">
           <div className="relative w-32 h-32 flex items-center justify-center mb-4">
             <div className="absolute inset-0 bg-blue-100/50 rounded-full blur-2xl"></div>
@@ -372,8 +379,7 @@ const LoginPage: React.FC = () => {
             <motion.div
               animate={{ y: [0, -8, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="relative z-10 flex items-center justify-center"
-            >
+              className="relative z-10 flex items-center justify-center">
               <Smartphone className="w-24 h-24 text-blue-600" strokeWidth={1} />
 
               {/* Screen glow effect */}
@@ -383,16 +389,15 @@ const LoginPage: React.FC = () => {
               <motion.div
                 animate={{
                   opacity: [0, 1, 1, 0],
-                  scale: [0.5, 1.2, 1, 0.5]
+                  scale: [0.5, 1.2, 1, 0.5],
                 }}
                 transition={{
                   repeat: Infinity,
                   duration: 3,
                   times: [0, 0.2, 0.8, 1],
-                  ease: "easeInOut"
+                  ease: "easeInOut",
                 }}
-                className="absolute inset-0 flex items-center justify-center"
-              >
+                className="absolute inset-0 flex items-center justify-center">
                 <div className="bg-white p-1.5 rounded-full shadow-lg">
                   <Shield className="w-5 h-5 text-green-500 fill-green-100" />
                 </div>
@@ -430,7 +435,7 @@ const LoginPage: React.FC = () => {
                 onChange={(e) => {
                   const val = e.target.value.replace(
                     isRecoveryMode ? /[^a-zA-Z0-9]/g : /[^0-9]/g,
-                    ""
+                    "",
                   );
                   e.target.value = val;
                   if (
@@ -456,8 +461,7 @@ const LoginPage: React.FC = () => {
                     setIsRecoveryMode(true);
                     setError(null);
                   }}
-                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                >
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors">
                   Use a recovery code
                 </button>
               </div>
@@ -470,8 +474,7 @@ const LoginPage: React.FC = () => {
                     setIsRecoveryMode(false);
                     setError(null);
                   }}
-                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                >
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors">
                   Use authenticator app
                 </button>
               </div>
@@ -481,21 +484,19 @@ const LoginPage: React.FC = () => {
           <div className="grid grid-cols-2 gap-3 pt-2">
             <Button
               onClick={() => setIs2FARequired(false)} // Cancel/Back
-              className="w-full h-11 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium shadow-sm transition-colors"
-            >
+              className="w-full h-11 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium shadow-sm transition-colors">
               Cancel
             </Button>
             <Button
               disabled={isLoading}
               onClick={() => {
                 const input = document.querySelector(
-                  'input[type="text"]'
+                  'input[type="text"]',
                 ) as HTMLInputElement;
                 if (input && input.value.length >= 6)
                   handle2FASubmit(input.value);
               }}
-              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium"
-            >
+              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium">
               {isLoading ? (
                 <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
@@ -530,8 +531,6 @@ const LoginPage: React.FC = () => {
                   <Button
                     onClick={handleResendVerification}
                     disabled={isLoading}
-                    variant="outline"
-                    size="sm"
                     className="bg-blue-800/50 border-blue-700 text-blue-100 hover:bg-blue-700/50">
                     {isLoading ? (
                       <div className="h-4 w-4 border-2 border-blue-300 border-t-transparent rounded-full animate-spin" />
@@ -541,8 +540,6 @@ const LoginPage: React.FC = () => {
                   </Button>
                   <Button
                     asChild
-                    variant="outline"
-                    size="sm"
                     className="bg-blue-800/50 border-blue-700 text-blue-100 hover:bg-blue-700/50">
                     <Link
                       to={`/verify-email?email=${encodeURIComponent(watchedFields.email || "")}&source=manual`}>
@@ -560,11 +557,9 @@ const LoginPage: React.FC = () => {
       <div className="grid grid-cols-1 gap-3 mb-6">
         <Button
           type="button"
-          variant="outline"
           onClick={handleGoogleLogin}
           disabled={socialLoading || isLoading}
-          className="flex items-center justify-center gap-2 h-12 bg-white text-gray-900 border-gray-300 hover:bg-gray-100 font-medium transition-all"
-        >
+          className="flex items-center justify-center gap-2 h-12 bg-white text-gray-900 border-gray-300 hover:bg-gray-100 font-medium transition-all">
           {socialLoading ? (
             <div className="h-5 w-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
           ) : (
@@ -598,7 +593,9 @@ const LoginPage: React.FC = () => {
           <div className="w-full border-t border-gray-200"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 text-gray-500 bg-white">Or continue with email</span>
+          <span className="px-2 text-gray-500 bg-white">
+            Or continue with email
+          </span>
         </div>
       </div>
 

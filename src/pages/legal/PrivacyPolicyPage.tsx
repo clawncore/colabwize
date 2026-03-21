@@ -37,13 +37,11 @@ function IntroHero() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
-              size="lg"
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
               onClick={handleGetStarted}>
               Get Started
             </Button>
             <Button
-              size="lg"
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
               asChild>
               <RouterLink to="/contact">Contact Us</RouterLink>
@@ -56,7 +54,6 @@ function IntroHero() {
 }
 
 // Feature Detail Component
-
 
 // Features Presentation Flow
 function FeaturesPresentationFlow() {
@@ -87,17 +84,33 @@ function FeaturesPresentationFlow() {
                 </h2>
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 rounded-r">
                   <p className="text-sm text-blue-700">
-                    <strong>Compliance Notice:</strong> We strictly adhere to the Google API Services User Data Policy, including the Limited Use requirements.
+                    <strong>Compliance Notice:</strong> We strictly adhere to
+                    the Google API Services User Data Policy, including the
+                    Limited Use requirements.
                   </p>
                 </div>
                 <p className="text-gray-600 mb-4">
-                  If you choose to sign in with Google, we access the following information:
+                  If you choose to sign in with Google, we access the following
+                  information:
                 </p>
                 <ul className="list-disc list-inside text-gray-600 space-y-2 mb-4">
-                  <li><strong>Basic Profile:</strong> Name, Email, and Profile Picture to create your account.</li>
+                  <li>
+                    <strong>Basic Profile:</strong> Name, Email, and Profile
+                    Picture to create your account.
+                  </li>
                 </ul>
                 <p className="text-gray-600 mb-4">
-                  <strong>Limited Use Disclosure:</strong> Use of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google API Services User Data Policy</a>, including the Limited Use requirements. We do not use Google user data for advertising purposes.
+                  <strong>Limited Use Disclosure:</strong> Use of information
+                  received from Google APIs will adhere to the{" "}
+                  <a
+                    href="https://developers.google.com/terms/api-services-user-data-policy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline">
+                    Google API Services User Data Policy
+                  </a>
+                  , including the Limited Use requirements. We do not use Google
+                  user data for advertising purposes.
                 </p>
               </section>
 
@@ -211,22 +224,18 @@ function ClosingCTA() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Button
-              size="lg"
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
               onClick={handleGetStarted}>
               Start Your Free Trial
             </Button>
             <Button
               asChild
-              size="lg"
-              variant="outline"
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
               <a
                 href="https://docs.colabwize.com/quickstart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center"
-              >
+                className="flex items-center">
                 See How It Works
               </a>
             </Button>

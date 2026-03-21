@@ -37,14 +37,15 @@ export const useWorkspacePermissions = (workspaceId?: string) => {
                 setPermissions(prev => ({ ...prev, loading: true }));
                 const workspace = await WorkspaceService.getWorkspace(workspaceId);
                 const role = (workspace as any).role || "viewer";
+                console.log(`[Permissions] Workspace ${workspaceId} role:`, role);
 
                 setPermissions({
                     role,
-                    isAdmin: role === "admin",
+                    isAdmin: role === "admin" || role === "owner",
                     isEditor: role === "editor",
                     isViewer: role === "viewer",
-                    canEdit: role === "admin" || role === "editor",
-                    canManageMembers: role === "admin",
+                    canEdit: role === "admin" || role === "editor" || role === "owner",
+                    canManageMembers: role === "admin" || role === "owner",
                     loading: false,
                 });
             } catch (error) {

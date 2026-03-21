@@ -290,10 +290,7 @@ export default function FilesPage() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 text-slate-600">
+              <Button className="gap-2 text-slate-600">
                 <Filter className="w-4 h-4" />
                 Filter
               </Button>
@@ -412,10 +409,7 @@ export default function FilesPage() {
                           {/* Actions Dropdown */}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0">
+                              <Button className="h-8 w-8 p-0">
                                 <MoreVertical className="w-4 h-4 text-slate-400" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -467,18 +461,10 @@ export default function FilesPage() {
                 Showing {filteredFiles.length} of {files.length} files
               </span>
               <div className="flex gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  className="h-7 text-xs">
+                <Button disabled className="h-7 text-xs">
                   Previous
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  className="h-7 text-xs">
+                <Button disabled className="h-7 text-xs">
                   Next
                 </Button>
               </div>

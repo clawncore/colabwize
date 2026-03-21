@@ -69,7 +69,7 @@ const VerifyEmailPage: React.FC = () => {
       console.error("Resend verification failed:", error);
       setError(
         error.message ||
-          "Failed to resend verification email. Please try again."
+          "Failed to resend verification email. Please try again.",
       );
     } finally {
       setIsLoading(false);
@@ -82,8 +82,7 @@ const VerifyEmailPage: React.FC = () => {
       <AuthLayout
         title="Email verified!"
         subtitle="Your account is ready. Let's get started."
-        showSidebar={false}
-      >
+        showSidebar={false}>
         <div className="text-center space-y-6">
           {/* Success Icon */}
           <div className="flex justify-center">
@@ -118,8 +117,7 @@ const VerifyEmailPage: React.FC = () => {
               // For all sources, go to the redirect or dashboard
               navigate(redirect || "/dashboard");
             }}
-            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all duration-200 btn-glow"
-          >
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-all duration-200 btn-glow">
             Complete Registration
           </Button>
 
@@ -127,8 +125,7 @@ const VerifyEmailPage: React.FC = () => {
           <div className="text-center">
             <Link
               to="/login"
-              className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-            >
+              className="text-blue-600 hover:text-blue-700 font-medium text-sm">
               Sign in instead
             </Link>
           </div>
@@ -197,9 +194,7 @@ const VerifyEmailPage: React.FC = () => {
             <Button
               onClick={handleResendVerification}
               disabled={isLoading}
-              variant="outline"
-              className="w-full h-12 rounded-xl bg-white/60 backdrop-blur-sm hover:bg-white/80"
-            >
+              className="w-full h-12 rounded-xl bg-white/60 backdrop-blur-sm hover:bg-white/80">
               {isLoading ? (
                 <div className="h-5 w-5 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin" />
               ) : (
@@ -221,9 +216,7 @@ const VerifyEmailPage: React.FC = () => {
           <p className="text-sm text-gray-600">Wrong email address?</p>
           <Button
             asChild
-            variant="ghost"
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
+            className="text-blue-600 hover:text-blue-700 font-medium">
             <Link to="/signup">
               <Edit className="h-4 w-4 mr-2" />
               Update email address
@@ -235,8 +228,7 @@ const VerifyEmailPage: React.FC = () => {
         <div className="text-center">
           <Link
             to="/login"
-            className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-          >
+            className="text-blue-600 hover:text-blue-700 font-medium text-sm">
             Back to login
           </Link>
         </div>

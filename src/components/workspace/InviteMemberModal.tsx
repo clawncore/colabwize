@@ -130,7 +130,6 @@ export function InviteMemberModal({
           <DialogFooter>
             <Button
               className="bg-gray-500 text-white border-slate-200"
-              variant="outline"
               onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

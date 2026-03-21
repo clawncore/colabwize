@@ -44,8 +44,7 @@ export function ListView({
                   allSelected
                     ? "bg-teal-500 border-teal-500 text-white"
                     : "bg-white border-slate-300 hover:border-teal-400"
-                }`}
-              >
+                }`}>
                 {allSelected && <CheckSquare className="w-3 h-3" />}
               </div>
             </th>
@@ -76,8 +75,7 @@ export function ListView({
                 onClick={() => onTaskClick(task)}
                 className={`group border-t border-slate-50 transition-colors cursor-pointer ${
                   isSelected ? "bg-teal-50/30" : "hover:bg-slate-50/50"
-                }`}
-              >
+                }`}>
                 <td className="p-4" onClick={(e) => e.stopPropagation()}>
                   <div
                     onClick={() => onToggleSelection(task.id, !isSelected)}
@@ -85,8 +83,7 @@ export function ListView({
                       isSelected
                         ? "bg-teal-500 border-teal-500 text-white"
                         : "bg-white border-slate-300 group-hover:border-teal-400"
-                    }`}
-                  >
+                    }`}>
                     {isSelected && <CheckSquare className="w-3 h-3" />}
                   </div>
                 </td>
@@ -121,8 +118,7 @@ export function ListView({
                 <td className="py-4 px-2">
                   <Badge
                     variant="secondary"
-                    className="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold px-2 py-0.5 border-0"
-                  >
+                    className="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold px-2 py-0.5 border-0">
                     {task.status.replace("-", " ")}
                   </Badge>
                 </td>
@@ -158,8 +154,7 @@ export function ListView({
                       <div
                         key={assignee.user.id}
                         className="w-6 h-6 rounded-full border-2 border-white bg-teal-100 flex items-center justify-center text-[10px] font-bold text-teal-700 shadow-sm"
-                        title={assignee.user.full_name || assignee.user.email}
-                      >
+                        title={assignee.user.full_name || assignee.user.email}>
                         {assignee.user.full_name?.charAt(0) ||
                           assignee.user.email.charAt(0)}
                       </div>
@@ -167,11 +162,7 @@ export function ListView({
                   </div>
                 </td>
                 <td className="py-4 px-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600 rounded-full"
-                  >
+                  <Button className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600 rounded-full">
                     <MoreVertical className="w-4 h-4" />
                   </Button>
                 </td>

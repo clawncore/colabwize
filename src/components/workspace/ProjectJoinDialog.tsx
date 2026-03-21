@@ -104,7 +104,7 @@ export function ProjectJoinDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel} disabled={isLoading}>
+          <Button onClick={onCancel} disabled={isLoading}>
             Cancel
           </Button>
           <Button

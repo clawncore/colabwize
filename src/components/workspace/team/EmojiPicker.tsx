@@ -91,8 +91,6 @@ export function EmojiPicker({ onSelect, className }: EmojiPickerProps) {
     <Popover>
       <PopoverTrigger asChild>
         <Button
-          variant="ghost"
-          size="icon"
           className={cn(
             "h-10 w-10 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all",
             className,

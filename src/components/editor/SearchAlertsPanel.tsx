@@ -229,15 +229,17 @@ export function SearchAlertsPanel({ projectId }: SearchAlertsPanelProps) {
                 <button
                   key={freq}
                   onClick={() => setNewFrequency(freq)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${newFrequency === freq
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300"
-                    }`}>
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                    newFrequency === freq
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}>
                   <div
-                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${newFrequency === freq
-                      ? "border-blue-500"
-                      : "border-gray-300"
-                      }`}>
+                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      newFrequency === freq
+                        ? "border-blue-500"
+                        : "border-gray-300"
+                    }`}>
                     {newFrequency === freq && (
                       <div className="w-2 h-2 rounded-full bg-blue-500" />
                     )}
@@ -259,7 +261,6 @@ export function SearchAlertsPanel({ projectId }: SearchAlertsPanelProps) {
         </div>
         <div className="p-4 border-t border-gray-200 flex gap-2">
           <Button
-            variant="outline"
             onClick={() => setView("list")}
             className="flex-1 bg-gray-600 hover:bg-gray-700 text-white">
             Cancel
@@ -285,11 +286,7 @@ export function SearchAlertsPanel({ projectId }: SearchAlertsPanelProps) {
       <div className="h-full flex flex-col bg-white">
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-2 mb-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setView("list")}
-              className="-ml-2 ">
+            <Button onClick={() => setView("list")} className="-ml-2 ">
               <ChevronLeft className="h-5 w-5 text-gray-600" />
             </Button>
             <h3 className="text-lg font-semibold text-gray-900">
@@ -370,7 +367,6 @@ export function SearchAlertsPanel({ projectId }: SearchAlertsPanelProps) {
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-semibold text-gray-900">Search Alerts</h3>
           <Button
-            size="sm"
             onClick={() => setView("create")}
             className="bg-blue-600 hover:bg-blue-700 text-white h-8">
             <Plus className="h-3.5 w-3.5 mr-1.5" />
@@ -389,10 +385,11 @@ export function SearchAlertsPanel({ projectId }: SearchAlertsPanelProps) {
           {alerts.map((alert) => (
             <div
               key={alert.id}
-              className={`p-3 rounded-lg border-2 transition-all ${alert.is_active
-                ? "border-gray-200 hover:border-blue-300 hover:bg-blue-50/30"
-                : "border-gray-100 bg-gray-50/50 opacity-60"
-                }`}>
+              className={`p-3 rounded-lg border-2 transition-all ${
+                alert.is_active
+                  ? "border-gray-200 hover:border-blue-300 hover:bg-blue-50/30"
+                  : "border-gray-100 bg-gray-50/50 opacity-60"
+              }`}>
               <div className="flex items-start gap-3">
                 <div className="mt-0.5">
                   {alert.new_matches_count > 0 ? (
@@ -411,7 +408,7 @@ export function SearchAlertsPanel({ projectId }: SearchAlertsPanelProps) {
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${getFrequencyColor(
-                        alert.frequency
+                        alert.frequency,
                       )}`}>
                       {getFrequencyIcon(alert.frequency)}
                       {alert.frequency}
@@ -437,8 +434,6 @@ export function SearchAlertsPanel({ projectId }: SearchAlertsPanelProps) {
 
                   <div className="flex items-center gap-1 flex-wrap mt-2">
                     <Button
-                      size="sm"
-                      variant="ghost"
                       onClick={() => handleCheckAlert(alert)}
                       disabled={checkingId === alert.id}
                       className="h-6 px-2 text-xs text-blue-600 bg-blue-500 hover:text-blue-700 hover:bg-blue-600">
@@ -450,8 +445,6 @@ export function SearchAlertsPanel({ projectId }: SearchAlertsPanelProps) {
                       Check Now
                     </Button>
                     <Button
-                      size="sm"
-                      variant="ghost"
                       onClick={() => handleToggleActive(alert)}
                       className="h-6 px-2 bg-gray-600 hover:bg-gray-700 text-xs text-gray-50 hover:text-gray-20">
                       {alert.is_active ? (
@@ -468,8 +461,6 @@ export function SearchAlertsPanel({ projectId }: SearchAlertsPanelProps) {
                     </Button>
                     <div className="flex-1" /> {/* Spacer */}
                     <Button
-                      size="sm"
-                      variant="ghost"
                       onClick={() => handleDeleteAlert(alert.id)}
                       className="h-6 w-6 p-0 ">
                       <Trash2 className="h-3 w-3 text-gray-400 hover:text-red-600" />

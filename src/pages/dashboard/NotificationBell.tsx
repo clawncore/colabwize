@@ -547,16 +547,14 @@ const NotificationBell: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="fixed top-[10px] right-4 sm:right-[150px] w-[calc(100vw-2rem)] sm:w-[420px] max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">
-          <div className="p-4 border-b border-gray-100">
+        <div className="fixed top-16 right-4 sm:right-8 w-[calc(100vw-2rem)] sm:w-[420px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-100px)] flex flex-col bg-white rounded-xl shadow-2xl border border-gray-100 z-[9999] overflow-hidden">
+          <div className="p-4 border-b border-gray-100 bg-white">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-medium text-gray-700">
                 Notifications
               </h3>
               {unreadCount > 0 && (
                 <Button
-                  variant="ghost"
-                  size="sm"
                   onClick={markAllAsRead}
                   className="text-sm text-blue-600 hover:text-blue-800">
                   Mark all as read
@@ -596,7 +594,7 @@ const NotificationBell: React.FC = () => {
             </div>
           </div>
 
-          <div className="max-h-96 overflow-y-auto">
+          <div className="overflow-y-auto flex-1 custom-scrollbar">
             {loading ? (
               <div className="p-4 text-center text-gray-700">
                 Loading notifications...

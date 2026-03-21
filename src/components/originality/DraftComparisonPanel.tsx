@@ -58,8 +58,6 @@ export const DraftComparisonPanel: React.FC<DraftComparisonPanelProps> = ({
           </h3>
           {onClose && (
             <Button
-              variant="ghost"
-              size="sm"
               onClick={onClose}
               className="h-8 w-8 p-0 text-gray-600 hover:text-gray-700">
               <ArrowLeft className="w-4 h-4" />
@@ -186,7 +184,6 @@ export const DraftComparisonPanel: React.FC<DraftComparisonPanelProps> = ({
               <Button
                 type="button"
                 variant={comparisonMode === "text" ? "default" : "outline"}
-                size="sm"
                 onClick={() => setComparisonMode("text")}
                 className={
                   comparisonMode === "text"
@@ -198,7 +195,6 @@ export const DraftComparisonPanel: React.FC<DraftComparisonPanelProps> = ({
               <Button
                 type="button"
                 variant={comparisonMode === "file" ? "default" : "outline"}
-                size="sm"
                 onClick={() => setComparisonMode("file")}
                 className={
                   comparisonMode === "file"

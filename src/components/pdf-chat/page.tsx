@@ -11,8 +11,8 @@ import {
   Lock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../lib/supabase/client";
 import { documentService } from "../../services/documentService";
+import { apiClient } from "../../services/apiClient";
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import { PlanRestrictionCover } from "../subscription/PlanRestrictionCover";
 import { UpgradePromptDialog } from "../subscription/UpgradePromptDialog";
@@ -60,26 +60,12 @@ export default function PdfUploadPage() {
 
   React.useEffect(() => {
     const fetchPdfs = async () => {
+      setLoadingPdfs(true);
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const token = session?.access_token;
+        const response = await apiClient.get("/api/pdf");
 
-        if (!token) {
-          console.error("No auth token found");
-          return;
-        }
-
-        const res = await fetch("/api/pdf", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setPdfs(data);
+        if (response.success && response.data) {
+          setPdfs(response.data);
         }
       } catch (err) {
         console.error("Failed to fetch PDFs", err);
@@ -148,46 +134,27 @@ export default function PdfUploadPage() {
     setIsUploading(true);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      if (!token) {
-        alert("You must be logged in to upload files.");
-        setIsUploading(false);
-        return;
-      }
-
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/pdf/upload", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const response = await apiClient.post("/api/pdf/upload", formData);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.error === "PDF_LIMIT_REACHED") {
+      if (!response.success) {
+        if (response.error === "PDF_LIMIT_REACHED") {
           setUpgradeFeature("pdf_limit");
           setShowUpgradeDialog(true);
           return;
         }
-        if (data.error === "FILE_SIZE_EXCEEDED") {
+        if (response.error === "FILE_SIZE_EXCEEDED") {
           setUpgradeFeature("pdf_size_limit");
           setShowUpgradeDialog(true);
           return;
         }
-        throw new Error(data.error || "Upload failed");
+        throw new Error(response.error || "Upload failed");
       }
 
       navigate(
-        `/dashboard/pdf-chat/${data.documentId}?name=${encodeURIComponent(
+        `/dashboard/pdf-chat/${response.data.documentId}?name=${encodeURIComponent(
           file.name,
         )}`,
       );

@@ -285,9 +285,7 @@ export default function Profile() {
                 </label>
               </div>
               <div>
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
-                  variant="outline">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white mb-2">
                   Change Photo
                 </Button>
                 {/* Added dark mode support to the text */}
@@ -528,7 +526,6 @@ export default function Profile() {
             </div>
             <DialogFooter className="sm:justify-end">
               <Button
-                variant="outline"
                 onClick={() => {
                   setShowOTPModal(false);
                   setOtp("");
@@ -552,7 +549,6 @@ export default function Profile() {
           </DialogContent>
         </Dialog>
       )}
-
     </div>
   );
 }

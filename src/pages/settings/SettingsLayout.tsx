@@ -91,7 +91,7 @@ const SettingsLayout: React.FC = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-full bg-white">
+    <div className="flex flex-col lg:flex-row h-full bg-white overflow-hidden">
       {/* Mobile menu button */}
       <div className="lg:hidden p-4 border-b border-gray-200 ">
         <button
@@ -156,7 +156,7 @@ const SettingsLayout: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0 bg-transparent transition-all duration-300">
+      <div className="flex-1 min-w-0 bg-transparent transition-all duration-300 overflow-y-auto custom-scrollbar">
         <div className="p-4 sm:p-6 lg:p-8">
           <Outlet />
         </div>

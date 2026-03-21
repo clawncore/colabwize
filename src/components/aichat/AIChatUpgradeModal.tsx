@@ -135,7 +135,6 @@ export const AIChatUpgradeModal: React.FC<AIChatUpgradeModalProps> = ({
             <ArrowRight className="w-4 h-4" />
           </Button>
           <Button
-            variant="ghost"
             className="w-full text-gray-500 hover:text-gray-700 text-sm"
             onClick={() => navigate(config.secondaryPath)}>
             {config.secondaryLabel}

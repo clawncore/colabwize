@@ -126,14 +126,12 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       {!isCollapsed && (
         <div className="flex items-center gap-1 px-3 py-2 bg-gray-50 border-t border-gray-100 overflow-x-auto scrollbar-hide min-h-[44px]">
           <Toggle
-            size="sm"
             title="Undo"
             className="h-8 w-8 shrink-0"
             onClick={() => editor.chain().focus().undo().run()}>
             <Undo className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Redo"
             className="h-8 w-8 shrink-0"
             onClick={() => editor.chain().focus().redo().run()}>
@@ -144,10 +142,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Toggle
-                size="sm"
-                title="Heading"
-                className="h-8 gap-1.5 px-2.5 shrink-0">
+              <Toggle title="Heading" className="h-8 gap-1.5 px-2.5 shrink-0">
                 <Type className="h-[15px] w-[15px]" />
                 <span className="text-xs">
                   {currentHeading?.label ?? "Paragraph"}
@@ -182,7 +177,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Toggle
-                size="sm"
                 title="Font Family"
                 className="gap-1.5 px-2.5 h-8 w-[6.5rem] justify-between shrink-0">
                 <span className="text-xs truncate">
@@ -226,7 +220,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           <Toggle
-            size="sm"
             title="Bold"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("bold")}
@@ -234,7 +227,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Bold className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Italic"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("italic")}
@@ -242,7 +234,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Italic className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Underline"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("underline")}
@@ -252,7 +243,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Underline className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Strikethrough"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("strike")}
@@ -260,7 +250,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Strikethrough className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Superscript"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("superscript")}
@@ -270,7 +259,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Superscript className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Subscript"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("subscript")}
@@ -280,7 +268,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Subscript className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Code"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("code")}
@@ -290,7 +277,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Toggle
-                size="sm"
                 title="Highlight"
                 pressed={editor.isActive("user-highlight")}
                 className="gap-1 px-2 h-8 w-12 justify-between shrink-0">
@@ -372,7 +358,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           </DropdownMenu>
 
           <Toggle
-            size="sm"
             title="Insert Logic / Math"
             pressed={editor.isActive("math")}
             className="h-8 w-8 font-serif italic font-bold shrink-0 text-[13px]"
@@ -383,7 +368,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           <Toggle
-            size="sm"
             title="Align Left"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive({ textAlign: "left" })}
@@ -393,7 +377,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <AlignLeft className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Align Center"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive({ textAlign: "center" })}
@@ -403,7 +386,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <AlignCenter className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Align Right"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive({ textAlign: "right" })}
@@ -413,7 +395,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <AlignRight className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Align Justify"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive({ textAlign: "justify" })}
@@ -426,7 +407,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           <Toggle
-            size="sm"
             title="Bullet List"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("bulletList")}
@@ -436,7 +416,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <List className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Ordered List"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("orderedList")}
@@ -449,7 +428,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <Separator orientation="vertical" className="mx-1.5 h-6 shrink-0" />
 
           <Toggle
-            size="sm"
             title="Blockquote"
             className="h-8 w-8 shrink-0"
             pressed={editor.isActive("blockquote")}
@@ -459,7 +437,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <Quote className="h-[15px] w-[15px]" />
           </Toggle>
           <Toggle
-            size="sm"
             title="Horizontal Rule"
             className="h-8 w-8 shrink-0"
             onClick={() => editor.chain().focus().setHorizontalRule().run()}>
@@ -472,7 +449,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Toggle
-                size="sm"
                 title="Table"
                 pressed={editor.isActive("table")}
                 className="gap-1 px-2 h-8 shrink-0">
@@ -555,7 +531,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           <Popover>
             <PopoverTrigger asChild>
               <Toggle
-                size="sm"
                 title="Link"
                 pressed={editor.isActive("link")}
                 className="h-8 w-8 shrink-0">
@@ -571,7 +546,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
                   onKeyDown={(e) => e.key === "Enter" && setLink()}
                 />
                 <Button
-                  size="sm"
                   className="bg-blue-600 text-white hover:bg-blue-700"
                   onClick={setLink}>
                   Add
@@ -581,7 +555,6 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
           </Popover>
 
           <Toggle
-            size="sm"
             title="Insert Image"
             className="h-8 w-8 shrink-0"
             onClick={() => {

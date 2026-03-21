@@ -96,7 +96,6 @@ export default function TeamWorkspacePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Button
-                size="lg"
                 className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-10 py-7 rounded-2xl text-lg shadow-2xl shadow-indigo-500/20 transition-all border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1"
                 asChild>
                 <RouterLink to="/signup">
@@ -104,8 +103,6 @@ export default function TeamWorkspacePage() {
                 </RouterLink>
               </Button>
               <Button
-                size="lg"
-                variant="outline"
                 className="bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold px-10 py-7 rounded-2xl text-lg backdrop-blur-md"
                 asChild>
                 <RouterLink to="/pricing">Explore Enterprise Plans</RouterLink>
@@ -530,14 +527,11 @@ export default function TeamWorkspacePage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
                 <Button
-                  size="lg"
                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-12 py-8 rounded-2xl text-lg shadow-2xl shadow-indigo-600/20"
                   asChild>
                   <RouterLink to="/signup">Deploy Workspace Hub</RouterLink>
                 </Button>
                 <Button
-                  size="lg"
-                  variant="outline"
                   className="bg-white/5 border-white/20 hover:bg-white/10 text-white font-bold px-12 py-8 rounded-2xl text-lg"
                   asChild>
                   <RouterLink to="/contact">Schedule Site Visit</RouterLink>
