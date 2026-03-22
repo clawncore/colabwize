@@ -60,11 +60,7 @@ export default function ChatInput({
       if (chatRoomId && user) {
         supabase
           .channel(`chat_events:${chatRoomId}`)
-          .send({
-            type: "broadcast",
-            event: "stopped_typing",
-            payload: { userId: user.id },
-          })
+          .httpSend("stopped_typing", { userId: user.id })
           .catch(() => {
             // Suppress errors for this non-critical broadcast
           });
@@ -169,15 +165,10 @@ export default function ChatInput({
           // Direct REST broadcast sending to bypass WS fallback warnings
           supabase
             .channel(`chat_events:${chatRoomId}`)
-            .send({
-              type: "broadcast",
-              event: "typing",
-              payload: {
-                userId: user.id,
-                userName:
-                  user.user_metadata.full_name || user.email.split("@")[0],
-                timestamp: now,
-              },
+            .httpSend("typing", {
+              userId: user.id,
+              userName: user.user_metadata.full_name || user.email.split("@")[0],
+              timestamp: now,
             })
             .catch(() => {});
           lastTypingTimeRef.current = now;
@@ -188,11 +179,7 @@ export default function ChatInput({
     const broadcastStopped = async () => {
       supabase
         .channel(`chat_events:${chatRoomId}`)
-        .send({
-          type: "broadcast",
-          event: "stopped_typing",
-          payload: { userId: user.id },
-        })
+        .httpSend("stopped_typing", { userId: user.id })
         .catch(() => {});
       lastTypingTimeRef.current = 0;
     };

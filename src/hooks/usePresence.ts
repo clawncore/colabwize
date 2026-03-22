@@ -36,6 +36,7 @@ export function usePresence(documentId: string) {
       name: documentId, // Scoped to this ID (e.g., 'dashboard-team-123')
       document: ydoc,
       token: token,
+      parameters: { token }, // Fix: Pass token in URL parameters to ensure backend receives it immediately during connect
       onConnect: () => setIsConnected(true),
       onDisconnect: () => setIsConnected(false),
       onAwarenessChange: ({ states }) => {
