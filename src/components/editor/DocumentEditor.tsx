@@ -213,6 +213,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       name: `project-${project.id}`,
       document: freshYdoc,
       token: token,
+      parameters: { token }, // Fix: Pass token in URL parameters to ensure backend receives it immediately during connect
       onStatus: (item) => {
         console.log(`[HP Status] Project ${project.id}:`, item.status);
         setCollabStatus(item.status);
@@ -358,24 +359,24 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           history: isCollaborative ? false : {},
         }),
         ...(isCollaborative &&
-        collabReady &&
-        providerRef.current &&
-        ydocRef.current
+          collabReady &&
+          providerRef.current &&
+          ydocRef.current
           ? [
-              Collaboration.configure({
-                document: ydocRef.current,
-              }),
-              CollaborationCursor.configure({
-                provider: providerRef.current,
-                user: {
-                  name:
-                    user?.user_metadata?.full_name ||
-                    user?.email ||
-                    "Anonymous",
-                  color: cursorColor,
-                },
-              }),
-            ]
+            Collaboration.configure({
+              document: ydocRef.current,
+            }),
+            CollaborationCursor.configure({
+              provider: providerRef.current,
+              user: {
+                name:
+                  user?.user_metadata?.full_name ||
+                  user?.email ||
+                  "Anonymous",
+                color: cursorColor,
+              },
+            }),
+          ]
           : []),
         AuthorshipExtension.configure({
           user: {
@@ -436,7 +437,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         GrammarExtension, // AI Grammar Checker
         CitationScannerExtension,
       ],
-      content: formatContentForTiptap(project.content),
+      content: isCollaborative ? undefined : formatContentForTiptap(project.content),
       onUpdate: ({ editor, transaction }) => {
         if (
           transaction.getMeta("normalization") ||
@@ -499,7 +500,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             try {
               const sel = NodeSelection.create(view.state.doc, pos);
               view.dispatch(view.state.tr.setSelection(sel));
-            } catch (e) {}
+            } catch (e) { }
             return true;
           }
 
@@ -650,57 +651,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           projectId: project.id,
         });
         try {
-          // --- SEED CONTENT IF YDOC IS EMPTY ---
-          const ydoc = ydocRef.current;
-          if (ydoc && project.content) {
-            const fragment = ydoc.getXmlFragment("default");
-            console.log("[Collab] Fragment check:", {
-              length: fragment.length,
-              hasContent: !!project.content,
-            });
-            // If the fragment is empty (no content nodes yet), seed it from project.content
-            if (fragment.length === 0) {
-              const tiptapContent = formatContentForTiptap(project.content);
-              console.log(
-                "[Collab] YDoc is empty, seeding with initial project content. Content type:",
-                typeof tiptapContent,
-                "IsDoc:",
-                tiptapContent?.type === "doc",
-              );
-
-              if (tiptapContent) {
-                // Defensive delay to ensure HP provider doesn't immediately overwrite with empty state
-                setTimeout(() => {
-                  console.log("[Collab] Executing deferred setContent...");
-                  editor.chain().setContent(tiptapContent, true).focus().run();
-                  console.log(
-                    "[Collab] setContent command executed successfully",
-                  );
-
-                  // Double check if it actually applied
-                  if (
-                    editor.getText().trim().length === 0 &&
-                    project.word_count > 0
-                  ) {
-                    console.error(
-                      "[Collab] Seeding failed: Editor is still empty despite word_count > 0",
-                    );
-                  }
-                }, 500);
-              }
-            } else {
-              console.log(
-                "[Collab] YDoc is NOT empty, skipping seed. Length:",
-                fragment.length,
-              );
-            }
-          } else {
-            console.warn("[Collab] Missing ydoc or project.content", {
-              hasYdoc: !!ydoc,
-              hasContent: !!project.content,
-            });
-          }
-
           const { CitationRegistryService } =
             await import("../../services/CitationRegistryService");
           await CitationRegistryService.initializeFromBackend(project.id);
@@ -857,7 +807,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) {} // Dispatch clear
+          } catch (e) { } // Dispatch clear
           console.log("âœ… No grammar issues in block.");
           return;
         }
@@ -895,7 +845,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (matchCount > 0 || errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) {}
+          } catch (e) { }
           console.log(`âœ… Applied ${matchCount} grammar highlights to block.`);
         }
       } catch (error) {
@@ -934,7 +884,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             description: `We've detected you're using ${state.stats.majorityStyle} formatting and updated your settings.`,
           });
         }
-      } catch (err) {}
+      } catch (err) { }
     }, 5000);
 
     return () => clearInterval(interval);
@@ -1297,11 +1247,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               <div className="flex items-center space-x-2 flex-nowrap overflow-x-auto pb-1 custom-scrollbar min-w-0 flex-1 justify-end">
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isPreviewMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
                       ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                    }`}
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1317,11 +1266,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isFocusMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
                       ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                    }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />

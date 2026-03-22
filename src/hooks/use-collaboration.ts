@@ -37,7 +37,7 @@ export const useCollaboration = ({
 
     const initProvider = async () => {
       if (authLoading || !token) return;
-      
+
       setStatus("connecting");
 
       try {
@@ -48,6 +48,7 @@ export const useCollaboration = ({
           url: wsUrl,
           name: `project-${documentId}`,
           token: token,
+          parameters: { token }, // Fix: Pass token in URL parameters to ensure backend receives it immediately during connect
           onAuthenticationFailed: ({ reason }) => {
             console.error("Collab Auth Failed:", reason);
             if (mounted) setStatus("disconnected");
