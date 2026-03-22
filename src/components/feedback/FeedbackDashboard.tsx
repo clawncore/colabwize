@@ -308,7 +308,6 @@ const FeedbackDashboard: React.FC = () => {
                       dashboard performance and added dark mode support.
                     </p>
                     <Button
-                      variant="outline"
                       className="bg-blue-500 hover:bg-blue-600 text-white border-blue-200"
                       onClick={() => setActiveTab("submit")}>
                       Have an idea? Tell us!
@@ -442,11 +441,7 @@ const FeedbackDashboard: React.FC = () => {
               </div>
 
               <div className="pt-4 flex justify-end gap-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => setActiveTab("overview")}>
-                  Cancel
-                </Button>
+                <Button onClick={() => setActiveTab("overview")}>Cancel</Button>
                 <Button
                   className="bg-blue-600 hover:bg-blue-700 text-white min-w-[150px] h-11"
                   onClick={handleCreateFeedback}

@@ -108,10 +108,7 @@ export default function WorkspaceOverview() {
         <div className="flex gap-3 items-center">
           {workspaceId && <OnlineMembers workspaceId={workspaceId} />}
           {canManageMembers && (
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => setShowInviteModal(true)}>
+            <Button className="gap-2" onClick={() => setShowInviteModal(true)}>
               <Users className="w-4 h-4" />
               Invite
             </Button>
@@ -208,11 +205,7 @@ export default function WorkspaceOverview() {
               <CardTitle className="text-lg font-semibold text-slate-900">
                 Recent Projects
               </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="text-slate-500 hover:text-indigo-600">
+              <Button asChild className="text-slate-500 hover:text-indigo-600">
                 <Link to={`/dashboard/workspace/${workspaceId}/projects`}>
                   View All <ArrowRight className="w-4 h-4 ml-1" />
                 </Link>
@@ -292,11 +285,7 @@ export default function WorkspaceOverview() {
               <CardTitle className="text-lg font-semibold text-slate-900">
                 My Priority Tasks
               </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="text-slate-500 hover:text-indigo-600">
+              <Button asChild className="text-slate-500 hover:text-indigo-600">
                 <Link
                   to={`/dashboard/workspace/${workspaceId}/kanban?view=list`}>
                   View All <ArrowRight className="w-4 h-4 ml-1" />
@@ -318,8 +307,7 @@ export default function WorkspaceOverview() {
                           `/dashboard/workspace/${workspaceId}/kanban?view=list&taskId=${task.id}`,
                         )
                       }
-                      className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group"
-                    >
+                      className="flex items-center justify-between p-3 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group">
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-2 h-2 rounded-full ${
@@ -346,7 +334,7 @@ export default function WorkspaceOverview() {
                             {format(new Date(task.due_date), "MMM d")}
                           </div>
                         )}
-                        <Badge variant="outline" className="text-xs capitalize">
+                        <Badge className="text-xs capitalize">
                           {task.status.replace("-", " ")}
                         </Badge>
                       </div>

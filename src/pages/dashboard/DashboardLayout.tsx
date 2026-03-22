@@ -1303,8 +1303,8 @@ export default function DashboardLayout({
             <Dialog
               open={showSidebarCreateModal}
               onOpenChange={setShowSidebarCreateModal}>
-              <DialogContent className="sm:max-w-[425px] bg-white border-border">
-                <DialogHeader>
+              <DialogContent className="w-[95vw] sm:max-w-[425px] max-h-[90vh] overflow-hidden flex flex-col bg-white border-border p-0">
+                <DialogHeader className="p-6 pb-2">
                   <DialogTitle>Create New Workspace</DialogTitle>
                   <DialogDescription>
                     Create a new collaborative space for your team.
@@ -1316,7 +1316,8 @@ export default function DashboardLayout({
                     )}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
+
+                <div className="grid gap-4 py-4 px-6 overflow-y-auto flex-1 custom-scrollbar">
                   <div className="grid gap-2">
                     <Label htmlFor="sidebar-ws-name">Workspace Name</Label>
                     <Input
@@ -1349,15 +1350,40 @@ export default function DashboardLayout({
                           Select or type
                         </span>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-1.5 p-2 border rounded-md bg-slate-50/50">
-                        {["💼", "📁", "📊", "📝", "💻", "🚀", "🤝", "👥", "💬", "📢", "🌐", "🎓", "📖", "🔬", "🧪", "🎨", "✨", "💡", "🔥", "⭐", "📍", "🛠️", "🏠", "🏢", "🏫"].map((emoji) => (
+                        {[
+                          "💼",
+                          "📁",
+                          "📊",
+                          "📝",
+                          "💻",
+                          "🚀",
+                          "🤝",
+                          "👥",
+                          "💬",
+                          "📢",
+                          "🌐",
+                          "🎓",
+                          "📖",
+                          "🔬",
+                          "🧪",
+                          "🎨",
+                          "✨",
+                          "💡",
+                          "🔥",
+                          "⭐",
+                          "📍",
+                          "🛠️",
+                          "🏠",
+                          "🏢",
+                          "🏫",
+                        ].map((emoji) => (
                           <button
                             key={emoji}
                             type="button"
                             onClick={() => setSidebarWsIcon(emoji)}
-                            className={`flex items-center justify-center w-8 h-8 rounded hover:bg-white hover:shadow-sm transition-all text-lg ${sidebarWsIcon === emoji ? 'bg-white shadow-sm border border-emerald-100' : ''}`}
-                          >
+                            className={`flex items-center justify-center w-8 h-8 rounded hover:bg-white hover:shadow-sm transition-all text-lg ${sidebarWsIcon === emoji ? "bg-white shadow-sm border border-emerald-100" : ""}`}>
                             {emoji}
                           </button>
                         ))}
@@ -1375,10 +1401,10 @@ export default function DashboardLayout({
                     />
                   </div>
                 </div>
-                <DialogFooter>
+
+                <DialogFooter className="p-6 pt-2 border-t bg-slate-50/30">
                   <Button
-                    variant="outline"
-                    className="bg-muted hover:bg-muted/80 border-border"
+                    className="bg-white hover:bg-muted/80 border-border"
                     onClick={() => setShowSidebarCreateModal(false)}
                     disabled={isCreatingSidebarWs}>
                     Cancel

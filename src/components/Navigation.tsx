@@ -585,13 +585,11 @@ export default function Navigation() {
               <>
                 <Button
                   asChild
-                  variant="outline"
                   className="bg-blue-600 border-gray-300 text-white hover:bg-blue-700 hover:text-white font-medium transition-all shadow-sm">
                   <Link to="/login">Login</Link>
                 </Button>
                 <Button
                   asChild
-                  variant="outline"
                   className="bg-blue-600 border-white text-white hover:bg-blue-700 hover:text-white font-semibold shadow-sm transition-all">
                   <Link to="/schedule-demo">Schedule Demo</Link>
                 </Button>
@@ -605,13 +603,11 @@ export default function Navigation() {
               <>
                 <Button
                   asChild
-                  variant="outline"
                   className="bg-blue-600 border-white text-white hover:bg-blue-700 hover:text-white font-medium transition-all">
                   <Link to="/login">Sign In</Link>
                 </Button>
                 <Button
                   asChild
-                  variant="outline"
                   className="bg-blue-600 border-white text-white hover:bg-blue-700 hover:text-white font-semibold shadow-sm transition-all">
                   <Link to="/schedule-demo">Schedule Demo</Link>
                 </Button>
@@ -640,8 +636,6 @@ export default function Navigation() {
               </Button>
             )}
             <Button
-              variant="ghost"
-              size="sm"
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 text-gray-800 hover:text-gray-800">
               {isOpen ? (
@@ -806,7 +800,6 @@ export default function Navigation() {
             <div className="flex flex-col space-y-3 pt-4">
               <Button
                 asChild
-                variant="outline"
                 className="w-full py-6 border-gray-200 bg-blue-600 text-white hover:bg-blue-700 font-semibold"
                 onClick={() => setIsOpen(false)}>
                 <Link to="/schedule-demo">Schedule Demo</Link>

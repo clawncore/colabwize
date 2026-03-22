@@ -4,6 +4,7 @@ import {
   sessionManager,
 } from "../lib/supabase/client";
 import logger from "../utils/logger";
+import { apiClient } from "./apiClient";
 
 /**
  * Supabase Authentication Utilities
@@ -272,21 +273,13 @@ export async function sendOTP(
 ) {
   try {
     // Use the backend API to send OTP
-    const response = await fetch("/api/auth/send-otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId,
-        phoneNumber,
-        method,
-      }),
+    const result = await apiClient.post("/api/auth/send-otp", {
+      userId,
+      phoneNumber,
+      method,
     });
 
-    const result = await response.json();
-
-    if (response.ok && result.success) {
+    if (result.success) {
       return result;
     } else {
       throw new Error(result.message || "Failed to send OTP");
@@ -303,20 +296,12 @@ export async function sendOTP(
 export async function verifyOTP(userId: string, code: string) {
   try {
     // Use the backend API to verify OTP
-    const response = await fetch("/api/auth/verify-otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId,
-        otp: code,
-      }),
+    const result = await apiClient.post("/api/auth/verify-otp", {
+      userId,
+      otp: code,
     });
 
-    const result = await response.json();
-
-    if (response.ok && result.success) {
+    if (result.success) {
       return result;
     } else {
       throw new Error(result.message || "Failed to verify OTP");

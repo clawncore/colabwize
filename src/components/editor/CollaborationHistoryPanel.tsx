@@ -196,8 +196,6 @@ export const CollaborationHistoryPanel: React.FC<
             </h2>
           </div>
           <Button
-            variant="ghost"
-            size="icon"
             onClick={onClose}
             className="h-8 w-8 text-slate-400 hover:text-slate-600">
             ×

@@ -88,9 +88,10 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
         { papers },
       );
 
-      if (response.data.success) {
+      if (response && response.success && response.data) {
         const scores = new Map<string, any>();
-        Object.entries(response.data.credibilityScores).forEach(
+        const credibilityData = response.data.credibilityScores || response.data;
+        Object.entries(credibilityData || {}).forEach(
           ([title, score]) => {
             scores.set(title, score);
           },
@@ -321,7 +322,6 @@ export const PaperSuggestionsPanel: React.FC<PaperSuggestionsPanelProps> = ({
                               }
                               score={credibilityScores.get(paper.title)?.score}
                               flags={credibilityScores.get(paper.title)?.flags}
-                              size="sm"
                             />
                             {isFree && (
                               <span className="text-[10px] bg-blue-50 text-blue-600 px-1 py-0.5 rounded font-bold uppercase tracking-wider">

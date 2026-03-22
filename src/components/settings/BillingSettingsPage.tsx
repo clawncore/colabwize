@@ -41,7 +41,7 @@ const SubscriptionStatus = ({
     setLoading(true);
     try {
       await SubscriptionService.cancelSubscription(
-        "User requested cancellation"
+        "User requested cancellation",
       );
       onUpdate?.();
       toast({
@@ -98,18 +98,22 @@ const SubscriptionStatus = ({
               Current Subscription
             </h2>
             <div
-              className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase flex items-center gap-1.5 ${subscription.status === "active"
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                : subscription.status === "canceled"
-                  ? "bg-amber-50 text-amber-700 border border-amber-100"
-                  : "bg-gray-50 text-gray-700 border border-gray-100"
-                }`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${subscription.status === "active"
-                ? "bg-emerald-500"
-                : subscription.status === "canceled"
-                  ? "bg-amber-500"
-                  : "bg-gray-500"
-                }`} />
+              className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase flex items-center gap-1.5 ${
+                subscription.status === "active"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                  : subscription.status === "canceled"
+                    ? "bg-amber-50 text-amber-700 border border-amber-100"
+                    : "bg-gray-50 text-gray-700 border border-gray-100"
+              }`}>
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${
+                  subscription.status === "active"
+                    ? "bg-emerald-500"
+                    : subscription.status === "canceled"
+                      ? "bg-amber-500"
+                      : "bg-gray-500"
+                }`}
+              />
               {subscription.status}
             </div>
           </div>
@@ -123,7 +127,6 @@ const SubscriptionStatus = ({
               <>
                 <Button
                   onClick={handleManage}
-                  variant="outline"
                   className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                   disabled={loading}>
                   Payment Methods
@@ -133,7 +136,6 @@ const SubscriptionStatus = ({
                   onOpenChange={setShowCancelDialog}>
                   <AlertDialogTrigger asChild>
                     <Button
-                      variant="ghost"
                       className="rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700"
                       disabled={loading}>
                       Cancel Plan
@@ -156,18 +158,20 @@ const SubscriptionStatus = ({
                             Access ends on:{" "}
                             {subscription.current_period_end
                               ? new Date(
-                                subscription.current_period_end
-                              ).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })
+                                  subscription.current_period_end,
+                                ).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })
                               : "End of current period"}
                           </p>
                         </div>
 
                         <div className="space-y-3">
-                          <p className="font-medium text-gray-900">What you'll lose:</p>
+                          <p className="font-medium text-gray-900">
+                            What you'll lose:
+                          </p>
                           <ul className="space-y-2 text-sm text-gray-600">
                             {[
                               "Unlimited Originality Scans",
@@ -176,7 +180,9 @@ const SubscriptionStatus = ({
                               "Draft Comparison History",
                             ].map((item, i) => (
                               <li key={i} className="flex items-center gap-2">
-                                <span className="text-red-500 flex-shrink-0">✕</span>
+                                <span className="text-red-500 flex-shrink-0">
+                                  ✕
+                                </span>
                                 {item}
                               </li>
                             ))}
@@ -184,7 +190,9 @@ const SubscriptionStatus = ({
                         </div>
 
                         <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
-                          <p className="font-medium text-gray-900">What happens next?</p>
+                          <p className="font-medium text-gray-900">
+                            What happens next?
+                          </p>
                           <ul className="space-y-1 text-gray-600 list-disc pl-4">
                             <li>No further payments will be charged</li>
                             <li>You keep full access until the date above</li>
@@ -229,18 +237,34 @@ const SubscriptionStatus = ({
 
       <div className="grid md:grid-cols-2 gap-8">
         <div className="space-y-1">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Current Plan</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Current Plan
+          </p>
           <div className="flex items-baseline gap-2">
             <p className="text-3xl font-extrabold text-gray-900">{plan.name}</p>
-            <span className="text-gray-500 font-medium">${plan.price}/month</span>
+            <span className="text-gray-500 font-medium">
+              ${plan.price}/month
+            </span>
           </div>
 
           <div className="pt-4 space-y-3">
             <div className="flex items-center text-sm text-gray-600 bg-gray-50 w-fit px-3 py-1.5 rounded-lg border border-gray-100">
               <Calendar className="mr-2 h-4 w-4 text-gray-400" />
-              {subscription.cancel_at_period_end
-                ? <span className="text-amber-700 font-medium">Expires on {new Date(subscription.current_period_end!).toLocaleDateString()}</span>
-                : <span>Renews on {new Date(subscription.current_period_end || Date.now()).toLocaleDateString()}</span>}
+              {subscription.cancel_at_period_end ? (
+                <span className="text-amber-700 font-medium">
+                  Expires on{" "}
+                  {new Date(
+                    subscription.current_period_end!,
+                  ).toLocaleDateString()}
+                </span>
+              ) : (
+                <span>
+                  Renews on{" "}
+                  {new Date(
+                    subscription.current_period_end || Date.now(),
+                  ).toLocaleDateString()}
+                </span>
+              )}
             </div>
             <div className="flex items-center text-sm text-gray-600">
               <CheckCircle className="mr-2 h-4 w-4 text-emerald-500" />
@@ -252,7 +276,9 @@ const SubscriptionStatus = ({
         </div>
 
         <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-2xl border border-indigo-50/50">
-          <h4 className="font-semibold text-indigo-900 mb-3 text-sm uppercase tracking-wide">Included in {plan.name}</h4>
+          <h4 className="font-semibold text-indigo-900 mb-3 text-sm uppercase tracking-wide">
+            Included in {plan.name}
+          </h4>
           <ul className="grid grid-cols-2 gap-3">
             {plan.features.slice(0, 6).map((feature, i) => (
               <li key={i} className="flex items-start text-sm text-gray-700">
@@ -388,12 +414,13 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
                 {!isUnlimited && (
                   <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ease-out ${percentage > 90
-                        ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
-                        : percentage > 75
-                          ? "bg-amber-500"
-                          : "bg-indigo-500"
-                        }`}
+                      className={`h-full rounded-full transition-all duration-500 ease-out ${
+                        percentage > 90
+                          ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
+                          : percentage > 75
+                            ? "bg-amber-500"
+                            : "bg-indigo-500"
+                      }`}
                       style={{
                         width: `${percentage}%`,
                       }}
@@ -475,7 +502,9 @@ const PaymentHistory = () => {
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-8">
       <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
         Payment History
-        <span className="px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 text-xs font-normal border border-gray-100">{invoices.length} records</span>
+        <span className="px-2 py-0.5 rounded-full bg-gray-50 text-gray-500 text-xs font-normal border border-gray-100">
+          {invoices.length} records
+        </span>
       </h2>
 
       {invoices.length === 0 ? (
@@ -487,16 +516,38 @@ const PaymentHistory = () => {
           <table className="min-w-full divide-y divide-gray-100">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Invoice
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Amount
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Receipt
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
               {invoices.map((invoice) => (
-                <tr key={invoice.invoice_id} className="hover:bg-gray-50/50 transition-colors">
+                <tr
+                  key={invoice.invoice_id}
+                  className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     Invoice {invoice.invoice_id}
                   </td>
@@ -512,13 +563,15 @@ const PaymentHistory = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${invoice.status === "paid"
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                        : invoice.status === "pending"
-                          ? "bg-amber-50 text-amber-700 border border-amber-100"
-                          : "bg-red-50 text-red-700 border border-red-100"
-                        }`}>
-                      {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        invoice.status === "paid"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                          : invoice.status === "pending"
+                            ? "bg-amber-50 text-amber-700 border border-amber-100"
+                            : "bg-red-50 text-red-700 border border-red-100"
+                      }`}>
+                      {invoice.status.charAt(0).toUpperCase() +
+                        invoice.status.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -600,7 +653,8 @@ const PaymentMethodsDisplay = () => {
                 <div>
                   <p className="font-semibold text-gray-900 capitalize text-sm">
                     {method.type}{" "}
-                    <span className="text-gray-400 font-normal">••••</span> {method.lastFour}
+                    <span className="text-gray-400 font-normal">••••</span>{" "}
+                    {method.lastFour}
                   </p>
                   {method.expiryMonth && method.expiryYear && (
                     <p className="text-xs text-gray-500 mt-0.5">
@@ -643,9 +697,10 @@ export default function BillingPage() {
       ]);
 
       setData(subData);
-      const planId = typeof subData.subscription.plan === 'string'
-        ? subData.subscription.plan
-        : subData.subscription.plan.id;
+      const planId =
+        typeof subData.subscription.plan === "string"
+          ? subData.subscription.plan
+          : subData.subscription.plan.id;
 
       const plan = plans.find((p) => p.id === planId) || null;
       setActivePlan(plan);
@@ -672,10 +727,16 @@ export default function BillingPage() {
         <h1 className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
           Billing & Subscription
         </h1>
-        <p className="text-gray-500">Manage your subscription plan and billing history.</p>
+        <p className="text-gray-500">
+          Manage your subscription plan and billing history.
+        </p>
       </div>
 
-      <SubscriptionStatus subscription={data.subscription} plan={activePlan} onUpdate={loadData} />
+      <SubscriptionStatus
+        subscription={data.subscription}
+        plan={activePlan}
+        onUpdate={loadData}
+      />
 
       <UsageChart usage={data.usage} limits={data.limits} />
 

@@ -102,7 +102,7 @@ export function OTPVerificationForm({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId, otp: otpToVerify }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -142,7 +142,7 @@ export function OTPVerificationForm({
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId }),
-          }
+          },
         );
 
         const data = await response.json();
@@ -207,8 +207,7 @@ export function OTPVerificationForm({
         <Button
           onClick={() => handleVerify()}
           disabled={isVerifying || otp.some((d) => !d)}
-          className="w-full"
-          size="lg">
+          className="w-full">
           {isVerifying ? "Verifying..." : "Verify Email"}
         </Button>
 

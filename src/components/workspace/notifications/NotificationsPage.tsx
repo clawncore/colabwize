@@ -262,8 +262,6 @@ const NotificationsPage: React.FC = () => {
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <Button
-              variant="outline"
-              size="sm"
               onClick={handleMarkAllAsRead}
               className="text-slate-600 border-slate-200">
               <Check className="h-4 w-4 mr-2" />
@@ -271,16 +269,12 @@ const NotificationsPage: React.FC = () => {
             </Button>
           )}
           <Button
-            variant="outline"
-            size="icon"
             className="sm:hidden"
             onClick={() => setIsSearchVisible(!isSearchVisible)}>
             <Search className="h-4 w-4" />
           </Button>
           {isAdmin && (
             <Button
-              variant="outline"
-              size="sm"
               onClick={() => {
                 if (workspaceId) {
                   navigate(
@@ -350,10 +344,7 @@ const NotificationsPage: React.FC = () => {
               Error Loading Notifications
             </h3>
             <p className="text-slate-500 mt-2 max-w-xs mx-auto">{error}</p>
-            <Button
-              variant="outline"
-              className="mt-6"
-              onClick={() => fetchNotifications(false)}>
+            <Button className="mt-6" onClick={() => fetchNotifications(false)}>
               Try Again
             </Button>
           </div>
@@ -371,7 +362,6 @@ const NotificationsPage: React.FC = () => {
             </p>
             {filter !== "all" || searchQuery ? (
               <Button
-                variant="ghost"
                 className="mt-4 text-blue-600"
                 onClick={() => {
                   setFilter("all");
@@ -457,10 +447,7 @@ const NotificationsPage: React.FC = () => {
                     <DropdownMenuTrigger
                       asChild
                       onClick={(e) => e.stopPropagation()}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:bg-slate-200">
+                      <Button className="h-8 w-8 hover:bg-slate-200">
                         <MoreHorizontal className="h-4 w-4 text-slate-400" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -490,7 +477,6 @@ const NotificationsPage: React.FC = () => {
       {notifications.length > 0 && hasMore && (
         <div className="mt-8 flex justify-center">
           <Button
-            variant="ghost"
             className="text-blue-600 font-medium hover:bg-blue-50"
             onClick={handleLoadMore}
             disabled={isFetchingMore}>

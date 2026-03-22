@@ -35,37 +35,27 @@ const MenuBar = ({ editor }: { editor: any }) => {
   return (
     <div className="mini-editor-toolbar">
       <Button
-        variant="ghost"
-        size="sm"
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={editor.isActive("bold") ? "is-active" : ""}>
         <Bold className="w-4 h-4" />
       </Button>
       <Button
-        variant="ghost"
-        size="sm"
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={editor.isActive("italic") ? "is-active" : ""}>
         <Italic className="w-4 h-4" />
       </Button>
       <div className="w-px h-4 bg-slate-200 mx-1" />
       <Button
-        variant="ghost"
-        size="sm"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         className={editor.isActive("bulletList") ? "is-active" : ""}>
         <List className="w-4 h-4" />
       </Button>
       <Button
-        variant="ghost"
-        size="sm"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         className={editor.isActive("orderedList") ? "is-active" : ""}>
         <ListOrdered className="w-4 h-4" />
       </Button>
       <Button
-        variant="ghost"
-        size="sm"
         onClick={addLink}
         className={editor.isActive("link") ? "is-active" : ""}>
         <LinkIcon className="w-4 h-4" />

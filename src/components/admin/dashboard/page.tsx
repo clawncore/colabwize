@@ -307,7 +307,6 @@ export default function AdminDashboard() {
               </div>
               <DialogFooter>
                 <Button
-                  variant="outline"
                   className="bg-muted hover:bg-muted/80 border-border"
                   onClick={() => setShowCreateWorkspaceModal(false)}
                   disabled={isCreatingWorkspace}>
@@ -372,13 +371,11 @@ export default function AdminDashboard() {
         </div>
         <div className="flex gap-2">
           <Button
-            variant="outline"
             onClick={() => setShowInviteModal(true)}
             className="cursor-pointer border-primary text-primary hover:bg-primary/10">
             <Users className="mr-2 h-4 w-4" /> Invite Member
           </Button>
           <Button
-            variant="outline"
             onClick={handleOpenNewWorkspaceModal}
             className="cursor-pointer border-emerald-500 text-emerald-600 hover:bg-emerald-50">
             <Plus className="mr-2 h-4 w-4" /> New Workspace

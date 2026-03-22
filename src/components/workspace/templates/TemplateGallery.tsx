@@ -235,18 +235,23 @@ export default function TemplateGallery({
       setIsLoading(true);
       // Load document templates
       const docTemplates = await TemplateService.getTemplates({ workspaceId });
-      
+
       // Load task templates (if we have a workspace ID)
       let taskTemplates: any[] = [];
       if (workspaceId) {
         try {
-          const workspaceTasks = await WorkspaceTaskService.getTasks(workspaceId, true);
-          taskTemplates = workspaceTasks.filter(t => t.is_template).map(t => ({
-            ...t,
-            name: t.template_name || t.title,
-            type: 'task',
-            is_task_template: true
-          }));
+          const workspaceTasks = await WorkspaceTaskService.getTasks(
+            workspaceId,
+            true,
+          );
+          taskTemplates = workspaceTasks
+            .filter((t) => t.is_template)
+            .map((t) => ({
+              ...t,
+              name: t.template_name || t.title,
+              type: "task",
+              is_task_template: true,
+            }));
         } catch (err) {
           console.error("Failed to load task templates:", err);
         }
@@ -300,7 +305,8 @@ export default function TemplateGallery({
 
   return (
     <div className="space-y-6">
-      <div className={`${isSelectionMode ? 'p-0' : 'p-8'} bg-background min-h-screen`}>
+      <div
+        className={`${isSelectionMode ? "p-0" : "p-8"} bg-background min-h-screen`}>
         <div className="flex justify-between items-center mb-8">
           <div>
             {!isSelectionMode && (
@@ -314,7 +320,7 @@ export default function TemplateGallery({
               </h1>
             )}
             <p className="text-muted-foreground">
-              {isSelectionMode 
+              {isSelectionMode
                 ? "Select a template to quickly create your next task."
                 : "Manage custom templates for your workspace."}
             </p>
@@ -355,9 +361,7 @@ export default function TemplateGallery({
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -380,9 +384,7 @@ export default function TemplateGallery({
                 <CardContent>
                   <div className="flex gap-2">
                     <Badge variant="secondary">{template.type}</Badge>
-                    {template.is_public && (
-                      <Badge variant="outline">Public</Badge>
-                    )}
+                    {template.is_public && <Badge>Public</Badge>}
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-between items-center text-xs text-muted-foreground pt-0">
@@ -392,7 +394,6 @@ export default function TemplateGallery({
                   <Button
                     variant="secondary"
                     className="bg-teal-500 border-border hover:bg-teal-600 hover:border-teal-600"
-                    size="sm"
                     onClick={() => handleOpenUse(template)}>
                     Use Template
                   </Button>
@@ -473,10 +474,7 @@ export default function TemplateGallery({
               />
             </div>
             <DialogFooter className="pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsFormOpen(false)}>
+              <Button type="button" onClick={() => setIsFormOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -532,10 +530,7 @@ export default function TemplateGallery({
               />
             </div>
             <DialogFooter className="pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsUseTemplateOpen(false)}>
+              <Button type="button" onClick={() => setIsUseTemplateOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -561,9 +556,7 @@ export default function TemplateGallery({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteConfirmOpen(false)}>
+            <Button onClick={() => setIsDeleteConfirmOpen(false)}>
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteConfirm}>

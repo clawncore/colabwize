@@ -26,8 +26,7 @@ export default function CitationConfidencePage() {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 z-0"
           style={{
-            backgroundImage:
-              "url('/images/academic_citation_network.png')",
+            backgroundImage: "url('/images/academic_citation_network.png')",
           }}></div>
         <div className="container-custom relative z-10">
           <div className="text-center max-w-4xl mx-auto">
@@ -44,14 +43,11 @@ export default function CitationConfidencePage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
-                size="lg"
                 className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-8 py-6 shadow-sm transition-all duration-200 rounded-lg"
                 asChild>
                 <RouterLink to="/signup">Start Audit</RouterLink>
               </Button>
               <Button
-                size="lg"
-                variant="outline"
                 className="border-slate-300 text-slate-700 hover:bg-slate-50 font-medium px-8 py-6 text-lg shadow-sm transition-all duration-200 rounded-lg"
                 asChild>
                 <RouterLink to="/schedule-demo">View Methodology</RouterLink>
@@ -214,7 +210,6 @@ export default function CitationConfidencePage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button
-                size="lg"
                 className="bg-slate-900 hover:bg-slate-800 text-white font-medium px-8 py-6 shadow-sm hover:shadow-md transition-all duration-200 rounded-lg"
                 asChild>
                 <RouterLink to="/signup">
@@ -222,8 +217,6 @@ export default function CitationConfidencePage() {
                 </RouterLink>
               </Button>
               <Button
-                size="lg"
-                variant="outline"
                 className="border-slate-300 text-slate-700 hover:bg-slate-50 font-medium px-8 py-6 text-lg shadow-sm transition-all duration-200 rounded-lg"
                 asChild>
                 <RouterLink to="/schedule-demo">Request Access</RouterLink>

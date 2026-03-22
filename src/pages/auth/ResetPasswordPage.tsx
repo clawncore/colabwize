@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@hookform/resolvers/zod/dist/zod";
 import { z } from "zod";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Lock, CheckCircle, Shield } from "lucide-react";

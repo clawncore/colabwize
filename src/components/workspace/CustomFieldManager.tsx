@@ -78,7 +78,7 @@ export default function CustomFieldManager({
   const handleDeleteField = async (fieldId: string) => {
     if (
       !confirm(
-        "Are you sure you want to delete this custom field? This will delete all values stored in tasks."
+        "Are you sure you want to delete this custom field? This will delete all values stored in tasks.",
       )
     )
       return;
@@ -86,7 +86,7 @@ export default function CustomFieldManager({
     try {
       await workspaceTaskService.deleteCustomFieldDefinition(
         workspaceId,
-        fieldId
+        fieldId,
       );
       loadFields();
     } catch (error) {
@@ -108,11 +108,7 @@ export default function CustomFieldManager({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-        >
+        <Button className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
           <Settings2 className="w-4 h-4" />
           <span>Custom Fields</span>
         </Button>
@@ -151,16 +147,13 @@ export default function CustomFieldManager({
                 {fields.map((field) => (
                   <div
                     key={field.id}
-                    className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors"
-                  >
+                    className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">
                           {field.name}
                         </span>
-                        <Badge variant="outline" className="text-[10px] h-4">
-                          {field.type}
-                        </Badge>
+                        <Badge className="text-[10px] h-4">{field.type}</Badge>
                       </div>
                       {field.type === "dropdown" && field.options && (
                         <div className="flex flex-wrap gap-1">
@@ -170,8 +163,7 @@ export default function CustomFieldManager({
                           ).map((opt: string) => (
                             <span
                               key={opt}
-                              className="text-[10px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground"
-                            >
+                              className="text-[10px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground">
                               {opt}
                             </span>
                           ))}
@@ -180,11 +172,8 @@ export default function CustomFieldManager({
                     </div>
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="icon"
                       className="text-muted-foreground hover:text-destructive h-8 w-8"
-                      onClick={() => handleDeleteField(field.id)}
-                    >
+                      onClick={() => handleDeleteField(field.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -197,10 +186,8 @@ export default function CustomFieldManager({
           {!isAdding ? (
             <Button
               type="button"
-              variant="outline"
               className="w-full border-dashed border-2 py-6 h-auto flex flex-col items-center gap-2"
-              onClick={() => setIsAdding(true)}
-            >
+              onClick={() => setIsAdding(true)}>
               <Plus className="w-5 h-5" />
               <span>Define New Field</span>
             </Button>
@@ -241,8 +228,7 @@ export default function CustomFieldManager({
                       <Badge
                         key={opt}
                         variant="secondary"
-                        className="flex gap-1 items-center px-2"
-                      >
+                        className="flex gap-1 items-center px-2">
                         {opt}
                         <Trash2
                           className="w-3 h-3 cursor-pointer hover:text-destructive"
@@ -261,10 +247,8 @@ export default function CustomFieldManager({
                     />
                     <Button
                       type="button"
-                      size="sm"
                       className="bg-emerald-600 h-8"
-                      onClick={addOption}
-                    >
+                      onClick={addOption}>
                       Add
                     </Button>
                   </div>
@@ -272,20 +256,13 @@ export default function CustomFieldManager({
               )}
 
               <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsAdding(false)}
-                >
+                <Button type="button" onClick={() => setIsAdding(false)}>
                   Cancel
                 </Button>
                 <Button
                   type="button"
-                  size="sm"
                   className="bg-emerald-600 hover:bg-emerald-700"
-                  onClick={handleAddField}
-                >
+                  onClick={handleAddField}>
                   Add Field
                 </Button>
               </div>

@@ -46,8 +46,6 @@ export function BulkActionToolbar({
             Tasks Selected
           </span>
           <Button
-            variant="ghost"
-            size="sm"
             onClick={onClearSelection}
             className="text-slate-500 hover:text-white hover:bg-slate-800 h-8 w-8 p-0 ml-1">
             <X className="w-4 h-4" />
@@ -104,8 +102,6 @@ export function BulkActionToolbar({
 
           {/* Delete Action */}
           <Button
-            variant="ghost"
-            size="sm"
             onClick={onDeleteTasks}
             className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 h-9 font-medium px-4">
             <Trash2 className="w-4 h-4 mr-2" />
@@ -115,7 +111,6 @@ export function BulkActionToolbar({
 
         <div className="pl-6 border-l border-slate-700">
           <Button
-            size="sm"
             className="bg-teal-600 hover:bg-teal-700 text-white h-9 px-4 font-bold"
             onClick={onClearSelection}>
             <CheckCircle2 className="w-4 h-4 mr-2" />

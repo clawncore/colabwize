@@ -208,7 +208,6 @@ export default function SurveyForm({
             {onBack && (
               <Button
                 type="button"
-                variant="outline"
                 onClick={onBack}
                 className="flex-1 h-12 border-gray-300 text-gray-700 hover:bg-gray-50 font-medium rounded-xl transition-all duration-200">
                 Back

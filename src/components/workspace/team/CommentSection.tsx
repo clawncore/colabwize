@@ -27,7 +27,12 @@ interface CommentSectionProps {
   canEdit?: boolean;
 }
 
-export function CommentSection({ taskId, workspaceId, currentUserId, canEdit = true }: CommentSectionProps) {
+export function CommentSection({
+  taskId,
+  workspaceId,
+  currentUserId,
+  canEdit = true,
+}: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
@@ -44,10 +49,12 @@ export function CommentSection({ taskId, workspaceId, currentUserId, canEdit = t
   useEffect(() => {
     if (workspaceId) {
       WorkspaceTaskService.getWorkspaceMembers(workspaceId)
-        .then(data => {
+        .then((data) => {
           setMembers(data.map(mapMemberToMentionUser));
         })
-        .catch(err => console.error("Failed to fetch members for mentions", err));
+        .catch((err) =>
+          console.error("Failed to fetch members for mentions", err),
+        );
     }
   }, [workspaceId]);
 
@@ -55,7 +62,7 @@ export function CommentSection({ taskId, workspaceId, currentUserId, canEdit = t
     try {
       setLoading(true);
       const data = await apiClient.get(
-        `/api/workspaces/tasks/comments?taskId=${taskId}`
+        `/api/workspaces/tasks/comments?taskId=${taskId}`,
       );
       setComments(data.comments || []);
     } catch (error) {
@@ -71,10 +78,13 @@ export function CommentSection({ taskId, workspaceId, currentUserId, canEdit = t
     setSubmitting(true);
     try {
       // Resolve @[Name] mentions to @[Name](UserId) using our members list
-      const resolvedContent = newComment.replace(/@\[([^\]]+)\](?!\()/g, (match, name) => {
-        const member = members.find(m => m.name === name);
-        return member ? `@[${name}](${member.id})` : match;
-      });
+      const resolvedContent = newComment.replace(
+        /@\[([^\]]+)\](?!\()/g,
+        (match, name) => {
+          const member = members.find((m) => m.name === name);
+          return member ? `@[${name}](${member.id})` : match;
+        },
+      );
 
       const data = await apiClient.post("/api/workspaces/tasks/comments", {
         taskId,
@@ -156,8 +166,7 @@ export function CommentSection({ taskId, workspaceId, currentUserId, canEdit = t
                     {currentUserId === comment.user.id && (
                       <button
                         onClick={() => handleDelete(comment.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-rose-50 hover:text-rose-500 text-slate-300 transition-all"
-                      >
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-rose-50 hover:text-rose-500 text-slate-300 transition-all">
                         <Trash2 className="w-3 h-3" />
                       </button>
                     )}
@@ -196,11 +205,9 @@ export function CommentSection({ taskId, workspaceId, currentUserId, canEdit = t
           />
           <div className="absolute right-2 bottom-2">
             <Button
-              size="icon"
               disabled={!newComment.trim() || submitting}
               onClick={handleSubmit}
-              className="h-8 w-8 rounded-lg bg-teal-600 hover:bg-teal-700 shadow-sm disabled:bg-slate-100 disabled:text-slate-400"
-            >
+              className="h-8 w-8 rounded-lg bg-teal-600 hover:bg-teal-700 shadow-sm disabled:bg-slate-100 disabled:text-slate-400">
               {submitting ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
@@ -211,7 +218,7 @@ export function CommentSection({ taskId, workspaceId, currentUserId, canEdit = t
         </div>
       )}
     </div>
-    );
+  );
 }
 
 // Helper to render comments with clickable mentions
@@ -241,10 +248,9 @@ function renderCommentContent(content: string) {
     parts.push(
       <span
         key={`mention-${i}`}
-        className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-700 text-[12px] font-bold border border-teal-100/50 mx-0.5"
-      >
+        className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-700 text-[12px] font-bold border border-teal-100/50 mx-0.5">
         @{name}
-      </span>
+      </span>,
     );
 
     lastIndex = startIndex + fullMatch.length;

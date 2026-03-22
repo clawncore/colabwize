@@ -7,6 +7,7 @@ import Layout from "../../components/Layout";
 import PageMetadata from "../../components/PageMetadata";
 import ConfigService from "../../services/ConfigService";
 
+<<<<<<< HEAD
 interface ApiBlogPost {
   id: string;
   slug: string;
@@ -17,6 +18,54 @@ interface ApiBlogPost {
   image: string | null;
   created_at: string;
   read_time?: string | null;
+=======
+// Intro Hero Section
+function IntroHero() {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate("/signup");
+  };
+
+  return (
+    <section className="section-padding bg-white relative overflow-hidden">
+      {/* Background Image Overlay */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 z-0"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&h=800&fit=crop')",
+        }}></div>
+      <div className="container-custom relative z-10">
+        <div className="text-center max-w-4xl mx-auto">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+            ColabWize{" "}
+            <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+              Blog
+            </span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
+            Insights, tips, and best practices for academic writing and research
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
+              onClick={handleGetStarted}>
+              Get Started
+            </Button>
+            <Button
+              className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
+              asChild>
+              <RouterLink to="/signup">Subscribe to Newsletter</RouterLink>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+>>>>>>> origin/craig-update
 }
 
 function useBlogPosts() {
@@ -45,6 +94,75 @@ function useBlogPosts() {
   return { posts, loading };
 }
 
+<<<<<<< HEAD
+=======
+// Closing CTA
+function ClosingCTA() {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate("/signup");
+  };
+
+  return (
+    <section className="section-padding relative overflow-hidden bg-white">
+      {/* Background with academic shapes */}
+      <div className="absolute inset-0 bg-gradient-to-r from-green-100/50 to-emerald-100/50 opacity-95"></div>
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-10 left-10 w-20 h-20 border-2 border-green-300/30 rounded-full"></div>
+        <div className="absolute top-40 right-20 w-16 h-16 border-2 border-green-300/30 rotate-45"></div>
+        <div className="absolute bottom-20 left-1/4 w-24 h-24 border-2 border-green-300/30 rounded-full"></div>
+        <div className="absolute bottom-40 right-10 w-12 h-12 border-2 border-green-300/30 rotate-12"></div>
+      </div>
+
+      <div className="container-custom relative z-10">
+        <div className="text-center max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            Stay Updated with Our Insights
+          </h2>
+          <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+            Subscribe to our newsletter for the latest tips and best practices.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+            <Button
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
+              onClick={handleGetStarted}>
+              Start Your Free Trial
+            </Button>
+            <Button
+              asChild
+              className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
+              <a
+                href="https://docs.colabwize.com/quickstart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center">
+                See How It Works
+              </a>
+            </Button>
+          </div>
+
+          {/* Trust indicators */}
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-6 text-gray-500 text-sm">
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-500" />
+              <span>No credit card required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-500" />
+              <span>Cancel anytime</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-500" />
+              <span>Available worldwide</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+>>>>>>> origin/craig-update
 export default function BlogsPage() {
   const { posts, loading } = useBlogPosts();
   const [activeTab, setActiveTab] = useState<'for-you' | 'featured'>('for-you');
@@ -134,8 +252,13 @@ export default function BlogsPage() {
   return (
     <Layout>
       <PageMetadata
+<<<<<<< HEAD
         title="Resources & Insights | ColabWize"
         description="Discover insights, tips, and best practices for academic writing and research collaboration."
+=======
+        title="Blog | Academic Integrity & Collaboration Insights"
+        description="Discover insights, tips, and best practices for academic writing, authorship verification, and maintaining academic integrity in the AI era."
+>>>>>>> origin/craig-update
       />
       
       <div className="bg-white min-h-screen pt-20 pb-20">

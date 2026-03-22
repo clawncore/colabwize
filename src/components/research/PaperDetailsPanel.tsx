@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useUser } from "../../services/useUser";
 import { ResearchChatSidebar } from "./ResearchChatSidebar";
+import { apiClient } from "../../services/apiClient";
 
 interface PaperDetailsPanelProps {
   paperId?: string;
@@ -54,16 +55,12 @@ export default function PaperDetailsPanel({
     async function fetchPaper() {
       if (!paperId) return;
       try {
-        const headers: any = {};
-        if (user) headers["Authorization"] = `Bearer ${user}`;
-
-        const res = await fetch(`/api/research/${paperId}`, { headers });
-        if (!res.ok) throw new Error("Failed to load paper");
-        const data = await res.json();
-        setPaper(data.data);
-        // If we fetched the library version, it might have notes
-        // But GET /api/research/:id might fetch from semantic scholar directly
-        // We might need to check if user has it saved separately.
+        const res = await apiClient.get(`/api/research/${paperId}`);
+        if (res.success) {
+          setPaper(res.data);
+        } else {
+          throw new Error(res.message || "Failed to load paper");
+        }
       } catch (err) {
         setError("Could not load paper details.");
       } finally {
@@ -97,25 +94,20 @@ export default function PaperDetailsPanel({
         "Limitations",
       ];
 
-      const res = await fetch("/api/research/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          papers: [
-            {
-              externalId: paper.externalId,
-              title: paper.title,
-              abstract: paper.abstract,
-              year: paper.year,
-            },
-          ],
-          columns: columnsToAnalyze,
-        }),
+      const res = await apiClient.post("/api/research/analyze", {
+        papers: [
+          {
+            externalId: paper.externalId,
+            title: paper.title,
+            abstract: paper.abstract,
+            year: paper.year,
+          },
+        ],
+        columns: columnsToAnalyze,
       });
 
-      if (!res.ok) throw new Error("Analysis failed");
-      const data = await res.json();
-      const result = data.data[paper.externalId];
+      if (!res.success) throw new Error("Analysis failed");
+      const result = res.data[paper.externalId || paper.id];
 
       if (result) {
         // Auto-select tags based on what was found
@@ -168,19 +160,12 @@ export default function PaperDetailsPanel({
         selectedTags.length > 0 ? `[Tags: ${selectedTags.join(", ")}]\n\n` : "";
       const finalNotes = tagsHeader + matrixNotes;
 
-      const res = await fetch("/api/research/library/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user}`,
-        },
-        body: JSON.stringify({
-          paper: paper,
-          notes: finalNotes,
-        }),
+      const res = await apiClient.post("/api/research/library/save", {
+        paper: paper,
+        notes: finalNotes,
       });
 
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.success) throw new Error("Save failed");
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e) {

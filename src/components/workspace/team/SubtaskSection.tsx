@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  CheckSquare,
-  Plus,
-  Trash2,
-  CheckCircle2,
-  Circle,
-} from "lucide-react";
+import { CheckSquare, Plus, Trash2, CheckCircle2, Circle } from "lucide-react";
 import { WorkspaceSubtask } from "../../../services/workspaceTaskService";
 import { Button } from "../../ui/button";
 import workspaceTaskService from "../../../services/workspaceTaskService";
@@ -34,7 +28,7 @@ export const SubtaskSection: React.FC<SubtaskSectionProps> = ({
     try {
       const newSubtask = await workspaceTaskService.createSubtask(
         taskId,
-        newSubtaskTitle
+        newSubtaskTitle,
       );
       onUpdate([...subtasks, newSubtask]);
       setNewSubtaskTitle("");
@@ -95,13 +89,11 @@ export const SubtaskSection: React.FC<SubtaskSectionProps> = ({
           .map((subtask) => (
             <div
               key={subtask.id}
-              className="group flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors"
-            >
+              className="group flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
               <button
                 type="button"
                 onClick={() => handleToggleSubtask(subtask.id, subtask.is_done)}
-                className="text-slate-400 hover:text-indigo-500 transition-colors"
-              >
+                className="text-slate-400 hover:text-indigo-500 transition-colors">
                 {subtask.is_done ? (
                   <CheckCircle2 className="w-5 h-5 text-green-500" />
                 ) : (
@@ -109,19 +101,18 @@ export const SubtaskSection: React.FC<SubtaskSectionProps> = ({
                 )}
               </button>
               <span
-                className={`flex-1 text-sm ${subtask.is_done
-                  ? "text-slate-400 line-through"
-                  : "text-slate-700"
-                  }`}
-              >
+                className={`flex-1 text-sm ${
+                  subtask.is_done
+                    ? "text-slate-400 line-through"
+                    : "text-slate-700"
+                }`}>
                 {subtask.title}
               </span>
               {canEdit && (
                 <button
                   type="button"
                   onClick={() => handleDeleteSubtask(subtask.id)}
-                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all p-1"
-                >
+                  className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all p-1">
                   <Trash2 className="w-4 h-4" />
                 </button>
               )}
@@ -129,8 +120,8 @@ export const SubtaskSection: React.FC<SubtaskSectionProps> = ({
           ))}
       </div>
 
-      {canEdit && (
-        isAdding ? (
+      {canEdit &&
+        (isAdding ? (
           <div className="flex gap-2">
             <input
               autoFocus
@@ -141,25 +132,17 @@ export const SubtaskSection: React.FC<SubtaskSectionProps> = ({
               onChange={(e) => setNewSubtaskTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAddSubtask()}
             />
-            <Button onClick={handleAddSubtask} size="sm">
-              Add
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setIsAdding(false)}>
-              Cancel
-            </Button>
+            <Button onClick={handleAddSubtask}>Add</Button>
+            <Button onClick={() => setIsAdding(false)}>Cancel</Button>
           </div>
         ) : (
           <Button
-            variant="ghost"
-            size="sm"
             className="w-full justify-start text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 bg-white"
-            onClick={() => setIsAdding(true)}
-          >
+            onClick={() => setIsAdding(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add a subtask
           </Button>
-        )
-      )}
+        ))}
     </div>
   );
 };

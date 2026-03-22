@@ -42,7 +42,10 @@ export const CitationComponent = (props: NodeViewProps) => {
     const calculateDocCount = () => {
       let count = 0;
       editor.state.doc.descendants((node) => {
-        if (node.type.name === "citation" && node.attrs.citationId === citationId) {
+        if (
+          node.type.name === "citation" &&
+          node.attrs.citationId === citationId
+        ) {
           count++;
         }
       });
@@ -57,7 +60,9 @@ export const CitationComponent = (props: NodeViewProps) => {
     };
   }, [editor, citationId]);
 
-  const worldCitationCount = metadata?.metadata?.citationCount || (metadata?.metadata as any)?.citation_count;
+  const worldCitationCount =
+    metadata?.metadata?.citationCount ||
+    (metadata?.metadata as any)?.citation_count;
   const abstract = metadata?.metadata?.abstract;
   const displayText = text || "[citation]";
 
@@ -157,7 +162,7 @@ export const CitationComponent = (props: NodeViewProps) => {
     let target = document.getElementById(`bib-${citationId}`);
     if (!target) {
       target = document.querySelector(
-        `[data-bibliography-entry][data-citation-id="${citationId}"]`
+        `[data-bibliography-entry][data-citation-id="${citationId}"]`,
       );
     }
 
@@ -180,17 +185,23 @@ export const CitationComponent = (props: NodeViewProps) => {
       (target as HTMLElement).style.backgroundColor = "rgba(59, 130, 246, 0.1)";
       (target as HTMLElement).style.transition = "background-color 0.5s ease";
       setTimeout(() => {
-        (target as HTMLElement).style.backgroundColor = originalBg || "transparent";
+        (target as HTMLElement).style.backgroundColor =
+          originalBg || "transparent";
       }, 2000);
     } else if (metadata) {
       const author = metadata.authors?.[0]?.split(",")[0].trim().toLowerCase();
       const year = String(metadata.year || "");
       if (author) {
-        const allPotentialRefs = document.querySelectorAll("[data-bibliography-entry], p, li");
+        const allPotentialRefs = document.querySelectorAll(
+          "[data-bibliography-entry], p, li",
+        );
         let fallbackTarget: HTMLElement | null = null;
         for (const el of Array.from(allPotentialRefs)) {
           const textContent = el.textContent?.toLowerCase() || "";
-          if (textContent.includes(author) && (!year || textContent.includes(year))) {
+          if (
+            textContent.includes(author) &&
+            (!year || textContent.includes(year))
+          ) {
             const rect = el.getBoundingClientRect();
             if (rect.top + window.scrollY > document.body.scrollHeight * 0.3) {
               fallbackTarget = el as HTMLElement;
@@ -199,11 +210,16 @@ export const CitationComponent = (props: NodeViewProps) => {
           }
         }
         if (fallbackTarget) {
-          fallbackTarget.scrollIntoView({ behavior: "smooth", block: "center" });
+          fallbackTarget.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
           const originalBg = fallbackTarget.style.backgroundColor;
           fallbackTarget.style.backgroundColor = "rgba(59, 130, 246, 0.1)";
           setTimeout(() => {
-            if (fallbackTarget) fallbackTarget.style.backgroundColor = originalBg || "transparent";
+            if (fallbackTarget)
+              fallbackTarget.style.backgroundColor =
+                originalBg || "transparent";
           }, 2000);
         }
       }
@@ -240,17 +256,14 @@ export const CitationComponent = (props: NodeViewProps) => {
               </p>
             </div>
             <div className="flex flex-col items-end gap-1 shrink-0">
-              {worldCitationCount !== undefined && Number(worldCitationCount) > 0 && (
-                <Badge
-                  variant="outline"
-                  className="px-1.5 py-0 text-[9px] text-green-600 bg-green-50/50 border-green-100 shadow-none font-bold">
-                  {worldCitationCount} WORLD CITES
-                </Badge>
-              )}
+              {worldCitationCount !== undefined &&
+                Number(worldCitationCount) > 0 && (
+                  <Badge className="px-1.5 py-0 text-[9px] text-green-600 bg-green-50/50 border-green-100 shadow-none font-bold">
+                    {worldCitationCount} WORLD CITES
+                  </Badge>
+                )}
               {docCitationCount > 0 && (
-                <Badge
-                  variant="outline"
-                  className="px-1.5 py-0 text-[9px] text-blue-600 bg-blue-50/50 border-blue-100 shadow-none font-bold">
+                <Badge className="px-1.5 py-0 text-[9px] text-blue-600 bg-blue-50/50 border-blue-100 shadow-none font-bold">
                   {docCitationCount} DOC CITES
                 </Badge>
               )}
@@ -289,9 +302,7 @@ export const CitationComponent = (props: NodeViewProps) => {
                 <span className="text-gray-700">{metadata?.year || "N/A"}</span>
               </span>
             </div>
-            <Badge
-              variant="outline"
-              className="text-[9px] font-black text-orange-600 border-orange-100 bg-orange-50/50 px-1.5 py-0 h-4 uppercase">
+            <Badge className="text-[9px] font-black text-orange-600 border-orange-100 bg-orange-50/50 px-1.5 py-0 h-4 uppercase">
               Open Access
             </Badge>
           </div>
@@ -299,32 +310,26 @@ export const CitationComponent = (props: NodeViewProps) => {
           {/* Compact Action Footer */}
           <div className="flex items-center gap-1.5 mt-1">
             <Button
-              variant="outline"
-              size="sm"
               className="flex-1 h-8 rounded-lg font-bold text-[11px] text-gray-900 hover:bg-gray-50 border-gray-200 shadow-sm"
               onClick={handleOpenPdf}
-              disabled={!metadata?.url}
-            >
-              <FileTextIcon className="w-3.5 h-3.5 mr-2 text-red-500" strokeWidth={2.5} />
+              disabled={!metadata?.url}>
+              <FileTextIcon
+                className="w-3.5 h-3.5 mr-2 text-red-500"
+                strokeWidth={2.5}
+              />
               Read Article
             </Button>
             <div className="flex gap-1 shrink-0">
               <Button
-                variant="ghost"
-                size="icon"
                 className="h-8 w-8 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50"
                 onClick={handleEdit}
-                title="Edit Source"
-              >
+                title="Edit Source">
                 <Edit2 className="w-3.5 h-3.5" />
               </Button>
               <Button
-                variant="ghost"
-                size="icon"
                 className="h-8 w-8 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50"
                 onClick={handleToggleNarrative}
-                title="Toggle Narrative Style"
-              >
+                title="Toggle Narrative Style">
                 <RefreshCw className="w-3.5 h-3.5" />
               </Button>
             </div>

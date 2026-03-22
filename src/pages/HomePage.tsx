@@ -111,7 +111,6 @@ function HeroSection() {
           <div className="flex flex-row gap-3 justify-center items-center mb-8 px-2 max-w-[100vw]">
             <Button
               asChild
-              size="lg"
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-4 py-4 md:px-8 md:py-6 text-sm md:text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300 whitespace-nowrap">
               <Link to="/signup" className="flex items-center">
                 Start Free
@@ -121,7 +120,6 @@ function HeroSection() {
 
             <Button
               asChild
-              size="lg"
               className="bg-gradient-to-r from-green-600 to-blue-700 text-white hover:from-green-700 hover:to-blue-800 font-semibold px-4 py-4 md:px-8 md:py-6 text-sm md:text-lg shadow-lg hover:shadow-green-500/20 transition-all duration-300 whitespace-nowrap">
               <Link to="/schedule-demo#demo-form" className="flex items-center">
                 Request demo
@@ -822,7 +820,6 @@ function CTASection() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Button
               asChild
-              size="lg"
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
               <Link to="/signup" className="flex items-center">
                 Get Started Free Today
@@ -830,8 +827,6 @@ function CTASection() {
               </Link>
             </Button>
             <Button
-              variant="outline"
-              size="lg"
               asChild
               className="bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-green-500/20 transition-all duration-300">
               <a
@@ -845,8 +840,6 @@ function CTASection() {
             </Button>
             <Button
               asChild
-              size="lg"
-              variant="outline"
               className="bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-gray-700 hover:to-gray-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-gray-500/20 transition-all duration-300">
               <a
                 href="https://discord.gg/2MMSdX3Uee"

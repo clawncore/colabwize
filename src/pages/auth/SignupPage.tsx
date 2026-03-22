@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@hookform/resolvers/zod/dist/zod";
 import { z } from "zod";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Mail, Lock, User } from "lucide-react";
@@ -747,7 +747,7 @@ const SignupPage: React.FC = () => {
           // Don't continue to survey if login fails - this will cause survey submission to fail
           throw new Error(
             loginError.message ||
-            "Failed to sign you in after verification. Please try signing in manually from the login page.",
+              "Failed to sign you in after verification. Please try signing in manually from the login page.",
           );
         }
 
@@ -973,7 +973,6 @@ const SignupPage: React.FC = () => {
               <div className="grid grid-cols-1 gap-3 ">
                 <Button
                   type="button"
-                  variant="outline"
                   onClick={handleGoogleSignup}
                   disabled={socialLoading || isLoading}
                   className="flex items-center justify-center gap-2 h-12 bg-white text-gray-900 border-gray-300 hover:bg-gray-100">
@@ -1028,7 +1027,7 @@ const SignupPage: React.FC = () => {
                 leftIcon={<User className="h-4 w-4" />}
                 error={
                   watchedFields.fullName !== undefined &&
-                    watchedFields.fullName !== ""
+                  watchedFields.fullName !== ""
                     ? errors.fullName?.message || validationErrors.fullName
                     : undefined
                 }
@@ -1050,7 +1049,7 @@ const SignupPage: React.FC = () => {
                 leftIcon={<Mail className="h-4 w-4" />}
                 error={
                   watchedFields.email !== undefined &&
-                    watchedFields.email !== ""
+                  watchedFields.email !== ""
                     ? errors.email?.message || validationErrors.email
                     : undefined
                 }
@@ -1074,7 +1073,7 @@ const SignupPage: React.FC = () => {
                   showPasswordToggle
                   error={
                     watchedFields.password !== undefined &&
-                      watchedFields.password !== ""
+                    watchedFields.password !== ""
                       ? errors.password?.message
                       : undefined
                   }
@@ -1096,7 +1095,7 @@ const SignupPage: React.FC = () => {
                 showPasswordToggle
                 error={
                   watchedFields.confirmPassword !== undefined &&
-                    watchedFields.confirmPassword !== ""
+                  watchedFields.confirmPassword !== ""
                     ? errors.confirmPassword?.message
                     : undefined
                 }
@@ -1220,8 +1219,13 @@ const SignupPage: React.FC = () => {
                   try {
                     await handleSubmit(onSubmit)();
                   } catch (e: any) {
-                    if (e?.message?.includes("Lock broken") || e?.name === "AbortError") {
-                      console.warn("Suppressed React StrictMode Supabase Lock Error");
+                    if (
+                      e?.message?.includes("Lock broken") ||
+                      e?.name === "AbortError"
+                    ) {
+                      console.warn(
+                        "Suppressed React StrictMode Supabase Lock Error",
+                      );
                     } else {
                       throw e;
                     }
@@ -1233,7 +1237,6 @@ const SignupPage: React.FC = () => {
               <div className="flex space-x-3">
                 <Button
                   type="button"
-                  variant="outline"
                   onClick={handleBackToSignup}
                   className="flex-1 bg-blue-500 text-gray-500 hover:bg-blue-600">
                   Back

@@ -115,7 +115,7 @@ export default function CaseStudyPage() {
               Share this case study
             </h4>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="rounded-full">
+              <Button className="rounded-full">
                 <Share2 className="h-4 w-4" />
               </Button>
             </div>

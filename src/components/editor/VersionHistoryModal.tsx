@@ -227,8 +227,6 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                       <div className="flex items-center gap-2 ml-4">
                         {/* Restore button */}
                         <Button
-                          variant="outline"
-                          size="sm"
                           disabled={isCurrent || isBusy}
                           onClick={() => handleRestore(version)}
                           className="gap-1.5 border-gray-200 group-hover:border-indigo-200 group-hover:text-indigo-700 text-xs">
@@ -243,8 +241,6 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
                         {/* Delete button — hidden for current version */}
                         {!isCurrent && (
                           <Button
-                            variant="ghost"
-                            size="sm"
                             disabled={isBusy}
                             onClick={() =>
                               setConfirmDeleteId(
@@ -292,7 +288,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
-          <Button variant="ghost" onClick={onClose} className="text-gray-500">
+          <Button onClick={onClose} className="text-gray-500">
             Close
           </Button>
         </div>

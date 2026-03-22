@@ -72,7 +72,9 @@ export default function BlogPostPage() {
       <Layout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
           <h1 className="text-4xl font-bold text-gray-900">Post Not Found</h1>
-          <p className="text-gray-600">The blog post you're looking for doesn't exist.</p>
+          <p className="text-gray-600">
+            The blog post you're looking for doesn't exist.
+          </p>
           <Button onClick={() => navigate("/resources/blogs")}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Blogs
           </Button>
@@ -110,8 +112,7 @@ export default function BlogPostPage() {
       <PageMetadata
         title={post.title}
         description={post.excerpt}
-        ogType="article"
-      >
+        ogType="article">
         <script type="application/ld+json">
           {JSON.stringify(articleSchema)}
         </script>
@@ -128,8 +129,7 @@ export default function BlogPostPage() {
           <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 text-white container-custom">
             <Link
               to="/resources/blogs"
-              className="inline-flex items-center text-gray-300 hover:text-white mb-6 transition-colors"
-            >
+              className="inline-flex items-center text-gray-300 hover:text-white mb-6 transition-colors">
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Blogs
             </Link>
             <div className="flex items-center gap-3 mb-4">
@@ -166,7 +166,7 @@ export default function BlogPostPage() {
           <div className="mt-12 pt-8 border-t border-gray-200 flex items-center justify-between">
             <h4 className="font-semibold text-gray-900">Share this article</h4>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="rounded-full">
+              <Button className="rounded-full">
                 <Share2 className="h-4 w-4" />
               </Button>
             </div>

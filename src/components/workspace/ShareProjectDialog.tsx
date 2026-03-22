@@ -116,7 +116,6 @@ export function ShareProjectDialog({
           </div>
           <Button
             type="submit"
-            size="sm"
             className="px-3"
             onClick={copyToClipboard}
             disabled={!isSharingEnabled}>

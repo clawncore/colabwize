@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 
-import apiClient from "../../services/apiClient";
+import { apiClient } from "../../services/apiClient";
 import WaitlistService from "../../services/waitlistService";
 import { SubscriptionService } from "../../services/subscriptionService";
 import ConfigService from "../../services/ConfigService";
@@ -111,45 +111,31 @@ const HelpSettingsPage: React.FC = () => {
       };
 
       // Send feedback to backend using the public endpoint
-      const response = await fetch(
-        `${ConfigService.getApiUrl()}/api/feedback/public`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(feedbackData),
-        },
-      );
+      const result = await apiClient.post("/api/feedback/public", feedbackData);
 
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          // Send Discord notification as a background task
-          DiscordWebhookService.sendFeedbackNotification({
-            type: "feedback",
-            priority: "medium",
-            title: `User Feedback - ${feedbackRating} stars`,
-            description: feedbackComment,
-            userEmail: user?.email,
-            rating: feedbackRating,
-          }).catch((err) => {
-            console.error(
-              "Failed to send Discord notification for feedback:",
-              err,
-            );
-          });
+      if (result && result.success) {
+        // Send Discord notification as a background task
+        DiscordWebhookService.sendFeedbackNotification({
+          type: "feedback",
+          priority: "medium",
+          title: `User Feedback - ${feedbackRating} stars`,
+          description: feedbackComment,
+          userEmail: user?.email,
+          rating: feedbackRating,
+        }).catch((err) => {
+          console.error(
+            "Failed to send Discord notification for feedback:",
+            err,
+          );
+        });
 
-          setFeedbackSubmitted(true);
-          setFeedbackRating(0);
-          setFeedbackComment("");
-          // Reset success message after 3 seconds
-          setTimeout(() => setFeedbackSubmitted(false), 3000);
-        } else {
-          throw new Error(result.message || "Failed to submit feedback");
-        }
+        setFeedbackSubmitted(true);
+        setFeedbackRating(0);
+        setFeedbackComment("");
+        // Reset success message after 3 seconds
+        setTimeout(() => setFeedbackSubmitted(false), 3000);
       } else {
-        throw new Error("Failed to submit feedback");
+        throw new Error(result.message || "Failed to submit feedback");
       }
     } catch (error) {
       console.error("Error submitting feedback:", error);
@@ -196,23 +182,14 @@ const HelpSettingsPage: React.FC = () => {
           formData.append("file", ticketAttachment);
 
           // Upload file to the support ticket upload endpoint (public, no authentication required)
-          const response = await fetch("/api/support-ticket/upload", {
-            method: "POST",
-            body: formData,
-          });
-
-          // Check if the response is successful
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Upload failed: ${errorText}`);
-          }
-
-          // Parse the response data
-          const data = await response.json();
+          const data = await apiClient.post(
+            "/api/support-ticket/upload",
+            formData,
+          );
 
           // Check if the upload was successful
-          if (!data.success) {
-            throw new Error(data.message || "Failed to upload attachment");
+          if (!data || !data.success) {
+            throw new Error(data?.message || "Failed to upload attachment");
           }
 
           // Use the public URL of the uploaded file
@@ -370,25 +347,12 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
     setSubmittingFeature(true);
     try {
       // Create a feature request using the dedicated feature request API
-      const response = await fetch("/api/feature-request/simple", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: newFeatureTitle,
-          description: newFeatureDescription,
-          category: "other",
-          priority: "nice-to-have",
-        }),
+      const result = await apiClient.post("/api/feature-request/simple", {
+        title: newFeatureTitle,
+        description: newFeatureDescription,
+        category: "other",
+        priority: "nice-to-have",
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to submit feature request");
-      }
-
-      const result = await response.json();
 
       if (result.message && result.featureRequestId) {
         // Send Discord notification as a background task

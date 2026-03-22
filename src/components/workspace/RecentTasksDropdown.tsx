@@ -27,8 +27,6 @@ export function RecentTasksDropdown({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
-          size="sm"
           className="h-10 px-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all gap-2"
           title="Recent Tasks">
           <History className="w-4 h-4" />

@@ -1,23 +1,32 @@
+import sys
+from typing import List, Tuple, cast
 
-with open(r'c:\Users\SIMBY\Desktop\colabwize\src\components\admin\email\AdminEmailCenter.tsx', 'r', encoding='utf-8') as f:
-    content = f.read()
+def main():
+    path = r'c:\Users\SIMBY\Desktop\colabwize\src\components\admin\email\AdminEmailCenter.tsx'
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except FileNotFoundError:
+        print(f"Error: File not found: {path}")
+        return
+    
+    count_mismatches(content)
 
-def count_mismatches(text):
-    stack = []
+def count_mismatches(text: str) -> None:
+    stack: List[Tuple[str, int, int]] = []
     pairs = {'{': '}', '(': ')', '[': ']', '<': '>'}
     closers = {v: k for k, v in pairs.items()}
     
-    line_no = 1
-    char_no = 0
-    for i, char in enumerate(text):
-        char_no += 1
+    line_no: int = 1
+    char_no: int = 0
+    
+    for char in text:
+        char_no = cast(int, char_no) + 1
         if char == '\n':
-            line_no += 1
+            line_no = cast(int, line_no) + 1
             char_no = 0
             
         if char in pairs:
-            # Simple heuristic for JSX tags vs generic brackets
-            # If it's '<' followed by a space or '/' it's likely a tag or fragment
             stack.append((char, line_no, char_no))
         elif char in closers:
             if not stack:
@@ -31,4 +40,5 @@ def count_mismatches(text):
         char, l, c = stack.pop()
         print(f"Unclosed {char} at line {l}, col {c}")
 
-count_mismatches(content)
+if __name__ == "__main__":
+    main()

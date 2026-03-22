@@ -50,7 +50,7 @@ export default function CustomFieldsSection({
     try {
       setIsLoading(true);
       const data = await workspaceTaskService.getCustomFieldDefinitions(
-        task.workspace_id
+        task.workspace_id,
       );
       setDefinitions(data);
     } catch (error) {
@@ -117,8 +117,7 @@ export default function CustomFieldsSection({
               {field.type === "dropdown" ? (
                 <Select
                   value={value || ""}
-                  onValueChange={(val) => handleValueChange(field.id, val)}
-                >
+                  onValueChange={(val) => handleValueChange(field.id, val)}>
                   <SelectTrigger className="h-9 text-sm bg-muted/30 border-transparent hover:border-border transition-colors">
                     <SelectValue placeholder={`Select ${field.name}...`} />
                   </SelectTrigger>
@@ -128,7 +127,7 @@ export default function CustomFieldsSection({
                         <SelectItem key={opt} value={opt}>
                           {opt}
                         </SelectItem>
-                      )
+                      ),
                     )}
                   </SelectContent>
                 </Select>
@@ -137,12 +136,10 @@ export default function CustomFieldsSection({
                   <PopoverTrigger asChild>
                     <Button
                       type="button"
-                      variant="outline"
                       className={cn(
                         "w-full h-9 justify-start text-left font-normal text-sm bg-muted/30 border-transparent hover:border-border",
-                        !value && "text-muted-foreground"
-                      )}
-                    >
+                        !value && "text-muted-foreground",
+                      )}>
                       <Calendar className="mr-2 h-4 w-4" />
                       {value ? (
                         format(new Date(value), "PPP")

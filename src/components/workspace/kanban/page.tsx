@@ -440,7 +440,8 @@ export function KanbanBoard() {
     task: WorkspaceTask,
   ) => {
     try {
-      const title = type === "task_completed" ? "Task Completed" : "Task Deleted";
+      const title =
+        type === "task_completed" ? "Task Completed" : "Task Deleted";
       const message =
         type === "task_completed"
           ? `Task "${task.title}" was completed by ${user?.full_name || "a collaborator"}.`
@@ -793,7 +794,6 @@ export function KanbanBoard() {
           <div className="flex items-center bg-muted p-1 rounded-xl border border-border shadow-sm">
             <Button
               variant={boardView === "kanban" ? "secondary" : "ghost"}
-              size="sm"
               onClick={() => handleSetBoardView("kanban")}
               className={`h-8 px-3 rounded-lg transition-all font-outfit ${
                 boardView === "kanban"
@@ -805,7 +805,6 @@ export function KanbanBoard() {
             </Button>
             <Button
               variant={boardView === "list" ? "secondary" : "ghost"}
-              size="sm"
               onClick={() => handleSetBoardView("list")}
               className={`h-8 px-3 rounded-lg transition-all font-outfit ${
                 boardView === "list"
@@ -817,7 +816,6 @@ export function KanbanBoard() {
             </Button>
             <Button
               variant={boardView === "calendar" ? "secondary" : "ghost"}
-              size="sm"
               onClick={() => handleSetBoardView("calendar")}
               className={`h-8 px-3 rounded-lg transition-all font-outfit ${
                 boardView === "calendar"
@@ -849,7 +847,6 @@ export function KanbanBoard() {
             )}
             {canEdit && (
               <Button
-                variant="outline"
                 onClick={() => setIsLibraryOpen(true)}
                 className="h-10 px-4 border-teal-500/20 text-teal-600 hover:bg-teal-50 shadow-sm transition-all font-outfit">
                 <Library className="w-4 h-4 mr-2" />
@@ -858,8 +855,6 @@ export function KanbanBoard() {
             )}
           </div>
           <Button
-            variant="ghost"
-            size="sm"
             onClick={() => setShowShortcutsHelper(true)}
             className="h-10 px-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
             title="Keyboard Shortcuts (Shift + /)">
@@ -883,10 +878,7 @@ export function KanbanBoard() {
           {/* Saved Views Dropdown */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-10 border-border bg-background shadow-sm flex items-center gap-2 font-outfit text-foreground hover:bg-muted">
+              <Button className="h-10 border-border bg-background shadow-sm flex items-center gap-2 font-outfit text-foreground hover:bg-muted">
                 <Save className="w-3.5 h-3.5 text-muted-foreground" />
                 <span>Views</span>
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
@@ -914,8 +906,6 @@ export function KanbanBoard() {
                         )}
                         {canEdit && (
                           <Button
-                            variant="ghost"
-                            size="icon"
                             className="h-6 w-6 text-muted-foreground hover:text-destructive"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -994,10 +984,7 @@ export function KanbanBoard() {
           {/* Labels Filter */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-10 border-border bg-background shadow-sm flex items-center gap-2 font-outfit text-foreground hover:bg-muted">
+              <Button className="h-10 border-border bg-background shadow-sm flex items-center gap-2 font-outfit text-foreground hover:bg-muted">
                 <Badge
                   variant="secondary"
                   className="h-4 w-4 p-0 rounded-full bg-muted">
@@ -1068,8 +1055,6 @@ export function KanbanBoard() {
             labelFilter.length > 0 ||
             dateStatusFilter !== "all") && (
             <Button
-              variant="ghost"
-              size="sm"
               onClick={() => {
                 setSearchQuery("");
                 setPriorityFilter("all");
