@@ -110,7 +110,7 @@ export const DraftComparisonPage: React.FC = () => {
               </div>
               <h1 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-[1.05] text-slate-900">
                 Integrity at <br />
-                <span className="text-blue-600">
+                <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 bg-clip-text text-transparent">
                   Every Version.
                 </span>
               </h1>
@@ -123,19 +123,18 @@ export const DraftComparisonPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   size="lg"
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-7 rounded-2xl text-lg shadow-xl shadow-blue-500/10 transition-all active:scale-95">
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-7 rounded-2xl text-lg shadow-xl shadow-blue-500/10 transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1 active:scale-95">
                   Start Analysis <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
                 <Button
                   variant="outline"
                   size="lg"
                   className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-bold px-8 py-7 rounded-2xl text-lg shadow-sm">
-                  View Workflow
+                  View Certification Workflow
                 </Button>
               </div>
             </motion.div>
 
-<<<<<<< HEAD
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -154,33 +153,6 @@ export const DraftComparisonPage: React.FC = () => {
               <div className="absolute -top-10 -right-10 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl"></div>
               <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-indigo-200/20 rounded-full blur-[80px]"></div>
             </motion.div>
-=======
-        <div className="container-custom pt-16 relative z-10 text-center">
-          <div className="max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs uppercase mb-8 tracking-widest backdrop-blur-sm">
-              <ShieldCheck className="w-4 h-4" /> Authorship Integrity Protocol
-            </div>
-            <h1 className="text-4xl md:text-7xl font-black mb-8 tracking-tighter leading-[1.1]">
-              Integrity at <br />
-              <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">
-                Every Version.
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-slate-300 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
-              ColabWize’s version comparison engine provides high-resolution
-              insights into your writing evolution, safeguards against
-              self-plagiarism, and builds a defensible history for every
-              manuscript.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-7 rounded-2xl text-lg shadow-xl shadow-blue-500/20 transition-all border-b-4 border-blue-800 active:border-b-0 active:translate-y-1">
-                Start Analysis <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <Button className="bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold px-10 py-7 rounded-2xl text-lg backdrop-blur-md">
-                View Certification Workflow
-              </Button>
-            </div>
->>>>>>> origin/craig-update
           </div>
         </div>
       </section>

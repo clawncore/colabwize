@@ -7,7 +7,6 @@ import Layout from "../../components/Layout";
 import PageMetadata from "../../components/PageMetadata";
 import ConfigService from "../../services/ConfigService";
 
-<<<<<<< HEAD
 interface ApiBlogPost {
   id: string;
   slug: string;
@@ -18,7 +17,8 @@ interface ApiBlogPost {
   image: string | null;
   created_at: string;
   read_time?: string | null;
-=======
+}
+
 // Intro Hero Section
 function IntroHero() {
   const navigate = useNavigate();
@@ -65,7 +65,6 @@ function IntroHero() {
       </div>
     </section>
   );
->>>>>>> origin/craig-update
 }
 
 function useBlogPosts() {
@@ -94,8 +93,6 @@ function useBlogPosts() {
   return { posts, loading };
 }
 
-<<<<<<< HEAD
-=======
 // Closing CTA
 function ClosingCTA() {
   const navigate = useNavigate();
@@ -162,7 +159,6 @@ function ClosingCTA() {
     </section>
   );
 }
->>>>>>> origin/craig-update
 export default function BlogsPage() {
   const { posts, loading } = useBlogPosts();
   const [activeTab, setActiveTab] = useState<'for-you' | 'featured'>('for-you');
@@ -252,13 +248,8 @@ export default function BlogsPage() {
   return (
     <Layout>
       <PageMetadata
-<<<<<<< HEAD
-        title="Resources & Insights | ColabWize"
-        description="Discover insights, tips, and best practices for academic writing and research collaboration."
-=======
         title="Blog | Academic Integrity & Collaboration Insights"
         description="Discover insights, tips, and best practices for academic writing, authorship verification, and maintaining academic integrity in the AI era."
->>>>>>> origin/craig-update
       />
       
       <div className="bg-white min-h-screen pt-20 pb-20">
