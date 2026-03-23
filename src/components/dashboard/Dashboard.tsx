@@ -14,6 +14,13 @@ import {
   RefreshCw,
   CheckCircle,
   TrendingUp,
+  Play,
+  FileText,
+  Users,
+  Star,
+  MessageCircle,
+  Layout,
+  X,
 } from "lucide-react";
 
 import { documentService, Project } from "../../services/documentService";
@@ -35,6 +42,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useOnboarding } from "../../hooks/useOnboarding";
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
 import { extractTextFromContent } from "../../utils/documentUtils";
+import { videoTutorials, VideoTutorial } from "../../data/helpData";
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -65,6 +73,9 @@ export const Dashboard: React.FC = () => {
   });
   const [latestProject, setLatestProject] = useState<Project | null>(null);
   const [selectedWeeks, setSelectedWeeks] = useState(8);
+  const [selectedVideo, setSelectedVideo] = useState<VideoTutorial | null>(
+    null,
+  );
 
   // Helper to ensure consistency with sidebar logic
   const userPlan = plan || "free";
@@ -210,7 +221,8 @@ export const Dashboard: React.FC = () => {
           <button
             onClick={handleRetry}
             disabled={isRetrying}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
             {isRetrying ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -253,7 +265,8 @@ export const Dashboard: React.FC = () => {
           ) && (
             <button
               onClick={handleUpgradeClick}
-              className="flex items-center px-3 py-1.5 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-sm font-bold rounded-lg hover:from-amber-500 hover:to-amber-700 active:bg-amber-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+              className="flex items-center px-3 py-1.5 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-sm font-bold rounded-lg hover:from-amber-500 hover:to-amber-700 active:bg-amber-800 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            >
               <Crown className="w-3.5 h-3.5 mr-1.5 text-amber-100" />
               Upgrade
             </button>
@@ -261,7 +274,8 @@ export const Dashboard: React.FC = () => {
           <button
             data-tour="upload-button"
             onClick={() => navigate("/dashboard/documents")}
-            className="flex items-center px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors shadow-sm">
+            className="flex items-center px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-colors shadow-sm"
+          >
             <Upload className="w-3.5 h-3.5 mr-1.5" />
             Upload
           </button>
@@ -285,7 +299,8 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <Link
                   to={`/dashboard/editor/${latestProject.id}`}
-                  className="group flex items-center text-sm font-semibold text-gray-500 hover:text-indigo-600 transition-colors">
+                  className="group flex items-center text-sm font-semibold text-gray-500 hover:text-indigo-600 transition-colors"
+                >
                   Open in Editor
                   <BookOpen className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
@@ -320,7 +335,8 @@ export const Dashboard: React.FC = () => {
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center z-10">
                   <Link
                     to={`/dashboard/editor/${latestProject.id}`}
-                    className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-base font-bold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
+                    className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-base font-bold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+                  >
                     Resume Editing
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Link>
@@ -360,7 +376,8 @@ export const Dashboard: React.FC = () => {
                           : (dashboardData.originalityScore || 0) >= 10
                             ? "bg-amber-50 text-amber-600"
                             : "bg-green-50 text-green-600"
-                      }`}>
+                      }`}
+                    >
                       <ShieldCheck className="w-4 h-4" />
                     </div>
                     <span className="text-sm font-semibold text-gray-700">
@@ -374,7 +391,8 @@ export const Dashboard: React.FC = () => {
                         : (dashboardData.originalityScore || 0) >= 10
                           ? "text-amber-600"
                           : "text-green-600"
-                    }`}>
+                    }`}
+                  >
                     {Math.round(
                       dashboardData.originalityScore ??
                         latestProject?.originality_scans?.[0]?.overallScore ??
@@ -427,12 +445,228 @@ export const Dashboard: React.FC = () => {
                 <div className="mt-4 pt-4 border-t border-gray-200/60">
                   <button
                     onClick={handleUpgradeClick}
-                    className="w-full py-2 bg-gradient-to-r from-gray-900 to-gray-800 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow hover:shadow-md transition-all flex items-center justify-center gap-2 group">
+                    className="w-full py-2 bg-gradient-to-r from-gray-900 to-gray-800 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow hover:shadow-md transition-all flex items-center justify-center gap-2 group"
+                  >
                     <Zap className="w-3.5 h-3.5 text-amber-400 group-hover:animate-pulse" />
                     Unlock All Insights
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Onboarding / Getting Started Section */}
+      {(!shouldShowTour || !onboardingLoading) && (
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                Getting Started
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Complete these steps to get the most out of ColabWize
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+              <span>Need help?</span>
+              <Link
+                to="/settings#help"
+                className="text-indigo-600 hover:underline"
+              >
+                Visit Help Center
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Step 1: Account */}
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-8 -mt-8 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-start gap-4 relative z-10">
+                <div
+                  className={`p-3 rounded-xl ${user ? "bg-green-50 text-green-600 border border-green-100" : "bg-gray-50 text-gray-400 border border-gray-100"}`}
+                >
+                  {user ? (
+                    <CheckCircle className="w-6 h-6" />
+                  ) : (
+                    <Users className="w-6 h-6" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">
+                    Step 1: Create Your Account
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                    Set up your profile and institutional preferences to
+                    personalize your experience.
+                  </p>
+                  <button
+                    onClick={() => navigate("/settings/profile")}
+                    className="mt-3 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center group/btn"
+                  >
+                    {user ? "View Profile" : "Complete Profile"}
+                    <ArrowRight className="ml-1 w-3 h-3 transform group-hover/btn:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Upload */}
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-8 -mt-8 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-start gap-4 relative z-10">
+                <div
+                  className={`p-3 rounded-xl ${latestProject ? "bg-green-50 text-green-600 border border-green-100" : "bg-indigo-50 text-indigo-600 border border-indigo-100"}`}
+                >
+                  {latestProject ? (
+                    <CheckCircle className="w-6 h-6" />
+                  ) : (
+                    <Upload className="w-6 h-6" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">
+                    Step 2: Upload Your First Document
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                    Power up your analysis by importing your first research
+                    paper or academic draft.
+                  </p>
+                  <button
+                    onClick={() => setShowUploadModal(true)}
+                    className="mt-3 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center group/btn"
+                  >
+                    {latestProject ? "Upload Another" : "Start Upload"}
+                    <ArrowRight className="ml-1 w-3 h-3 transform group-hover/btn:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3: Explore Tools (Video: Explore Your Papers) */}
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-8 -mt-8 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-start gap-4 relative z-10">
+                <div className="p-3 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl">
+                  <Play className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900">
+                    Step 3: Explore the Tools
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                    Learn how the Scientific Citation Auditor preserves your
+                    academic reputation.
+                  </p>
+                  <button
+                    onClick={() =>
+                      setSelectedVideo(
+                        videoTutorials.find((v) => v.id === "5") || null,
+                      )
+                    }
+                    className="mt-3 text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center group/btn"
+                  >
+                    Watch Tutorial (4:20)
+                    <Play className="ml-1.5 w-3 h-3 fill-blue-600" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 4: Create a Project (Video: Citation Audit) */}
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-bl-full -mr-8 -mt-8 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-start gap-4 relative z-10">
+                <div className="p-3 bg-purple-50 text-purple-600 border border-purple-100 rounded-xl">
+                  <Layout className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">
+                    Step 4: Create a Project
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                    Organize your research materials into dedicated, searchable
+                    workspaces.
+                  </p>
+                  <button
+                    onClick={() =>
+                      setSelectedVideo(
+                        videoTutorials.find((v) => v.id === "6") || null,
+                      )
+                    }
+                    className="mt-3 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center group/btn"
+                  >
+                    Watch Video (5:15)
+                    <Play className="ml-1.5 w-3 h-3 fill-indigo-600" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 5: Invite Collaborators (Video: Workspace Collaboration) */}
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-rose-50 rounded-bl-full -mr-8 -mt-8 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-start gap-4 relative z-10">
+                <div className="p-3 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">
+                    Step 5: Invite Collaborators
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                    Experience seamless real-time co-authoring with your
+                    academic team members.
+                  </p>
+                  <button
+                    onClick={() =>
+                      setSelectedVideo(
+                        videoTutorials.find((v) => v.id === "7") || null,
+                      )
+                    }
+                    className="mt-3 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center group/btn"
+                  >
+                    Watch Video (6:30)
+                    <Play className="ml-1.5 w-3 h-3 fill-indigo-600" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 6: Upgrade */}
+            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden relative font-primary">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-8 -mt-8 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-start gap-4 relative z-10">
+                <div
+                  className={`p-3 rounded-xl ${userPlan !== "free" ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-amber-50 text-amber-600 border border-amber-100"}`}
+                >
+                  {userPlan !== "free" ? (
+                    <Star className="w-6 h-6 fill-amber-700" />
+                  ) : (
+                    <Crown className="w-6 h-6" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">
+                    Step 6: Upgrade to Plus
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                    Unlock irrefutable Authorship Certificates and
+                    institutional-grade defensibility.
+                  </p>
+                  <button
+                    onClick={handleUpgradeClick}
+                    className="mt-3 text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center group/btn"
+                  >
+                    {userPlan !== "free"
+                      ? "Manage Subscription"
+                      : "Upgrade Now ($12/mo)"}
+                    <ArrowRight className="ml-1 w-3 h-3 transform group-hover/btn:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -479,7 +713,8 @@ export const Dashboard: React.FC = () => {
                     className="bg-gradient-to-r from-indigo-500 to-blue-500 h-1.5 rounded-full shadow-lg"
                     style={{
                       width: `${dashboardData.originalityScore || 0}%`,
-                    }}></div>
+                    }}
+                  ></div>
                 </div>
               </div>
 
@@ -519,7 +754,8 @@ export const Dashboard: React.FC = () => {
                                 : dashboardData.citationStatus === "Active"
                                   ? "25%"
                                   : "5%",
-                      }}></div>
+                      }}
+                    ></div>
                   </div>
                   <span className="text-xs font-bold text-gray-500">
                     {dashboardData.citationStatus === "Strong"
@@ -558,7 +794,8 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <p className="text-xs font-medium text-gray-500 mt-2 flex items-center bg-gray-50 py-1 px-2 rounded-lg inline-block">
                   <span
-                    className={`w-1.5 h-1.5 ${dashboardData.authorshipVerified ? "bg-green-500" : "bg-gray-400"} rounded-full mr-2`}></span>
+                    className={`w-1.5 h-1.5 ${dashboardData.authorshipVerified ? "bg-green-500" : "bg-gray-400"} rounded-full mr-2`}
+                  ></span>
                   {dashboardData.authorshipVerified
                     ? "Certificate Active"
                     : "No Certificate"}
@@ -586,9 +823,11 @@ export const Dashboard: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <select 
-                      value={selectedWeeks} 
-                      onChange={(e) => setSelectedWeeks(parseInt(e.target.value))}
+                    <select
+                      value={selectedWeeks}
+                      onChange={(e) =>
+                        setSelectedWeeks(parseInt(e.target.value))
+                      }
                       className="text-xs font-semibold text-gray-500 bg-gray-50 border border-gray-200 rounded-md px-2 py-1 outline-none focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer"
                     >
                       <option value={4}>Last 4 Weeks</option>
@@ -605,7 +844,8 @@ export const Dashboard: React.FC = () => {
                   <ResponsiveContainer width="99%" height="100%">
                     <BarChart
                       data={dashboardData.trendData || []}
-                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    >
                       <CartesianGrid
                         strokeDasharray="3 3"
                         vertical={false}
@@ -664,14 +904,16 @@ export const Dashboard: React.FC = () => {
                   {userPlan === "free" ? (
                     <Link
                       to="/pricing"
-                      className="text-sm font-semibold text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 group">
+                      className="text-sm font-semibold text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 group"
+                    >
                       <Lock className="w-3.5 h-3.5 group-hover:text-indigo-500 transition-colors" />
                       View All
                     </Link>
                   ) : (
                     <Link
                       to="/dashboard/analytics"
-                      className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center">
+                      className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center"
+                    >
                       View All
                       <ArrowRight className="w-4 h-4 ml-1" />
                     </Link>
@@ -713,7 +955,8 @@ export const Dashboard: React.FC = () => {
                           return (
                             <tr
                               key={i}
-                              className="group hover:bg-gray-50/80 transition-colors">
+                              className="group hover:bg-gray-50/80 transition-colors"
+                            >
                               <td className="px-6 py-4 font-medium text-gray-900 truncate max-w-[140px]">
                                 {doc.title}
                               </td>
@@ -730,7 +973,8 @@ export const Dashboard: React.FC = () => {
                                   <div className="w-24 bg-gray-100 rounded-full h-2 overflow-hidden">
                                     <div
                                       className={`h-2 rounded-full transition-all duration-500 ${progress >= 100 ? "bg-green-500" : "bg-indigo-500"}`}
-                                      style={{ width: `${progress}%` }}></div>
+                                      style={{ width: `${progress}%` }}
+                                    ></div>
                                   </div>
                                   <span className="text-xs font-semibold text-gray-400">
                                     {progress}%
@@ -745,7 +989,8 @@ export const Dashboard: React.FC = () => {
                                       : isDueSoon
                                         ? "bg-amber-50 text-amber-700 border border-amber-100"
                                         : "bg-green-50 text-green-600 border border-green-100"
-                                  }`}>
+                                  }`}
+                                >
                                   {isOverdue
                                     ? "Overdue"
                                     : isDueSoon
@@ -761,7 +1006,8 @@ export const Dashboard: React.FC = () => {
                         <tr>
                           <td
                             colSpan={4}
-                            className="px-6 py-8 text-center text-gray-400 italic">
+                            className="px-6 py-8 text-center text-gray-400 italic"
+                          >
                             No active deadlines.
                           </td>
                         </tr>
@@ -800,6 +1046,47 @@ export const Dashboard: React.FC = () => {
           onFinish={completeOnboarding}
           onSkip={skipOnboarding}
         />
+      )}
+
+      {/* Video Tutorial Modal */}
+      {selectedVideo && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900 flex items-center">
+                <Play className="w-4 h-4 text-blue-600 mr-2" />
+                {selectedVideo.title}
+              </h3>
+              <button
+                onClick={() => setSelectedVideo(null)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="Close video"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="aspect-video bg-black">
+              <iframe
+                src={`https://www.youtube.com/embed/${selectedVideo.videoId}?autoplay=1`}
+                title={selectedVideo.title}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+            <div className="p-4 bg-gray-50 flex justify-between items-center">
+              <span className="text-sm text-gray-500 font-medium font-primary">
+                Duration: {selectedVideo.duration}
+              </span>
+              <button
+                onClick={() => setSelectedVideo(null)}
+                className="px-4 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

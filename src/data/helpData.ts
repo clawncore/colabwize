@@ -42,16 +42,34 @@ export const videoTutorials: VideoTutorial[] = [
     },
     {
         id: "5",
-        title: "Adding Citations and References",
-        duration: "8:45",
-        thumbnail: "📚",
-        customThumbnail: "/assets/images/thumbnails/citations.jpg"
+        title: "Explore Your Papers",
+        duration: "4:20",
+        thumbnail: "📄",
+        videoId: "ndX50xogcno",
+        customThumbnail: "/assets/images/thumbnails/papers.jpg"
     },
     {
         id: "6",
-        title: "Collaborating with Your Team",
-        duration: "6:18",
+        title: "Citation Audit",
+        duration: "5:15",
+        thumbnail: "🔍",
+        videoId: "PRU5CS26tb8",
+        customThumbnail: "/assets/images/thumbnails/audit.jpg"
+    },
+    {
+        id: "7",
+        title: "Workspace Collaboration Overview",
+        duration: "6:30",
         thumbnail: "👥",
-        customThumbnail: "/assets/images/thumbnails/collaborating.jpg"
+        videoId: "k67eC8Ttzs8",
+        customThumbnail: "/assets/images/thumbnails/workspace.jpg"
+    },
+    {
+        id: "8",
+        title: "Export Your Document",
+        duration: "3:10",
+        thumbnail: "📤",
+        videoId: "k67eC8Ttzs8",
+        customThumbnail: "/assets/images/thumbnails/export.jpg"
     },
 ];
