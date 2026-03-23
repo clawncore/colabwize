@@ -10,10 +10,10 @@ const footerLinks = {
     { name: "Roadmap", href: "/roadmap" },
   ],
   resources: [
-    { name: "Blogs", href: "/blogs" },
+    { name: "Blogs", href: "/resources/blogs" },
     { name: "Case Studies", href: "/resources/case-studies" },
-    { name: "Help Center", href: "/help" },
-    { name: "Documentation", href: "https://docs.colabwize.com" },
+    { name: "Help Center", href: "/resources/help-center" },
+    { name: "Documentation", href: "/resources/documentation" },
     { name: "Schedule Demo", href: "/schedule-demo" },
   ],
   solutions: [
@@ -200,12 +200,12 @@ export default function Footer() {
               </p>
             </div>
             <div className="flex space-x-4">
-              <Link to="/docs/privacy">
+              <Link to="/legal/privacy">
                 <p className="text-gray-500 text-sm hover:text-gray-400 transition-colors">
                   Privacy Policy
                 </p>
               </Link>
-              <Link to="/docs/terms">
+              <Link to="/legal/terms">
                 <p className="text-gray-500 text-sm hover:text-gray-400 transition-colors">
                   Terms of Service
                 </p>

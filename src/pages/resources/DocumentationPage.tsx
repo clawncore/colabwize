@@ -7,17 +7,19 @@ import {
   Shield,
   Terminal,
 } from "lucide-react";
-import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
+import ConfigService from "../../services/ConfigService";
+
+const DOCS_URL = ConfigService.getDocsUrl();
 
 // Intro Hero Section
 function IntroHero() {
   const navigate = useNavigate();
 
-  const handleGetStarted = () => {
-    navigate("/signup");
+  const handleBrowseDocs = () => {
+    window.location.href = DOCS_URL;
   };
 
   return (
@@ -46,13 +48,18 @@ function IntroHero() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
-              onClick={handleGetStarted}>
+              onClick={handleBrowseDocs}>
               Browse Docs
             </Button>
             <Button
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
               asChild>
-              <RouterLink to="/signup">API Reference</RouterLink>
+              <a
+                href={DOCS_URL}
+                target="_blank"
+                rel="noopener noreferrer">
+                API Reference
+              </a>
             </Button>
           </div>
         </div>
@@ -315,9 +322,13 @@ function ClosingCTA() {
             <Button
               asChild
               className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
-              <RouterLink to="/docs/quickstart" className="flex items-center">
+              <a
+                href={`${DOCS_URL}/quickstart`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center">
                 See How It Works
-              </RouterLink>
+              </a>
             </Button>
           </div>
 

@@ -19,7 +19,6 @@ coverage/
 
 # Backend files and directories to exclude from frontend repo
 backend/
-docs/
 uploads/
 migrations/
 schema.sql
