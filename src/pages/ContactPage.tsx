@@ -172,6 +172,9 @@ function ContactForm() {
       if (RECAPTCHA_SITE_KEY) {
         try {
           token = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "contact");
+          if (!token) {
+            console.warn("reCAPTCHA token is empty, proceeding with fail-open");
+          }
         } catch (rcErr) {
           console.warn("reCAPTCHA token generation failed:", rcErr);
         }

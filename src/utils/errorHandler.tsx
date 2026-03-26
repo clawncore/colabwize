@@ -126,16 +126,15 @@ export const getErrorMessage = (
     );
   }
 
-  // 5. Unhandled frontend errors
+  // 6. reCAPTCHA / Security errors
   if (
-    lowerMsg.includes("cannot read properties") ||
-    lowerMsg.includes("is not a function") ||
-    lowerMsg.includes("json at position") ||
-    lowerMsg.includes("unexpected token") ||
-    lowerMsg.includes("exception")
+    lowerMsg.includes("recaptcha") ||
+    lowerMsg.includes("automated activity") ||
+    lowerMsg.includes("security verification") ||
+    lowerMsg.includes("low security score")
   ) {
     return buildErrorNode(
-      "An unexpected application error occurred. We have registered this issue.",
+      "Security verification failed. If you're using a privacy browser or ad-blocker (like Brave Shields), please try disabling it or completing the manual challenge.",
       "Contact Support",
       "mailto:support@colabwize.com"
     );

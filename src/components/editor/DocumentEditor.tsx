@@ -149,7 +149,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const isSyncedRef = useRef(false);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [isMassDeletionDetected, setIsMassDeletionDetected] = useState(false);
 
   useEffect(() => {
     if (RECAPTCHA_SITE_KEY) {
@@ -157,6 +156,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         /* silent */
       });
     }
+  }, []);
+
+  // Hide reCAPTCHA badge in the editor for a cleaner UI
+  useEffect(() => {
+    document.body.classList.add("hide-recaptcha");
+    return () => {
+      document.body.classList.remove("hide-recaptcha");
+    };
   }, []);
 
   const { plan: rawPlan } = useSubscriptionStore();
@@ -466,20 +473,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         }
 
         setEditCount((prev) => prev + 1);
-
-        // --- Mass Deletion Detection (Bot Mitigation) ---
-        try {
-          const oldSize = transaction.before.content.size;
-          const newSize = transaction.doc.content.size;
-
-          // If more than 5000 characters or 50% of a large document is deleted
-          if (oldSize > 1000 && oldSize - newSize > 5000) {
-            console.warn("[reCAPTCHA] Potential mass deletion detected.");
-            setIsMassDeletionDetected(true);
-          }
-        } catch (e) {
-          /* fail silent */
-        }
       },
       editorProps: {
         attributes: {
@@ -1064,40 +1057,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
   const handleSave = React.useCallback(async () => {
     if (!editor) return;
-
-    // --- reCAPTCHA Behavioral Check for Mass Deletions ---
-    if (isMassDeletionDetected && RECAPTCHA_SITE_KEY) {
-      try {
-        const token = await getRecaptchaToken(
-          RECAPTCHA_SITE_KEY,
-          "editor_mass_delete",
-        );
-        const verifyRes = await fetch(
-          `${
-            process.env.REACT_APP_API_URL || ""
-          }/api/auth/hybrid/verify-recaptcha`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token }),
-          },
-        );
-        const verifyData = await verifyRes.json();
-        if (!verifyData.success) {
-          toast({
-            title: "Security Check",
-            description:
-              "Suspicious activity detected. Please try again or contact support.",
-            variant: "destructive",
-          });
-          return;
-        }
-        // If human, reset the flag
-        setIsMassDeletionDetected(false);
-      } catch (rcError) {
-        console.warn("[reCAPTCHA] Editor verification skipped:", rcError);
-      }
-    }
 
     // setIsSaving(true);
 
@@ -1767,6 +1726,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           }
         }}
       />
+
     </EditorProvider>
   );
 };

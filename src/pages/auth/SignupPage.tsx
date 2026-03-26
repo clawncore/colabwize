@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod/dist/zod";
 import { z } from "zod";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, Shield } from "lucide-react";
 import AuthLayout from "../../components/auth/AuthLayout";
 import FormInput from "../../components/auth/FormInput";
 import PasswordStrength from "../../components/auth/PasswordStrength";
@@ -22,13 +22,14 @@ import {
 } from "../../services/hybridAuth";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { useToast } from "../../hooks/use-toast";
-import { loadRecaptchaScript, getRecaptchaToken } from "../../lib/recaptcha";
+import { loadRecaptchaScript, getRecaptchaToken, renderRecaptchaV2 } from "../../lib/recaptcha";
 import ConfigService from "../../services/ConfigService";
 
 // API base URL - adjust this to match your backend URL
 const API_BASE_URL = ConfigService.getApiUrl();
 
 const RECAPTCHA_SITE_KEY = ConfigService.getRecaptchaSiteKey();
+const RECAPTCHA_V2_SITE_KEY = ConfigService.getRecaptchaV2SiteKey();
 
 // List of allowed email domains
 const ALLOWED_DOMAINS = [
@@ -273,6 +274,10 @@ const SignupPage: React.FC = () => {
     }
   }, [searchParams, setError]);
 
+  const [isChallengeRequired, setIsChallengeRequired] = React.useState(false);
+  const [v2Token, setV2Token] = React.useState<string | null>(null);
+  const v2ContainerRef = React.useRef<HTMLDivElement>(null);
+
   // Check if user has a session but needs to complete signup (for OAuth users)
   React.useEffect(() => {
     const checkSessionAndRedirect = async () => {
@@ -343,6 +348,19 @@ const SignupPage: React.FC = () => {
       // This will be handled in the form submission
     }
   }, [searchParams]);
+
+  // Render reCAPTCHA v2 when challenge is required
+  React.useEffect(() => {
+    if (isChallengeRequired && RECAPTCHA_V2_SITE_KEY && v2ContainerRef.current) {
+      console.log("Rendering reCAPTCHA v2 challenge for signup...");
+      const timer = setTimeout(() => {
+        renderRecaptchaV2("recaptcha-v2-container-signup", RECAPTCHA_V2_SITE_KEY, (token) => {
+          setV2Token(token);
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isChallengeRequired]);
 
   // Initialize recaptcha verifier
   React.useEffect(() => {
@@ -641,30 +659,62 @@ const SignupPage: React.FC = () => {
       clearErrors();
       
       try {
-        // ── reCAPTCHA v3 verification ──────────────────────────────────────────
+        // ── reCAPTCHA verification ──────────────────────────────────────────
         if (RECAPTCHA_SITE_KEY) {
           try {
-            const rcToken = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "signup");
-            const rcRes = await fetch(
-              `${API_BASE_URL}/api/auth/hybrid/verify-recaptcha`,
-              {
+            // If a manual challenge is already required, verify the v2 token instead
+            if (isChallengeRequired) {
+              if (!v2Token) {
+                setError("root", { message: "Please complete the security challenge." });
+                setIsLoading(false);
+                return;
+              }
+              // Use the v2 token for manual verification
+              const rcRes = await fetch(`${API_BASE_URL}/api/auth/hybrid/verify-recaptcha`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token: rcToken }),
-              },
-            );
-            const rcData = await rcRes.json();
-            if (!rcRes.ok || !rcData.success) {
-              setError("root", {
-                message:
-                  "Automated activity detected. Please try again or contact support.",
+                body: JSON.stringify({ token: v2Token }),
               });
-              setIsLoading(false);
-              return;
+              const rcData = await rcRes.json();
+              if (!rcRes.ok || !rcData.success) {
+                setError("root", { message: "Security verification failed. Please try again." });
+                setV2Token(null);
+                setIsLoading(false);
+                return;
+              }
+            } else {
+              // Standard v3 background check
+              const rcToken = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "signup");
+              
+              if (!rcToken) {
+                console.warn("reCAPTCHA v3 blocked/empty, triggering manual challenge");
+                setIsChallengeRequired(true);
+                setIsLoading(false);
+                return;
+              } else {
+                const rcRes = await fetch(`${API_BASE_URL}/api/auth/hybrid/verify-recaptcha`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ token: rcToken }),
+                });
+                const rcData = await rcRes.json();
+                if (!rcRes.ok || !rcData.success) {
+                  if (rcData.score !== undefined && rcData.score < 0.5) {
+                    console.warn("Low v3 score, triggering manual challenge");
+                    setIsChallengeRequired(true);
+                  } else {
+                    setError("root", { message: "Security verification failed. Please try again." });
+                  }
+                  setIsLoading(false);
+                  return;
+                }
+              }
             }
           } catch (rcErr) {
-            console.warn("reCAPTCHA check failed, proceeding anyway:", rcErr);
-            // Fail open — don't block legitimate users if reCAPTCHA itself errors
+            console.warn("reCAPTCHA check encountered an error, triggering manual challenge:", rcErr);
+            setIsChallengeRequired(true);
+            setIsLoading(false);
+            return;
           }
         }
         // ────────────────────────────────────────────────────────────────────────
@@ -1205,6 +1255,23 @@ const SignupPage: React.FC = () => {
                     {errors.agreeToTerms.message}
                   </p>
                 )}
+
+              {/* reCAPTCHA v2 Fallback Challenge */}
+              {isChallengeRequired && !showOtpStep && (
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-4 duration-500">
+                  <p className="text-xs font-medium text-blue-600 flex items-center gap-1.5 px-1">
+                    <Shield className="w-3.5 h-3.5" />
+                    Security verification required
+                  </p>
+                  <div 
+                    id="recaptcha-v2-container-signup" 
+                    ref={v2ContainerRef}
+                    className="flex justify-center p-2 bg-gray-50 rounded-xl border border-dashed border-gray-300 min-h-[80px]"
+                  >
+                    {/* reCAPTCHA v2 widget will be injected here */}
+                  </div>
+                </div>
+              )}
 
               {/* Submit Button */}
               <Button

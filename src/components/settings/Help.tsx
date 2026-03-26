@@ -111,6 +111,9 @@ const HelpSettingsPage: React.FC = () => {
       if (RECAPTCHA_SITE_KEY) {
         try {
           token = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "feedback");
+          if (!token) {
+            console.warn("reCAPTCHA token is empty, proceeding with fail-open");
+          }
         } catch (rcErr) {
           console.warn("reCAPTCHA token generation failed:", rcErr);
         }
@@ -174,6 +177,9 @@ const HelpSettingsPage: React.FC = () => {
       if (RECAPTCHA_SITE_KEY) {
         try {
           token = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "support_ticket");
+          if (!token) {
+            console.warn("reCAPTCHA token is empty, proceeding with fail-open");
+          }
         } catch (rcErr) {
           console.warn("reCAPTCHA token generation failed:", rcErr);
         }
@@ -376,6 +382,9 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
       if (RECAPTCHA_SITE_KEY) {
         try {
           token = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "feature_request");
+          if (!token) {
+            console.warn("reCAPTCHA token is empty, proceeding with fail-open");
+          }
         } catch (rcErr) {
           console.warn("reCAPTCHA token generation failed:", rcErr);
         }

@@ -2,11 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ensure reCAPTCHA badge is visible and on top */
+/* Ensure reCAPTCHA badge is visible and on top by default */
 .grecaptcha-badge {
   z-index: 9999 !important;
   visibility: visible !important;
   display: block !important;
+}
+
+/* Hide reCAPTCHA badge in specific contexts (like the Editor) */
+.hide-recaptcha .grecaptcha-badge {
+  visibility: hidden !important;
 }
 
 body {

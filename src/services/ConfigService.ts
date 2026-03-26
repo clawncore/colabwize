@@ -107,6 +107,16 @@ export class ConfigService {
   }
 
   /**
+   * Get the reCAPTCHA v2 Site Key (Checkbox)
+   */
+  static getRecaptchaV2SiteKey(): string {
+    return (
+      process.env.REACT_APP_RC_V2_SITE ||
+      "" // Default to empty, user must provide this for v2 to work
+    );
+  }
+
+  /**
    * Get current environment name
    */
   static getNodeEnv(): string {
