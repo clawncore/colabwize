@@ -31,9 +31,9 @@ const FAQPage = () => {
             "You can create an account by clicking the 'Sign Up' button on our homepage. You'll need to provide your email address, create a password, and verify your email. After verification, you can complete your profile and start using ColabWize.",
         },
         {
-          question: "Is there a free trial available?",
+          question: "Is there a free plan available?",
           answer:
-            "Yes! All new users get access to our Free plan which includes basic features like up to 3 projects, 100 AI writing suggestions per month, and basic plagiarism checking. You can upgrade to a paid plan at any time.",
+            "Yes! All new users get access to our Free plan which includes 3 document scans per month, basic originality checking (30 sentences), AI detection, 3 rephrase suggestions, and watermarked certificates. You can upgrade to a paid plan at any time.",
         },
         {
           question: "What are the system requirements?",

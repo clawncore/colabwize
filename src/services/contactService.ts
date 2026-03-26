@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import apiClient from "./apiClient";
 
 class ContactService {
@@ -18,15 +19,14 @@ class ContactService {
 
       return {
         success: true,
-        message: response.message,
+        message: getErrorMessage(response),
       };
     } catch (error: any) {
       console.error("Failed to submit contact form:", error);
       return {
         success: false,
         message:
-          error.message ||
-          "Failed to submit contact form. Please try again later.",
+          getErrorMessage(error, "Failed to submit contact form. Please try again later."),
       };
     }
   }

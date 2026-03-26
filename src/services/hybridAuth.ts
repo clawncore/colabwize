@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import {
   supabase,
   configureSessionPersistence,
@@ -82,14 +83,14 @@ export async function signUpWithEmail(
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.message || "Signup failed");
+      throw new Error(getErrorMessage(result, "Signup failed"));
     }
 
     console.log("Hybrid signup successful:", result);
     return {
       success: true,
       user: result.user,
-      message: result.message,
+      message: getErrorMessage(result),
       otpSent: result.otpSent,
       needsVerification: result.needsVerification || true,
     };
@@ -99,7 +100,7 @@ export async function signUpWithEmail(
     return {
       success: false,
       user: null,
-      message: error.message || "Signup failed",
+      message: getErrorMessage(error, "Signup failed"),
       otpSent: false,
       needsVerification: false,
     };
@@ -237,7 +238,7 @@ export async function signInWithEmail(
       throw networkErr;
     }
     logger.authError("Hybrid sign in error", {
-      error: error.message,
+      error: getErrorMessage(error),
       code: error?.code,
       email,
     });
@@ -307,7 +308,7 @@ export async function syncUser(): Promise<{
       throw new Error(result.error || "Failed to verify user with backend");
     }
   } catch (error: any) {
-    logger.authError("Sync user error", { error: error.message });
+    logger.authError("Sync user error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -345,7 +346,7 @@ export async function signInWithGoogle(): Promise<{
       userData: null,
     };
   } catch (error: any) {
-    logger.error("Hybrid Google sign in error", { error: error.message });
+    logger.error("Hybrid Google sign in error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -383,7 +384,7 @@ export async function signInWithMicrosoft(): Promise<{
       userData: null,
     };
   } catch (error: any) {
-    logger.error("Hybrid Microsoft sign in error", { error: error.message });
+    logger.error("Hybrid Microsoft sign in error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -431,7 +432,7 @@ export async function signUpWithGoogle(redirectParams?: {
       userData: null,
     };
   } catch (error: any) {
-    logger.error("Hybrid Google signup error", { error: error.message });
+    logger.error("Hybrid Google signup error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -479,7 +480,7 @@ export async function signUpWithMicrosoft(redirectParams?: {
       userData: null,
     };
   } catch (error: any) {
-    logger.error("Hybrid Microsoft signup error", { error: error.message });
+    logger.error("Hybrid Microsoft signup error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -552,7 +553,7 @@ export async function updateUserProfile(updates: {
       throw new Error(result.error || "Failed to update user profile");
     }
   } catch (error: any) {
-    logger.error("Hybrid profile update error", { error: error.message });
+    logger.error("Hybrid profile update error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -568,7 +569,7 @@ export async function signOutUser(): Promise<void> {
     }
     logger.info("User signed out");
   } catch (error: any) {
-    logger.error("Sign out error", { error: error.message });
+    logger.error("Sign out error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -580,12 +581,12 @@ export async function getCurrentUser(): Promise<any> {
   try {
     const { data, error } = await supabase.auth.getUser();
     if (error) {
-      logger.error("Get user error", { error: error.message });
+      logger.error("Get user error", { error: getErrorMessage(error)});
       return null;
     }
     return data.user;
   } catch (error: any) {
-    logger.error("Get user error", { error: error.message });
+    logger.error("Get user error", { error: getErrorMessage(error)});
     return null;
   }
 }
@@ -600,20 +601,20 @@ export async function getIdToken(
     if (forceRefresh) {
       const { data, error } = await supabase.auth.refreshSession();
       if (error) {
-        logger.error("Refresh session error", { error: error.message });
+        logger.error("Refresh session error", { error: getErrorMessage(error)});
         return null;
       }
       return data.session?.access_token || null;
     } else {
       const { data, error } = await supabase.auth.getSession();
       if (error) {
-        logger.error("Get session error", { error: error.message });
+        logger.error("Get session error", { error: getErrorMessage(error)});
         return null;
       }
       return data.session?.access_token || null;
     }
   } catch (error: any) {
-    logger.error("Get ID token error", { error: error.message });
+    logger.error("Get ID token error", { error: getErrorMessage(error)});
     return null;
   }
 }
@@ -645,7 +646,7 @@ export async function resetPassword(email: string): Promise<void> {
       throw new Error(result.error || "Failed to send password reset email");
     }
   } catch (error: any) {
-    logger.error("Password reset error", { error: error.message, email });
+    logger.error("Password reset error", { error: getErrorMessage(error), email });
     throw error;
   }
 }
@@ -696,11 +697,11 @@ export async function verifyEmailOTP(
         message: "Email verified successfully! You can now sign in.",
       };
     } else {
-      throw new Error(result.message || "Failed to verify OTP code");
+      throw new Error(getErrorMessage(result, "Failed to verify OTP code"));
     }
   } catch (error: any) {
     logger.error("Email OTP verification error", {
-      error: error.message,
+      error: getErrorMessage(error),
       email,
     });
     throw error;
@@ -739,10 +740,10 @@ export async function verifyOTP(
         logger.info("OTP verified successfully via Backend");
         return {
           success: true,
-          message: result.message || "Email verified successfully.",
+          message: getErrorMessage(result, "Email verified successfully."),
         };
       } else {
-        throw new Error(result.message || "Failed to verify OTP with backend");
+        throw new Error(getErrorMessage(result, "Failed to verify OTP with backend"));
       }
     }
 
@@ -755,7 +756,7 @@ export async function verifyOTP(
     });
 
     if (error) {
-      throw new Error(error.message);
+      throw new Error(getErrorMessage(error));
     }
 
     logger.info("OTP verified successfully via Supabase SDK");
@@ -764,7 +765,7 @@ export async function verifyOTP(
       message: "Email verified successfully.",
     };
   } catch (error: any) {
-    logger.error("OTP verification error", { error: error.message });
+    logger.error("OTP verification error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -830,7 +831,7 @@ export async function resendVerificationEmail(
 
     if (error) {
       logger.error("Resend verification email error", {
-        error: error.message,
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -843,7 +844,7 @@ export async function resendVerificationEmail(
     };
   } catch (error: any) {
     logger.error("Resend verification email error", {
-      error: error.message,
+      error: getErrorMessage(error),
       email,
     });
     throw error;

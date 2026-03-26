@@ -39,13 +39,13 @@ const UsageLimitsPage = () => {
           </div>
 
           <div className="border border-blue-500 rounded-lg p-6 bg-blue-50">
-            <h3 className="text-lg font-semibold mb-3">Student</h3>
+            <h3 className="text-lg font-semibold mb-3">Plus</h3>
             <div className="text-4xl font-bold text-blue-600 mb-2">50</div>
             <p className="text-sm text-gray-600">scans per month</p>
           </div>
 
           <div className="border border-purple-500 rounded-lg p-6 bg-purple-50">
-            <h3 className="text-lg font-semibold mb-3">Researcher</h3>
+            <h3 className="text-lg font-semibold mb-3">Pro</h3>
             <div className="text-4xl font-bold text-purple-600 mb-2">∞</div>
             <p className="text-sm text-gray-600">unlimited scans</p>
           </div>
@@ -82,7 +82,7 @@ const UsageLimitsPage = () => {
               <AlertCircle className="h-5 w-5 text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
               <span className="text-blue-900">
                 <strong>Citation checks:</strong> Do NOT count toward scan
-                limits for Student+ plans (counted separately for Free users - 0
+                limits for Plus+ plans (counted separately for Free users - 0
                 allowed)
               </span>
             </li>
@@ -106,9 +106,9 @@ const UsageLimitsPage = () => {
               <tr>
                 <th className="px-6 py-3 text-left font-semibold">Feature</th>
                 <th className="px-6 py-3 text-center font-semibold">Free</th>
-                <th className="px-6 py-3 text-center font-semibold">Student</th>
+                <th className="px-6 py-3 text-center font-semibold">Plus</th>
                 <th className="px-6 py-3 text-center font-semibold">
-                  Researcher
+                  Pro
                 </th>
                 <th className="px-6 py-3 text-center font-semibold">PAYG</th>
               </tr>

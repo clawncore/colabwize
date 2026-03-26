@@ -9,6 +9,10 @@ import FormInput from "../../components/auth/FormInput";
 import PasswordStrength from "../../components/auth/PasswordStrength";
 import { Button } from "../../components/ui/button";
 import { supabase } from "../../lib/supabase/client";
+import { loadRecaptchaScript, getRecaptchaToken } from "../../lib/recaptcha";
+import ConfigService from "../../services/ConfigService";
+
+const RECAPTCHA_SITE_KEY = ConfigService.getRecaptchaSiteKey();
 
 const resetPasswordSchema = z
   .object({
@@ -33,6 +37,14 @@ const ResetPasswordPage: React.FC = () => {
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [isValidToken, setIsValidToken] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (RECAPTCHA_SITE_KEY) {
+      loadRecaptchaScript(RECAPTCHA_SITE_KEY).catch(() => {
+        /* silent */
+      });
+    }
+  }, []);
 
   const oobCode = searchParams.get("oobCode");
   const email = searchParams.get("email");
@@ -74,6 +86,40 @@ const ResetPasswordPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
+      // ── reCAPTCHA v3 verification ──────────────────────────────────────────
+      if (RECAPTCHA_SITE_KEY) {
+        try {
+          const token = await getRecaptchaToken(
+            RECAPTCHA_SITE_KEY,
+            "reset_password",
+          );
+          const verifyRes = await fetch(
+            `${
+              process.env.REACT_APP_API_URL || ""
+            }/api/auth/hybrid/verify-recaptcha`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token }),
+            },
+          );
+          const verifyData = await verifyRes.json();
+          if (!verifyData.success) {
+            setError(
+              "Automated activity detected. Please try again or contact support.",
+            );
+            setIsLoading(false);
+            return;
+          }
+        } catch (rcError) {
+          console.warn(
+            "[reCAPTCHA] Reset Password verification skipped:",
+            rcError,
+          );
+        }
+      }
+      // ───────────────────────────────────────────────────────────────────────
+
       // Use Supabase to reset password
       if (!oobCode) {
         throw new Error("Invalid reset code");

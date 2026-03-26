@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { create } from "zustand";
 import apiClient from "../services/apiClient";
 import { supabase } from "../lib/supabase/client";
@@ -134,7 +135,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
           console.warn("⚠️ Subscription fetch soft failure:", response.message);
           set({
             status: "failed",
-            error: response.message || "Service unavailable",
+            error: getErrorMessage(response, "Service unavailable"),
             loading: false,
           });
         }
@@ -142,7 +143,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         console.error("❌ Subscription fetch critical failure:", err);
         set({
           status: "failed", // TERMINAL STATE
-          error: err.message,
+          error: getErrorMessage(err),
           loading: false,
         });
       } finally {

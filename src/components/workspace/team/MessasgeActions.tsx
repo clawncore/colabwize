@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "../../../utils/errorHandler";
 import { useState, useEffect } from "react";
 import {
   AlertDialog,
@@ -42,7 +43,7 @@ export function DeleteAlert() {
       .eq("id", actionMessage?.id!);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(getErrorMessage(error));
     } else {
       toast.success("Successfully delete a message");
     }
@@ -126,7 +127,7 @@ export function EditAlert({ workspaceId }: { workspaceId?: string }) {
         .update({ content: resolvedContent })
         .eq("id", actionMessage?.id!);
       if (error) {
-        toast.error(error.message);
+        toast.error(getErrorMessage(error));
       } else {
         toast.success("Update Successfully");
       }

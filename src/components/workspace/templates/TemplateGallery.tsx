@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../../utils/errorHandler";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import TemplateService, { Template } from "../../../services/templateService";
@@ -205,7 +206,7 @@ export default function TemplateGallery({
       }
     } catch (error: any) {
       console.error("Failed to use template:", error);
-      toast.error(error.message || "Failed to create project from template");
+      toast.error(getErrorMessage(error, "Failed to create project from template"));
     } finally {
       setIsSubmitting(false);
     }

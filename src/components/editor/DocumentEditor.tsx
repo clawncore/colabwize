@@ -92,9 +92,16 @@ import {
   Bot,
   GitCompare,
   Lock,
+  HelpCircle,
+  Video,
 } from "lucide-react";
+
+import { EditorHelpDialog } from "./EditorHelpDialog";
 import { Button } from "../ui/button";
 import ConfigService from "../../services/ConfigService";
+import { loadRecaptchaScript, getRecaptchaToken } from "../../lib/recaptcha";
+
+const RECAPTCHA_SITE_KEY = ConfigService.getRecaptchaSiteKey();
 
 function isViewReady(ed: any): boolean {
   if (!ed) return false;
@@ -142,6 +149,15 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const isSyncedRef = useRef(false);
   const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [isMassDeletionDetected, setIsMassDeletionDetected] = useState(false);
+
+  useEffect(() => {
+    if (RECAPTCHA_SITE_KEY) {
+      loadRecaptchaScript(RECAPTCHA_SITE_KEY).catch(() => {
+        /* silent */
+      });
+    }
+  }, []);
 
   const { plan: rawPlan } = useSubscriptionStore();
   const userPlanName = rawPlan?.toLowerCase() || "free";
@@ -304,6 +320,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [description, setDescription] = useState(project.description || "");
 
   const [isStyleDialogOpen, setIsStyleDialogOpen] = useState(false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   // Stats and usage tracking
@@ -437,7 +454,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         GrammarExtension, // AI Grammar Checker
         CitationScannerExtension,
       ],
-      content: isCollaborative ? undefined : formatContentForTiptap(project.content),
+      content: isCollaborative
+        ? undefined
+        : formatContentForTiptap(project.content),
       onUpdate: ({ editor, transaction }) => {
         if (
           transaction.getMeta("normalization") ||
@@ -447,6 +466,20 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         }
 
         setEditCount((prev) => prev + 1);
+
+        // --- Mass Deletion Detection (Bot Mitigation) ---
+        try {
+          const oldSize = transaction.before.content.size;
+          const newSize = transaction.doc.content.size;
+
+          // If more than 5000 characters or 50% of a large document is deleted
+          if (oldSize > 1000 && oldSize - newSize > 5000) {
+            console.warn("[reCAPTCHA] Potential mass deletion detected.");
+            setIsMassDeletionDetected(true);
+          }
+        } catch (e) {
+          /* fail silent */
+        }
       },
       editorProps: {
         attributes: {
@@ -1032,6 +1065,40 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const handleSave = React.useCallback(async () => {
     if (!editor) return;
 
+    // --- reCAPTCHA Behavioral Check for Mass Deletions ---
+    if (isMassDeletionDetected && RECAPTCHA_SITE_KEY) {
+      try {
+        const token = await getRecaptchaToken(
+          RECAPTCHA_SITE_KEY,
+          "editor_mass_delete",
+        );
+        const verifyRes = await fetch(
+          `${
+            process.env.REACT_APP_API_URL || ""
+          }/api/auth/hybrid/verify-recaptcha`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token }),
+          },
+        );
+        const verifyData = await verifyRes.json();
+        if (!verifyData.success) {
+          toast({
+            title: "Security Check",
+            description:
+              "Suspicious activity detected. Please try again or contact support.",
+            variant: "destructive",
+          });
+          return;
+        }
+        // If human, reset the flag
+        setIsMassDeletionDetected(false);
+      } catch (rcError) {
+        console.warn("[reCAPTCHA] Editor verification skipped:", rcError);
+      }
+    }
+
     // setIsSaving(true);
 
     try {
@@ -1575,6 +1642,29 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               title="Compare with Previous">
               <GitCompare className="w-4 h-4" />
               Compare
+            </button>
+
+            <button
+              onClick={() => setShowHelpDialog(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md hover:scale-105"
+              title="Help & Video Tutorials"
+              aria-label="Help">
+              <HelpCircle className="w-4 h-4" />
+              Help
+            </button>
+
+            <EditorHelpDialog
+              open={showHelpDialog}
+              onOpenChange={setShowHelpDialog}
+            />
+
+            {/* Floating Help Button */}
+            <button
+              onClick={() => setShowHelpDialog(true)}
+              className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center hover:scale-110"
+              title="Help & Tutorials"
+              aria-label="Help">
+              <HelpCircle className="w-6 h-6" />
             </button>
 
             <AuthorshipCertificateAdapter

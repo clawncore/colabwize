@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../../utils/errorHandler";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOutletContext } from "react-router-dom";
@@ -351,7 +352,7 @@ export const AdminEmailCenter: React.FC = () => {
       setMessage("");
       setIsTemplateLoaded(false);
     } catch (err: any) {
-      toast({ title: "Failed", description: err.message || "Email dispatch failed", variant: "destructive" });
+      toast({ title: "Failed", description: getErrorMessage(err, "Email dispatch failed"), variant: "destructive" });
     } finally {
       setIsSending(false);
     }
@@ -381,7 +382,7 @@ export const AdminEmailCenter: React.FC = () => {
           setConfirmText("");
           setIsTemplateLoaded(false);
       } catch (err: any) {
-          toast({ title: "Broadcast Failed", description: err.message, variant: "destructive" });
+          toast({ title: "Broadcast Failed", description: getErrorMessage(err), variant: "destructive" });
       } finally {
           setIsBroadcasting(false);
       }
@@ -404,7 +405,7 @@ export const AdminEmailCenter: React.FC = () => {
         setAiPrompt("");
       }
     } catch (err: any) {
-      toast({ title: "AI Failed", description: err.message || "Failed to generate email.", variant: "destructive" });
+      toast({ title: "AI Failed", description: getErrorMessage(err, "Failed to generate email."), variant: "destructive" });
     } finally {
       setIsGeneratingAI(false);
     }

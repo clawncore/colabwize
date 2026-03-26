@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 import { supabase } from "../lib/supabase/client";
 
@@ -58,7 +59,7 @@ class AuthService {
     } catch (error: any) {
       return {
         success: false,
-        message: error.message || "Registration failed",
+        message: getErrorMessage(error, "Registration failed"),
       };
     }
   }
@@ -78,7 +79,7 @@ class AuthService {
     } catch (error: any) {
       return {
         success: false,
-        message: error.message || "Login failed",
+        message: getErrorMessage(error, "Login failed"),
       };
     }
   }
@@ -93,7 +94,7 @@ class AuthService {
     } catch (error: any) {
       return {
         success: false,
-        message: error.message || "OTP verification failed",
+        message: getErrorMessage(error, "OTP verification failed"),
       };
     }
   }
@@ -110,7 +111,7 @@ class AuthService {
     } catch (error: any) {
       return {
         success: false,
-        message: error.message || "Failed to resend OTP",
+        message: getErrorMessage(error, "Failed to resend OTP"),
       };
     }
   }
@@ -125,7 +126,7 @@ class AuthService {
     } catch (error: any) {
       return {
         success: false,
-        message: error.message || "Survey submission failed",
+        message: getErrorMessage(error, "Survey submission failed"),
       };
     }
   }
@@ -140,7 +141,7 @@ class AuthService {
     } catch (error: any) {
       return {
         success: false,
-        message: error.message || "Failed to get user",
+        message: getErrorMessage(error, "Failed to get user"),
       };
     }
   }
@@ -183,7 +184,7 @@ class AuthService {
       return response as any;
     } catch (error: any) {
       console.error("Enable 2FA Error:", error);
-      return { success: false, message: error.message || "Failed to start 2FA setup" };
+      return { success: false, message: getErrorMessage(error, "Failed to start 2FA setup") };
     }
   }
 
@@ -195,7 +196,7 @@ class AuthService {
       const response = await apiClient.post("/api/auth/2fa/verify", { token, secret });
       return response;
     } catch (error: any) {
-      return { success: false, message: error.message || "Failed to confirm 2FA" };
+      return { success: false, message: getErrorMessage(error, "Failed to confirm 2FA") };
     }
   }
 
@@ -209,7 +210,7 @@ class AuthService {
       const response = await apiClient.post("/api/auth/hybrid/verify-2fa", { userId, token });
       return response;
     } catch (error: any) {
-      return { success: false, message: error.message || "Invalid code" };
+      return { success: false, message: getErrorMessage(error, "Invalid code") };
     }
   }
 
@@ -223,7 +224,7 @@ class AuthService {
       const response = await apiClient.post("/api/auth/hybrid/verify-2fa", { userId, token });
       return response;
     } catch (error: any) {
-      return { success: false, message: error.message || "Invalid code" };
+      return { success: false, message: getErrorMessage(error, "Invalid code") };
     }
   }
 
@@ -244,7 +245,7 @@ class AuthService {
       const response = await apiClient.post("/api/auth/2fa/disable", { password, token });
       return response;
     } catch (error: any) {
-      return { success: false, message: error.message || "Failed to disable 2FA" };
+      return { success: false, message: getErrorMessage(error, "Failed to disable 2FA") };
     }
   }
 

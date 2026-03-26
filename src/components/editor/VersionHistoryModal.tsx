@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../utils/errorHandler";
 import React, { useEffect, useState } from "react";
 import {
   X,
@@ -116,7 +117,7 @@ export const VersionHistoryModal: React.FC<VersionHistoryModalProps> = ({
       console.error("Failed to delete version:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to delete version.",
+        description: getErrorMessage(error, "Failed to delete version."),
         variant: "destructive",
       });
     } finally {

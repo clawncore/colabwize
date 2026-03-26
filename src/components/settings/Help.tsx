@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import { getErrorMessage } from "../../utils/errorHandler";
+import React, { useState, useEffect } from "react";
+import { loadRecaptchaScript, getRecaptchaToken } from "../../lib/recaptcha";
 import { useToast } from "../../hooks/use-toast";
 import {
   HelpCircle,
@@ -32,6 +34,13 @@ interface HelpArticle {
 const HelpSettingsPage: React.FC = () => {
   const { toast } = useToast();
   const { user } = useUser();
+  const RECAPTCHA_SITE_KEY = ConfigService.getRecaptchaSiteKey();
+
+  useEffect(() => {
+    if (RECAPTCHA_SITE_KEY) {
+      loadRecaptchaScript(RECAPTCHA_SITE_KEY).catch(() => {});
+    }
+  }, [RECAPTCHA_SITE_KEY]);
   const [searchQuery, setSearchQuery] = useState("");
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackComment, setFeedbackComment] = useState("");
@@ -98,6 +107,14 @@ const HelpSettingsPage: React.FC = () => {
   const handleSubmitFeedback = async () => {
     setSubmittingFeedback(true);
     try {
+      let token = "";
+      if (RECAPTCHA_SITE_KEY) {
+        try {
+          token = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "feedback");
+        } catch (rcErr) {
+          console.warn("reCAPTCHA token generation failed:", rcErr);
+        }
+      }
       // Prepare feedback data
       const feedbackData = {
         type: "feedback",
@@ -111,7 +128,7 @@ const HelpSettingsPage: React.FC = () => {
       };
 
       // Send feedback to backend using the public endpoint
-      const result = await apiClient.post("/api/feedback/public", feedbackData);
+      const result = await apiClient.post("/api/feedback/public", { ...feedbackData, token });
 
       if (result && result.success) {
         // Send Discord notification as a background task
@@ -135,7 +152,7 @@ const HelpSettingsPage: React.FC = () => {
         // Reset success message after 3 seconds
         setTimeout(() => setFeedbackSubmitted(false), 3000);
       } else {
-        throw new Error(result.message || "Failed to submit feedback");
+        throw new Error(getErrorMessage(result, "Failed to submit feedback"));
       }
     } catch (error) {
       console.error("Error submitting feedback:", error);
@@ -153,6 +170,14 @@ const HelpSettingsPage: React.FC = () => {
   const handleSubmitTicket = async () => {
     setSubmittingTicket(true);
     try {
+      let token = "";
+      if (RECAPTCHA_SITE_KEY) {
+        try {
+          token = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "support_ticket");
+        } catch (rcErr) {
+          console.warn("reCAPTCHA token generation failed:", rcErr);
+        }
+      }
       // Get browser and system information
       const browserInfo = navigator.userAgent;
       const osInfo = navigator.platform;
@@ -216,6 +241,7 @@ const HelpSettingsPage: React.FC = () => {
         osInfo,
         screenSize,
         userPlan,
+        token,
       };
 
       // Send the ticket data to the backend
@@ -319,7 +345,7 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
         toast({
           title: "Vote Submission Failed",
           description:
-            result.message || "Failed to submit vote. Please try again.",
+            getErrorMessage(result, "Failed to submit vote. Please try again."),
           variant: "destructive",
         });
       }
@@ -346,8 +372,17 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
 
     setSubmittingFeature(true);
     try {
+      let token = "";
+      if (RECAPTCHA_SITE_KEY) {
+        try {
+          token = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "feature_request");
+        } catch (rcErr) {
+          console.warn("reCAPTCHA token generation failed:", rcErr);
+        }
+      }
       // Create a feature request using the dedicated feature request API
       const result = await apiClient.post("/api/feature-request/simple", {
+        token,
         title: newFeatureTitle,
         description: newFeatureDescription,
         category: "other",
@@ -466,66 +501,90 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
         </div>
 
         {/* Video Tutorials */}
-        <div className="bg-white  rounded-xl shadow-sm border border-gray-200 ">
-          <div className="p-6 border-b border-gray-200 ">
-            <h2 className="text-lg font-semibold text-gray-900 ">
-              Video Tutorials
-            </h2>
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-gray-100 mb-8 overflow-hidden relative group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl -z-10 group-hover:bg-blue-100/50 transition-colors duration-700"></div>
+          
+          <div className="p-6 border-b border-gray-100 flex items-center justify-between z-10">
+            <div>
+              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-600 flex items-center gap-2">
+                <Play className="w-5 h-5 text-blue-600 fill-current" />
+                Masterclass Tutorials
+              </h2>
+              <p className="text-sm text-gray-500 mt-1 font-medium">Elevate your productivity with our expert guides</p>
+            </div>
           </div>
 
           <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
               {videoTutorials.map((video) => (
                 <div
                   key={video.id}
-                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col h-full">
-                  <div className="bg-gray-100 aspect-video relative group overflow-hidden">
+                  onClick={() => video.videoId && setSelectedVideo(video)}
+                  className={`group relative bg-white/60 backdrop-blur-sm rounded-2xl p-3 border border-gray-100/80 shadow-sm hover:shadow-[0_8px_30px_rgb(6,81,237,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col sm:flex-row gap-4 items-center overflow-hidden z-10 ${
+                    video.videoId ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'
+                  }`}
+                >
+                  <div className="w-full sm:w-32 h-44 sm:h-24 shrink-0 rounded-xl bg-gray-100/80 relative overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)] border border-gray-200/50 flex items-center justify-center">
+                    {/* Tutorial Badge */}
+                    <div className="absolute top-1.5 left-1.5 z-10">
+                      <span className="px-1.5 py-0.5 bg-white/95 backdrop-blur-md text-blue-700 text-[9px] font-bold rounded shadow-sm uppercase tracking-wider">
+                        Guide
+                      </span>
+                    </div>
+
                     {video.videoId ? (
                       <>
                         <img
                           src={
                             video.customThumbnail && !imgError[video.id]
                               ? video.customThumbnail
-                              : `https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`
+                              : `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`
                           }
                           onError={() => handleImgError(video.id)}
                           alt={video.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                          <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-md shadow-lg transform transition-transform group-hover:scale-110">
-                            <Play className="h-5 w-5 text-blue-600 ml-1 fill-blue-600" />
+                        <div className="absolute inset-0 flex items-center justify-center bg-blue-900/10 group-hover:bg-blue-900/40 transition-colors duration-300">
+                          <div className="w-8 h-8 bg-white/95 rounded-full flex items-center justify-center shadow-lg transform scale-75 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300">
+                            <Play className="h-4 w-4 text-blue-600 ml-0.5" fill="currentColor" />
                           </div>
                         </div>
                         {/* Duration Badge */}
-                        <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm text-white text-xs px-2 py-1 rounded font-medium">
+                        <div className="absolute bottom-1.5 right-1.5 bg-black/70 backdrop-blur-md text-white text-[9px] px-1.5 py-0.5 rounded-md font-medium tracking-wide">
                           {video.duration}
                         </div>
                       </>
                     ) : (
-                      <div className="h-full w-full flex items-center justify-center text-4xl">
+                      <div className="text-3xl bg-gradient-to-br from-gray-50 to-gray-200 w-full h-full flex items-center justify-center opacity-70">
                         {video.thumbnail}
                       </div>
                     )}
                   </div>
-                  <div className="p-4 flex flex-col flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-gray-900 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
-                        {video.title}
-                      </h3>
-                    </div>
-                    <div className="mt-auto">
-                      <button
-                        onClick={() => video.videoId && setSelectedVideo(video)}
-                        disabled={!video.videoId}
-                        className={`flex items-center text-sm font-medium ${
-                          video.videoId
-                            ? "text-blue-600 hover:text-blue-700"
-                            : "text-gray-400 cursor-not-allowed"
-                        }`}>
-                        <Play className="h-4 w-4 mr-1" />
-                        {video.videoId ? "Watch Tutorial" : "Coming Soon"}
-                      </button>
+                  
+                  <div className="flex flex-col flex-1 py-1 pr-2 w-full text-center sm:text-left">
+                    <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
+                      {video.title}
+                    </h3>
+                    <p className="text-[11px] text-gray-500 mt-1.5 line-clamp-1">
+                      {video.videoId ? "Watch our step-by-step tutorial" : "Under production"}
+                    </p>
+                    <div className="mt-4 sm:mt-auto pt-2 flex items-center justify-center sm:justify-start">
+                      <div className={`flex items-center text-[10px] font-bold uppercase tracking-wider ${
+                        video.videoId
+                          ? "text-blue-600"
+                          : "text-gray-400"
+                      }`}>
+                        {video.videoId ? (
+                          <>
+                            <span className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center mr-1.5 group-hover:bg-blue-100 transition-colors">
+                              <Play className="h-2 w-2" fill="currentColor" />
+                            </span>
+                            Watch Now
+                          </>
+                        ) : (
+                          "Coming Soon"
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

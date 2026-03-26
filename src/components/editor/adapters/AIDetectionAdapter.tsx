@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../../utils/errorHandler";
 import React, { useState } from "react";
 import { Loader2, Sparkles } from "lucide-react";
 import { AIDetectionService, AIScanResult } from "../../../services/aiDetectionService";
@@ -43,7 +44,7 @@ export const AIDetectionAdapter: React.FC<AIDetectionAdapterProps> = ({
             console.error("AI Scan Error:", error);
             toast({
                 title: "Scan Failed",
-                description: error.message || "Failed to scan for AI content.",
+                description: getErrorMessage(error, "Failed to scan for AI content."),
                 variant: "destructive",
             });
         } finally {

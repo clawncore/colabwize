@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../utils/errorHandler";
 import React, { useState, useEffect } from "react";
 import {
   CreditCard,
@@ -171,7 +172,7 @@ const BillingSettingsPage: React.FC = () => {
     } catch (err: any) {
       toast({
         title: "Error",
-        description: err.message || "Failed to initiate payment method update",
+        description: getErrorMessage(err, "Failed to initiate payment method update"),
         variant: "destructive",
       });
     }
@@ -251,12 +252,12 @@ const BillingSettingsPage: React.FC = () => {
         // Reset step or navigate away
         setCancelStep("start");
       } else {
-        throw new Error(result.message || "Failed to cancel subscription");
+        throw new Error(getErrorMessage(result, "Failed to cancel subscription"));
       }
     } catch (err: any) {
       toast({
         title: "Error",
-        description: err.message || "Failed to cancel subscription",
+        description: getErrorMessage(err, "Failed to cancel subscription"),
         variant: "destructive",
       });
     }

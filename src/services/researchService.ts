@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 import {
   ResearchTopic,
@@ -19,7 +20,7 @@ export class ResearchService {
       });
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to perform web search");
+        throw new Error(getErrorMessage(response, "Failed to perform web search"));
       }
 
       return response.results;
@@ -41,7 +42,7 @@ export class ResearchService {
       });
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to perform deep search");
+        throw new Error(getErrorMessage(response, "Failed to perform deep search"));
       }
 
       return response.results;
@@ -63,7 +64,7 @@ export class ResearchService {
       });
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to analyze search results");
+        throw new Error(getErrorMessage(response, "Failed to analyze search results"));
       }
 
       return response.analysis;
@@ -270,7 +271,7 @@ export class ResearchService {
       });
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to save research topic");
+        throw new Error(getErrorMessage(response, "Failed to save research topic"));
       }
 
       return response.topic;
@@ -327,7 +328,7 @@ export class ResearchService {
 
       if (!response.success && !response.data) {
         // If the API returns a standard success: false structure
-        throw new Error(response.message || "Failed to fetch library sources");
+        throw new Error(getErrorMessage(response, "Failed to fetch library sources"));
       }
 
       // Handle cases where response might be { data: [...] } or just [...]

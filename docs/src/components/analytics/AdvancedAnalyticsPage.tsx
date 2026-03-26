@@ -465,9 +465,9 @@ const AdvancedAnalyticsPage = () => {
               </h3>
               <p className="text-gray-600">
                 Advanced Analytics is{" "}
-                <strong>ONLY available for Researcher plan subscribers</strong>.
-                Student and Free users do not have access to this feature.
-                Upgrade to Researcher plan to unlock Advanced Analytics.
+                <strong>ONLY available for Pro plan subscribers</strong>.
+                Plus and Free users do not have access to this feature.
+                Upgrade to Pro plan to unlock Advanced Analytics.
               </p>
             </div>
             <div className="border-b border-gray-200 pb-6">

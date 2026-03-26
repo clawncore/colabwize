@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "../../utils/errorHandler";
 
 import { useState } from "react";
 import {
@@ -72,7 +73,7 @@ export function InviteMemberModal({
 
       toast({
         title: "Error",
-        description: error.message || "Failed to invite member",
+        description: getErrorMessage(error, "Failed to invite member"),
         variant: "destructive",
       });
     } finally {

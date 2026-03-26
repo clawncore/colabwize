@@ -37,11 +37,11 @@ const CitationsPage = () => {
           <AlertCircle className="h-6 w-6 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" />
           <div>
             <h3 className="font-semibold text-yellow-900 mb-2">
-              Student Plan or Higher Required
+              Plus Plan or Higher Required
             </h3>
             <p className="text-yellow-800">
               Citation Confidence features are <strong>NOT available</strong> on
-              the Free plan. Upgrade to Student, Researcher, or purchase PAYG
+              the Free plan. Upgrade to Plus, Pro, or purchase PAYG
               credits to access citation analysis.
             </p>
           </div>
@@ -59,6 +59,21 @@ const CitationsPage = () => {
           potential issues like outdated sources, questionable citations, or
           missing links.
         </p>
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6 mb-6">
+          <h3 className="font-semibold text-indigo-900 mb-2">
+            Automatic Background Audits
+          </h3>
+          <p className="text-indigo-800 text-sm">
+            Once a document is uploaded and normalized, the citation auditor
+            runs <strong>exactly once</strong> in the background. The regex +
+            metadata pipeline is fully automated—no manual "Run" button is
+            required.
+          </p>
+          <p className="text-indigo-800 text-sm mt-3">
+            Simply open the Citations → Confidence panel to see the status pill;
+            it refreshes automatically when the audit finishes.
+          </p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="border border-gray-200 rounded-lg p-6">
             <CheckCircle className="h-8 w-8 text-green-600 mb-3" />
@@ -136,7 +151,7 @@ const CitationsPage = () => {
           <div className="border-2 border-indigo-500 rounded-xl p-6 bg-indigo-50">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">
-                Student, Researcher, PAYG
+                Plus, Pro, PAYG
               </h3>
               <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
                 Full Access
@@ -190,7 +205,7 @@ const CitationsPage = () => {
               </h3>
               <p className="text-gray-600 text-sm">
                 Upload your document that includes citations. Our AI will
-                automatically extract them.
+                automatically extract and normalize them in the background.
               </p>
             </div>
           </div>
@@ -202,10 +217,11 @@ const CitationsPage = () => {
               </div>
             </div>
             <div>
-              <h3 className="font-semibold mb-1">Run Citation Analysis</h3>
+              <h3 className="font-semibold mb-1">Let Auto Audit Run Once</h3>
               <p className="text-gray-600 text-sm">
-                Navigate to Citations → Confidence and select your project to
-                analyze.
+                After normalization, the built-in regex + metadata auditor kicks
+                off automatically. There is no action to trigger—it processes
+                each document a single time in the background.
               </p>
             </div>
           </div>
@@ -219,8 +235,9 @@ const CitationsPage = () => {
             <div>
               <h3 className="font-semibold mb-1">Review Confidence Scores</h3>
               <p className="text-gray-600 text-sm">
-                Examine each citation's reliability score and identify flagged
-                or low-confidence citations.
+                Watch the status pill in Citations → Confidence. When it shows
+                "Ready," every citation will have a confidence score, recency
+                tag, and recommended fix—no manual refresh required.
               </p>
             </div>
           </div>
@@ -291,7 +308,7 @@ const CitationsPage = () => {
           Strengthen Your Citations
         </h3>
         <p className="opacity-90 mb-4">
-          Upgrade to Student plan or purchase credits to access Citation
+          Upgrade to Plus plan or purchase credits to access Citation
           Confidence and improve your academic writing quality.
         </p>
         <div className="flex gap-3">

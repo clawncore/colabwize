@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../utils/errorHandler";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod/dist/zod";
@@ -21,10 +22,13 @@ import {
 } from "../../services/hybridAuth";
 import { SubscriptionService } from "../../services/subscriptionService";
 import { useToast } from "../../hooks/use-toast";
+import { loadRecaptchaScript, getRecaptchaToken } from "../../lib/recaptcha";
 import ConfigService from "../../services/ConfigService";
 
 // API base URL - adjust this to match your backend URL
 const API_BASE_URL = ConfigService.getApiUrl();
+
+const RECAPTCHA_SITE_KEY = ConfigService.getRecaptchaSiteKey();
 
 // List of allowed email domains
 const ALLOWED_DOMAINS = [
@@ -170,6 +174,15 @@ const SignupPage: React.FC = () => {
   // Add debounce timer ref
   const validationTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
+  // Pre-load reCAPTCHA script on mount
+  React.useEffect(() => {
+    if (RECAPTCHA_SITE_KEY) {
+      loadRecaptchaScript(RECAPTCHA_SITE_KEY).catch(() => {
+        /* silent */
+      });
+    }
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -241,8 +254,7 @@ const SignupPage: React.FC = () => {
             // Set an error that can be displayed to the user
             setError("root", {
               message:
-                error.message ||
-                "Failed to complete OAuth signup. Please try again.",
+                getErrorMessage(error, "Failed to complete OAuth signup. Please try again."),
             });
           } finally {
             setIsLoading(false);
@@ -574,7 +586,7 @@ const SignupPage: React.FC = () => {
 
         // Check if signup was successful before attempting to extract user ID
         if (!result.success) {
-          throw new Error(result.message || "Signup failed");
+          throw new Error(getErrorMessage(result, "Signup failed"));
         }
 
         // Store the user ID for OTP verification
@@ -593,7 +605,7 @@ const SignupPage: React.FC = () => {
             needsVerification: needsVerification,
           };
         } else {
-          throw new Error("Failed to get user ID from signup result");
+          throw new Error("User ID not received from signup");
         }
       } catch (error: any) {
         console.error("Signup failed:", error);
@@ -626,7 +638,37 @@ const SignupPage: React.FC = () => {
       }
 
       setIsLoading(true);
+      clearErrors();
+      
       try {
+        // ── reCAPTCHA v3 verification ──────────────────────────────────────────
+        if (RECAPTCHA_SITE_KEY) {
+          try {
+            const rcToken = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "signup");
+            const rcRes = await fetch(
+              `${API_BASE_URL}/api/auth/hybrid/verify-recaptcha`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: rcToken }),
+              },
+            );
+            const rcData = await rcRes.json();
+            if (!rcRes.ok || !rcData.success) {
+              setError("root", {
+                message:
+                  "Automated activity detected. Please try again or contact support.",
+              });
+              setIsLoading(false);
+              return;
+            }
+          } catch (rcErr) {
+            console.warn("reCAPTCHA check failed, proceeding anyway:", rcErr);
+            // Fail open — don't block legitimate users if reCAPTCHA itself errors
+          }
+        }
+        // ────────────────────────────────────────────────────────────────────────
+
         // Create user account first
         const signupResult = await completeSignup(data);
         console.log("Signup completed:", signupResult);
@@ -695,7 +737,7 @@ const SignupPage: React.FC = () => {
           toast({
             title: "Account Already Exists",
             description:
-              error.message +
+              getErrorMessage(error)+
               "\n\nIf you already have an account, please sign in instead.",
           });
           // Optionally, you could redirect to login or handle differently
@@ -772,32 +814,6 @@ const SignupPage: React.FC = () => {
     }
   };
 
-  const handleBackToSignup = () => {
-    if (showSurveyStep) {
-      // If on survey step, go back to OTP step
-      setShowSurveyStep(false);
-    } else if (showOtpStep) {
-      // If on OTP step, go back to signup step
-      setShowOtpStep(false);
-    }
-    // If on signup step, there's no previous step to go back to
-  };
-
-  const handleSurveyComplete = () => {
-    // Override redirect specifically for Admins to access their tools
-    const userEmail = watchedFields.email?.toLowerCase() || "";
-    const ADMIN_EMAILS = ["clawncore@colabwize.com", "simbisai@colabwize.com", "craig@colabwize.com"];
-
-    if (ADMIN_EMAILS.includes(userEmail)) {
-      window.location.href = "/admin/email";
-      return;
-    }
-
-    // After survey completion, redirect to the intended destination
-    const finalRedirectPath = redirectPath || "/dashboard";
-    window.location.href = finalRedirectPath;
-  };
-
   // Function to resend OTP
   const handleResendOTP = async () => {
     setIsLoading(true);
@@ -864,7 +880,7 @@ const SignupPage: React.FC = () => {
         console.log("OTP sent successfully via Supabase/Backend");
         return true;
       } else {
-        throw new Error(result.message || "Failed to send OTP");
+        throw new Error(getErrorMessage(result, "Failed to send OTP"));
       }
     } catch (error: unknown) {
       console.error("Failed to send OTP:", error);
@@ -898,7 +914,7 @@ const SignupPage: React.FC = () => {
         console.log("OTP verified successfully");
         return true;
       } else {
-        throw new Error(result.message || "Failed to verify OTP");
+        throw new Error(getErrorMessage(result, "Failed to verify OTP"));
       }
     } catch (error: unknown) {
       console.error("Failed to verify OTP:", error);
@@ -925,10 +941,36 @@ const SignupPage: React.FC = () => {
     } catch (error: any) {
       console.error("Google signup failed:", error);
       setError("root", {
-        message: error.message || "Google signup failed. Please try again.",
+        message: getErrorMessage(error, "Google signup failed. Please try again."),
       });
       setSocialLoading(false);
     }
+  };
+
+  const handleBackToSignup = () => {
+    if (showSurveyStep) {
+      // If on survey step, go back to OTP step
+      setShowSurveyStep(false);
+    } else if (showOtpStep) {
+      // If on OTP step, go back to signup step
+      setShowOtpStep(false);
+    }
+    // If on signup step, there's no previous step to go back to
+  };
+
+  const handleSurveyComplete = () => {
+    // Override redirect specifically for Admins to access their tools
+    const userEmail = watchedFields.email?.toLowerCase() || "";
+    const ADMIN_EMAILS = ["clawncore@colabwize.com", "simbisai@colabwize.com", "craig@colabwize.com"];
+
+    if (ADMIN_EMAILS.includes(userEmail)) {
+      window.location.href = "/admin/email";
+      return;
+    }
+
+    // After survey completion, redirect to the intended destination
+    const finalRedirectPath = redirectPath || "/dashboard";
+    window.location.href = finalRedirectPath;
   };
 
   return (

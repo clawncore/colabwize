@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../utils/errorHandler";
 import React, { useState, useEffect } from "react";
 import { Editor } from "@tiptap/react";
 import {
@@ -110,7 +111,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
           violations: (initialAuditReport.issues || []).map((i: any) => ({
             id: i.id || Math.random().toString(36),
             ruleId: i.type || "BACKEND",
-            message: i.message,
+            message: getErrorMessage(i),
             context: i.suggestedFix || i.context,
             severity: i.severity,
             location: i.location,
@@ -324,7 +325,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
         const data = await response.json();
 
         if (!data.success || !data.result?.downloadUrl) {
-          throw new Error(data.message || "Failed to generate download URL");
+          throw new Error(getErrorMessage(data, "Failed to generate download URL"));
         }
 
         // Primary document download

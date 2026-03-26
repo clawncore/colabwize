@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 
 export interface AuthorshipStats {
@@ -62,7 +63,7 @@ export class AuthorshipService {
       return response.data;
     } catch (error: any) {
       console.error("Error getting authorship stats:", error);
-      throw new Error(error.message || "Failed to get statistics");
+      throw new Error(getErrorMessage(error, "Failed to get statistics"));
     }
   }
 
@@ -77,7 +78,7 @@ export class AuthorshipService {
       return response.data;
     } catch (error: any) {
       console.error("Error getting quick stats:", error);
-      throw new Error(error.message || "Failed to get quick statistics");
+      throw new Error(getErrorMessage(error, "Failed to get quick statistics"));
     }
   }
 
@@ -116,9 +117,7 @@ export class AuthorshipService {
       return response.data;
     } catch (error: any) {
       console.error("Error getting detailed activity tracking:", error);
-      throw new Error(
-        error.message || "Failed to get detailed activity tracking"
-      );
+      throw new Error(getErrorMessage(error, "Failed to get detailed activity tracking"));
     }
   }
 

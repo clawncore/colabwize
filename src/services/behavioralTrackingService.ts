@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 
 export interface WritingPatternData {
@@ -87,7 +88,7 @@ export class BehavioralTrackingService {
             return response;
         } catch (error: any) {
             console.error("Error getting writing patterns:", error);
-            throw new Error(error.message || "Failed to get writing patterns");
+            throw new Error(getErrorMessage(error, "Failed to get writing patterns"));
         }
     }
 

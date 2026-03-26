@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../utils/errorHandler";
 /* eslint-disable */
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Editor } from "@tiptap/react";
@@ -92,7 +93,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
 
       editor.chain().highlightRange?.(start, end, {
         color,
-        message: issue.message,
+        message: getErrorMessage(issue),
         ruleId: issue.type,
         expected: issue.suggestedFix,
       }).run();
@@ -250,7 +251,7 @@ export const CitationAuditSidebar: React.FC<CitationAuditSidebarProps> = ({
     } catch (err: any) {
       setAuditStatus("FAILED");
       setErrorMessage(err.message || "Failed to start audit.");
-      toast({ title: "Audit Failed", description: err.message, variant: "destructive" });
+      toast({ title: "Audit Failed", description: getErrorMessage(err), variant: "destructive" });
     }
   }, [editor, projectId, applyHighlights, toast, setAuditStatus]);
 

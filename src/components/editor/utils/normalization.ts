@@ -2,6 +2,22 @@
 import { Editor } from "@tiptap/react";
 import { extractPatterns } from "../../../services/citationAudit/patterns";
 
+export interface CitationNormalizationStats {
+  ieee: number;
+  apa: number;
+  mla: number;
+  chicago: number;
+}
+
+export interface CitationNormalizationResult {
+  stats: CitationNormalizationStats;
+  replacements: number;
+}
+
+export interface BibliographyNormalizationResult {
+  normalizedCount: number;
+}
+
 export function isLikelyCitation(text: string): boolean {
   const cleanText = text.trim();
   // Bibliography entries are generally dense and long.
@@ -168,8 +184,12 @@ export async function detectAndNormalizeCitations(
   editor: Editor,
   projectId: string,
   availableCitations: any[] = [],
-) {
-  if (!editor || !editor.isEditable) return;
+): Promise<CitationNormalizationResult> {
+  if (!editor || !editor.isEditable)
+    return {
+      stats: { ieee: 0, apa: 0, mla: 0, chicago: 0 },
+      replacements: 0,
+    };
 
   const { CitationRegistryService } =
     await import("../../../services/CitationRegistryService");
@@ -207,7 +227,11 @@ export async function detectAndNormalizeCitations(
     return true;
   });
 
-  if (uniqueCitationTexts.size === 0) return { stats: { ieee: 0, apa: 0 } };
+  if (uniqueCitationTexts.size === 0)
+    return {
+      stats: { ieee: 0, apa: 0, mla: 0, chicago: 0 },
+      replacements: 0,
+    };
 
   // --- Phase 2: Async Resolution. User can continue typing during this await. ---
   const allRegistryEntries = CitationRegistryService.getAllCitations();
@@ -344,6 +368,7 @@ export async function detectAndNormalizeCitations(
       mla: mlaCount,
       chicago: chicagoCount,
     },
+    replacements: citationsToReplace.length,
   };
 }
 

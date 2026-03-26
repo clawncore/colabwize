@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 
 export interface SearchAlert {
@@ -22,7 +23,7 @@ class SearchAlertService {
             return response || [];
         } catch (error: any) {
             console.error("Error fetching search alerts:", error);
-            throw new Error(error.message || "Failed to fetch search alerts");
+            throw new Error(getErrorMessage(error, "Failed to fetch search alerts"));
         }
     }
 
@@ -41,7 +42,7 @@ class SearchAlertService {
             return response;
         } catch (error: any) {
             console.error("Error creating search alert:", error);
-            throw new Error(error.message || "Failed to create search alert");
+            throw new Error(getErrorMessage(error, "Failed to create search alert"));
         }
     }
 
@@ -57,7 +58,7 @@ class SearchAlertService {
             return response;
         } catch (error: any) {
             console.error("Error updating search alert:", error);
-            throw new Error(error.message || "Failed to update search alert");
+            throw new Error(getErrorMessage(error, "Failed to update search alert"));
         }
     }
 
@@ -69,7 +70,7 @@ class SearchAlertService {
             await apiClient.delete(`/api/search-alerts/${id}`);
         } catch (error: any) {
             console.error("Error deleting search alert:", error);
-            throw new Error(error.message || "Failed to delete search alert");
+            throw new Error(getErrorMessage(error, "Failed to delete search alert"));
         }
     }
 
@@ -84,7 +85,7 @@ class SearchAlertService {
             return response;
         } catch (error: any) {
             console.error("Error checking search alert:", error);
-            throw new Error(error.message || "Failed to check search alert");
+            throw new Error(getErrorMessage(error, "Failed to check search alert"));
         }
     }
 }

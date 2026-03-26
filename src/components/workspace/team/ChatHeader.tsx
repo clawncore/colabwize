@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "../../../utils/errorHandler";
 import { useState, useEffect } from "react";
 import ChatPresence from "./ChatPresence";
 import { useParams } from "react-router-dom";
@@ -90,7 +91,7 @@ export default function ChatHeader({
       toast.success("Chat cleared successfully");
     } catch (err: any) {
       console.error("Failed to clear chat", err);
-      toast.error(err.message || "Failed to clear chat");
+      toast.error(getErrorMessage(err, "Failed to clear chat"));
     } finally {
       setIsClearing(false);
     }

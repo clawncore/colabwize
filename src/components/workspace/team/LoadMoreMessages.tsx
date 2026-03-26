@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../../utils/errorHandler";
 import React from "react";
 import { Button } from "../../ui/button";
 import { supabaseBrowser } from "../../../lib/supabase/browser";
@@ -40,7 +41,7 @@ export default function LoadMoreMessages({
     const { data, error } = await query;
 
     if (error) {
-      toast.error(error.message);
+      toast.error(getErrorMessage(error));
     } else {
       setMesssages(data.reverse());
     }

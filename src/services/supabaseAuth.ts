@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import {
   supabase,
   configureSessionPersistence,
@@ -31,7 +32,7 @@ export async function signInWithEmail(
     });
 
     if (error) {
-      logger.error("Sign in error", { error: error.message, email });
+      logger.error("Sign in error", { error: getErrorMessage(error), email });
       throw error;
     }
 
@@ -42,7 +43,7 @@ export async function signInWithEmail(
 
     return data;
   } catch (error: any) {
-    logger.error("Sign in error", { error: error.message, email });
+    logger.error("Sign in error", { error: getErrorMessage(error), email });
     throw error;
   }
 }
@@ -66,14 +67,14 @@ export async function signUpWithEmail(
     });
 
     if (error) {
-      logger.error("Sign up error", { error: error.message, email });
+      logger.error("Sign up error", { error: getErrorMessage(error), email });
       throw error;
     }
 
     logger.info("User signed up", { email, uid: data.user?.id });
     return data;
   } catch (error: any) {
-    logger.error("Sign up error", { error: error.message, email });
+    logger.error("Sign up error", { error: getErrorMessage(error), email });
     throw error;
   }
 }
@@ -85,12 +86,12 @@ export async function signOutUser(): Promise<void> {
   try {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      logger.error("Sign out error", { error: error.message });
+      logger.error("Sign out error", { error: getErrorMessage(error)});
       throw error;
     }
     logger.info("User signed out");
   } catch (error: any) {
-    logger.error("Sign out error", { error: error.message });
+    logger.error("Sign out error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -102,12 +103,12 @@ export async function getCurrentUser() {
   try {
     const { data, error } = await supabase.auth.getUser();
     if (error) {
-      logger.error("Get user error", { error: error.message });
+      logger.error("Get user error", { error: getErrorMessage(error)});
       return null;
     }
     return data.user;
   } catch (error: any) {
-    logger.error("Get user error", { error: error.message });
+    logger.error("Get user error", { error: getErrorMessage(error)});
     return null;
   }
 }
@@ -122,20 +123,20 @@ export async function getIdToken(
     if (forceRefresh) {
       const { data, error } = await supabase.auth.refreshSession();
       if (error) {
-        logger.error("Refresh session error", { error: error.message });
+        logger.error("Refresh session error", { error: getErrorMessage(error)});
         return null;
       }
       return data.session?.access_token || null;
     } else {
       const { data, error } = await supabase.auth.getSession();
       if (error) {
-        logger.error("Get session error", { error: error.message });
+        logger.error("Get session error", { error: getErrorMessage(error)});
         return null;
       }
       return data.session?.access_token || null;
     }
   } catch (error: any) {
-    logger.error("Get ID token error", { error: error.message });
+    logger.error("Get ID token error", { error: getErrorMessage(error)});
     return null;
   }
 }
@@ -147,12 +148,12 @@ export async function resetPassword(email: string): Promise<void> {
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) {
-      logger.error("Password reset error", { error: error.message, email });
+      logger.error("Password reset error", { error: getErrorMessage(error), email });
       throw error;
     }
     logger.info("Password reset email sent", { email });
   } catch (error: any) {
-    logger.error("Password reset error", { error: error.message, email });
+    logger.error("Password reset error", { error: getErrorMessage(error), email });
     throw error;
   }
 }
@@ -166,12 +167,12 @@ export async function updateUserPassword(newPassword: string): Promise<void> {
       password: newPassword,
     });
     if (error) {
-      logger.error("Update password error", { error: error.message });
+      logger.error("Update password error", { error: getErrorMessage(error)});
       throw error;
     }
     logger.info("Password updated");
   } catch (error: any) {
-    logger.error("Update password error", { error: error.message });
+    logger.error("Update password error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -188,12 +189,12 @@ export async function updateUserProfile(updates: {
       data: updates,
     });
     if (error) {
-      logger.error("Update profile error", { error: error.message });
+      logger.error("Update profile error", { error: getErrorMessage(error)});
       throw error;
     }
     logger.info("Profile updated", { updates });
   } catch (error: any) {
-    logger.error("Update profile error", { error: error.message });
+    logger.error("Update profile error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -207,7 +208,7 @@ export async function sendVerificationEmail(): Promise<void> {
     // For existing users, we can resend by calling signUp again
     const { data, error } = await supabase.auth.getUser();
     if (error) {
-      logger.error("Get user error", { error: error.message });
+      logger.error("Get user error", { error: getErrorMessage(error)});
       throw error;
     }
 
@@ -219,7 +220,7 @@ export async function sendVerificationEmail(): Promise<void> {
 
       if (resendError) {
         logger.error("Send verification email error", {
-          error: resendError.message,
+          error: getErrorMessage(resendError),
         });
         throw resendError;
       }
@@ -229,7 +230,7 @@ export async function sendVerificationEmail(): Promise<void> {
       throw new Error("No email found for current user");
     }
   } catch (error: any) {
-    logger.error("Send verification email error", { error: error.message });
+    logger.error("Send verification email error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -251,14 +252,14 @@ export async function signInWithProvider(
     });
 
     if (error) {
-      logger.error(`${provider} sign in error`, { error: error.message });
+      logger.error(`${provider} sign in error`, { error: getErrorMessage(error)});
       throw error;
     }
 
     logger.info(`User signed in with ${provider}`, { url: data.url });
     return data;
   } catch (error: any) {
-    logger.error(`${provider} sign in error`, { error: error.message });
+    logger.error(`${provider} sign in error`, { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -282,10 +283,10 @@ export async function sendOTP(
     if (result.success) {
       return result;
     } else {
-      throw new Error(result.message || "Failed to send OTP");
+      throw new Error(getErrorMessage(result, "Failed to send OTP"));
     }
   } catch (error: any) {
-    logger.error("Send OTP error", { error: error.message });
+    logger.error("Send OTP error", { error: getErrorMessage(error)});
     throw error;
   }
 }
@@ -304,10 +305,10 @@ export async function verifyOTP(userId: string, code: string) {
     if (result.success) {
       return result;
     } else {
-      throw new Error(result.message || "Failed to verify OTP");
+      throw new Error(getErrorMessage(result, "Failed to verify OTP"));
     }
   } catch (error: any) {
-    logger.error("Verify OTP error", { error: error.message });
+    logger.error("Verify OTP error", { error: getErrorMessage(error)});
     throw error;
   }
 }

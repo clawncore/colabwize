@@ -137,8 +137,8 @@ function FeaturesPresentationFlow() {
       benefits: [
         "Unique verification codes and timestamps",
         "Online certificate verification system",
-        "Professional certificates without watermarks (Student+ plans)",
-        "Retention policies: 7 days (Free), 30 days (Student), unlimited (Researcher)",
+        "Professional certificates without watermarks (Plus+ plans)",
+        "Retention policies: 7 days (Free), 30 days (Plus), unlimited (Pro)",
       ],
       imageUrl:
         "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&h=600&fit=crop",
@@ -149,7 +149,7 @@ function FeaturesPresentationFlow() {
       icon: BarChart3,
       title: "Advanced Analytics",
       description:
-        "Exclusive to Researcher plan subscribers. Track your writing productivity, identify your most active days, monitor citation fix rates, and visualize your verification times with comprehensive analytics.",
+        "Exclusive to Pro plan subscribers. Track your writing productivity, identify your most active days, monitor citation fix rates, and visualize your verification times with comprehensive analytics.",
       benefits: [
         "Most Active Day detection",
         "Weekly Upload Velocity tracking",
@@ -167,7 +167,7 @@ function FeaturesPresentationFlow() {
         "Export your work in multiple formats for submission or sharing. Free users can export to PDF, while paid plans unlock additional formats for maximum flexibility.",
       benefits: [
         "PDF export (all plans)",
-        "DOCX and other formats (Student+ plans)",
+        "DOCX and other formats (Plus+ plans)",
         "Maintain formatting across all formats",
         "Quick export from your dashboard",
       ],
@@ -206,7 +206,7 @@ function ClosingCTA() {
               </h2>
 
               <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-                Whether you're a student or a researcher, ColabWize helps you
+                Whether you're a Plus user or a Pro, ColabWize helps you
                 maintain originality, detect AI content, and prove authorship
                 with confidence.
               </p>

@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import type { Plugin } from 'vite';
 
 /**
@@ -30,7 +31,7 @@ export default function consoleToParent(): Plugin {
     return JSON.stringify(value, (_k, v) => {
       if (v instanceof Date) return { __t: 'Date', v: v.toISOString() };
       if (v instanceof Error)
-        return { __t: 'Error', v: { name: v.name, message: v.message, stack: v.stack } };
+        return { __t: 'Error', v: { name: v.name, message: getErrorMessage(v), stack: v.stack } };
       return v;
     });
   }

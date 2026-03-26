@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { useState } from "react";
 import ConfigService from "../services/ConfigService";
 import { Mail, Building, Newspaper, Send, Check } from "lucide-react";
@@ -6,6 +7,9 @@ import { Card, CardContent } from "../components/ui/card";
 import Layout from "../components/Layout";
 import DiscordWebhookService from "../services/discordWebhookService";
 import { useNavigate } from "react-router-dom";
+import { loadRecaptchaScript, getRecaptchaToken } from "../lib/recaptcha";
+import { useEffect } from "react";
+
 
 // Contact Hero Section
 function ContactHero() {
@@ -146,18 +150,39 @@ function ContactForm() {
     message: string;
   }>({ type: null, message: "" });
 
+  const RECAPTCHA_SITE_KEY = ConfigService.getRecaptchaSiteKey();
+
+  // Pre-load reCAPTCHA script on mount
+  useEffect(() => {
+    if (RECAPTCHA_SITE_KEY) {
+      loadRecaptchaScript(RECAPTCHA_SITE_KEY).catch(() => {
+        /* silent */
+      });
+    }
+  }, [RECAPTCHA_SITE_KEY]);
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus({ type: null, message: "" });
 
     try {
+      let token = "";
+      if (RECAPTCHA_SITE_KEY) {
+        try {
+          token = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "contact");
+        } catch (rcErr) {
+          console.warn("reCAPTCHA token generation failed:", rcErr);
+        }
+      }
+
       const response = await fetch(`${ConfigService.getApiUrl()}/api/contact`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, token }),
       });
 
       const data = await response.json();
@@ -192,7 +217,7 @@ function ContactForm() {
       console.error("Error submitting contact form:", error);
       setSubmitStatus({
         type: "error",
-        message: error.message || "An error occurred. Please try again later.",
+        message: getErrorMessage(error, "An error occurred. Please try again later."),
       });
     } finally {
       setIsSubmitting(false);

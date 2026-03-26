@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 
 import { apiClient } from "./apiClient";
 
@@ -76,7 +77,7 @@ class ProfileService {
 
       // Check if the response indicates success
       if (!response.success) {
-        throw new Error(response.message || "Failed to update profile");
+        throw new Error(getErrorMessage(response, "Failed to update profile"));
       }
 
       return response;
@@ -100,7 +101,7 @@ class ProfileService {
       if (!response.success && response.success !== undefined) {
         // If response has success field, check it. 
         // Note: apiClient usually returns parsed JSON.
-        throw new Error(response.message || "Failed to upload avatar");
+        throw new Error(getErrorMessage(response, "Failed to upload avatar"));
       }
       // If apiClient returns the object directly and it lacks success=false, good.
       // But let's act defensively based on typical successful response structure { success: true, fileUrl: ... }

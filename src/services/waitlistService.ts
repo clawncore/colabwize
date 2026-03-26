@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 /**
  * Waitlist service for managing user waitlist operations
  */
@@ -231,14 +232,14 @@ export const voteForFeature = async (
     return {
       success: response.success || false,
       votes: response.votes || 0,
-      message: response.message,
+      message: getErrorMessage(response),
     };
   } catch (error) {
     console.error(`Error voting for feature ${featureId}:`, error);
     return {
       success: false,
       votes: 0,
-      message: error.message || "Failed to submit vote",
+      message: getErrorMessage(error, "Failed to submit vote"),
     };
   }
 };

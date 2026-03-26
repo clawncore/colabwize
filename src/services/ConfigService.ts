@@ -97,6 +97,16 @@ export class ConfigService {
   }
 
   /**
+   * Get the reCAPTCHA v3 Site Key
+   */
+  static getRecaptchaSiteKey(): string {
+    return (
+      process.env.REACT_APP_RECAPTCHA_SITE_KEY ||
+      "6LfAnpgsAAAAAPse1qAZ1kReTvWaM_ThzjjRjNYv"
+    );
+  }
+
+  /**
    * Get current environment name
    */
   static getNodeEnv(): string {

@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../utils/errorHandler";
 import React, { useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -66,13 +67,13 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
         setSecretData({ secret: result.secret, qrCodeUrl: result.qrCodeUrl });
         setStep("qr");
       } else {
-        throw new Error(result.message || "Failed to start 2FA setup");
+        throw new Error(getErrorMessage(result, "Failed to start 2FA setup"));
       }
     } catch (err: any) {
       console.error("2FA Setup Error:", err);
       toast({
         title: "Setup Failed",
-        description: err.message,
+        description: getErrorMessage(err),
         variant: "destructive",
       });
     } finally {
@@ -91,12 +92,12 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
         onStatusChange();
         toast({ title: "Success", description: "2FA Enabled Successfully" });
       } else {
-        throw new Error(result.message || "Invalid code");
+        throw new Error(getErrorMessage(result, "Invalid code"));
       }
     } catch (err: any) {
       toast({
         title: "Error",
-        description: err.message,
+        description: getErrorMessage(err),
         variant: "destructive",
       });
     } finally {
@@ -118,12 +119,12 @@ export const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
         onStatusChange();
         toast({ title: "Success", description: "2FA Disabled" });
       } else {
-        throw new Error(result.message);
+        throw new Error(getErrorMessage(result));
       }
     } catch (err: any) {
       toast({
         title: "Disable Failed",
-        description: err.message,
+        description: getErrorMessage(err),
         variant: "destructive",
       });
     } finally {

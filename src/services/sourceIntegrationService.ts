@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 
 export interface SourceReadingData {
@@ -86,7 +87,7 @@ export class SourceIntegrationService {
             return response.data;
         } catch (error: any) {
             console.error("Error getting source analytics:", error);
-            throw new Error(error.message || "Failed to get source analytics");
+            throw new Error(getErrorMessage(error, "Failed to get source analytics"));
         }
     }
 

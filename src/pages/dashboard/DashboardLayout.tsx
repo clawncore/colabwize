@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../utils/errorHandler";
 import { useState, useEffect, useCallback } from "react";
 import NotificationBell from "./NotificationBell";
 import { useAuth } from "../../hooks/useAuth";
@@ -201,7 +202,7 @@ export default function DashboardLayout({
       }
       toast({
         title: "Error",
-        description: error.message || "Failed to create workspace",
+        description: getErrorMessage(error, "Failed to create workspace"),
         variant: "destructive",
       });
     } finally {

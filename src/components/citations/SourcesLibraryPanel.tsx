@@ -440,24 +440,9 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
 
                         const year = source.year || "n.d.";
                         const inTextText = `(${authorText}, ${year})`;
+                        const activeStyle = citationStyle || "APA";
 
-                        return !citationStyle ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // We pass the formatted text through to pending
-                              const pendingSource = {
-                                ...source,
-                                _formattedInText: inTextText,
-                              };
-                              setPendingCiteSource(pendingSource);
-                              setShowStylePanel(true);
-                            }}
-                            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap">
-                            <Quote className="w-3.5 h-3.5 fill-current" />
-                            Cite
-                          </button>
-                        ) : (
+                        return (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -466,7 +451,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                                   eventId: "citation_inserted",
                                   sourceId:
                                     source.id || source.doi || source.title,
-                                  style: citationStyle,
+                                  style: activeStyle,
                                   timestamp: new Date().toISOString(),
                                   fullReferenceEntry: source,
                                 });

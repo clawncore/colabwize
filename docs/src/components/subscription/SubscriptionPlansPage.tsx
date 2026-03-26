@@ -64,12 +64,12 @@ const SubscriptionPlansPage = () => {
             </ul>
           </div>
 
-          {/* Student Plan */}
+          {/* Plus Plan */}
           <div className="border-2 border-blue-500 rounded-xl p-6 bg-blue-50 relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
               Most Popular
             </div>
-            <h3 className="text-xl font-bold mb-2">Student</h3>
+            <h3 className="text-xl font-bold mb-2">Plus</h3>
             <div className="mb-4">
               <span className="text-3xl font-bold">$4.99</span>
               <span className="text-gray-600">/month</span>
@@ -99,9 +99,9 @@ const SubscriptionPlansPage = () => {
             </ul>
           </div>
 
-          {/* Researcher Plan */}
+          {/* Pro Plan */}
           <div className="border border-purple-500 rounded-xl p-6 bg-purple-50">
-            <h3 className="text-xl font-bold mb-2">Researcher</h3>
+            <h3 className="text-xl font-bold mb-2">Pro</h3>
             <div className="mb-4">
               <span className="text-3xl font-bold">$12.99</span>
               <span className="text-gray-600">/month</span>
@@ -182,9 +182,9 @@ const SubscriptionPlansPage = () => {
               <tr>
                 <th className="px-6 py-3 text-left font-semibold">Feature</th>
                 <th className="px-6 py-3 text-center font-semibold">Free</th>
-                <th className="px-6 py-3 text-center font-semibold">Student</th>
+                <th className="px-6 py-3 text-center font-semibold">Plus</th>
                 <th className="px-6 py-3 text-center font-semibold">
-                  Researcher
+                  Pro
                 </th>
                 <th className="px-6 py-3 text-center font-semibold">PAYG</th>
               </tr>
@@ -267,20 +267,20 @@ const SubscriptionPlansPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="border border-gray-200 rounded-lg p-6">
             <Users className="h-8 w-8 text-blue-600 mb-3" />
-            <h3 className="font-semibold mb-2">Students</h3>
+            <h3 className="font-semibold mb-2">Plus Users</h3>
             <p className="text-gray-600 text-sm mb-3">
               If you write 3-5 papers per month and need reliable plagiarism
-              checking and citation analysis, the <strong>Student plan</strong>{" "}
+              checking and citation analysis, the <strong>Plus plan</strong>{" "}
               offers the best value.
             </p>
           </div>
 
           <div className="border border-gray-200 rounded-lg p-6">
             <TrendingUp className="h-8 w-8 text-purple-600 mb-3" />
-            <h3 className="font-semibold mb-2">Researchers & Faculty</h3>
+            <h3 className="font-semibold mb-2">Pro & Faculty</h3>
             <p className="text-gray-600 text-sm mb-3">
               For unlimited scanning, advanced analytics, and permanent
-              certificate storage, the <strong>Researcher plan</strong> is
+              certificate storage, the <strong>Pro plan</strong> is
               designed for you.
             </p>
           </div>

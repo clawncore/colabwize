@@ -48,7 +48,7 @@ Patches:
 
 ## 1.5.0 (Dec 15, 2025) - Core Platform Launch
 
-The official release of the ColabWize platform, bringing integrated academic integrity tools to students and researchers.
+The official release of the ColabWize platform, bringing integrated academic integrity tools to Plus users and Pros.
 
 Improvements:
 

@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Ensure reCAPTCHA badge is visible and on top */
+.grecaptcha-badge {
+  z-index: 9999 !important;
+  visibility: visible !important;
+  display: block !important;
+}
+
 body {
   margin: 0;
   font-family:

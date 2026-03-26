@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { supabase } from "../lib/supabase/client";
 // Simple API client wrapper
 import ConfigService from "./ConfigService";
@@ -109,7 +110,7 @@ class ApiClient {
         ) {
           // Clear any stored data
           console.error("CRITICAL: Auth error detected. Wiping session.", {
-            message: errorData.message,
+            message: getErrorMessage(errorData),
           });
 
           // Prevent infinite reload loops - check if we just redirected
@@ -134,7 +135,7 @@ class ApiClient {
           }
         }
 
-        throw new Error(errorData.message || "User not authenticated");
+        throw new Error(getErrorMessage(errorData, "User not authenticated"));
       }
 
       // Special handling for 404 errors for affiliate record not found

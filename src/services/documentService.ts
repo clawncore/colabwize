@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 
 export interface Project {
@@ -52,7 +53,7 @@ export const documentService = {
       console.error("Upload error:", error);
       return {
         success: false,
-        error: error.message || "Upload failed",
+        error: getErrorMessage(error, "Upload failed"),
       };
     }
   },
@@ -86,7 +87,7 @@ export const documentService = {
       console.error("Fetch projects error:", error);
       return {
         success: false,
-        error: error.message || "Failed to fetch projects",
+        error: getErrorMessage(error, "Failed to fetch projects"),
       };
     }
   },
@@ -117,7 +118,7 @@ export const documentService = {
       console.error("Update project error:", error);
       return {
         success: false,
-        error: error.message || "Failed to update project",
+        error: getErrorMessage(error, "Failed to update project"),
       };
     }
   },
@@ -135,7 +136,7 @@ export const documentService = {
       console.error("Fetch project error:", error);
       return {
         success: false,
-        error: error.message || "Failed to fetch project",
+        error: getErrorMessage(error, "Failed to fetch project"),
       };
     }
   },
@@ -163,7 +164,7 @@ export const documentService = {
       console.error("Create project error:", error);
       return {
         success: false,
-        error: error.message || "Failed to create project",
+        error: getErrorMessage(error, "Failed to create project"),
       };
     }
   },
@@ -187,7 +188,7 @@ export const documentService = {
       console.error("Duplicate project error:", error);
       return {
         success: false,
-        error: error.message || "Failed to duplicate project",
+        error: getErrorMessage(error, "Failed to duplicate project"),
       };
     }
   },
@@ -202,7 +203,7 @@ export const documentService = {
       console.error("Delete project error:", error);
       return {
         success: false,
-        error: error.message || "Failed to delete project",
+        error: getErrorMessage(error, "Failed to delete project"),
       };
     }
   },

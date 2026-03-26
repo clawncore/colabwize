@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../utils/errorHandler";
 import React, { useState, useEffect } from "react";
 import {
   Download,
@@ -75,8 +76,7 @@ const AccountSettingsPage: React.FC = () => {
         toast({
           title: "Error",
           description:
-            error.message ||
-            "Failed to load account details. Please try again.",
+            getErrorMessage(error, "Failed to load account details. Please try again."),
           variant: "destructive",
         });
       } finally {
@@ -136,7 +136,7 @@ const AccountSettingsPage: React.FC = () => {
       toast({
         title: "Error",
         description:
-          error.message || "Failed to update password. Please try again.",
+          getErrorMessage(error, "Failed to update password. Please try again."),
         variant: "destructive",
       });
     } finally {
@@ -169,7 +169,7 @@ const AccountSettingsPage: React.FC = () => {
       toast({
         title: "Error",
         description:
-          error.message || "Failed to export account data. Please try again.",
+          getErrorMessage(error, "Failed to export account data. Please try again."),
         variant: "destructive",
       });
     } finally {
@@ -226,7 +226,7 @@ const AccountSettingsPage: React.FC = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to send OTP. Please try again.",
+        description: getErrorMessage(error, "Failed to send OTP. Please try again."),
         variant: "destructive",
       });
     } finally {
@@ -285,7 +285,7 @@ const AccountSettingsPage: React.FC = () => {
       toast({
         title: "Error",
         description:
-          error.message || "Failed to update email. Please try again.",
+          getErrorMessage(error, "Failed to update email. Please try again."),
         variant: "destructive",
       });
     } finally {

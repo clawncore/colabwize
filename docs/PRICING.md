@@ -9,61 +9,81 @@ Yearly billing is billed annually and advertised as "SAVE 20%".
 | Plan | Monthly | Yearly (billed annually) | Notes |
 | --- | ---: | ---: | --- |
 | Free | $0 | $0 | Forever free |
-| Plus | $5.99/mo | $57.50/year | $4.79/mo effective on yearly |
-| Premium | $12.99/mo | $124.70/year | $10.39/mo effective on yearly |
+| Student | $4.99/mo | $47.90/year | $3.99/mo effective on yearly |
+| Researcher | $12.99/mo | $124.70/year | $10.39/mo effective on yearly |
 
 ### Free
 
-- 1 Team Workspace
-- 2 Collaborators per workspace
-- 3 rephrases / mo (1 variant)
-- Preview certificate (watermarked)
+- 3 document scans per month
+- Basic originality check (30 sentences only)
+- 3 rephrase suggestions
+- Max 100,000 characters per document
+- Certificate included (watermarked)
+- 7-day certificate retention
+- PDF export only
 
 Locked:
 
-- Chat with PDF & My Projects
-- Full citation analysis
-- Large academic papers
+- Full document originality scan
+- Citation confidence auditor
+- Advanced analytics
+- All export formats
 
-### Plus
+### Student
 
-- Chat with PDF
-- 5 Team Workspaces
-- 10 Collaborators per workspace
-- 25 rephrases (up to 3 variants)
-- File Size Limit: 50MB
-- Unlimited Chats with PDFs
-- Citation confidence analysis
+- 50 document scans per month
+- Full document originality map
+- AI detection included
+- Citation confidence auditor
+- 50 rephrase suggestions
+- Max 300,000 characters per document
+- Professional certificates (no watermark)
+- 30-day certificate retention
+- All export formats
 
 Locked:
 
-- Chat with My Projects
+- Advanced analytics
 - Draft comparison
-- Advanced analytics
+- Unlimited scanning
 
-### Premium
+### Researcher
 
-- Advanced analytics
-- 100 citation audits / month (Max 200,000 chars/doc)
-- Chat with My Projects
-- Unlimited Chats with My Projects
-- Advanced Research
-- Insight Map & Research Gaps
-- Search Alerts
+- Unlimited document scans
+- Full document originality
+- AI detection included
+- Max 500,000 characters per document
+- Priority scanning
+- Advanced analytics (exclusive)
+- Draft comparison
+- Safe AI Integrity Assistant
+- Professional certificates
+- Unlimited certificate retention
+- All export formats
 
 Note: Designed for rigorous academic standards and frequent analysis.
 
-## Credit Packs (One-Time)
+## Pay-As-You-Go Credits (One-Time)
 
-Credits are a one-time purchase option shown in the app (dashboard credits page).
+Credits are a one-time purchase option shown in the app (dashboard credits page). Credits let you scan documents without a subscription.
 
-| Package | Credits | Price | Price / credit | Typical usage |
+| Package | Credits | Price | Price / credit | Notes |
 | --- | ---: | ---: | ---: | --- |
-| Starter | 5 | $1.99 | $0.40 | ~5,000 words |
-| Professional | 25 | $6.99 | $0.28 | ~25,000 words |
-| Enterprise | 50 | $12.99 | $0.26 | ~50,000 words |
+| Standard | 10 | $4.99 | $0.50 | Flexible scanning |
+| Professional | 25 | $9.99 | $0.40 | Most Popular |
+| Enterprise | 50 | $17.99 | $0.36 | Best value |
 
 Credits:
 
 - Never expire
 - Activate immediately after purchase
+- Full document scanning (not limited to 30 sentences)
+- Citation confidence included
+- Professional certificates (no watermarks, deleted after download)
+- All export formats
+
+### Credit Usage
+
+- 1 Credit = 1 Scan (Originality + AI Detection)
+- Citation analysis does NOT consume credits
+- Certificate generation may require 1 credit

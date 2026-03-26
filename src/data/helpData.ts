@@ -5,6 +5,7 @@ export interface VideoTutorial {
     thumbnail: string;
     videoId?: string;
     customThumbnail?: string;
+    description?: string;
 }
 
 export const videoTutorials: VideoTutorial[] = [
@@ -14,7 +15,8 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "3:45",
         thumbnail: "🎥",
         videoId: "Zsid3NSL188",
-        customThumbnail: "/assets/images/thumbnails/intro.jpg"
+        customThumbnail: "/assets/images/thumbnails/intro.jpg",
+        description: "Learn the basics of ColabWize and how it can help you with academic writing, citation management, and more."
     },
     {
         id: "2",
@@ -22,7 +24,8 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "4:00",
         thumbnail: "👤",
         videoId: "alIzg6uC_sY",
-        customThumbnail: "/assets/images/thumbnails/account-creation.jpg"
+        customThumbnail: "/assets/images/thumbnails/account-creation.jpg",
+        description: "Step-by-step guide to creating your ColabWize account and setting up your profile for optimal experience."
     },
     {
         id: "3",
@@ -30,7 +33,8 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "3:30",
         thumbnail: "🎬",
         videoId: "22CkOWWOkl4",
-        customThumbnail: "/assets/images/thumbnails/upload-document.jpg"
+        customThumbnail: "/assets/images/thumbnails/upload-document.jpg",
+        description: "Learn how to upload documents, papers, and research materials to your ColabWize library."
     },
     {
         id: "4",
@@ -38,7 +42,8 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "5:45",
         thumbnail: "📊",
         videoId: "g_HyTIMTaiE",
-        customThumbnail: "/assets/images/thumbnails/dashboard.jpg"
+        customThumbnail: "/assets/images/thumbnails/dashboard.jpg",
+        description: "Navigate your dashboard to track projects, view analytics, and manage your academic work efficiently."
     },
     {
         id: "5",
@@ -46,7 +51,8 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "4:20",
         thumbnail: "📄",
         videoId: "ndX50xogcno",
-        customThumbnail: "/assets/images/thumbnails/papers.jpg"
+        customThumbnail: "/assets/images/thumbnails/papers.jpg",
+        description: "Organize and browse your saved papers, research materials, and references in one place."
     },
     {
         id: "6",
@@ -54,7 +60,8 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "5:15",
         thumbnail: "🔍",
         videoId: "PRU5CS26tb8",
-        customThumbnail: "/assets/images/thumbnails/audit.jpg"
+        customThumbnail: "/assets/images/thumbnails/audit.jpg",
+        description: "Analyze your citations for accuracy, completeness, and proper formatting across APA, MLA, and Chicago styles."
     },
     {
         id: "7",
@@ -62,7 +69,8 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "6:30",
         thumbnail: "👥",
         videoId: "k67eC8Ttzs8",
-        customThumbnail: "/assets/images/thumbnails/workspace.jpg"
+        customThumbnail: "/assets/images/thumbnails/workspace.jpg",
+        description: "Work together with teammates in real-time, share documents, and collaborate on research projects."
     },
     {
         id: "8",
@@ -70,6 +78,7 @@ export const videoTutorials: VideoTutorial[] = [
         duration: "3:10",
         thumbnail: "📤",
         videoId: "k67eC8Ttzs8",
-        customThumbnail: "/assets/images/thumbnails/export.jpg"
+        customThumbnail: "/assets/images/thumbnails/export.jpg",
+        description: "Export your documents in various formats with properly formatted citations and references."
     },
 ];

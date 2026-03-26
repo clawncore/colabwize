@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../../utils/errorHandler";
 import React, { useState, useEffect } from "react";
 import { useToast } from "../../../hooks/use-toast";
 import { apiClient } from "../../../services/apiClient";
@@ -113,7 +114,7 @@ export const AdminInboxView: React.FC = () => {
     } catch (error: any) {
       toast({
         title: "Send Failed",
-        description: error.message || "Failed to send the email reply.",
+        description: getErrorMessage(error, "Failed to send the email reply."),
         variant: "destructive"
       });
     } finally {

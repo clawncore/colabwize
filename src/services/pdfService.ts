@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 
 export interface Annotation {
@@ -20,7 +21,7 @@ export class PDFService {
             return response.data;
         } catch (error: any) {
             console.error("Failed to fetch annotations:", error);
-            throw new Error(error.message || "Failed to fetch annotations");
+            throw new Error(getErrorMessage(error, "Failed to fetch annotations"));
         }
     }
 
@@ -33,7 +34,7 @@ export class PDFService {
             return response.data;
         } catch (error: any) {
             console.error("Failed to save annotation:", error);
-            throw new Error(error.message || "Failed to save annotation");
+            throw new Error(getErrorMessage(error, "Failed to save annotation"));
         }
     }
 
@@ -46,7 +47,7 @@ export class PDFService {
             return response.data;
         } catch (error: any) {
             console.error("Failed to update annotation:", error);
-            throw new Error(error.message || "Failed to update annotation");
+            throw new Error(getErrorMessage(error, "Failed to update annotation"));
         }
     }
 
@@ -58,7 +59,7 @@ export class PDFService {
             await apiClient.delete(`/api/annotations/${id}`);
         } catch (error: any) {
             console.error("Failed to delete annotation:", error);
-            throw new Error(error.message || "Failed to delete annotation");
+            throw new Error(getErrorMessage(error, "Failed to delete annotation"));
         }
     }
 }

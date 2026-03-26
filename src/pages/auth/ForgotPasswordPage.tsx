@@ -8,6 +8,10 @@ import AuthLayout from "../../components/auth/AuthLayout";
 import FormInput from "../../components/auth/FormInput";
 import { Button } from "../../components/ui/button";
 import { resetPassword } from "../../services/supabaseAuth";
+import { loadRecaptchaScript, getRecaptchaToken } from "../../lib/recaptcha";
+import ConfigService from "../../services/ConfigService";
+
+const RECAPTCHA_SITE_KEY = ConfigService.getRecaptchaSiteKey();
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -20,6 +24,14 @@ const ForgotPasswordPage: React.FC = () => {
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [submittedEmail, setSubmittedEmail] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (RECAPTCHA_SITE_KEY) {
+      loadRecaptchaScript(RECAPTCHA_SITE_KEY).catch(() => {
+        /* silent */
+      });
+    }
+  }, []);
 
   const {
     register,
@@ -37,6 +49,40 @@ const ForgotPasswordPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
+      // ── reCAPTCHA v3 verification ──────────────────────────────────────────
+      if (RECAPTCHA_SITE_KEY) {
+        try {
+          const token = await getRecaptchaToken(
+            RECAPTCHA_SITE_KEY,
+            "forgot_password",
+          );
+          const verifyRes = await fetch(
+            `${
+              process.env.REACT_APP_API_URL || ""
+            }/api/auth/hybrid/verify-recaptcha`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token }),
+            },
+          );
+          const verifyData = await verifyRes.json();
+          if (!verifyData.success) {
+            setError(
+              "Automated activity detected. Please try again or contact support.",
+            );
+            setIsLoading(false);
+            return;
+          }
+        } catch (rcError) {
+          console.warn(
+            "[reCAPTCHA] Forgot Password verification skipped:",
+            rcError,
+          );
+        }
+      }
+      // ───────────────────────────────────────────────────────────────────────
+
       // Use Supabase to send reset email
       await resetPassword(data.email);
 

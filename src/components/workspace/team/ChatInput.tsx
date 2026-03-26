@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "../../../utils/errorHandler";
 import React, { useState, useRef, useEffect } from "react";
 import { MentionInput, MentionUser } from "../../ui/mention-input";
 import { supabaseBrowser } from "../../../lib/supabase/browser";
@@ -105,7 +106,7 @@ export default function ChatInput({
       });
 
       if (error) {
-        toast.error(error.message);
+        toast.error(getErrorMessage(error));
       } else {
         // Create notifications for other members
         const otherMembers = members.filter((m) => m.id !== user?.id);

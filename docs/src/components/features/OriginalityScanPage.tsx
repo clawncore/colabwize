@@ -3,9 +3,8 @@ import {
   ArrowLeft,
   FileSearch,
   CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Zap,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 
 const OriginalityScanPage = () => {
@@ -19,11 +18,48 @@ const OriginalityScanPage = () => {
             Back to Documentation
           </Link>
           <div className="text-center">
-            <FileSearch className="h-16 w-16 mx-auto mb-4 text-blue-600" />
+            <div className="relative inline-block">
+              <FileSearch className="h-16 w-16 mx-auto mb-4 text-blue-600" />
+              <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                BETA
+              </span>
+            </div>
             <h1 className="text-3xl font-bold mb-2">Originality Scanning</h1>
             <p className="text-lg text-gray-600">
               Detect similarity and ensure your work is original
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Coming Soon Banner */}
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-8 text-white mb-8">
+        <div className="flex flex-col md:flex-row items-center justify-between">
+          <div className="mb-4 md:mb-0">
+            <div className="flex items-center mb-2">
+              <Clock className="h-6 w-6 mr-2" />
+              <span className="text-sm font-semibold uppercase tracking-wide">
+                Coming Soon
+              </span>
+            </div>
+            <h2 className="text-2xl font-bold mb-2">
+              Originality Scanning is in Beta
+            </h2>
+            <p className="opacity-90 max-w-xl">
+              We're currently refining our originality scanning engine. This
+              feature will be available soon with powerful similarity detection
+              across billions of sources.
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            <a
+              href="https://discord.gg/2MMSdX3Uee"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-6 py-3 bg-white text-purple-600 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+              <Sparkles className="h-5 w-5 mr-2" />
+              Join Beta Waitlist
+            </a>
           </div>
         </div>
       </div>
@@ -49,9 +85,9 @@ const OriginalityScanPage = () => {
         </div>
       </div>
 
-      {/* Plan-Based Features */}
+      {/* Planned Features */}
       <div className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">Scan Depth by Plan</h2>
+        <h2 className="text-2xl font-bold mb-6">Planned Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Free Plan */}
           <div className="border border-gray-200 rounded-xl p-6">
@@ -75,8 +111,8 @@ const OriginalityScanPage = () => {
                 </span>
               </li>
               <li className="flex items-start">
-                <XCircle className="h-5 w-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-700">Limited to quick overview</span>
+                <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                <span className="text-gray-700">Quick overview of matches</span>
               </li>
             </ul>
           </div>
@@ -84,7 +120,7 @@ const OriginalityScanPage = () => {
           {/* Paid Plans */}
           <div className="border border-blue-500 rounded-xl p-6 bg-blue-50">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Student & Researcher</h3>
+              <h3 className="text-lg font-semibold">Plus & Pro</h3>
               <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
                 Full Scan
               </span>
@@ -99,7 +135,7 @@ const OriginalityScanPage = () => {
               <li className="flex items-start">
                 <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                 <span className="text-gray-700">
-                  50+ scans/month (Student), Unlimited (Researcher)
+                  50+ scans/month (Plus), Unlimited (Pro)
                 </span>
               </li>
               <li className="flex items-start">
@@ -113,81 +149,15 @@ const OriginalityScanPage = () => {
         </div>
       </div>
 
-      {/* How to Use */}
+      {/* Match Indicators Preview */}
       <div className="mb-12">
         <h2 className="text-2xl font-bold mb-4">
-          How to Run an Originality Scan
+          Match Level Indicators (Preview)
         </h2>
-        <div className="space-y-6">
-          <div className="flex">
-            <div className="flex-shrink-0 mr-4">
-              <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
-                <span className="text-blue-600 font-bold">1</span>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-2">
-                Upload Your Document
-              </h3>
-              <p className="text-gray-600">
-                Navigate to the Originality page and upload your document or
-                paste your text directly.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex">
-            <div className="flex-shrink-0 mr-4">
-              <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
-                <span className="text-blue-600 font-bold">2</span>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Start Scan</h3>
-              <p className="text-gray-600">
-                Click "Scan for Originality" button. The scan typically takes
-                30-60 seconds depending on document length.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex">
-            <div className="flex-shrink-0 mr-4">
-              <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
-                <span className="text-blue-600 font-bold">3</span>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Review Results</h3>
-              <p className="text-gray-600">
-                Analyze the Originality Map to see which sentences have
-                similarities. Sentences are color-coded by match level.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex">
-            <div className="flex-shrink-0 mr-4">
-              <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
-                <span className="text-blue-600 font-bold">4</span>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Take Action</h3>
-              <p className="text-gray-600">
-                Use the rephrase suggestions to rewrite flagged content and
-                improve your originality score.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Understanding Results */}
-      <div className="mb-12">
-        <h2 className="text-2xl font-bold mb-4">Understanding Your Results</h2>
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-          <h3 className="font-semibold mb-4">Match Level Indicators</h3>
+          <p className="text-gray-600 mb-4">
+            When launched, sentences will be color-coded by similarity level:
+          </p>
           <div className="space-y-3">
             <div className="flex items-center">
               <div className="w-4 h-4 bg-green-500 rounded mr-3"></div>
@@ -215,46 +185,30 @@ const OriginalityScanPage = () => {
         </div>
       </div>
 
-      {/* Best Practices */}
-      <div className="mb-12">
-        <h2 className="text-2xl font-bold mb-4">Best Practices</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="border border-gray-200 rounded-lg p-6">
-            <AlertTriangle className="h-8 w-8 text-yellow-600 mb-3" />
-            <h3 className="font-semibold mb-2">Scan Early and Often</h3>
-            <p className="text-gray-600">
-              Run scans during your writing process, not just at the end. This
-              helps you catch and fix issues earlier.
-            </p>
-          </div>
-
-          <div className="border border-gray-200 rounded-lg p-6">
-            <Zap className="h-8 w-8 text-blue-600 mb-3" />
-            <h3 className="font-semibold mb-2">Use Rephrase Wisely</h3>
-            <p className="text-gray-600">
-              Our AI rephrase suggestions maintain your meaning while improving
-              originality. Always review suggestions before accepting.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Upgrade CTA */}
+      {/* CTA */}
       <div className="p-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl text-white">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col md:flex-row items-center justify-between">
+          <div className="mb-4 md:mb-0">
             <h3 className="text-xl font-semibold mb-2">
-              Need Full Document Scanning?
+              Get Notified When It Launches
             </h3>
-            <p className="opacity-90 mb-4">
-              Upgrade to Student or Researcher plan for complete document
-              analysis with no limits.
+            <p className="opacity-90">
+              Join our community to be the first to know when Originality
+              Scanning goes live.
             </p>
+          </div>
+          <div className="flex gap-3">
+            <a
+              href="https://discord.gg/2MMSdX3Uee"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+              Join Discord
+            </a>
             <Link
               to="/plans"
-              className="inline-flex items-center px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+              className="inline-flex items-center px-4 py-2 bg-white/10 text-white rounded-lg font-medium hover:bg-white/20 transition-colors border border-white/20">
               View Plans
-              <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
             </Link>
           </div>
         </div>

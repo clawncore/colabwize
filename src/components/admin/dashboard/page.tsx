@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "../../../utils/errorHandler";
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -128,7 +129,7 @@ export default function AdminDashboard() {
       console.error("Error creating workspace", error); // Using console.error as a fallback
       toast({
         title: "Error",
-        description: error.message || "Failed to create workspace",
+        description: getErrorMessage(error, "Failed to create workspace"),
         variant: "destructive",
       });
     } finally {

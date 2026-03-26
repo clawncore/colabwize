@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../utils/errorHandler";
 import React, { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -105,12 +106,12 @@ export default function Profile() {
           description: `Verification code sent to your email.`,
         });
       } else {
-        throw new Error(response.message || "Failed to request OTP");
+        throw new Error(getErrorMessage(response, "Failed to request OTP"));
       }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to send code. Please try again.",
+        description: getErrorMessage(error, "Failed to send code. Please try again."),
         variant: "destructive",
       });
     } finally {
@@ -174,12 +175,12 @@ export default function Profile() {
         setOtp("");
         setPendingProfileData(null);
       } else {
-        throw new Error(response.message || "Failed to update profile");
+        throw new Error(getErrorMessage(response, "Failed to update profile"));
       }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to verify OTP. Please try again.",
+        description: getErrorMessage(error, "Failed to verify OTP. Please try again."),
         variant: "destructive",
       });
     } finally {
@@ -274,8 +275,7 @@ export default function Profile() {
                           toast({
                             title: "Error",
                             description:
-                              error.message ||
-                              "Failed to upload avatar. Please try again.",
+                              getErrorMessage(error, "Failed to upload avatar. Please try again."),
                             variant: "destructive",
                           });
                         }

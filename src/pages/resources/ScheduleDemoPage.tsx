@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../utils/errorHandler";
 import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import ConfigService from "../../services/ConfigService";
@@ -103,7 +104,7 @@ ${formData.message || "No additional message provided."}
       console.error("Error scheduling demo:", error);
       setSubmitStatus({
         type: "error",
-        message: error.message || "An error occurred. Please try again later.",
+        message: getErrorMessage(error, "An error occurred. Please try again later."),
       });
     } finally {
       setIsSubmitting(false);

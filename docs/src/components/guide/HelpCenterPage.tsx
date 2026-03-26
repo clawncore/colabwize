@@ -98,7 +98,7 @@ const HelpCenterPage = () => {
     },
     {
       title: "Understanding AI Detection Scores",
-      link: "/ai-detection",
+      link: "/originality",
       readTime: "3 min read",
     },
     {

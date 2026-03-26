@@ -4,6 +4,10 @@ import { Mail, CheckCircle, RefreshCw, Edit } from "lucide-react";
 import AuthLayout from "../../components/auth/AuthLayout";
 import { Button } from "../../components/ui/button";
 import { supabase } from "../../lib/supabase/client";
+import { loadRecaptchaScript, getRecaptchaToken } from "../../lib/recaptcha";
+import ConfigService from "../../services/ConfigService";
+
+const RECAPTCHA_SITE_KEY = ConfigService.getRecaptchaSiteKey();
 
 const VerifyEmailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +16,14 @@ const VerifyEmailPage: React.FC = () => {
   const [isVerified, setIsVerified] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [isAllowed, setIsAllowed] = React.useState(false);
+
+  React.useEffect(() => {
+    if (RECAPTCHA_SITE_KEY) {
+      loadRecaptchaScript(RECAPTCHA_SITE_KEY).catch(() => {
+        /* silent */
+      });
+    }
+  }, []);
 
   // Get email and source from URL params
   const email = searchParams.get("email");
@@ -52,6 +64,40 @@ const VerifyEmailPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
+      // ── reCAPTCHA v3 verification ──────────────────────────────────────────
+      if (RECAPTCHA_SITE_KEY) {
+        try {
+          const token = await getRecaptchaToken(
+            RECAPTCHA_SITE_KEY,
+            "resend_verification",
+          );
+          const verifyRes = await fetch(
+            `${
+              process.env.REACT_APP_API_URL || ""
+            }/api/auth/hybrid/verify-recaptcha`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token }),
+            },
+          );
+          const verifyData = await verifyRes.json();
+          if (!verifyData.success) {
+            setError(
+              "Automated activity detected. Please try again or contact support.",
+            );
+            setIsLoading(false);
+            return;
+          }
+        } catch (rcError) {
+          console.warn(
+            "[reCAPTCHA] Resend verification skipped:",
+            rcError,
+          );
+        }
+      }
+      // ───────────────────────────────────────────────────────────────────────
+
       // In Supabase, we can resend verification email using the resend method
       if (email) {
         const { error } = await supabase.auth.resend({

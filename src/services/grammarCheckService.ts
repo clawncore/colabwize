@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { supabase } from "../lib/supabase/client";
 import ConfigService from "./ConfigService";
 
@@ -30,7 +31,7 @@ export const GrammarCheckService = {
             const result = await response.json();
 
             if (!result.success) {
-                throw new Error(result.message || "Failed to check grammar");
+                throw new Error(getErrorMessage(result, "Failed to check grammar"));
             }
 
             return result.errors || [];

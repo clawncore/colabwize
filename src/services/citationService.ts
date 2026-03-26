@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 import { generatePrecomputedCitations } from "../utils/citationFormatter";
 
@@ -91,7 +92,7 @@ export class CitationService {
       return response.suggestions;
     } catch (error: any) {
       console.error("Error finding missing link:", error);
-      throw new Error(error.message || "Failed to find missing link");
+      throw new Error(getErrorMessage(error, "Failed to find missing link"));
     }
   }
 
@@ -116,7 +117,7 @@ export class CitationService {
     } catch (error: any) {
       console.error("Error searching papers:", error);
       console.error("Error response:", error.response?.data);
-      throw new Error(error.message || "Failed to search papers");
+      throw new Error(getErrorMessage(error, "Failed to search papers"));
     }
   }
 
@@ -135,7 +136,7 @@ export class CitationService {
       return response.data;
     } catch (error: any) {
       console.error("Error getting confidence analysis:", error);
-      throw new Error(error.message || "Failed to get confidence analysis");
+      throw new Error(getErrorMessage(error, "Failed to get confidence analysis"));
     }
   }
 
@@ -154,7 +155,7 @@ export class CitationService {
       return response.data;
     } catch (error: any) {
       console.error("Error getting recency analysis:", error);
-      throw new Error(error.message || "Failed to get recency analysis");
+      throw new Error(getErrorMessage(error, "Failed to get recency analysis"));
     }
   }
 
@@ -231,7 +232,7 @@ export class CitationService {
       return response;
     } catch (error: any) {
       console.error("Error adding citation:", error);
-      throw new Error(error.message || "Failed to add citation");
+      throw new Error(getErrorMessage(error, "Failed to add citation"));
     }
   }
 
@@ -365,7 +366,7 @@ export class CitationService {
       return response.data;
     } catch (error: any) {
       console.error("Error updating citation themes:", error);
-      throw new Error(error.message || "Failed to update citation themes");
+      throw new Error(getErrorMessage(error, "Failed to update citation themes"));
     }
   }
 
@@ -384,7 +385,7 @@ export class CitationService {
       return response.data;
     } catch (error: any) {
       console.error("Error analyzing citation:", error);
-      throw new Error(error.message || "Failed to analyze citation");
+      throw new Error(getErrorMessage(error, "Failed to analyze citation"));
     }
   }
 
@@ -436,7 +437,7 @@ export class CitationService {
       return response.data;
     } catch (error: any) {
       console.error("Batch analysis failed:", error);
-      throw new Error(error.message || "Failed to batch analyze citations");
+      throw new Error(getErrorMessage(error, "Failed to batch analyze citations"));
     }
   }
 
@@ -451,7 +452,7 @@ export class CitationService {
       return response.data || [];
     } catch (error: any) {
       console.error("Error searching citations:", error);
-      throw new Error(error.message || "Failed to search citations");
+      throw new Error(getErrorMessage(error, "Failed to search citations"));
     }
   }
 
@@ -466,7 +467,7 @@ export class CitationService {
       return response.data || [];
     } catch (error: any) {
       console.error("Error getting project citations:", error);
-      throw new Error(error.message || "Failed to get project citations");
+      throw new Error(getErrorMessage(error, "Failed to get project citations"));
     }
   }
 
@@ -478,7 +479,7 @@ export class CitationService {
       await apiClient.delete(`/api/citations/${citationId}`);
     } catch (error: any) {
       console.error("Error deleting citation:", error);
-      throw new Error(error.message || "Failed to delete citation");
+      throw new Error(getErrorMessage(error, "Failed to delete citation"));
     }
   }
 
@@ -542,7 +543,7 @@ export class CitationService {
       return response.data || response;
     } catch (error: any) {
       console.error("Error updating citation:", error);
-      throw new Error(error.message || "Failed to update citation");
+      throw new Error(getErrorMessage(error, "Failed to update citation"));
     }
   }
 
@@ -557,7 +558,7 @@ export class CitationService {
       return response.data;
     } catch (error: any) {
       console.error("Error importing from DOI:", error);
-      throw new Error(error.message || "Failed to import from DOI");
+      throw new Error(getErrorMessage(error, "Failed to import from DOI"));
     }
   }
 
@@ -572,7 +573,7 @@ export class CitationService {
       return response.data;
     } catch (error: any) {
       console.error("Error importing from URL:", error);
-      throw new Error(error.message || "Failed to import from URL");
+      throw new Error(getErrorMessage(error, "Failed to import from URL"));
     }
   }
 
@@ -639,7 +640,7 @@ export class CitationService {
       return response.data || [];
     } catch (error: any) {
       console.error("Error searching external sources:", error);
-      throw new Error(error.message || "Failed to search external sources");
+      throw new Error(getErrorMessage(error, "Failed to search external sources"));
     }
   }
 
@@ -680,7 +681,7 @@ export class CitationService {
       return response.data;
     } catch (error: any) {
       console.error("Error saving research topic:", error);
-      throw new Error(error.message || "Failed to save research topic");
+      throw new Error(getErrorMessage(error, "Failed to save research topic"));
     }
   }
 

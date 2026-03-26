@@ -48,7 +48,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
-import { EditorHelpDialog } from "./EditorHelpDialog";
+
 import { UpgradeModal } from "../../components/subscription/UpgradeModal";
 import { CollaborationHistoryPanel } from "./CollaborationHistoryPanel";
 import workspaceService, {
@@ -156,7 +156,7 @@ const EditorWorkspacePage: React.FC = () => {
 
   // Editor onboarding tour state
   const [showEditorTour, setShowEditorTour] = useState(false);
-  const [showHelpDialog, setShowHelpDialog] = useState(false);
+
 
   const [isResizingLeft, setIsResizingLeft] = useState(false);
   const [isResizingRight, setIsResizingRight] = useState(false);
@@ -825,31 +825,12 @@ const EditorWorkspacePage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="p-1.5 hover:bg-indigo-100 rounded-md transition-colors group"
-                          title="Help & Resources">
-                          <HelpCircle className="w-4 h-4 text-gray-400 group-hover:text-indigo-600" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="bg-white">
-                        <DropdownMenuItem
-                          onClick={() => setShowEditorTour(true)}>
-                          <HelpCircle className="mr-2 h-4 w-4" />
-                          <span>Show Tour</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setShowHelpDialog(true)}>
-                          <Video className="mr-2 h-4 w-4" />
-                          <span>Video Tutorials</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <EditorHelpDialog
-                      open={showHelpDialog}
-                      onOpenChange={setShowHelpDialog}
-                    />
+                    <button
+                      onClick={() => setShowEditorTour(true)}
+                      className="p-1.5 hover:bg-indigo-100 rounded-md transition-colors group"
+                      title="Show Workspace Tour">
+                      <Lightbulb className="w-4 h-4 text-gray-400 group-hover:text-amber-500" />
+                    </button>
                     <button
                       onClick={() => setIsNavRailOpen(!isNavRailOpen)}
                       title={isNavRailOpen ? "Unpin Sidebar" : "Pin Sidebar"}

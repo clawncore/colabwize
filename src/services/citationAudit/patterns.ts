@@ -6,6 +6,14 @@ export interface ExtractedPattern {
   end: number;
 }
 
+function isStandaloneUppercaseAbbreviation(content: string): boolean {
+  const trimmed = content.trim();
+  if (trimmed.length < 2 || trimmed.length > 6) return false;
+  if (/\s|,|;|\.|\//.test(trimmed)) return false;
+  if (/\d/.test(trimmed)) return false;
+  return /^[A-Z-]+$/.test(trimmed);
+}
+
 export function extractPatterns(
   text: string,
   absolutePos: number,
@@ -45,6 +53,8 @@ export function extractPatterns(
     if (m.index === mlaRegex.lastIndex) mlaRegex.lastIndex++;
     // Only count if it DOES NOT contain a year (otherwise it's APA/Chicago)
     if (!m[0].match(/\d{4}/)) {
+      const inner = m[0].slice(1, -1);
+      if (isStandaloneUppercaseAbbreviation(inner)) continue;
       matches.push({
         patternType: "AUTHOR_ONLY",
         start: m.index,

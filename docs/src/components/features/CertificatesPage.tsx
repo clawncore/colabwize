@@ -88,10 +88,10 @@ const CertificatesPage = () => {
             </p>
           </div>
 
-          {/* Student Plan */}
+          {/* Plus Plan */}
           <div className="border border-blue-500 rounded-xl p-6 bg-blue-50">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Student Plan</h3>
+              <h3 className="text-lg font-semibold">Plus Plan</h3>
               <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
                 Professional
               </span>
@@ -116,10 +116,10 @@ const CertificatesPage = () => {
             </ul>
           </div>
 
-          {/* Researcher Plan */}
+          {/* Pro Plan */}
           <div className="border border-purple-500 rounded-xl p-6 bg-purple-50">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Researcher Plan</h3>
+              <h3 className="text-lg font-semibold">Pro Plan</h3>
               <span className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm">
                 Premium
               </span>
@@ -169,12 +169,12 @@ const CertificatesPage = () => {
             </li>
             <li className="flex items-center">
               <Calendar className="h-5 w-5 text-blue-600 mr-3" />
-              <strong className="mr-2">Student Plan:</strong>
+              <strong className="mr-2">Plus Plan:</strong>
               <span className="text-blue-900">Deleted after 30 days</span>
             </li>
             <li className="flex items-center">
               <Calendar className="h-5 w-5 text-green-600 mr-3" />
-              <strong className="mr-2">Researcher Plan:</strong>
+              <strong className="mr-2">Pro Plan:</strong>
               <span className="text-blue-900">Kept forever (no deletion)</span>
             </li>
             <li className="flex items-center">
@@ -187,7 +187,7 @@ const CertificatesPage = () => {
           </ul>
           <p className="text-sm text-blue-700 mt-4 italic">
             💡 Tip: Download your certificates before they expire if you need to
-            keep them long-term on the Free or Student plan.
+            keep them long-term on the Free or Plus plan.
           </p>
         </div>
       </div>

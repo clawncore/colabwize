@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 import { supabase } from "../lib/supabase/client";
 
@@ -93,7 +94,7 @@ export class SubscriptionService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch subscription info");
+        throw new Error(getErrorMessage(data, "Failed to fetch subscription info"));
       }
 
       this.userPlan = data.subscription;

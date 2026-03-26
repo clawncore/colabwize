@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "../../../utils/errorHandler";
 
 import React, { useState, useRef } from "react";
 import {
@@ -117,7 +118,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
 
       toast({
         title: "Upload failed",
-        description: error.message || "Could not upload the file.",
+        description: getErrorMessage(error, "Could not upload the file."),
         variant: "destructive",
       });
     } finally {

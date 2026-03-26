@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "../../../utils/errorHandler";
 import { Imessage, useMessage } from "../../../stores/messages";
 import { formatChatDate } from "../../../lib/utils";
 import React, { useEffect, useRef, useState } from "react";
@@ -100,7 +101,7 @@ export default function ListMessages({
               .eq("id", payload.new.user_id)
               .single();
             if (error) {
-              toast.error(error.message);
+              toast.error(getErrorMessage(error));
             } else {
               const newMessage = {
                 ...payload.new,

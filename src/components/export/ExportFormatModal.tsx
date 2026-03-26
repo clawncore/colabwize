@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../utils/errorHandler";
 import React, { useState } from "react";
 import {
   Dialog,
@@ -77,7 +78,7 @@ export const ExportFormatModal: React.FC<ExportFormatModalProps> = ({
       const data = await response.json();
 
       if (!data.success || !data.result?.downloadUrl) {
-        throw new Error(data.message || "Failed to generate download URL");
+        throw new Error(getErrorMessage(data, "Failed to generate download URL"));
       }
 
       // Fetch the actual file content from the signed/public URL

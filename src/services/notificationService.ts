@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 import { getAuthToken } from "./auth";
 import { ConfigService } from "./ConfigService";
@@ -381,7 +382,7 @@ class NotificationService {
     // Handle errors
     if (type === "error") {
       console.error("Notification WebSocket error:", data.message);
-      this.emit("error", { message: data.message });
+      this.emit("error", { message: getErrorMessage(data)});
       return;
     }
 
@@ -502,7 +503,7 @@ class NotificationService {
       );
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to register push token");
+        throw new Error(getErrorMessage(response, "Failed to register push token"));
       }
     } catch (error) {
       console.error("Error registering push token:", error);
@@ -521,7 +522,7 @@ class NotificationService {
       );
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to unregister push token");
+        throw new Error(getErrorMessage(response, "Failed to unregister push token"));
       }
     } catch (error) {
       console.error("Error unregistering push token:", error);
@@ -723,7 +724,7 @@ class NotificationService {
           unreadCount: response.unreadCount,
         };
       } else {
-        throw new Error(response.message || "Failed to fetch notifications");
+        throw new Error(getErrorMessage(response, "Failed to fetch notifications"));
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -740,7 +741,7 @@ class NotificationService {
       if (response.success) {
         return response.unreadCount;
       } else {
-        throw new Error(response.message || "Failed to fetch unread count");
+        throw new Error(getErrorMessage(response, "Failed to fetch unread count"));
       }
     } catch (error) {
       console.error("Error fetching unread count:", error);
@@ -793,7 +794,7 @@ class NotificationService {
       });
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to dismiss notification");
+        throw new Error(getErrorMessage(response, "Failed to dismiss notification"));
       }
     } catch (error) {
       console.error("Error dismissing notification:", error);
@@ -818,7 +819,7 @@ class NotificationService {
       });
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to snooze notification");
+        throw new Error(getErrorMessage(response, "Failed to snooze notification"));
       }
     } catch (error) {
       console.error("Error snoozing notification:", error);
@@ -861,7 +862,7 @@ class NotificationService {
       if (response.success) {
         return {
           success: true,
-          message: response.message,
+          message: getErrorMessage(response),
           settings: response.settings,
         };
       } else {

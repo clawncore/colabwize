@@ -242,11 +242,11 @@ const CreditsPage = () => {
             </h3>
             <ul className="space-y-2 text-yellow-800 text-sm">
               <li>
-                • Regular users (3+ scans/month) - Student plan is cheaper
+                • Regular users (3+ scans/month) - Plus plan is cheaper
               </li>
-              <li>• Users needing Advanced Analytics (Researcher only)</li>
+              <li>• Users needing Advanced Analytics (Pro only)</li>
               <li>• Users wanting long certificate retention</li>
-              <li>• High-volume scanning (Researcher plan better value)</li>
+              <li>• High-volume scanning (Pro plan better value)</li>
             </ul>
           </div>
         </div>

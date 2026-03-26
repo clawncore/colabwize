@@ -14,7 +14,11 @@ import {
   resendVerificationEmail,
   signUpWithGoogle,
 } from "../../services/hybridAuth";
+import { loadRecaptchaScript, getRecaptchaToken } from "../../lib/recaptcha";
 import authService from "../../services/authService";
+import ConfigService from "../../services/ConfigService";
+
+const RECAPTCHA_SITE_KEY = ConfigService.getRecaptchaSiteKey();
 
 // List of allowed email domains
 const ALLOWED_DOMAINS = [
@@ -98,12 +102,20 @@ const LoginPage: React.FC = () => {
   // Prevent duplicate submissions using ref
   const isSubmittingRef = React.useRef(false);
 
+  // Pre-load reCAPTCHA script on mount so the first login attempt is fast
+  React.useEffect(() => {
+    if (RECAPTCHA_SITE_KEY) {
+      loadRecaptchaScript(RECAPTCHA_SITE_KEY).catch(() => {/* silent */});
+    }
+  }, []);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
     watch,
     setValue,
+    clearErrors,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     mode: "onChange",
@@ -176,10 +188,32 @@ const LoginPage: React.FC = () => {
 
     isSubmittingRef.current = true;
     setIsLoading(true);
-    setError(null);
+    clearErrors();
     setIsEmailNotConfirmed(false);
 
     try {
+      // ── reCAPTCHA v3 verification ──────────────────────────────────────────
+      if (RECAPTCHA_SITE_KEY) {
+        try {
+          const rcToken = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "login");
+          const rcRes = await fetch(`${ConfigService.getApiUrl()}/api/auth/hybrid/verify-recaptcha`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: rcToken }),
+          });
+          const rcData = await rcRes.json();
+          if (!rcRes.ok || !rcData.success) {
+            setError("Automated activity detected. Please try again or contact support.");
+            isSubmittingRef.current = false;
+            setIsLoading(false);
+            return;
+          }
+        } catch (rcErr) {
+          console.warn("reCAPTCHA check failed, proceeding anyway:", rcErr);
+          // Fail open — don't block legitimate users if reCAPTCHA itself errors
+        }
+      }
+      // ────────────────────────────────────────────────────────────────────────
       console.log("Attempting login with email:", data.email);
       console.log("Remember me option:", data.rememberMe);
 
@@ -270,7 +304,7 @@ const LoginPage: React.FC = () => {
 
   const handleResendVerification = async () => {
     setIsLoading(true);
-    setError(null);
+    clearErrors();
     try {
       const email = watchedFields.email;
       if (email) {
@@ -325,7 +359,7 @@ const LoginPage: React.FC = () => {
 
   const handle2FASubmit = async (otp: string) => {
     setIsLoading(true);
-    setError(null);
+    clearErrors();
     try {
       if (!userIdFor2FA) throw new Error("Session invalid");
 
@@ -459,7 +493,7 @@ const LoginPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setIsRecoveryMode(true);
-                    setError(null);
+                    clearErrors();
                   }}
                   className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors">
                   Use a recovery code
@@ -472,7 +506,7 @@ const LoginPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setIsRecoveryMode(false);
-                    setError(null);
+                    clearErrors();
                   }}
                   className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors">
                   Use authenticator app
@@ -687,6 +721,14 @@ const LoginPage: React.FC = () => {
             Privacy Policy
           </Link>
         </p>
+        {RECAPTCHA_SITE_KEY && (
+          <p className="text-[10px] text-gray-300 text-center">
+            Protected by reCAPTCHA —{" "}
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="hover:underline">Privacy</a>
+            {" & "}
+            <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" className="hover:underline">Terms</a>
+          </p>
+        )}
       </div>
     </AuthLayout>
   );

@@ -1,4 +1,5 @@
 "use client";
+import { getErrorMessage } from "../../utils/errorHandler";
 
 import React, { useEffect, useState } from "react";
 import {
@@ -59,7 +60,7 @@ export default function PaperDetailsPanel({
         if (res.success) {
           setPaper(res.data);
         } else {
-          throw new Error(res.message || "Failed to load paper");
+          throw new Error(getErrorMessage(res, "Failed to load paper"));
         }
       } catch (err) {
         setError("Could not load paper details.");

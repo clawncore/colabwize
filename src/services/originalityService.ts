@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../utils/errorHandler";
 import { apiClient } from "./apiClient";
 
 export interface SimilarityMatch {
@@ -140,7 +141,7 @@ export class OriginalityService {
         throw upgradeError;
       }
 
-      throw new Error(error.message || "Failed to scan document");
+      throw new Error(getErrorMessage(error, "Failed to scan document"));
     }
   }
 
@@ -154,7 +155,7 @@ export class OriginalityService {
       return this.normalizeResponse(response.data);
     } catch (error: any) {
       console.error("Error getting scan results:", error);
-      throw new Error(error.message || "Failed to get scan results");
+      throw new Error(getErrorMessage(error, "Failed to get scan results"));
     }
   }
 
@@ -172,7 +173,7 @@ export class OriginalityService {
       );
     } catch (error: any) {
       console.error("Error getting project scans:", error);
-      throw new Error(error.message || "Failed to get project scans");
+      throw new Error(getErrorMessage(error, "Failed to get project scans"));
     }
   }
 
@@ -187,7 +188,7 @@ export class OriginalityService {
       );
     } catch (error: any) {
       console.error("Error getting scan history:", error);
-      throw new Error(error.message || "Failed to get scan history");
+      throw new Error(getErrorMessage(error, "Failed to get scan history"));
     }
   }
 
@@ -220,7 +221,7 @@ export class OriginalityService {
         throw upgradeError;
       }
 
-      throw new Error(error.message || "Failed to get rephrase suggestions");
+      throw new Error(getErrorMessage(error, "Failed to get rephrase suggestions"));
     }
   }
 
@@ -238,7 +239,7 @@ export class OriginalityService {
       return response.data;
     } catch (error: any) {
       console.error("Error getting scan suggestions:", error);
-      throw new Error(error.message || "Failed to get scan suggestions");
+      throw new Error(getErrorMessage(error, "Failed to get scan suggestions"));
     }
   }
 
@@ -258,7 +259,7 @@ export class OriginalityService {
       return response.data;
     } catch (error: any) {
       console.error("Error comparing drafts:", error);
-      throw new Error(error.message || "Failed to compare drafts");
+      throw new Error(getErrorMessage(error, "Failed to compare drafts"));
     }
   }
 
@@ -280,7 +281,7 @@ export class OriginalityService {
       return response.data;
     } catch (error: any) {
       console.error("Error checking self-plagiarism:", error);
-      throw new Error(error.message || "Failed to check self-plagiarism");
+      throw new Error(getErrorMessage(error, "Failed to check self-plagiarism"));
     }
   }
 
@@ -297,7 +298,7 @@ export class OriginalityService {
       return response.data;
     } catch (error: any) {
       console.error("Error humanizing text:", error);
-      throw new Error(error.message || "Failed to humanize text");
+      throw new Error(getErrorMessage(error, "Failed to humanize text"));
     }
   }
 
@@ -362,7 +363,7 @@ export class OriginalityService {
       return response.data?.explanation || "No explanation available.";
     } catch (e: any) {
       console.error("Error getting risk explanation", e);
-      throw new Error(e.message || "Failed to explain risk");
+      throw new Error(getErrorMessage(e, "Failed to explain risk"));
     }
   }
 }

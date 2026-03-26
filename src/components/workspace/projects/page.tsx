@@ -1,3 +1,4 @@
+import { getErrorMessage } from "../../../utils/errorHandler";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Plus, Grid3X3, List } from "lucide-react";
@@ -483,7 +484,7 @@ export default function WorkspaceProjectsPage() {
       toast({
         title: "Batch Export Failed",
         description:
-          error.message || "Failed to export projects. Please try again.",
+          getErrorMessage(error, "Failed to export projects. Please try again."),
         variant: "destructive",
       });
     }
