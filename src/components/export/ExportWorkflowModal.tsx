@@ -215,13 +215,17 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
   const prepareFinalHtml = (htmlContent: string) => {
     let html = htmlContent;
 
-    // 1. Resolve Citation Nodes/Tokens
-    const tokenRegex = /<span\s+data-cite="([^"]+)"[^>]*>(.*?)<\/span>/g;
-    html = html.replace(tokenRegex, (match, key, existingText) => {
+    // 1. Resolve Citation Nodes → proper <a href="#bib-KEY"> hyperlinks
+    // CitationNode.renderHTML outputs:
+    //   <a class="citation-node" data-citation-id="KEY" data-text="(Smith, 2023)" href="#bib-KEY" style="...">(Smith, 2023)</a>
+    const tokenRegex = /<a[^>]+data-citation-id="([^"]+)"[^>]*>([^<]*)<\/a>/g;
+    html = html.replace(tokenRegex, (match, key, _existingText) => {
       const meta = CitationRegistryService.getCitation(key);
+      const style = (project.citation_style?.toUpperCase() || "APA") as any;
+
+      let formattedText: string;
       if (meta && meta.authors && meta.authors.length > 0 && meta.year) {
-        const style = (project.citation_style?.toUpperCase() || "APA") as any;
-        return formatCitation(
+        formattedText = formatCitation(
           {
             title: meta.sourceTitle || "",
             authors: meta.authors || [],
@@ -233,21 +237,27 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
           style,
           "in-text",
         );
+      } else {
+        // Fallback: use whatever text was already in the node
+        formattedText = _existingText || key;
       }
-      return existingText;
+
+      // Return as a clickable hyperlink pointing to the bibliography anchor
+      return `<a href="#bib-${key}" style="color:#2563eb; font-weight:500; text-decoration:none;">${formattedText}</a>`;
     });
 
-    // 2. Flatten Bibliography Entry nodes into standard <p> tags
-    // These nodes are serialized as div[data-bibliography-entry]
-    const bibRegex =
-      /<div\s+data-bibliography-entry="true"[^>]*>([\s\S]*?)<\/div>/g;
-    html = html.replace(bibRegex, (match, content) => {
-      // Use standard paragraph with hanging indent style for references
-      return `<p class="bibliography-entry" style="margin-bottom: 0.5rem; text-indent: -1.5rem; padding-left: 1.5rem;">${content}</p>`;
+    // 2. Flatten Bibliography Entry nodes → <p> tags, preserving the id anchor
+    // BibliographyNode.renderHTML outputs:
+    //   <div data-bibliography-entry="true" id="bib-KEY" class="bibliography-entry ...">...</div>
+    const bibRegex = /<div\s+data-bibliography-entry="true"([^>]*)>([\s\S]*?)<\/div>/g;
+    html = html.replace(bibRegex, (match, attrStr, content) => {
+      // Extract the id attribute (e.g. id="bib-abc123") so in-text links land correctly
+      const idMatch = attrStr.match(/id="([^"]+)"/);
+      const idAttr = idMatch ? ` id="${idMatch[1]}"` : "";
+      return `<p${idAttr} class="bibliography-entry" style="margin-bottom: 0.5rem; text-indent: -1.5rem; padding-left: 1.5rem;">${content}</p>`;
     });
 
     // 3. Cleanup: Strip leading empty paragraphs that might trigger blank pages
-    // especially after backend-injected title pages.
     html = html.trim().replace(/^(<p>\s*<br\s*\/?>\s*<\/p>)+/i, "");
 
     return html;
@@ -303,7 +313,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             title: documentTitle,
             content: currentContent,
             htmlContent: preparedHtml,
-            citations: citationsToSend,
+            // citations: citationsToSend, 
             metadata: {
               author,
               institution: affiliation,
@@ -312,36 +322,23 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
               runningHead,
               date,
             },
-            citationPolicy: {
-              ...citationPolicy,
-              violations: auditResult?.violations || [], // Pass violations for backend annotation
-            },
           },
           fileType: `export-${selectedFormat}`,
           userId: userId,
-          format: selectedFormat,
         });
 
-        const data = await response.json();
-
-        if (!data.success || !data.result?.downloadUrl) {
-          throw new Error(getErrorMessage(data, "Failed to generate download URL"));
-        }
-
+        // apiClient throws on errors, so we can assume response.ok is true here
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        
         // Primary document download
-        await triggerDownload(
-          data.result.downloadUrl,
-          `${documentTitle}.${selectedFormat}`,
-        );
-
-        // Handle dual-download for certificate
-        if (data.result.certificateDownloadUrl) {
-          await new Promise((resolve) => setTimeout(resolve, 800)); // Brief stagger
-          await triggerDownload(
-            data.result.certificateDownloadUrl,
-            `${documentTitle.replace(/[^a-zA-Z0-9-_]/g, "_")}_Authorship_Certificate.pdf`,
-          );
-        }
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `${documentTitle.replace(/[^a-zA-Z0-9-_]/g, "_")}.${selectedFormat}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
 
         toast({
           title: "Download Started",
@@ -638,9 +635,10 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     __html: (() => {
                       let html = editor?.getHTML() || currentHtmlContent || "";
 
-                      // 1. Resolve Citation Tokens
+                      // 1. Resolve Citation Nodes — match <a data-citation-id="...">...</a>
+                      // CitationNode.renderHTML outputs: <a class="citation-node" data-citation-id="KEY" ...>(Smith, 2023)</a>
                       const tokenRegex =
-                        /<span\s+data-cite="([^"]+)"[^>]*>(.*?)<\/span>/g;
+                        /<a[^>]+data-citation-id="([^"]+)"[^>]*>([^<]*)<\/a>/g;
                       html = html.replace(
                         tokenRegex,
                         (match, key, existingText) => {
@@ -651,26 +649,27 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                             meta.authors.length > 0 &&
                             meta.year
                           ) {
-                            const author =
-                              meta.authors?.[0]?.split(",")?.[0]?.trim() ||
-                              meta.authors?.[0] ||
-                              "Unknown";
-
                             const style =
                               (project.citation_style?.toUpperCase() ||
                                 "APA") as any;
-                            return formatCitation(
+                            const formatted = formatCitation(
                               {
                                 title: meta.sourceTitle || "",
                                 authors: meta.authors || [],
                                 year: meta.year,
+                                journal: meta.metadata?.journal,
+                                doi: meta.doi,
                                 ...meta.metadata,
                               },
                               style,
                               "in-text",
                             );
+                            return `<span style="color:#2563eb; font-weight:500;">${formatted}</span>`;
                           }
-                          return existingText;
+                          // Fallback: keep the existing link text, styled blue
+                          return existingText
+                            ? `<span style="color:#2563eb; font-weight:500;">${existingText}</span>`
+                            : match;
                         },
                       );
 

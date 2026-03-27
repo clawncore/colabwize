@@ -100,6 +100,8 @@ export class ConfigService {
    * Get the reCAPTCHA v3 Site Key
    */
   static getRecaptchaSiteKey(): string {
+    if (this.getNodeEnv() === "development") return "";
+    
     return (
       process.env.REACT_APP_RECAPTCHA_SITE_KEY ||
       "6LfAnpgsAAAAAPse1qAZ1kReTvWaM_ThzjjRjNYv"
@@ -110,6 +112,8 @@ export class ConfigService {
    * Get the reCAPTCHA v2 Site Key (Checkbox)
    */
   static getRecaptchaV2SiteKey(): string {
+    if (this.getNodeEnv() === "development") return "";
+
     return (
       process.env.REACT_APP_RC_V2_SITE ||
       "" // Default to empty, user must provide this for v2 to work

@@ -1,3 +1,4 @@
+// Force rebuild to activate new citation patterns - 2026-03-27-10-52
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";

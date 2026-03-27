@@ -8,6 +8,16 @@
  */
 export function loadRecaptchaScript(siteKey: string): Promise<void> {
   return new Promise((resolve, reject) => {
+    // Bypass in development
+    if (
+      process.env.NODE_ENV === "development" ||
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+    ) {
+      resolve();
+      return;
+    }
+
     // Check if script already exists
     if (document.getElementById("recaptcha-script")) {
       resolve();
@@ -97,6 +107,16 @@ export async function getRecaptchaToken(
   siteKey: string,
   action: string = "homepage",
 ): Promise<string> {
+  // Bypass in development
+  if (
+    process.env.NODE_ENV === "development" ||
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+  ) {
+    console.log("[reCAPTCHA] Bypassing token generation in development mode.");
+    return "dev-token-bypassed";
+  }
+
   try {
     await loadRecaptchaScript(siteKey);
   } catch (err) {

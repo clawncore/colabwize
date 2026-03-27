@@ -90,6 +90,7 @@ export const CitationNode = Node.create<CitationNodeOptions>({
                 rel: url ? "noopener noreferrer" : undefined,
                 style: `color:#2563eb; font-weight:500; cursor:pointer; text-decoration:none;`,
             }),
+            displayText,
         ];
     },
 

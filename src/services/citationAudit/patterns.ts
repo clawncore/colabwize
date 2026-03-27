@@ -35,8 +35,8 @@ export function extractPatterns(
   }
 
   // APA e.g. (Smith, 2023) or (Smith et al., 2023)
-  // Use restrictive negative lookahead/character classes to prevent catastrophic backtracking
-  const apaRegex = /\([^()]{2,150}(?:19|20)\d{2}[a-z]?(?:\s*,?\s*[^)]*)?\)/g;
+  // Must start with an uppercase letter indicating an Author name
+  const apaRegex = /\([A-Z][^()]{1,100}(?:,\s*(?:19|20)\d{2}[a-z]?)(?:\s*,?\s*[^)]*)?\)/g;
   while ((m = apaRegex.exec(text)) !== null) {
     if (m.index === apaRegex.lastIndex) apaRegex.lastIndex++;
     matches.push({
@@ -47,14 +47,21 @@ export function extractPatterns(
     });
   }
 
-  // MLA e.g. (Smith) or (Smith and Doe) or (Smith et al.)
-  const mlaRegex = /\([^()]{2,100}(?:et al\.|and\s+[^()]+)?\)/g;
+  // MLA e.g. (Smith 42) or (Smith et al.)
+  // Must start with Uppercase, no year, and either 'et al.' or 'and' or a number (page) at the end
+  const mlaRegex = /\([A-Z][^()]{1,100}(?:\s+et al\.|\s+and\s+[^()]+|\s+\d+)\)/g;
   while ((m = mlaRegex.exec(text)) !== null) {
     if (m.index === mlaRegex.lastIndex) mlaRegex.lastIndex++;
-    // Only count if it DOES NOT contain a year (otherwise it's APA/Chicago)
+    // Only count if it DOES NOT contain a full year (otherwise it's APA/Chicago)
     if (!m[0].match(/\d{4}/)) {
       const inner = m[0].slice(1, -1);
       if (isStandaloneUppercaseAbbreviation(inner)) continue;
+      
+      // Additional check: exclude common abbreviations that start with Uppercase but aren't names
+      const commonFalsePositives = ["PrEP", "ART", "HIV", "U=U", "Table", "Figure", "Fig."];
+      if (commonFalsePositives.includes(inner)) continue;
+      if (inner.toLowerCase().startsWith("e.g.") || inner.toLowerCase().startsWith("i.e.")) continue;
+
       matches.push({
         patternType: "AUTHOR_ONLY",
         start: m.index,
@@ -65,7 +72,8 @@ export function extractPatterns(
   }
 
   // Chicago e.g. (Smith 2023) - Note the lack of comma
-  const chicagoRegex = /\([^(),]{2,100}\s+(?:19|20)\d{2}[a-z]?\)/g;
+  // Must start with Uppercase letter
+  const chicagoRegex = /\([A-Z][a-zÀ-ÿ-]+(?:\s+et al\.)?\s+(?:19|20)\d{2}[a-z]?\)/g;
   while ((m = chicagoRegex.exec(text)) !== null) {
     if (m.index === chicagoRegex.lastIndex) chicagoRegex.lastIndex++;
     matches.push({
