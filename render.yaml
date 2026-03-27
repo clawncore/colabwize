@@ -6,7 +6,7 @@ services:
     repo: https://github.com/clawncore/colabwize.git
     branch: main
     rootDir: backend
-    buildCommand: npm install && npm run build
+    buildCommand: chmod +x scripts/setup-pandoc.sh && ./scripts/setup-pandoc.sh && npm install && npm run build
     startCommand: npm start
     plan: starter
     healthCheckPath: /health
