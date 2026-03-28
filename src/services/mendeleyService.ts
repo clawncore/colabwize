@@ -45,7 +45,8 @@ export class MendeleyService {
    */
   static getConnectUrl(): string {
     const apiUrl = process.env.REACT_APP_API_URL || "https://api.colabwize.com";
-    return `${apiUrl}/api/auth/mendeley/connect`;
+    const token = localStorage.getItem("token");
+    return `${apiUrl}/api/auth/mendeley/connect?token=${token}`;
   }
 }
 

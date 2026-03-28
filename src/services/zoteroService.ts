@@ -161,7 +161,8 @@ export class ZoteroService {
    */
   static getConnectUrl(): string {
     const apiUrl = process.env.REACT_APP_API_URL || "https://api.colabwize.com";
-    return `${apiUrl}/api/auth/zotero/connect`;
+    const token = localStorage.getItem("token");
+    return `${apiUrl}/api/auth/zotero/connect?token=${token}`;
   }
 }
 
