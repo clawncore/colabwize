@@ -42,6 +42,22 @@ export class MendeleyService {
   }
 
   /**
+   * Import specific items from Mendeley to a ColabWize project
+   */
+  static async importItems(projectId: string, items: MendeleyItem[]): Promise<any> {
+    try {
+      const response = await apiClient.post("/api/mendeley/import", {
+        projectId,
+        items,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Failed to import Mendeley items:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Get the URL to initiate Mendeley OAuth connection
    */
   static async getConnectUrl(): Promise<string> {

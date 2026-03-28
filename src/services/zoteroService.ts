@@ -82,7 +82,7 @@ export class ZoteroService {
   static async getLibrary(): Promise<ZoteroItem[]> {
     try {
       const response = await apiClient.get("/api/zotero/library");
-      return response.items || [];
+      return Array.isArray(response) ? response : (response.items || []);
     } catch (error) {
       console.error("Failed to fetch Zotero library:", error);
       throw error;
@@ -92,11 +92,11 @@ export class ZoteroService {
   /**
    * Import specific items from Zotero to a ColabWize project
    */
-  static async importItems(projectId: string, itemKeys: string[]): Promise<any> {
+  static async importItems(projectId: string, items: ZoteroItem[]): Promise<any> {
     try {
       const response = await apiClient.post("/api/zotero/import", {
         projectId,
-        itemKeys,
+        items,
       });
       return response.data;
     } catch (error) {

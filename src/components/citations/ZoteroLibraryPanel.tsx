@@ -71,7 +71,10 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
   const handleImport = async (itemKey: string) => {
     setImporting(prev => [...prev, itemKey]);
     try {
-      await ZoteroService.importItems(projectId, [itemKey]);
+      const itemToImport = items.find(i => i.key === itemKey);
+      if (!itemToImport) throw new Error("Item not found");
+      
+      await ZoteroService.importItems(projectId, [itemToImport]);
       toast({
         title: "Success",
         description: "Reference imported to project library.",

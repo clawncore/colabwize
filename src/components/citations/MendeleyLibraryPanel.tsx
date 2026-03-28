@@ -64,8 +64,10 @@ export const MendeleyLibraryPanel: React.FC<MendeleyLibraryPanelProps> = ({
   const handleImport = async (itemId: string) => {
     setImporting(prev => [...prev, itemId]);
     try {
-      // In a real integration, we'd trigger an import endpoint
-      // await MendeleyService.importItems(projectId, [itemId]);
+      const itemToImport = items.find(i => i.id === itemId);
+      if (!itemToImport) throw new Error("Item not found");
+
+      await MendeleyService.importItems(projectId, [itemToImport]);
       toast({
         title: "Success",
         description: "Reference imported to project library.",
