@@ -1,4 +1,5 @@
 import { apiClient } from "./apiClient";
+import { supabase } from "../lib/supabase/client";
 
 export interface MendeleyItem {
   id: string;
@@ -43,9 +44,10 @@ export class MendeleyService {
   /**
    * Get the URL to initiate Mendeley OAuth connection
    */
-  static getConnectUrl(): string {
+  static async getConnectUrl(): Promise<string> {
     const apiUrl = process.env.REACT_APP_API_URL || "https://api.colabwize.com";
-    const token = localStorage.getItem("token");
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token || "";
     return `${apiUrl}/api/auth/mendeley/connect?token=${token}`;
   }
 }

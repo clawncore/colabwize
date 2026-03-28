@@ -155,9 +155,9 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
         </p>
         <Button 
           className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
-          onClick={() => {
+          onClick={async () => {
             if (!isConnected) {
-              window.location.href = ZoteroService.getConnectUrl();
+              window.location.href = await ZoteroService.getConnectUrl();
             } else {
               fetchLibrary();
             }

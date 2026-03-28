@@ -643,14 +643,14 @@ const AccountSettingsPage: React.FC = () => {
               <Button
                 variant={user?.zotero_user_id ? "outline" : "default"}
                 className={user?.zotero_user_id ? "border-red-200 text-red-600 hover:bg-red-50" : "bg-red-600 hover:bg-red-700 text-white"}
-                onClick={() => {
+                onClick={async () => {
                   if (user?.zotero_user_id) {
                     toast({
                       title: "Vault Integration",
                       description: "To disconnect your vault, please contact support or revoke access in your library settings.",
                     });
                   } else {
-                    window.location.href = ZoteroService.getConnectUrl();
+                    window.location.href = await ZoteroService.getConnectUrl();
                   }
                 }}
               >
@@ -700,14 +700,14 @@ const AccountSettingsPage: React.FC = () => {
               <Button
                 variant={user?.mendeley_access_token ? "outline" : "default"}
                 className={user?.mendeley_access_token ? "border-blue-200 text-blue-600 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700 text-white"}
-                onClick={() => {
+                onClick={async () => {
                   if (user?.mendeley_access_token) {
                     toast({
                       title: "Mendeley Integration",
                       description: "To disconnect Mendeley, please contact support or revoke access in your library settings.",
                     });
                   } else {
-                    window.location.href = MendeleyService.getConnectUrl();
+                    window.location.href = await MendeleyService.getConnectUrl();
                   }
                 }}
               >

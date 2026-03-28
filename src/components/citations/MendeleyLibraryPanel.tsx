@@ -116,9 +116,9 @@ export const MendeleyLibraryPanel: React.FC<MendeleyLibraryPanelProps> = ({
         </p>
         <Button 
           className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-          onClick={() => {
+          onClick={async () => {
             if (!isConnected) {
-              window.location.href = MendeleyService.getConnectUrl();
+              window.location.href = await MendeleyService.getConnectUrl();
             } else {
               fetchLibrary();
             }

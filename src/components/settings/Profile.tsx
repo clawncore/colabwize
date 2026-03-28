@@ -507,9 +507,9 @@ export default function Profile() {
               <Button
                 variant={(profile as any).zotero_user_id ? "outline" : "default"}
                 className={(profile as any).zotero_user_id ? "border-red-100 text-red-600 hover:bg-red-50" : "bg-red-600 hover:bg-red-700 text-white"}
-                onClick={() => {
+                onClick={async () => {
                   if (!(profile as any).zotero_user_id) {
-                    window.location.href = ZoteroService.getConnectUrl();
+                    window.location.href = await ZoteroService.getConnectUrl();
                   }
                 }}
               >
@@ -532,9 +532,9 @@ export default function Profile() {
               <Button
                 variant={(profile as any).mendeley_access_token ? "outline" : "default"}
                 className={(profile as any).mendeley_access_token ? "border-blue-100 text-blue-600 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700 text-white"}
-                onClick={() => {
+                onClick={async () => {
                   if (!(profile as any).mendeley_access_token) {
-                    window.location.href = MendeleyService.getConnectUrl();
+                    window.location.href = await MendeleyService.getConnectUrl();
                   }
                 }}
               >
