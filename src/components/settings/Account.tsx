@@ -74,7 +74,7 @@ const AccountSettingsPage: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("zotero_success") === "true") {
       toast({
-        title: "Vault Connected",
+        title: "Zotero Connected",
         description: "Your research library has been successfully linked.",
       });
       // Clean up URL
@@ -343,10 +343,10 @@ const AccountSettingsPage: React.FC = () => {
       });
       setUser({ ...user, zotero_auto_sync: newValue });
       toast({
-        title: newValue ? "Auto-Vaulting Enabled" : "Auto-Vaulting Disabled",
+        title: newValue ? "Zotero Auto-Sync Enabled" : "Zotero Auto-Sync Disabled",
         description: newValue 
           ? "New citations will now be automatically added to your Zotero."
-          : "Auto-vaulting has been turned off.",
+          : "Zotero auto-sync has been turned off.",
       });
     } catch (error: any) {
       toast({
@@ -444,7 +444,7 @@ const AccountSettingsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Linked Vault Account */}
+              {/* Linked Zotero Account */}
               {user?.zotero_user_id && (
                 <div className="flex items-center justify-between p-3 bg-red-50/30 rounded-lg border border-red-50">
                   <div className="flex items-center gap-3">
@@ -635,7 +635,7 @@ const AccountSettingsPage: React.FC = () => {
                   <h3 className="font-semibold text-gray-900">Zotero</h3>
                   <p className="text-sm text-gray-500">
                     {user?.zotero_user_id 
-                      ? `Vault is active and synced.` 
+                      ? `Zotero is active and synced.` 
                       : "Sync your research library directly"}
                   </p>
                 </div>
@@ -646,8 +646,8 @@ const AccountSettingsPage: React.FC = () => {
                 onClick={async () => {
                   if (user?.zotero_user_id) {
                     toast({
-                      title: "Vault Integration",
-                      description: "To disconnect your vault, please contact support or revoke access in your library settings.",
+                      title: "Zotero Integration",
+                      description: "To disconnect your Zotero, please contact support or revoke access in your library settings.",
                     });
                   } else {
                     window.location.href = await ZoteroService.getConnectUrl();
@@ -661,9 +661,9 @@ const AccountSettingsPage: React.FC = () => {
             {user?.zotero_user_id && (
               <div className="mt-4 p-4 bg-red-50/20 rounded-lg border border-red-100 flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900">Automated Vaulting</h4>
+                  <h4 className="text-sm font-semibold text-gray-900">Automated Zotero Sync</h4>
                   <p className="text-xs text-gray-500 mt-1">
-                    Automatically synchronize new citations from your research to your master library.
+                    Automatically synchronize new citations from your research to your Zotero library.
                   </p>
                 </div>
                 <div className="flex items-center">

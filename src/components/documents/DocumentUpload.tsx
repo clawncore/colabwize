@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { documentService } from "../../services/documentService";
 import ZoteroService from "../../services/zoteroService";
 import { MendeleyService } from "../../services/mendeleyService";
-import { useUser } from "../../services/useUser";
+import { useProfile } from "../../hooks/useProfile";
 import { ZoteroIcon } from "../common/ZoteroIcon";
 import { MendeleyIcon } from "../common/MendeleyIcon";
 import JSZip from "jszip";
@@ -49,7 +49,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   projectId,
   workspaceId,
 }) => {
-  const { user } = useUser();
+  const { profile: user, loading: isProfileLoading } = useProfile();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"local" | "zotero" | "mendeley">("local");
   const [isNotLinked, setIsNotLinked] = useState(false);
@@ -82,6 +82,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
   // Handle Tab Switching
   useEffect(() => {
+    if (isProfileLoading) return;
+
     setFile(null);
     setTitle("");
     setDescription("");
@@ -106,7 +108,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       }
       fetchMendeleyLibrary();
     }
-  }, [activeTab, user]);
+  }, [activeTab, user, isProfileLoading]);
 
   const fetchZoteroLibrary = async () => {
     setIsLoadingLibrary(true);
@@ -343,7 +345,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             }`}
           >
             <ZoteroIcon className="w-4 h-4" />
-            <span>Import from Zotero</span>
+            <span>Zotero</span>
           </button>
           
           <button
@@ -353,7 +355,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             }`}
           >
             <MendeleyIcon width={16} height={16} />
-            <span>Import from Mendeley</span>
+            <span>Mendeley</span>
           </button>
         </div>
       )}

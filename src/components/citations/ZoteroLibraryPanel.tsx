@@ -137,7 +137,7 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-white">
         <Loader2 className="w-8 h-8 text-red-600 animate-spin mb-4" />
-        <p className="text-gray-500 text-sm font-medium">Synchronizing Vault...</p>
+        <p className="text-gray-500 text-sm font-medium">Synchronizing Zotero...</p>
       </div>
     );
   }
@@ -153,8 +153,8 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
         </h3>
         <p className="text-sm text-gray-500 mb-6 max-w-[240px]">
           {isConnected 
-            ? "We couldn't find any items in your research vault. Add some references and refresh."
-            : "Setup your research vault to browse and import your master references directly into your projects."}
+            ? "We couldn't find any items in your Zotero library. Add some references and refresh."
+            : "Setup your Zotero library to browse and import your master references directly into your projects."}
         </p>
         <Button 
           className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
@@ -167,7 +167,7 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
           }}
         >
           {isConnected ? <RefreshCw className="w-4 h-4" /> : null}
-          {isConnected ? "Refresh Vault" : "Setup Vault"}
+          {isConnected ? "Refresh Zotero" : "Setup Zotero"}
         </Button>
       </div>
     );
@@ -313,7 +313,7 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
         <div className="flex gap-2.5">
           <Info className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
           <p className="text-[10px] text-red-800 leading-relaxed font-medium">
-            Vault items are imported as <strong>Trusted Sources</strong>. This boosts your citation accuracy and bypasses audit warnings.
+            Zotero items are imported as <strong>Trusted Sources</strong>. This boosts your citation accuracy and bypasses audit warnings.
           </p>
         </div>
       </div>
