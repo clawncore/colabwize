@@ -494,8 +494,8 @@ export default function Profile() {
             </h2>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-red-50">
-                  <VaultIcon className="h-full w-full" />
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-red-50 overflow-hidden">
+                  <ZoteroIcon className="w-full h-full object-contain scale-[1.3]" />
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900">Zotero</h3>
