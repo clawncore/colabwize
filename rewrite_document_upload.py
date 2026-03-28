@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import re
+
+new_content = """import React, { useState, useEffect } from "react";
 import { documentService } from "../../services/documentService";
-import ZoteroService from "../../services/zoteroService";
+import { zoteroService } from "../../services/zoteroService";
 import { MendeleyService } from "../../services/mendeleyService";
 import { useUser } from "../../services/useUser";
-import { ZoteroIcon } from "../common/ZoteroIcon";
-import { MendeleyIcon } from "../common/MendeleyIcon";
+import ZoteroIcon from "../common/ZoteroIcon";
+import MendeleyIcon from "../common/MendeleyIcon";
 import JSZip from "jszip";
 
 interface DocumentUploadProps {
@@ -33,7 +34,7 @@ const extractTextFromDocx = async (file: File): Promise<string> => {
             fullText += texts[j].textContent;
           }
         }
-        fullText += "\n";
+        fullText += "\\n";
       }
       return fullText;
     }
@@ -50,9 +51,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   workspaceId,
 }) => {
   const { user } = useUser();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"local" | "zotero" | "mendeley">("local");
-  const [isNotLinked, setIsNotLinked] = useState(false);
   
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
@@ -88,20 +87,17 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     setSelectedItem(null);
     setDocumentContent("");
     setPdfPreviewUrl(null);
-    setIsNotLinked(false);
     setError(null);
     
     if (activeTab === "zotero") {
       if (!user?.zotero_user_id) {
-        setIsNotLinked(true);
-        setError("Zotero account not linked. Please connect your Zotero account in Account Settings.");
+        setError("Zotero account not linked. Please connect Zotero in Account Settings.");
         return;
       }
       fetchZoteroLibrary();
     } else if (activeTab === "mendeley") {
       if (!user?.mendeley_access_token) {
-        setIsNotLinked(true);
-        setError("Mendeley account not linked. Please connect your Mendeley account in Account Settings.");
+        setError("Mendeley account not linked. Please connect Mendeley in Account Settings.");
         return;
       }
       fetchMendeleyLibrary();
@@ -111,7 +107,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const fetchZoteroLibrary = async () => {
     setIsLoadingLibrary(true);
     try {
-      const items = await ZoteroService.getLibrary();
+      const items = await zoteroService.getLibrary();
       // Filter out notes/attachments if needed, keep top-level items
       const mainItems = items.filter((i: any) => i.data.itemType !== "attachment" && i.data.itemType !== "note");
       setLibraryItems(mainItems);
@@ -148,7 +144,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       const year = item.data.date ? new Date(item.data.date).getFullYear() : "N/A";
       
       setDocumentContent(
-        `[Zotero Reference Preview]\n\nTitle: ${displayTitle}\nAuthors: ${authors}\nYear: ${year}\nItem Type: ${item.data.itemType}\n\nAbstract:\n${item.data.abstractNote || "No abstract available."}`
+        `[Zotero Reference Preview]\\n\\nTitle: ${displayTitle}\\nAuthors: ${authors}\\nYear: ${year}\\nItem Type: ${item.data.itemType}\\n\\nAbstract:\\n${item.data.abstractNote || "No abstract available."}`
       );
     } else if (source === "mendeley") {
       const displayTitle = item.title || "Untitled Reference";
@@ -158,7 +154,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       const authors = item.authors?.map((a: any) => `${a.first_name || ''} ${a.last_name || ''}`.trim()).join(", ") || "Unknown Authors";
       
       setDocumentContent(
-        `[Mendeley Reference Preview]\n\nTitle: ${displayTitle}\nAuthors: ${authors}\nYear: ${item.year || 'N/A'}\nItem Type: ${item.type}\n\nAbstract:\n${item.abstract || "No abstract available."}`
+        `[Mendeley Reference Preview]\\n\\nTitle: ${displayTitle}\\nAuthors: ${authors}\\nYear: ${item.year || 'N/A'}\\nItem Type: ${item.type}\\n\\nAbstract:\\n${item.abstract || "No abstract available."}`
       );
     }
   };
@@ -333,7 +329,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-            <span>Upload from PC</span>
+            <span>Upload New Document</span>
           </button>
           
           <button
@@ -343,7 +339,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             }`}
           >
             <ZoteroIcon className="w-4 h-4" />
-            <span>Import from Zotero</span>
+            <span>Import from Zotero Library</span>
           </button>
           
           <button
@@ -353,23 +349,14 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             }`}
           >
             <MendeleyIcon width={16} height={16} />
-            <span>Import from Mendeley</span>
+            <span>Import from Mendeley Library</span>
           </button>
         </div>
       )}
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm flex items-center justify-between gap-3">
-          <span>{error}</span>
-          {isNotLinked && (
-            <button
-              onClick={() => navigate("/dashboard/settings/account")}
-              className="flex-shrink-0 flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors whitespace-nowrap"
-            >
-              Connect in Settings
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-            </button>
-          )}
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
+          {error}
         </div>
       )}
 
@@ -567,3 +554,9 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     </div>
   );
 };
+"""
+
+with open("/home/clawncore/Desktop/colabwize/src/components/documents/DocumentUpload.tsx", "w") as f:
+    f.write(new_content)
+
+print("Rewrite of DocumentUpload.tsx complete.")

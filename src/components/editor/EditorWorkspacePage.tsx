@@ -11,6 +11,11 @@ import { AIChatPanel } from "../aichat/AIChatPanel";
 import TeamChat from "../workspace/chat/page";
 import { SourceDetailPanel } from "../citations/SourceDetailPanel";
 import { CitationAuditReportPanel } from "../audit/CitationAuditReportPanel";
+import { ZoteroLibraryPanel } from "../citations/ZoteroLibraryPanel";
+import { MendeleyLibraryPanel } from "../citations/MendeleyLibraryPanel";
+import { MendeleyIcon } from "../common/MendeleyIcon";
+import { ZoteroIcon } from "../common/ZoteroIcon";
+import { VaultIcon } from "../common/VaultIcon";
 import { Project, documentService } from "../../services/documentService";
 // Custom hook usage instead of direct service
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
@@ -99,6 +104,8 @@ const EditorWorkspacePage: React.FC = () => {
     | "research-gaps"
     | "search-alerts"
     | "research-assistant"
+    | "zotero"
+    | "mendeley"
     | null
   >(null);
   const [leftPanelData, setLeftPanelData] = useState<any>(null);
@@ -951,6 +958,66 @@ const EditorWorkspacePage: React.FC = () => {
                 </div>
               )}
 
+              {selectedProject?.linked_library === "zotero" && (
+              <button
+                onClick={() => {
+                  setActiveLeftPanel("zotero");
+                  setIsLeftSidebarOpen(true);
+                }}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "zotero"
+                    ? "bg-red-50 text-red-600 border border-red-100"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
+                title={!isNavRailExpanded ? "Zotero Library" : ""}
+              >
+                <div className="relative">
+                  <ZoteroIcon
+                    className={`w-4 h-4 flex-shrink-0`}
+                  />
+                  {!user?.zotero_user_id && (
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full border border-white" />
+                  )}
+                </div>
+                <div
+                  className={`flex items-center justify-between w-full whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>
+                  <span className="flex items-center gap-2">
+                    Zotero
+                  </span>
+                </div>
+              </button>
+              )}
+
+              {selectedProject?.linked_library === "mendeley" && (
+              <button
+                onClick={() => {
+                  setActiveLeftPanel("mendeley");
+                  setIsLeftSidebarOpen(true);
+                }}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "mendeley"
+                    ? "bg-blue-50 text-blue-600 border border-blue-100"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
+                title={!isNavRailExpanded ? "Mendeley Library" : ""}
+              >
+                <div className="relative">
+                  <MendeleyIcon
+                    className={`w-4 h-4 flex-shrink-0`}
+                  />
+                  {!user?.mendeley_access_token && (
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full border border-white" />
+                  )}
+                </div>
+                <div
+                  className={`flex items-center justify-between w-full whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>
+                  <span className="flex items-center gap-2">
+                    Mendeley
+                  </span>
+                </div>
+              </button>
+              )}
+
               <button
                 data-tour="outline-builder"
                 onClick={() => {
@@ -1355,6 +1422,27 @@ const EditorWorkspacePage: React.FC = () => {
                       />
                     </div>
                   )}
+
+                  {activeLeftPanel === "zotero" && selectedProject && (
+                    <div className="flex-1 overflow-hidden flex flex-col bg-white">
+                      <ZoteroLibraryPanel 
+                        projectId={selectedProject.id} 
+                        isConnected={!!user?.zotero_user_id}
+                        onImportSuccess={reloadProjectCitations}
+                      />
+                    </div>
+                  )}
+
+                  {activeLeftPanel === "mendeley" && selectedProject && (
+                    <div className="flex-1 overflow-hidden flex flex-col bg-white">
+                      <MendeleyLibraryPanel 
+                        projectId={selectedProject.id} 
+                        isConnected={!!user?.mendeley_access_token}
+                        onImportSuccess={reloadProjectCitations}
+                      />
+                    </div>
+                  )}
+
                   {/* Subtle shadow overlay to give depth to the opening panel */}
                   <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-black/5 to-transparent pointer-events-none" />
                 </motion.div>

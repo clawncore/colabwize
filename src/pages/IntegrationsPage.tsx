@@ -181,9 +181,9 @@ function FeaturesPresentationFlow() {
       icon: Plug,
       title: "Reference Management",
       description:
-        "Import your existing bibliographies from Zotero, Mendeley, and EndNote via standard BibTeX and RIS formats.",
+        "Import your existing bibliographies from our Research Vault, Mendeley, and EndNote via standard BibTeX and RIS formats.",
       benefits: [
-        "Zotero & Mendeley compatibility",
+        "Vault & Mendeley compatibility",
         "BibTeX and RIS format support",
         "Intelligent citation normalization",
         "Literature matrix generation",

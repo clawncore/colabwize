@@ -8,12 +8,18 @@ import {
   User,
   Phone,
   BookOpen,
+  BadgeCheck,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import AccountService from "../../services/accountService";
+import ZoteroService from "../../services/zoteroService";
 import { useToast } from "../../hooks/use-toast";
 import { supabase } from "../../lib/supabase/client";
 import { TwoFactorSetup } from "./TwoFactorSetup";
+import { VaultIcon } from "../common/VaultIcon";
+import { MendeleyService } from "../../services/mendeleyService";
+import { MendeleyIcon } from "../common/MendeleyIcon";
+import { ZoteroIcon } from "../common/ZoteroIcon";
 
 interface UserAccount {
   id: string;
@@ -26,6 +32,11 @@ interface UserAccount {
   retention_period: number | null;
   affiliate_ref: string | null;
   two_factor_enabled: boolean;
+  zotero_user_id?: string | null;
+  zotero_api_key?: string | null;
+  zotero_auto_sync?: boolean;
+  mendeley_access_token?: string | null;
+  mendeley_auto_sync?: boolean;
   created_at: string;
   updated_at: string;
   subscription?: {
@@ -58,6 +69,26 @@ const AccountSettingsPage: React.FC = () => {
 
   const { toast } = useToast();
 
+  // Handle Zotero and Mendeley callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("zotero_success") === "true") {
+      toast({
+        title: "Vault Connected",
+        description: "Your research library has been successfully linked.",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get("mendeley_success") === "true") {
+      toast({
+        title: "Mendeley Connected",
+        description: "Your Mendeley library has been successfully linked.",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [toast]);
+
   // Fetch user account details
   useEffect(() => {
     const fetchAccountDetails = async () => {
@@ -70,7 +101,7 @@ const AccountSettingsPage: React.FC = () => {
           throw new Error("User not authenticated");
         }
         const userData = await AccountService.getUserAccount();
-        setUser(userData);
+        setUser(userData as any);
       } catch (error: any) {
         console.error("Error fetching account details:", error);
         toast({
@@ -302,6 +333,54 @@ const AccountSettingsPage: React.FC = () => {
     setEmailChangeStep(1);
   };
 
+  const handleToggleAutoSync = async () => {
+    if (!user) return;
+    
+    const newValue = !user.zotero_auto_sync;
+    try {
+      await AccountService.updateProfile({
+        zotero_auto_sync: newValue
+      });
+      setUser({ ...user, zotero_auto_sync: newValue });
+      toast({
+        title: newValue ? "Auto-Vaulting Enabled" : "Auto-Vaulting Disabled",
+        description: newValue 
+          ? "New citations will now be automatically added to your Zotero."
+          : "Auto-vaulting has been turned off.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: getErrorMessage(error, "Failed to update sync settings."),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleMendeleyAutoSync = async () => {
+    if (!user) return;
+    
+    const newValue = !user.mendeley_auto_sync;
+    try {
+      await AccountService.updateProfile({
+        mendeley_auto_sync: newValue
+      });
+      setUser({ ...user, mendeley_auto_sync: newValue });
+      toast({
+        title: newValue ? "Mendeley Auto-Sync Enabled" : "Mendeley Auto-Sync Disabled",
+        description: newValue 
+          ? "New citations will now be automatically added to your Mendeley library."
+          : "Mendeley auto-sync has been turned off.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: getErrorMessage(error, "Failed to update sync settings."),
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -340,6 +419,68 @@ const AccountSettingsPage: React.FC = () => {
                 onClick={handleChangeEmail}>
                 Change Email
               </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Verified Accounts */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="p-6">
+            <h2 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+              Verified Accounts
+            </h2>
+            <div className="space-y-4">
+              {/* Primary Email */}
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">{user?.email}</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-md border border-green-100">
+                  <BadgeCheck className="w-3.5 h-3.5" />
+                  Verified
+                </div>
+              </div>
+
+              {/* Linked Vault Account */}
+              {user?.zotero_user_id && (
+                <div className="flex items-center justify-between p-3 bg-red-50/30 rounded-lg border border-red-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <ZoteroIcon width={32} height={32} />
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700 block">Linked Zotero</span>
+                      <span className="text-[10px] text-gray-400">Status: Verified</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-md border border-green-100">
+                    <BadgeCheck className="w-3.5 h-3.5" />
+                    Verified
+                  </div>
+                </div>
+              )}
+
+              {/* Linked Mendeley Account */}
+              {user?.mendeley_access_token && (
+                <div className="flex items-center justify-between p-3 bg-blue-50/30 rounded-lg border border-blue-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center p-1.5 shadow-sm border border-blue-50 text-blue-600">
+                      <MendeleyIcon className="w-full h-full" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-700 block">Linked Mendeley</span>
+                      <span className="text-[10px] text-gray-400">Status: Verified</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-md border border-green-100">
+                    <BadgeCheck className="w-3.5 h-3.5" />
+                    Verified
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -450,7 +591,7 @@ const AccountSettingsPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="text-blue-600 absolute inset-y-0 right-0 pr-3 flex items-center">
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center">
                     {showConfirmPassword ? (
                       <EyeOff className="h-5 w-5 text-gray-400 " />
                     ) : (
@@ -479,6 +620,128 @@ const AccountSettingsPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Integrations Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="p-6">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">
+              Integrations
+            </h2>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-red-50 overflow-hidden">
+                  <ZoteroIcon className="w-full h-full object-contain scale-[1.3]" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Zotero</h3>
+                  <p className="text-sm text-gray-500">
+                    {user?.zotero_user_id 
+                      ? `Vault is active and synced.` 
+                      : "Sync your research library directly"}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={user?.zotero_user_id ? "outline" : "default"}
+                className={user?.zotero_user_id ? "border-red-200 text-red-600 hover:bg-red-50" : "bg-red-600 hover:bg-red-700 text-white"}
+                onClick={() => {
+                  if (user?.zotero_user_id) {
+                    toast({
+                      title: "Vault Integration",
+                      description: "To disconnect your vault, please contact support or revoke access in your library settings.",
+                    });
+                  } else {
+                    window.location.href = ZoteroService.getConnectUrl();
+                  }
+                }}
+              >
+                {user?.zotero_user_id ? "Connected" : "Setup Zotero"}
+              </Button>
+            </div>
+
+            {user?.zotero_user_id && (
+              <div className="mt-4 p-4 bg-red-50/20 rounded-lg border border-red-100 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900">Automated Vaulting</h4>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Automatically synchronize new citations from your research to your master library.
+                  </p>
+                </div>
+                <div className="flex items-center">
+                  <button
+                    onClick={handleToggleAutoSync}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                      user.zotero_auto_sync ? "bg-red-600" : "bg-gray-200"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        user.zotero_auto_sync ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 mt-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-blue-50 text-blue-600">
+                  <MendeleyIcon className="h-full w-full" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Mendeley</h3>
+                  <p className="text-sm text-gray-500">
+                    {user?.mendeley_access_token 
+                      ? `Mendeley is active and synced.` 
+                      : "Sync your Mendeley library directly"}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant={user?.mendeley_access_token ? "outline" : "default"}
+                className={user?.mendeley_access_token ? "border-blue-200 text-blue-600 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700 text-white"}
+                onClick={() => {
+                  if (user?.mendeley_access_token) {
+                    toast({
+                      title: "Mendeley Integration",
+                      description: "To disconnect Mendeley, please contact support or revoke access in your library settings.",
+                    });
+                  } else {
+                    window.location.href = MendeleyService.getConnectUrl();
+                  }
+                }}
+              >
+                {user?.mendeley_access_token ? "Connected" : "Setup Mendeley"}
+              </Button>
+            </div>
+
+            {user?.mendeley_access_token && (
+              <div className="mt-4 p-4 bg-blue-50/20 rounded-lg border border-blue-100 flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900">Automated Mendeley Sync</h4>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Automatically synchronize new citations from your research to your Mendeley library.
+                  </p>
+                </div>
+                <div className="flex items-center">
+                  <button
+                    onClick={handleToggleMendeleyAutoSync}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                      user.mendeley_auto_sync ? "bg-blue-600" : "bg-gray-200"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        user.mendeley_auto_sync ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Two-Factor Authentication */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <TwoFactorSetup
@@ -487,7 +750,7 @@ const AccountSettingsPage: React.FC = () => {
               // Refresh user data silently to prevent unmounting TwoFactorSetup
               // and losing the backup codes display state
               AccountService.getUserAccount()
-                .then((u) => setUser(u))
+                .then((u) => setUser(u as any))
                 .catch(console.error);
             }}
           />
@@ -589,12 +852,12 @@ const AccountSettingsPage: React.FC = () => {
                     </div>
                     <div className="mt-6 flex justify-between">
                       <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
+                        variant="outline"
                         onClick={cancelEmailChange}>
                         Cancel
                       </Button>
                       <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
                         onClick={handleSendEmailChangeOTP}
                         disabled={
                           otpLoading || !newEmail || newEmail === user?.email
@@ -650,12 +913,12 @@ const AccountSettingsPage: React.FC = () => {
                     </div>
                     <div className="mt-6 flex justify-between">
                       <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
+                        variant="outline"
                         onClick={cancelEmailChange}>
                         Cancel
                       </Button>
                       <Button
-                        className="bg-blue-600 hover:bg-blue-700 text-white mb-2"
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
                         onClick={handleVerifyEmailChangeOTP}
                         disabled={otpLoading || otpValue.length !== 6}>
                         {otpLoading ? (

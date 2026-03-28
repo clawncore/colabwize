@@ -17,6 +17,7 @@ export interface Project {
   originality_scans: any[];
   citations: any[];
   workspace_id?: string;
+  linked_library?: string | null;
 }
 
 interface UploadResponse {
@@ -37,6 +38,7 @@ export const documentService = {
     title: string,
     description: string = "",
     workspaceId?: string,
+    linkedLibrary?: string | null,
   ): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append("document", file);
@@ -44,6 +46,9 @@ export const documentService = {
     formData.append("description", description);
     if (workspaceId) {
       formData.append("workspaceId", workspaceId);
+    }
+    if (linkedLibrary) {
+      formData.append("linked_library", linkedLibrary);
     }
 
     try {
@@ -147,6 +152,7 @@ export const documentService = {
     content: any = null,
     projectId: string = "",
     workspaceId?: string,
+    linkedLibrary?: string | null,
   ): Promise<{ success: boolean; data?: Project; error?: string }> {
     try {
       const response = await apiClient.post("/api/documents/create", {
@@ -155,6 +161,7 @@ export const documentService = {
         content,
         projectId,
         workspace_id: workspaceId || null,
+        linked_library: linkedLibrary || null,
       });
       if (response.success && response.data) {
         response.data = this.normalizeProject(response.data);

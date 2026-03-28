@@ -5,6 +5,8 @@ import { useUser } from "../../services/useUser";
 import { ArrowLeftIcon } from "lucide-react";
 import { RenameProjectModal } from "../dashboard/RenameProjectModal";
 import { extractTextFromContent } from "../../utils/documentUtils";
+import { ZoteroIcon } from "../common/ZoteroIcon";
+import { MendeleyIcon } from "../common/MendeleyIcon";
 
 type DisplayMode = "grid" | "list";
 
@@ -243,6 +245,21 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                     : "border-gray-200"
                 }`}
                 onClick={() => handleProjectClick(project)}>
+                
+                {/* Source Icon (Top Left) */}
+                <div 
+                  className="absolute top-2 left-2 z-10 flex items-center justify-center p-1 bg-white/90 backdrop-blur-sm rounded-md shadow-sm border border-gray-100" 
+                  title={`Source: ${project.linked_library === 'zotero' ? 'Zotero' : project.linked_library === 'mendeley' ? 'Mendeley' : 'Local File'}`}
+                >
+                  {project.linked_library === 'zotero' ? (
+                    <ZoteroIcon width={16} height={16} />
+                  ) : project.linked_library === 'mendeley' ? (
+                    <MendeleyIcon width={16} height={16} />
+                  ) : (
+                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  )}
+                </div>
+
                 {/* Menu Icon */}
                 {showActions && (
                   <div className="absolute top-2 right-2 z-10">
@@ -432,6 +449,20 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                     : "hover:bg-gray-100 border border-gray-200"
                 }`}
                 onClick={() => handleListProjectClick(project)}>
+                
+                <div 
+                  className="mr-3 flex-shrink-0 flex items-center justify-center p-2 bg-gray-50 rounded-lg border border-gray-100"
+                  title={`Source: ${project.linked_library === 'zotero' ? 'Zotero' : project.linked_library === 'mendeley' ? 'Mendeley' : 'Local File'}`}
+                >
+                  {project.linked_library === 'zotero' ? (
+                    <ZoteroIcon width={20} height={20} />
+                  ) : project.linked_library === 'mendeley' ? (
+                    <MendeleyIcon width={20} height={20} />
+                  ) : (
+                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  )}
+                </div>
+
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-gray-900 truncate">
                     {project.title}

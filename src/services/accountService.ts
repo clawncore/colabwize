@@ -18,6 +18,11 @@ export interface ActualUserAccount {
   two_factor_enabled: boolean;
   created_at: string;
   updated_at: string;
+  zotero_user_id?: string | null;
+  zotero_api_key?: string | null;
+  zotero_auto_sync?: boolean;
+  mendeley_access_token?: string | null;
+  mendeley_auto_sync?: boolean;
   subscription?: {
     plan: string;
     status: string;
@@ -31,6 +36,8 @@ export interface UpdateAccountData {
   field_of_study?: string;
   email?: string;
   otp?: string;
+  zotero_auto_sync?: boolean;
+  mendeley_auto_sync?: boolean;
 }
 
 export interface ChangePasswordData {

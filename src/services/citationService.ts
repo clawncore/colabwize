@@ -395,7 +395,7 @@ export class CitationService {
   static async verifySingleCitation(citation: {
     title: string;
     doi?: string;
-  }): Promise<{ isReliable: boolean; source: string | null }> {
+  }): Promise<{ vault_verified: boolean; source: string | null }> {
     try {
       const response = await apiClient.post(
         "/api/citations/verify-single",
@@ -404,7 +404,7 @@ export class CitationService {
       return response.data;
     } catch (e: any) {
       console.error("Single citation verification failed", e);
-      return { isReliable: false, source: null };
+      return { vault_verified: false, source: null };
     }
   }
 

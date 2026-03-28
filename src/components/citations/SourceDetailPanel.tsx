@@ -15,6 +15,9 @@ import {
 } from "lucide-react";
 import { ConsensusBadge } from "./ConsensusBadge";
 import { apiClient } from "../../services/apiClient";
+import { ZoteroService } from "../../services/zoteroService";
+import { VaultIcon } from "../common/VaultIcon";
+import { useToast } from "../../hooks/use-toast";
 
 export interface StoredCitation {
   id?: string;
@@ -85,6 +88,7 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
   const themes = ["Gap", "Methodology", "Result"];
   const [isSaving, setIsSaving] = React.useState(false);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const { toast } = useToast();
 
   // Consensus Meter State
   const [consensusClaim, setConsensusClaim] = React.useState("");
@@ -205,6 +209,41 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
     }
   };
 
+  const [isSyncing, setIsSyncing] = React.useState(false);
+
+  const handleSyncToZotero = async () => {
+    if (!source.formatted_citations?.key || isSyncing) return;
+
+    setIsSyncing(true);
+    try {
+      const itemKey = source.formatted_citations.key;
+      
+      // Prepare update payload
+      // Zotero items have a 'data' field
+      const updatePayload = {
+        title: source.title,
+        date: source.year?.toString(),
+        abstractNote: source.abstract,
+      };
+
+      await ZoteroService.updateItem(itemKey, updatePayload);
+      
+      toast({
+        title: "Synced to Zotero",
+        description: "Metadata updated successfully in your Zotero library.",
+      });
+    } catch (err: any) {
+      console.error("Zotero sync failed", err);
+      toast({
+        title: "Sync Failed",
+        description: err.message || "Could not update Zotero item.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const isOpenAccess = false; // We don't have this metadata explicitly yet, but could check type.
 
   return (
@@ -230,7 +269,12 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
             {source.title}
           </h1>
           <div className="flex flex-wrap gap-2 text-xs mb-4">
-            {/* Badges */}
+            {(source as any).vault_verified && (
+              <span className="px-2 py-0.5 bg-red-50 text-red-700 rounded font-bold border border-red-100 uppercase tracking-wide flex items-center gap-1">
+                <VaultIcon className="w-3 h-3" /> Vault Verified
+              </span>
+            )}
+
             {source.source === "arxiv" ? (
               <span className="px-2 py-0.5 bg-orange-100 text-orange-800 rounded font-medium border border-orange-200 uppercase tracking-wide">
                 Preprint
@@ -523,12 +567,28 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
         </div>
 
         {/* External Action */}
-        <button
-          onClick={handleVisitSource}
-          className="w-full py-2.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
-          <ExternalLink className="w-4 h-4" />
-          Visit Source
-        </button>
+        <div className="flex flex-col gap-2 mt-2">
+          <button
+            onClick={handleVisitSource}
+            className="w-full py-2.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
+            <ExternalLink className="w-4 h-4" />
+            Visit Source
+          </button>
+          
+          {source.source === "Zotero" && (
+            <button
+              onClick={handleSyncToZotero}
+              disabled={isSyncing}
+              className="w-full py-2.5 bg-white border border-red-100 text-red-600 rounded-md text-sm font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2 shadow-sm">
+              {isSyncing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <VaultIcon className="w-4 h-4" />
+              )}
+              {isSyncing ? "Syncing..." : "Update Vault Record"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

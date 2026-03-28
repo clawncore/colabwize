@@ -1,5 +1,4 @@
 import { getErrorMessage } from "../utils/errorHandler";
-
 import { apiClient } from "./apiClient";
 
 interface ProfileData {
@@ -12,6 +11,8 @@ interface ProfileData {
   institution: string;
   location: string;
   avatarUrl?: string;
+  zotero_user_id?: string | null;
+  zotero_api_key?: string | null;
 }
 
 class ProfileService {
@@ -33,6 +34,8 @@ class ProfileService {
           institution: response.user.institution || "",
           location: response.user.location || "",
           avatarUrl: response.user.avatar_url || "",
+          zotero_user_id: response.user.zotero_user_id || null,
+          zotero_api_key: response.user.zotero_api_key || null,
         };
       }
 
@@ -47,6 +50,8 @@ class ProfileService {
         institution: "",
         location: "",
         avatarUrl: "",
+        zotero_user_id: null,
+        zotero_api_key: null,
       };
     } catch (error: any) {
       console.error("Error fetching profile:", error);
@@ -99,12 +104,8 @@ class ProfileService {
 
       // Check if the upload was successful
       if (!response.success && response.success !== undefined) {
-        // If response has success field, check it. 
-        // Note: apiClient usually returns parsed JSON.
         throw new Error(getErrorMessage(response, "Failed to upload avatar"));
       }
-      // If apiClient returns the object directly and it lacks success=false, good.
-      // But let's act defensively based on typical successful response structure { success: true, fileUrl: ... }
 
       return response.fileUrl;
     } catch (error) {
