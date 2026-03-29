@@ -66,7 +66,8 @@ export class GoogleDriveService {
     const apiUrl = process.env.REACT_APP_API_URL || "https://api.colabwize.com";
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token || "";
-    return `${apiUrl}/api/auth/google/connect?token=${token}`;
+    // Updated to hit /api/auth/google instead of /connect as requested
+    return `${apiUrl}/api/auth/google?token=${token}`;
   }
 }
 
