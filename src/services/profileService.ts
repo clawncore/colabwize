@@ -14,6 +14,7 @@ interface ProfileData {
   zotero_user_id?: string | null;
   zotero_api_key?: string | null;
   mendeley_access_token?: string | null;
+  google_access_token?: string | null;
 }
 
 class ProfileService {
@@ -38,6 +39,7 @@ class ProfileService {
           zotero_user_id: response.user.zotero_user_id || null,
           zotero_api_key: response.user.zotero_api_key || null,
           mendeley_access_token: response.user.mendeley_access_token || null,
+          google_access_token: response.user.google_access_token || null,
         };
       }
 
@@ -55,6 +57,7 @@ class ProfileService {
         zotero_user_id: null,
         zotero_api_key: null,
         mendeley_access_token: null,
+        google_access_token: null,
       };
     } catch (error: any) {
       console.error("Error fetching profile:", error);

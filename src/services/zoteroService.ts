@@ -166,6 +166,32 @@ export class ZoteroService {
     const token = session?.access_token || "";
     return `${apiUrl}/api/auth/zotero/connect?token=${token}`;
   }
+
+  /**
+   * Fetch user's Zotero collections
+   */
+  static async getCollections(): Promise<any[]> {
+    try {
+      const response = await apiClient.get("/api/zotero/collections");
+      return response || [];
+    } catch (error) {
+      console.error("Failed to fetch Zotero collections:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch items from a specific Zotero collection
+   */
+  static async getCollectionItems(collectionKey: string): Promise<ZoteroItem[]> {
+    try {
+      const response = await apiClient.get(`/api/zotero/collections/${collectionKey}/items`);
+      return Array.isArray(response) ? response : (response.items || []);
+    } catch (error) {
+      console.error("Failed to fetch Zotero collection items:", error);
+      throw error;
+    }
+  }
 }
 
 export default ZoteroService;

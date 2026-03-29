@@ -11,7 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
   FileIcon,
-  Download
+  Folder
 } from "lucide-react";
 import { ZoteroService, ZoteroItem } from "../../services/zoteroService";
 import { useToast } from "../../hooks/use-toast";
@@ -33,15 +33,33 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState<string[]>([]);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [attachments, setAttachments] = useState<Record<string, any[]>>({});
-  const [loadingAttachments, setLoadingAttachments] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [collections, setCollections] = useState<any[]>([]);
+  const [selectedCollectionKey, setSelectedCollectionKey] = useState<string | null>(null);
+  const [isCollectionsLoading, setIsCollectionsLoading] = useState(false);
   const { toast } = useToast();
+
+  const fetchCollections = async () => {
+    setIsCollectionsLoading(true);
+    try {
+      const colls = await ZoteroService.getCollections();
+      setCollections(colls);
+    } catch (error) {
+      console.error("Error fetching Zotero collections:", error);
+    } finally {
+      setIsCollectionsLoading(false);
+    }
+  };
 
   const fetchLibrary = async () => {
     setLoading(true);
     try {
-      const libraryItems = await ZoteroService.getLibrary();
+      let libraryItems;
+      if (selectedCollectionKey) {
+        libraryItems = await ZoteroService.getCollectionItems(selectedCollectionKey);
+      } else {
+        libraryItems = await ZoteroService.getLibrary();
+      }
       setItems(libraryItems);
     } catch (error) {
       console.error("Error fetching Zotero library:", error);
@@ -56,8 +74,11 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
   };
 
   useEffect(() => {
-    fetchLibrary();
-  }, []);
+    if (isConnected) {
+      fetchCollections();
+      fetchLibrary();
+    }
+  }, [isConnected, selectedCollectionKey]);
 
   const filteredItems = useMemo(() => {
     if (!searchQuery) return items;
@@ -92,44 +113,11 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
     }
   };
 
-  const toggleExpand = async (itemKey: string) => {
+  const toggleExpand = (itemKey: string) => {
     if (expandedItems.includes(itemKey)) {
       setExpandedItems(prev => prev.filter(key => key !== itemKey));
-      return;
-    }
-
-    setExpandedItems(prev => [...prev, itemKey]);
-
-    if (!attachments[itemKey]) {
-      setLoadingAttachments(prev => [...prev, itemKey]);
-      try {
-        const itemAttachments = await ZoteroService.getAttachments(itemKey);
-        setAttachments(prev => ({ ...prev, [itemKey]: itemAttachments }));
-      } catch (error) {
-        console.error("Failed to load attachments:", error);
-      } finally {
-        setLoadingAttachments(prev => prev.filter(key => key !== itemKey));
-      }
-    }
-  };
-
-  const handleImportPDF = async (attachment: any) => {
-    setImporting(prev => [...prev, attachment.key]);
-    try {
-      // Logic to trigger backend PDF proxy and save to SourceLibrary
-      // For now, we'll just open the proxy URL which triggers a download
-      // In a real implementation, we'd use a dedicated import endpoint
-      const apiUrl = process.env.REACT_APP_API_URL || "https://api.colabwize.com";
-      window.open(`${apiUrl}/api/zotero/file/${attachment.key}`, '_blank');
-      
-      toast({
-        title: "Download Started",
-        description: "Your research PDF is being downloaded.",
-      });
-    } catch (error) {
-      console.error("PDF import failed:", error);
-    } finally {
-      setImporting(prev => prev.filter(key => key !== attachment.key));
+    } else {
+      setExpandedItems(prev => [...prev, itemKey]);
     }
   };
 
@@ -197,11 +185,40 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
           <input
             type="text"
             placeholder="Search Zotero Library..."
-            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-red-100 placeholder:text-gray-400 transition-all"
+            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-red-100 placeholder:text-gray-400 transition-all mb-3"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
+        {isConnected && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <button
+              onClick={() => setSelectedCollectionKey(null)}
+              className={`px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all border ${
+                selectedCollectionKey === null
+                  ? "bg-red-600 text-white border-red-600 shadow-sm"
+                  : "bg-white text-gray-500 border-gray-100 hover:border-red-200"
+              }`}
+            >
+              All Items
+            </button>
+            {collections.map((coll) => (
+              <button
+                key={coll.key}
+                onClick={() => setSelectedCollectionKey(coll.key)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all border ${
+                  selectedCollectionKey === coll.key
+                    ? "bg-red-600 text-white border-red-600 shadow-sm"
+                    : "bg-white text-gray-500 border-gray-100 hover:border-red-200"
+                }`}
+              >
+                <Folder className="w-3 h-3" />
+                {coll.data.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 custom-scrollbar">
@@ -249,42 +266,17 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
 
                 <div className="flex items-center gap-2 mb-4 text-[10px] text-gray-400 font-medium">
                   {expandedItems.includes(item.key) ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  {attachments[item.key]?.length ? `${attachments[item.key].length} attachments` : 'View Attachments'}
+                  View Details
                 </div>
               </div>
-              
+
               {expandedItems.includes(item.key) && (
                 <div className="mb-4 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                  {loadingAttachments.includes(item.key) ? (
-                    <div className="flex items-center gap-2 py-2 px-3 bg-gray-50 rounded-xl">
-                      <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
-                      <span className="text-[10px] text-gray-400">Loading attachments...</span>
+                    <div className="py-2 px-3 bg-gray-50 rounded-xl text-[10px] text-gray-500">
+                      <strong>Journal:</strong> {item.data.publicationTitle || 'N/A'}<br/>
+                      <strong>Volume:</strong> {item.data.volume || 'N/A'} <strong>Issue:</strong> {item.data.issue || 'N/A'}<br/>
+                      <strong>DOI:</strong> {item.data.DOI || 'N/A'}
                     </div>
-                  ) : attachments[item.key]?.length === 0 ? (
-                    <div className="py-2 px-3 bg-gray-50 rounded-xl text-[10px] text-gray-400 italic">
-                      No attachments found
-                    </div>
-                  ) : (
-                    attachments[item.key]?.map((att) => (
-                      <div key={att.key} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-xl group/att">
-                        <div className="flex items-center gap-2 overflow-hidden mr-2">
-                          <FileIcon className={`w-3 h-3 shrink-0 ${att.data.contentType?.includes('pdf') ? 'text-red-500' : 'text-blue-500'}`} />
-                          <span className="text-[10px] text-gray-600 truncate font-medium">
-                            {att.data.filename || att.data.title || 'Attachment'}
-                          </span>
-                        </div>
-                        {att.data.itemType === 'attachment' && (
-                          <button 
-                            onClick={() => handleImportPDF(att)}
-                            className="p-1 text-gray-400 hover:text-red-600 transition-colors shrink-0"
-                            title="Download PDF"
-                          >
-                            <Download className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    ))
-                  )}
                 </div>
               )}
 

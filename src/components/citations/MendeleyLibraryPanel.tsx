@@ -6,7 +6,8 @@ import {
   Info,
   ChevronDown,
   ChevronUp,
-  Plus
+  Plus,
+  Folder
 } from "lucide-react";
 import { MendeleyService, MendeleyItem } from "../../services/mendeleyService";
 import { useToast } from "../../hooks/use-toast";
@@ -29,12 +30,32 @@ export const MendeleyLibraryPanel: React.FC<MendeleyLibraryPanelProps> = ({
   const [importing, setImporting] = useState<string[]>([]);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [folders, setFolders] = useState<any[]>([]);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [isFoldersLoading, setIsFoldersLoading] = useState(false);
   const { toast } = useToast();
+
+  const fetchFolders = async () => {
+    setIsFoldersLoading(true);
+    try {
+      const resp = await MendeleyService.getFolders();
+      setFolders(resp);
+    } catch (error) {
+      console.error("Error fetching Mendeley folders:", error);
+    } finally {
+      setIsFoldersLoading(false);
+    }
+  };
 
   const fetchLibrary = async () => {
     setLoading(true);
     try {
-      const libraryItems = await MendeleyService.getLibrary();
+      let libraryItems;
+      if (selectedFolderId) {
+        libraryItems = await MendeleyService.getFolderItems(selectedFolderId);
+      } else {
+        libraryItems = await MendeleyService.getLibrary();
+      }
       setItems(libraryItems);
     } catch (error) {
       console.error("Error fetching Mendeley library:", error);
@@ -49,8 +70,11 @@ export const MendeleyLibraryPanel: React.FC<MendeleyLibraryPanelProps> = ({
   };
 
   useEffect(() => {
-    fetchLibrary();
-  }, []);
+    if (isConnected) {
+      fetchFolders();
+      fetchLibrary();
+    }
+  }, [isConnected, selectedFolderId]);
 
   const filteredItems = useMemo(() => {
     if (!searchQuery) return items;
@@ -157,11 +181,40 @@ export const MendeleyLibraryPanel: React.FC<MendeleyLibraryPanelProps> = ({
           <input
             type="text"
             placeholder="Search Mendeley Library..."
-            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-100 placeholder:text-gray-400 transition-all"
+            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-100 placeholder:text-gray-400 transition-all mb-3"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
+        {isConnected && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <button
+              onClick={() => setSelectedFolderId(null)}
+              className={`px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all border ${
+                selectedFolderId === null
+                  ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                  : "bg-white text-gray-500 border-gray-100 hover:border-blue-200"
+              }`}
+            >
+              All Documents
+            </button>
+            {folders.map((folder) => (
+              <button
+                key={folder.id}
+                onClick={() => setSelectedFolderId(folder.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all border ${
+                  selectedFolderId === folder.id
+                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                    : "bg-white text-gray-500 border-gray-100 hover:border-blue-200"
+                }`}
+              >
+                <Folder className="w-3 h-3" />
+                {folder.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 custom-scrollbar">
@@ -210,6 +263,9 @@ export const MendeleyLibraryPanel: React.FC<MendeleyLibraryPanelProps> = ({
                     <div className="py-2 px-3 bg-gray-50 rounded-xl text-[10px] text-gray-500">
                       <strong>Source:</strong> {item.source || 'N/A'}<br/>
                       <strong>Year:</strong> {item.year || 'N/A'}<br/>
+                      <strong>DOI:</strong> {(item.identifiers as any)?.doi || 'N/A'}<br/>
+                      {item.publisher && <><strong>Publisher:</strong> {item.publisher}<br/></>}
+                      {item.volume && <><strong>Volume:</strong> {item.volume} <strong>Issue:</strong> {item.issue || 'N/A'}<br/></>}
                     </div>
                 </div>
               )}

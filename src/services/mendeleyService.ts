@@ -1,5 +1,6 @@
 import { apiClient } from "./apiClient";
 import { supabase } from "../lib/supabase/client";
+import ConfigService from "./ConfigService";
 
 export interface MendeleyItem {
   id: string;
@@ -61,10 +62,36 @@ export class MendeleyService {
    * Get the URL to initiate Mendeley OAuth connection
    */
   static async getConnectUrl(): Promise<string> {
-    const apiUrl = process.env.REACT_APP_API_URL || "https://api.colabwize.com";
+    const apiUrl = ConfigService.getApiUrl();
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token || "";
     return `${apiUrl}/api/auth/mendeley/connect?token=${token}`;
+  }
+
+  /**
+   * Fetch authenticated user's Mendeley folders
+   */
+  static async getFolders(): Promise<any[]> {
+    try {
+      const response = await apiClient.get("/api/auth/mendeley/folders");
+      return response || [];
+    } catch (error) {
+      console.error("Failed to fetch Mendeley folders:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch items from a specific Mendeley folder
+   */
+  static async getFolderItems(folderId: string): Promise<MendeleyItem[]> {
+    try {
+      const response = await apiClient.get(`/api/auth/mendeley/folders/${folderId}/items`);
+      return response || [];
+    } catch (error) {
+      console.error("Failed to fetch Mendeley folder items:", error);
+      throw error;
+    }
   }
 }
 

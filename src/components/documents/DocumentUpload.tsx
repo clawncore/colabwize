@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { documentService } from "../../services/documentService";
-import ZoteroService from "../../services/zoteroService";
-import { MendeleyService } from "../../services/mendeleyService";
+import { GoogleDriveService } from "../../services/googleDriveService";
 import { useProfile } from "../../hooks/useProfile";
-import { ZoteroIcon } from "../common/ZoteroIcon";
-import { MendeleyIcon } from "../common/MendeleyIcon";
+import { GoogleDriveIcon } from "../common/GoogleDriveIcon";
+import { Loader2, ExternalLink } from "lucide-react";
+import { OneDriveIcon } from "../common/OneDriveIcon";
 import JSZip from "jszip";
 
 interface DocumentUploadProps {
@@ -51,7 +51,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
 }) => {
   const { profile: user, loading: isProfileLoading } = useProfile();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"local" | "zotero" | "mendeley">("local");
+  const [activeTab, setActiveTab] = useState<"local" | "google-drive" | "onedrive">("local");
   const [isNotLinked, setIsNotLinked] = useState(false);
   
   const [file, setFile] = useState<File | null>(null);
@@ -61,7 +61,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // External library states
+  // Cloud library states
   const [libraryItems, setLibraryItems] = useState<any[]>([]);
   const [isLoadingLibrary, setIsLoadingLibrary] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
@@ -80,7 +80,6 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     };
   }, [pdfPreviewUrl]);
 
-  // Handle Tab Switching
   useEffect(() => {
     if (isProfileLoading) return;
 
@@ -93,77 +92,59 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     setIsNotLinked(false);
     setError(null);
     
-    if (activeTab === "zotero") {
-      if (!user?.zotero_user_id) {
+    if (activeTab === "google-drive") {
+      if (!user?.google_access_token) {
         setIsNotLinked(true);
-        setError("Zotero account not linked. Please connect your Zotero account in Account Settings.");
         return;
       }
-      fetchZoteroLibrary();
-    } else if (activeTab === "mendeley") {
-      if (!user?.mendeley_access_token) {
-        setIsNotLinked(true);
-        setError("Mendeley account not linked. Please connect your Mendeley account in Account Settings.");
-        return;
-      }
-      fetchMendeleyLibrary();
+      fetchGoogleDriveLibrary();
     }
   }, [activeTab, user, isProfileLoading]);
 
-  const fetchZoteroLibrary = async () => {
-    setIsLoadingLibrary(true);
+  // Listen for Google Drive OAuth popup callback
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'GOOGLE_CONNECTED') {
+        setIsNotLinked(false);
+        setError(null);
+        // Refresh profile so google_access_token is available
+        window.location.reload();
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  const handleConnectGoogleDrive = async () => {
     try {
-      const items = await ZoteroService.getLibrary();
-      // Filter out notes/attachments if needed, keep top-level items
-      const mainItems = items.filter((i: any) => i.data.itemType !== "attachment" && i.data.itemType !== "note");
-      setLibraryItems(mainItems);
+      const url = await GoogleDriveService.getConnectUrl();
+      window.open(url, 'google-drive-connect', 'width=600,height=700,popup=yes');
     } catch (err) {
-      console.error(err);
-      setError("Failed to fetch Zotero library.");
-    } finally {
-      setIsLoadingLibrary(false);
+      console.error('Failed to get Google Drive connect URL:', err);
+      setError('Failed to initiate Google Drive connection.');
     }
   };
 
-  const fetchMendeleyLibrary = async () => {
+  const fetchGoogleDriveLibrary = async () => {
     setIsLoadingLibrary(true);
     try {
-      const items = await MendeleyService.getLibrary();
+      const items = await GoogleDriveService.listFiles();
       setLibraryItems(items);
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch Mendeley library.");
+      setError("Failed to fetch Google Drive files.");
     } finally {
       setIsLoadingLibrary(false);
     }
   };
 
-  const handleItemSelect = (item: any, source: "zotero" | "mendeley") => {
+  const handleItemSelect = (item: any) => {
     setSelectedItem(item);
-    
-    if (source === "zotero") {
-      const displayTitle = item.data.title || "Untitled Reference";
-      setTitle(displayTitle);
-      setDescription(item.data.abstractNote || "");
-      
-      const authors = item.data.creators?.map((c: any) => `${c.firstName || ''} ${c.lastName || ''}`.trim()).join(", ") || "Unknown Authors";
-      const year = item.data.date ? new Date(item.data.date).getFullYear() : "N/A";
-      
-      setDocumentContent(
-        `[Zotero Reference Preview]\n\nTitle: ${displayTitle}\nAuthors: ${authors}\nYear: ${year}\nItem Type: ${item.data.itemType}\n\nAbstract:\n${item.data.abstractNote || "No abstract available."}`
-      );
-    } else if (source === "mendeley") {
-      const displayTitle = item.title || "Untitled Reference";
-      setTitle(displayTitle);
-      setDescription(item.abstract || "");
-      
-      const authors = item.authors?.map((a: any) => `${a.first_name || ''} ${a.last_name || ''}`.trim()).join(", ") || "Unknown Authors";
-      
-      setDocumentContent(
-        `[Mendeley Reference Preview]\n\nTitle: ${displayTitle}\nAuthors: ${authors}\nYear: ${item.year || 'N/A'}\nItem Type: ${item.type}\n\nAbstract:\n${item.abstract || "No abstract available."}`
-      );
-    }
+    setTitle(item.name.replace(/\.[^/.]+$/, ""));
+    setDocumentContent(`[Google Drive File Preview]\n\nName: ${item.name}\nMIME Type: ${item.mimeType}\nModified: ${new Date(item.modifiedTime).toLocaleString()}`);
   };
+
+
 
   // Function to read and display file content (Local approach)
   const readDocumentContent = React.useCallback(async (selectedFile: File) => {
@@ -192,15 +173,13 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   }, []);
 
   useEffect(() => {
-    if (activeTab === "local") {
-      if (file) {
-        readDocumentContent(file);
-      } else {
-        setDocumentContent("");
-        setPdfPreviewUrl(null);
-      }
+    if (file) {
+      readDocumentContent(file);
+    } else {
+      setDocumentContent("");
+      setPdfPreviewUrl(null);
     }
-  }, [file, activeTab, readDocumentContent]);
+  }, [file, readDocumentContent]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -241,9 +220,14 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       setError("Please select a document to upload");
       return;
     }
-    
-    if ((activeTab === "zotero" || activeTab === "mendeley") && !selectedItem) {
-      setError(`Please select a document from ${activeTab === "zotero" ? "Zotero" : "Mendeley"}`);
+
+    if (activeTab === "google-drive" && !selectedItem) {
+      setError("Please select a file from Google Drive");
+      return;
+    }
+
+    if (activeTab === "onedrive") {
+      setError("OneDrive integration is coming soon.");
       return;
     }
 
@@ -267,31 +251,15 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
           workspaceId,
           null
         );
-      } else {
-        // Zotero or Mendeley import
-        const contentBlock = {
-          type: "doc",
-          content: [
-            {
-              type: "paragraph",
-              content: [
-                {
-                  type: "text",
-                  text: documentContent || `Imported from ${activeTab === 'zotero' ? 'Zotero' : 'Mendeley'}`,
-                },
-              ],
-            },
-          ],
-        };
-        
-        result = await documentService.createProject(
+      } else if (activeTab === "google-drive") {
+        result = await GoogleDriveService.createProject(
+          selectedItem.id,
           title,
           description,
-          contentBlock,
-          "",
-          workspaceId,
-          activeTab // This sets linked_library to "zotero" or "mendeley"
+          workspaceId
         );
+      } else {
+        throw new Error("Invalid source");
       }
 
       if (result.success && result.data) {
@@ -335,30 +303,32 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-            <span>Upload from PC</span>
+            <span>Local PC</span>
           </button>
           
           <button
-            onClick={() => setActiveTab("zotero")}
+            onClick={() => setActiveTab("google-drive")}
             className={`flex items-center space-x-2 px-4 py-2 rounded-t-md font-medium text-sm transition-colors border-b-2 ${
-              activeTab === "zotero" ? "border-red-600 text-red-600 bg-red-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+              activeTab === "google-drive" ? "border-blue-600 text-blue-600 bg-blue-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
             }`}
           >
-            <ZoteroIcon className="w-4 h-4" />
-            <span>Zotero</span>
+            <GoogleDriveIcon className="w-4 h-4" />
+            <span>Google Drive</span>
           </button>
           
           <button
-            onClick={() => setActiveTab("mendeley")}
+            onClick={() => setActiveTab("onedrive")}
             className={`flex items-center space-x-2 px-4 py-2 rounded-t-md font-medium text-sm transition-colors border-b-2 ${
-              activeTab === "mendeley" ? "border-blue-700 text-blue-800 bg-blue-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+              activeTab === "onedrive" ? "border-blue-700 text-blue-800 bg-blue-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
             }`}
           >
-            <MendeleyIcon width={16} height={16} />
-            <span>Mendeley</span>
+            <OneDriveIcon className="w-4 h-4" />
+            <span>OneDrive</span>
           </button>
         </div>
       )}
+
+
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm flex items-center justify-between gap-3">
@@ -382,36 +352,38 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left column - Upload details / Selection */}
+        {/* Left column - Document Details */}
         <div className="flex flex-col h-[500px]">
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Document Title *
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter document title"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter document description (optional)"
+              rows={2}
+            />
+          </div>
+
           {activeTab === "local" && (
             <div className="flex flex-col flex-1 pb-4 overflow-y-auto pr-2">
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Document Title *
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter document title"
-                  required
-                />
-              </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter document description (optional)"
-                  rows={3}
-                />
-              </div>
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -460,76 +432,95 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             </div>
           )}
 
-          {(activeTab === "zotero" || activeTab === "mendeley") && (
-            <div className="flex flex-col flex-1 min-h-0 border rounded-lg bg-gray-50 overflow-hidden mb-4">
-              <div className="p-3 border-b bg-white">
-                <h3 className="text-sm font-semibold flex items-center">
-                  Select a document from {activeTab === "zotero" ? "Zotero" : "Mendeley"}
-                </h3>
-                <p className="text-xs text-gray-500 mt-1">This will implicitly link this project's library exclusively to {activeTab === "zotero" ? "Zotero" : "Mendeley"}.</p>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                {isLoadingLibrary ? (
-                  <div className="flex justify-center items-center h-full p-8 text-gray-400">
-                    <svg className="animate-spin h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Loading library...
+          {activeTab === "google-drive" && (
+            <div className={`flex flex-col flex-1 border rounded-lg bg-gray-50 mb-4 ${isNotLinked ? 'min-h-[250px]' : 'min-h-0 overflow-hidden'}`}>
+              {isNotLinked ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center" style={{ minHeight: '250px' }}>
+                  <GoogleDriveIcon className="w-12 h-12 mb-4 opacity-60" />
+                  <h3 className="text-base font-semibold text-gray-900 mb-2">Connect Google Drive</h3>
+                  <p className="text-sm text-gray-500 mb-5 max-w-[280px]">
+                    Grant one-time access so ColabWize can browse your Drive documents. You'll stay on this page.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleConnectGoogleDrive}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm cursor-pointer z-10"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Connect & Browse
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="p-3 border-b bg-white">
+                    <h3 className="text-sm font-semibold flex items-center">
+                      Select a document from Google Drive
+                    </h3>
                   </div>
-                ) : libraryItems.length === 0 ? (
-                  <div className="text-sm text-gray-500 text-center py-10">
-                    No documents found in your library.
-                  </div>
-                ) : (
-                  libraryItems.map((item, idx) => {
-                    const isMendeley = activeTab === "mendeley";
-                    const id = isMendeley ? item.id : item.key;
-                    const itemTitle = isMendeley ? item.title : item.data.title;
-                    const itemAuthors = isMendeley 
-                      ? item.authors?.map((a: any) => `${a.first_name || ''} ${a.last_name || ''}`).join(', ') 
-                      : item.data.creators?.map((c: any) => `${c.firstName || ''} ${c.lastName || ''}`).join(', ');
-                    
-                    const isSelected = selectedItem && (isMendeley ? selectedItem.id === id : selectedItem.key === id);
-                    
-                    return (
-                      <div 
-                        key={id || idx}
-                        onClick={() => handleItemSelect(item, activeTab)}
-                        className={`p-3 rounded-md border cursor-pointer transition-colors ${
-                          isSelected 
-                            ? (isMendeley ? 'bg-blue-50 border-blue-400' : 'bg-red-50 border-red-400') 
-                            : 'bg-white border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="font-medium text-sm text-gray-900 line-clamp-2">{itemTitle || "Untitled"}</div>
-                        <div className="text-xs text-gray-500 mt-1 line-clamp-1">{itemAuthors || "Unknown authors"}</div>
+                  
+                  <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                    {isLoadingLibrary ? (
+                      <div className="flex justify-center items-center h-full p-8 text-gray-400">
+                        <Loader2 className="animate-spin h-6 w-6 mr-2" />
+                        Loading library...
                       </div>
-                    );
-                  })
-                )}
-              </div>
+                    ) : libraryItems.length === 0 ? (
+                      <div className="text-sm text-gray-500 text-center py-10">
+                        No documents found in your library.
+                      </div>
+                    ) : (
+                      libraryItems.map((item, idx) => {
+                        const isSelected = selectedItem && selectedItem.id === item.id;
+                        
+                        return (
+                          <div 
+                            key={item.id || idx}
+                            onClick={() => handleItemSelect(item)}
+                            className={`p-3 rounded-md border cursor-pointer transition-colors ${
+                              isSelected 
+                                ? 'bg-blue-50 border-blue-400' 
+                                : 'bg-white border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="font-medium text-sm text-gray-900 line-clamp-2">{item.name || "Untitled"}</div>
+                            <div className="text-xs text-gray-500 mt-1 line-clamp-1">{new Date(item.modifiedTime).toLocaleDateString()}</div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
+
+          {activeTab === "onedrive" && (
+            <div className="flex flex-col items-center justify-center flex-1 border rounded-lg bg-gray-50 mb-4 p-8 text-center">
+              <OneDriveIcon className="w-12 h-12 mb-4 opacity-40" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">OneDrive Coming Soon</h3>
+              <p className="text-sm text-gray-500">We're working on making OneDrive integration as smooth as possible.</p>
+            </div>
+          )}
+
+
 
           {/* Upload Button at the bottom of left column */}
           <div className="mt-auto pt-2 border-t">
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={isUploading || (activeTab === "local" && (!file || !title.trim())) || (activeTab !== "local" && !selectedItem)}
+              disabled={isUploading || (activeTab === "local" && (!file || !title.trim())) || (activeTab === "google-drive" && !selectedItem)}
               className={`w-full py-2.5 px-4 rounded-md text-white font-medium transition-colors ${
-                isUploading || (activeTab === "local" && (!file || !title.trim())) || (activeTab !== "local" && !selectedItem)
+                isUploading || (activeTab === "local" && (!file || !title.trim())) || (activeTab === "google-drive" && !selectedItem)
                   ? "bg-gray-400 cursor-not-allowed"
-                  : activeTab === "zotero" ? "bg-red-600 hover:bg-red-700" : activeTab === "mendeley" ? "bg-blue-700 hover:bg-blue-800" : "bg-blue-600 hover:bg-blue-700"
+                  : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
               {isUploading
                 ? "Uploading..."
                 : projectId
                   ? "Update Document"
-                  : activeTab === "local" ? "Upload Document" : `Import Document from ${activeTab === 'zotero' ? 'Zotero' : 'Mendeley'}`
+                : activeTab === "local" ? "Upload Document" : `Import Document from ${activeTab === 'google-drive' ? 'Google Drive' : 'OneDrive'}`
               }
             </button>
           </div>
@@ -553,14 +544,14 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   {documentContent || "Loading document content..."}
                 </div>
               )
-            ) : (activeTab === "zotero" || activeTab === "mendeley") && selectedItem ? (
+            ) : activeTab === "google-drive" && selectedItem ? (
               <div className="whitespace-pre-wrap font-sans text-sm bg-white p-6 rounded shadow-sm min-h-full leading-relaxed">
                 {documentContent}
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400 flex-col space-y-3">
                 <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                <p>{activeTab === "local" ? "Upload a document to see preview here" : `Select a document from ${activeTab === "zotero" ? "Zotero" : "Mendeley"} to preview`}</p>
+                <p>{activeTab === "local" ? "Upload a document to see preview here" : `Select a document from ${activeTab === "google-drive" ? "Google Drive" : "OneDrive"} to preview`}</p>
               </div>
             )}
           </div>

@@ -13,8 +13,10 @@ import { SourceDetailPanel } from "../citations/SourceDetailPanel";
 import { CitationAuditReportPanel } from "../audit/CitationAuditReportPanel";
 import { ZoteroLibraryPanel } from "../citations/ZoteroLibraryPanel";
 import { MendeleyLibraryPanel } from "../citations/MendeleyLibraryPanel";
+import { GoogleDrivePanel } from "../storage/GoogleDrivePanel";
 import { MendeleyIcon } from "../common/MendeleyIcon";
 import { ZoteroIcon } from "../common/ZoteroIcon";
+import { GoogleDriveIcon } from "../common/GoogleDriveIcon";
 import { VaultIcon } from "../common/VaultIcon";
 import { Project, documentService } from "../../services/documentService";
 // Custom hook usage instead of direct service
@@ -106,6 +108,7 @@ const EditorWorkspacePage: React.FC = () => {
     | "research-assistant"
     | "zotero"
     | "mendeley"
+    | "google-drive"
     | null
   >(null);
   const [leftPanelData, setLeftPanelData] = useState<any>(null);
@@ -958,7 +961,34 @@ const EditorWorkspacePage: React.FC = () => {
                 </div>
               )}
 
-              {selectedProject?.linked_library === "zotero" && (
+              <button
+                onClick={() => {
+                  setActiveLeftPanel("google-drive");
+                  setIsLeftSidebarOpen(true);
+                }}
+                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeLeftPanel === "google-drive"
+                    ? "bg-blue-50 text-blue-600 border border-blue-100"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
+                }`}
+                title={!isNavRailExpanded ? "Google Drive" : ""}
+              >
+                <div className="relative">
+                  <GoogleDriveIcon
+                    className={`w-4 h-4 flex-shrink-0`}
+                  />
+                  {!user?.google_access_token && (
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full border border-white" />
+                  )}
+                </div>
+                <div
+                  className={`flex items-center justify-between w-full whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>
+                  <span className="flex items-center gap-2">
+                    Google Drive
+                  </span>
+                </div>
+              </button>
+
               <button
                 onClick={() => {
                   setActiveLeftPanel("zotero");
@@ -986,9 +1016,7 @@ const EditorWorkspacePage: React.FC = () => {
                   </span>
                 </div>
               </button>
-              )}
 
-              {selectedProject?.linked_library === "mendeley" && (
               <button
                 onClick={() => {
                   setActiveLeftPanel("mendeley");
@@ -1016,7 +1044,6 @@ const EditorWorkspacePage: React.FC = () => {
                   </span>
                 </div>
               </button>
-              )}
 
               <button
                 data-tour="outline-builder"
@@ -1438,6 +1465,16 @@ const EditorWorkspacePage: React.FC = () => {
                       <MendeleyLibraryPanel 
                         projectId={selectedProject.id} 
                         isConnected={!!user?.mendeley_access_token}
+                        onImportSuccess={reloadProjectCitations}
+                      />
+                    </div>
+                  )}
+
+                  {activeLeftPanel === "google-drive" && selectedProject && (
+                    <div className="flex-1 overflow-hidden flex flex-col bg-white">
+                      <GoogleDrivePanel 
+                        projectId={selectedProject.id} 
+                        isConnected={!!user?.google_access_token}
                         onImportSuccess={reloadProjectCitations}
                       />
                     </div>

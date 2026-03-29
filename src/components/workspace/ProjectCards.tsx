@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import blankDocumentIcon from "../../assets/icons/blank-document.jpg";
 import documentPreviewIcon from "../../assets/icons/document-preview.png";
+import { GoogleDriveIcon } from "../common/GoogleDriveIcon";
+import { OneDriveIcon } from "../common/OneDriveIcon";
 
 type ViewMode = "grid" | "list";
 
@@ -60,6 +62,7 @@ interface Project {
     updated_at: string;
   } | null;
   // Add other fields as needed
+  linked_library?: string | null;
 }
 
 interface ProjectCardsProps {
@@ -473,20 +476,40 @@ export default function ProjectCards({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {project.word_count > 0 ? (
-                        <div className="flex-shrink-0 h-10 w-10">
+                        <div className="flex-shrink-0 h-10 w-10 relative">
                           <img
                             src={documentPreviewIcon}
                             alt="Document with content"
                             className="w-10 h-10 object-fill"
                           />
+                          {project.linked_library === 'google-drive' && (
+                            <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-gray-200">
+                              <GoogleDriveIcon className="w-3.5 h-3.5" />
+                            </div>
+                          )}
+                          {project.linked_library === 'onedrive' && (
+                            <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-gray-200">
+                              <OneDriveIcon className="w-3.5 h-3.5" />
+                            </div>
+                          )}
                         </div>
                       ) : (
-                        <div className="flex-shrink-0 h-10 w-10">
+                        <div className="flex-shrink-0 h-10 w-10 relative">
                           <img
                             src={blankDocumentIcon}
                             alt="Blank document"
                             className="w-10 h-10 object-fill"
                           />
+                          {project.linked_library === 'google-drive' && (
+                            <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-gray-200">
+                              <GoogleDriveIcon className="w-3.5 h-3.5" />
+                            </div>
+                          )}
+                          {project.linked_library === 'onedrive' && (
+                            <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-gray-200">
+                              <OneDriveIcon className="w-3.5 h-3.5" />
+                            </div>
+                          )}
                         </div>
                       )}
                       <div className="ml-4">
@@ -628,20 +651,40 @@ export default function ProjectCards({
               onClick={() => navigate(`/dashboard/editor/${project.id}`)}>
               <div className="flex items-start justify-between">
                 {project.word_count > 0 ? (
-                  <div className="flex-shrink-0 h-12 w-12">
+                  <div className="flex-shrink-0 h-12 w-12 relative">
                     <img
                       src={documentPreviewIcon}
                       alt="Document with content"
                       className="w-12 h-12 object-fill"
                     />
+                    {project.linked_library === 'google-drive' && (
+                      <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-gray-200">
+                        <GoogleDriveIcon className="w-4 h-4" />
+                      </div>
+                    )}
+                    {project.linked_library === 'onedrive' && (
+                      <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-gray-200">
+                        <OneDriveIcon className="w-4 h-4" />
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="flex-shrink-0 h-12 w-12">
+                  <div className="flex-shrink-0 h-12 w-12 relative">
                     <img
                       src={blankDocumentIcon}
                       alt="Blank document"
                       className="w-12 h-12 object-fill"
                     />
+                    {project.linked_library === 'google-drive' && (
+                      <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-gray-200">
+                        <GoogleDriveIcon className="w-4 h-4" />
+                      </div>
+                    )}
+                    {project.linked_library === 'onedrive' && (
+                      <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-gray-200">
+                        <OneDriveIcon className="w-4 h-4" />
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="ml-3 flex-1 min-w-0">
