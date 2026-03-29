@@ -100,9 +100,7 @@ export const GoogleDrivePanel: React.FC<GoogleDrivePanelProps> = ({
   if (!isConnected || (files.length === 0 && !loading)) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-white">
-        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 p-3 shadow-sm border border-blue-50">
-          <GoogleDriveIcon className="w-full h-full" />
-        </div>
+        <GoogleDriveIcon width={56} height={56} className="mb-4" />
         <h3 className="text-lg font-bold text-gray-900 mb-2">
           {isConnected ? "No Documents Found" : "Connect Google Drive"}
         </h3>

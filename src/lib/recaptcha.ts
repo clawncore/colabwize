@@ -120,18 +120,18 @@ export async function getRecaptchaToken(
   try {
     await loadRecaptchaScript(siteKey);
   } catch (err) {
-    throw new Error("reCAPTCHA script not available");
+    throw new Error("RECAPTCHA_LOAD_ERROR");
   }
 
   return new Promise((resolve, reject) => {
     if (!(window as any).grecaptcha) {
-      reject(new Error("reCAPTCHA script not loaded"));
+      reject(new Error("RECAPTCHA_NOT_LOADED"));
       return;
     }
 
     // Set a timeout for the entire token generation process
     const timeout = setTimeout(() => {
-      reject(new Error("reCAPTCHA execution timeout"));
+      reject(new Error("RECAPTCHA_EXECUTION_TIMEOUT"));
     }, 8000); // 8 second timeout
 
     (window as any).grecaptcha.ready(() => {
@@ -143,7 +143,7 @@ export async function getRecaptchaToken(
         })
         .catch((err: any) => {
           clearTimeout(timeout);
-          reject(err);
+          reject(new Error("RECAPTCHA_EXECUTION_FAILED"));
         });
     });
   });

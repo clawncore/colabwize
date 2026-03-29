@@ -16,6 +16,14 @@ export interface HighlightAttributes {
   // Citation hyperlink support
   url?: string;
   sourceTitle?: string;
+  // Consensus analysis
+  consensusLevel?: "strong" | "emerging" | "divided" | "controversial" | null;
+  consensusScore?: number;
+  evidenceConvergent?: boolean;
+  dissentAcknowledged?: boolean;
+  biasCheckStatus?: "pass" | "warning" | "failed" | null;
+  methodologyScore?: number;
+  extraordinaryEvidenceRequired?: boolean;
 }
 
 declare module "@tiptap/core" {
@@ -182,6 +190,69 @@ export const HighlightExtension = Mark.create<HighlightOptions>({
           return {
             "data-source-title": attributes.sourceTitle,
           };
+        },
+      },
+      consensusLevel: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-consensus-level"),
+        renderHTML: (attributes) => {
+          if (!attributes.consensusLevel) return {};
+          return {
+            "data-consensus-level": attributes.consensusLevel,
+          };
+        },
+      },
+      consensusScore: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-consensus-score"),
+        renderHTML: (attributes) => {
+          if (!attributes.consensusScore) return {};
+          return {
+            "data-consensus-score": attributes.consensusScore,
+          };
+        },
+      },
+      evidenceConvergent: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-evidence-convergent") === 'true',
+        renderHTML: (attributes) => {
+          if (attributes.evidenceConvergent === null || attributes.evidenceConvergent === undefined) return {};
+          return { "data-evidence-convergent": attributes.evidenceConvergent ? "true" : "false" };
+        },
+      },
+      dissentAcknowledged: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-dissent-acknowledged") === 'true',
+        renderHTML: (attributes) => {
+          if (attributes.dissentAcknowledged === null || attributes.dissentAcknowledged === undefined) return {};
+          return { "data-dissent-acknowledged": attributes.dissentAcknowledged ? "true" : "false" };
+        },
+      },
+      biasCheckStatus: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-bias-check"),
+        renderHTML: (attributes) => {
+          if (!attributes.biasCheckStatus) return {};
+          return { "data-bias-check": attributes.biasCheckStatus };
+        },
+      },
+      methodologyScore: {
+        default: null,
+        parseHTML: (element) => {
+          const val = element.getAttribute("data-methodology-score");
+          return val ? parseFloat(val) : null;
+        },
+        renderHTML: (attributes) => {
+          if (attributes.methodologyScore === null || attributes.methodologyScore === undefined) return {};
+          return { "data-methodology-score": attributes.methodologyScore };
+        },
+      },
+      extraordinaryEvidenceRequired: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-extra-evidence") === 'true',
+        renderHTML: (attributes) => {
+          if (attributes.extraordinaryEvidenceRequired === null || attributes.extraordinaryEvidenceRequired === undefined) return {};
+          return { "data-extra-evidence": attributes.extraordinaryEvidenceRequired ? "true" : "false" };
         },
       },
     };

@@ -1,5 +1,6 @@
 import { apiClient } from "./apiClient";
 import { supabase } from "../lib/supabase/client";
+import ConfigService from "./ConfigService";
 
 export interface ZoteroItem {
   key: string;
@@ -161,7 +162,7 @@ export class ZoteroService {
    * Get the URL to initiate Zotero OAuth connection
    */
   static async getConnectUrl(): Promise<string> {
-    const apiUrl = process.env.REACT_APP_API_URL || "https://api.colabwize.com";
+    const apiUrl = ConfigService.getApiUrl();
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token || "";
     return `${apiUrl}/api/auth/zotero/connect?token=${token}`;

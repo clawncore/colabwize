@@ -59,11 +59,14 @@ export const AuthorshipExtension = Mark.create<AuthorshipOptions>({
         parseHTML: (element) => element.getAttribute("data-author-color"),
         renderHTML: (attributes) => {
           const isHighVis = this.options.highVisibility;
+          if (isHighVis) {
+            return {
+              "data-author-color": attributes.color,
+              style: `background-color: ${attributes.color}33; border-bottom: 2px solid ${attributes.color}; border-radius: 2px; padding: 1px 0;`,
+            };
+          }
           return {
             "data-author-color": attributes.color,
-            style: isHighVis
-              ? `background-color: ${attributes.color}33; border-bottom: 2px solid ${attributes.color}; border-radius: 2px; padding: 1px 0;`
-              : `border-bottom: 1.5px solid ${attributes.color}44; background-color: ${attributes.color}08`,
           };
         },
       },

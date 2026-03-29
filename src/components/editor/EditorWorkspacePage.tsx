@@ -13,11 +13,8 @@ import { SourceDetailPanel } from "../citations/SourceDetailPanel";
 import { CitationAuditReportPanel } from "../audit/CitationAuditReportPanel";
 import { ZoteroLibraryPanel } from "../citations/ZoteroLibraryPanel";
 import { MendeleyLibraryPanel } from "../citations/MendeleyLibraryPanel";
-import { GoogleDrivePanel } from "../storage/GoogleDrivePanel";
 import { MendeleyIcon } from "../common/MendeleyIcon";
 import { ZoteroIcon } from "../common/ZoteroIcon";
-import { GoogleDriveIcon } from "../common/GoogleDriveIcon";
-import { VaultIcon } from "../common/VaultIcon";
 import { Project, documentService } from "../../services/documentService";
 // Custom hook usage instead of direct service
 import { useSubscriptionStore } from "../../stores/useSubscriptionStore";
@@ -83,6 +80,7 @@ export type RightPanelType =
   | "add-citation"
   | "collaboration-history"
   | "team-chat"
+  | "source-detail"
   | null;
 
 const EditorWorkspacePage: React.FC = () => {
@@ -108,7 +106,6 @@ const EditorWorkspacePage: React.FC = () => {
     | "research-assistant"
     | "zotero"
     | "mendeley"
-    | "google-drive"
     | null
   >(null);
   const [leftPanelData, setLeftPanelData] = useState<any>(null);
@@ -154,15 +151,16 @@ const EditorWorkspacePage: React.FC = () => {
 
   const isNavRailExpanded = isNavRailOpen || isNavRailHovered;
 
-  // Source Library sub-tab state
-  const [activeSourceTab, setActiveSourceTab] = useState<
-    "sources" | "collections" | "matrix"
-  >("sources");
-
-  // Source Library selection state for full-page view
-  const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
   const [selectedAuditReport, setSelectedAuditReport] = useState<any>(null);
   const [lastAuditReport, setLastAuditReport] = useState<any>(null);
+
+  // Source Library selection state for full-page view / full-screen view
+  const [selectedLibrarySource, setSelectedLibrarySource] = useState<any>(null);
+
+  // Source Library sub-tab state
+  const [activeSourceTab, setActiveSourceTab] = useState<
+    "sources" | "collections" | "matrix" | "zotero" | "mendeley"
+  >("sources");
 
   // Editor onboarding tour state
   const [showEditorTour, setShowEditorTour] = useState(false);
@@ -557,10 +555,17 @@ const EditorWorkspacePage: React.FC = () => {
     };
 
     window.addEventListener("openSidebarPanel", handleOpenSidebarPanel);
+    
+    const handleReloadCitations = () => {
+      reloadProjectCitations();
+    };
+    window.addEventListener("reloadProjectCitations", handleReloadCitations);
+
     return () => {
       window.removeEventListener("openSidebarPanel", handleOpenSidebarPanel);
+      window.removeEventListener("reloadProjectCitations", handleReloadCitations);
     };
-  }, [openPanel]);
+  }, [openPanel, reloadProjectCitations]);
 
   const handleInsertCitation = React.useCallback(
     async (text: string, trackingInfo?: any) => {
@@ -958,92 +963,35 @@ const EditorWorkspacePage: React.FC = () => {
                     />
                     Matrix
                   </button>
+                  <button
+                    onClick={() => setActiveSourceTab("zotero")}
+                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
+                      activeSourceTab === "zotero"
+                        ? "text-[#6366F1] bg-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    }`}>
+                    <ZoteroIcon className={`w-3 h-3 flex-shrink-0 ${activeSourceTab === "zotero" ? "text-[#6366F1]" : "text-gray-400"}`} />
+                    Zotero
+                    {!user?.zotero_user_id && (
+                      <div className="w-1.5 h-1.5 bg-red-400 rounded-full" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setActiveSourceTab("mendeley")}
+                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
+                      activeSourceTab === "mendeley"
+                        ? "text-[#6366F1] bg-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    }`}>
+                    <MendeleyIcon className={`w-3 h-3 flex-shrink-0 ${activeSourceTab === "mendeley" ? "text-[#6366F1]" : "text-gray-400"}`} />
+                    Mendeley
+                    {!user?.mendeley_access_token && (
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                    )}
+                  </button>
                 </div>
               )}
 
-              <button
-                onClick={() => {
-                  setActiveLeftPanel("google-drive");
-                  setIsLeftSidebarOpen(true);
-                }}
-                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  activeLeftPanel === "google-drive"
-                    ? "bg-blue-50 text-blue-600 border border-blue-100"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                }`}
-                title={!isNavRailExpanded ? "Google Drive" : ""}
-              >
-                <div className="relative">
-                  <GoogleDriveIcon
-                    className={`w-4 h-4 flex-shrink-0`}
-                  />
-                  {!user?.google_access_token && (
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full border border-white" />
-                  )}
-                </div>
-                <div
-                  className={`flex items-center justify-between w-full whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>
-                  <span className="flex items-center gap-2">
-                    Google Drive
-                  </span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveLeftPanel("zotero");
-                  setIsLeftSidebarOpen(true);
-                }}
-                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  activeLeftPanel === "zotero"
-                    ? "bg-red-50 text-red-600 border border-red-100"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                }`}
-                title={!isNavRailExpanded ? "Zotero Library" : ""}
-              >
-                <div className="relative">
-                  <ZoteroIcon
-                    className={`w-4 h-4 flex-shrink-0`}
-                  />
-                  {!user?.zotero_user_id && (
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full border border-white" />
-                  )}
-                </div>
-                <div
-                  className={`flex items-center justify-between w-full whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>
-                  <span className="flex items-center gap-2">
-                    Zotero
-                  </span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveLeftPanel("mendeley");
-                  setIsLeftSidebarOpen(true);
-                }}
-                className={`w-full flex items-center ${isNavRailExpanded ? "gap-3 px-3 justify-start" : "justify-center px-0"} py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  activeLeftPanel === "mendeley"
-                    ? "bg-blue-50 text-blue-600 border border-blue-100"
-                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-transparent"
-                }`}
-                title={!isNavRailExpanded ? "Mendeley Library" : ""}
-              >
-                <div className="relative">
-                  <MendeleyIcon
-                    className={`w-4 h-4 flex-shrink-0`}
-                  />
-                  {!user?.mendeley_access_token && (
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full border border-white" />
-                  )}
-                </div>
-                <div
-                  className={`flex items-center justify-between w-full whitespace-nowrap overflow-hidden transition-opacity duration-300 ${isNavRailExpanded ? "opacity-100" : "opacity-0 w-0"}`}>
-                  <span className="flex items-center gap-2">
-                    Mendeley
-                  </span>
-                </div>
-              </button>
 
               <button
                 data-tour="outline-builder"
@@ -1346,7 +1294,7 @@ const EditorWorkspacePage: React.FC = () => {
                         citationStyle={selectedProject?.citation_style}
                         onStyleSet={handleStyleSet}
                         activeTab={activeSourceTab}
-                        onSourceSelect={setSelectedLibrarySource}
+                        onSourceSelect={(source) => openPanel("source-detail", source)}
                         selectedLibrarySource={selectedLibrarySource}
                         viewMode={matrixMode}
                         onToggleViewMode={() =>
@@ -1450,35 +1398,6 @@ const EditorWorkspacePage: React.FC = () => {
                     </div>
                   )}
 
-                  {activeLeftPanel === "zotero" && selectedProject && (
-                    <div className="flex-1 overflow-hidden flex flex-col bg-white">
-                      <ZoteroLibraryPanel 
-                        projectId={selectedProject.id} 
-                        isConnected={!!user?.zotero_user_id}
-                        onImportSuccess={reloadProjectCitations}
-                      />
-                    </div>
-                  )}
-
-                  {activeLeftPanel === "mendeley" && selectedProject && (
-                    <div className="flex-1 overflow-hidden flex flex-col bg-white">
-                      <MendeleyLibraryPanel 
-                        projectId={selectedProject.id} 
-                        isConnected={!!user?.mendeley_access_token}
-                        onImportSuccess={reloadProjectCitations}
-                      />
-                    </div>
-                  )}
-
-                  {activeLeftPanel === "google-drive" && selectedProject && (
-                    <div className="flex-1 overflow-hidden flex flex-col bg-white">
-                      <GoogleDrivePanel 
-                        projectId={selectedProject.id} 
-                        isConnected={!!user?.google_access_token}
-                        onImportSuccess={reloadProjectCitations}
-                      />
-                    </div>
-                  )}
 
                   {/* Subtle shadow overlay to give depth to the opening panel */}
                   <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-black/5 to-transparent pointer-events-none" />
@@ -1733,24 +1652,7 @@ const EditorWorkspacePage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* SOURCE DETAIL OVERLAY */}
-        <AnimatePresence>
-          {selectedLibrarySource && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              className="absolute inset-0 z-30 bg-white">
-              <SourceDetailPanel
-                source={selectedLibrarySource}
-                projectId={selectedProject?.id || ""}
-                onBack={() => setSelectedLibrarySource(null)}
-                onUpdate={handleSourceUpdate}
-                isPremium={userPlan === "Premium"}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* SOURCE DETAIL OVERLAY REMOVED - NOW IN RIGHT SIDEBAR */}
 
         {/* LITERATURE MATRIX OVERLAY */}
         <AnimatePresence>
@@ -2001,6 +1903,15 @@ const EditorWorkspacePage: React.FC = () => {
                     onCitationAdded={() => {
                       reloadProjectCitations();
                     }}
+                  />
+                )}
+                {activePanelType === "source-detail" && panelData && (
+                  <SourceDetailPanel
+                    source={panelData}
+                    projectId={selectedProject?.id || ""}
+                    onBack={() => setIsRightSidebarOpen(false)}
+                    onUpdate={handleSourceUpdate}
+                    isPremium={isPlus}
                   />
                 )}
                 {activePanelType === "collaboration-history" && (

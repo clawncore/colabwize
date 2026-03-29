@@ -56,22 +56,49 @@ export interface StoredCitation {
   journal?: string;
   doi?: string;
   url?: string;
+  source?: string;
   type?: string;
   volume?: string;
   issue?: string;
   pages?: string;
   abstract?: string;
   citationCount?: number;
-  impactFactor?: string | number; // Added based on usage
-  openAccess?: boolean; // Added based on usage
-  raw_reference_text?: string; // Added to fix property missing error
+  impactFactor?: string | number;
+  openAccess?: boolean;
+  raw_reference_text?: string;
   formatted_citations?: any;
   publisher?: string;
   added_at?: string;
   themes?: string[];
   matrix_notes?: string;
   verified?: boolean;
-  database?: string; // Added to store source database (pubmed, crossref, etc)
+  database?: string;
+  itemType?: string;
+  sourceType?: string;
+  authorSummary?: string;
+  place?: string;
+  section?: string;
+  series?: string;
+  seriesTitle?: string;
+  seriesText?: string;
+  partNumber?: string;
+  partTitle?: string;
+  journalAbbr?: string;
+  citationKey?: string;
+  accessed?: string;
+  pmid?: string;
+  pmcid?: string;
+  issn?: string;
+  archive?: string;
+  locInArchive?: string;
+  shortTitle?: string;
+  language?: string;
+  libraryCatalog?: string;
+  callNumber?: string;
+  license?: string;
+  extra?: string;
+  dateAdded?: string;
+  dateModified?: string;
 }
 
 export class CitationService {
@@ -116,7 +143,6 @@ export class CitationService {
       return papers;
     } catch (error: any) {
       console.error("Error searching papers:", error);
-      console.error("Error response:", error.response?.data);
       throw new Error(getErrorMessage(error, "Failed to search papers"));
     }
   }
@@ -525,14 +551,15 @@ export class CitationService {
             author:
               updates.author ||
               (updates.authors ? updates.authors.join(", ") : ""),
-            year: Number(updates.year) || new Date().getFullYear(),
+            year: updates.year,
             journal: updates.journal,
             volume: updates.volume,
             issue: updates.issue,
             pages: updates.pages,
             doi: updates.doi,
             url: updates.url,
-          });
+            source: updates.source,
+          } as StoredCitation);
         }
       }
 
@@ -715,6 +742,27 @@ export class CitationService {
       throw new Error(
         error.response?.data?.error || "Failed to start audit job",
       );
+    }
+  }
+  
+  /**
+   * Analyze scientific consensus for a claim against provided citations
+   */
+  static async analyzeConsensus(
+    projectId: string,
+    claim: string,
+    citationIds: string[],
+  ): Promise<any> {
+    try {
+      const response = await apiClient.post(`/api/citations/${projectId}/consensus`, {
+        claim,
+        citationIds,
+      });
+      // The API endpoint wraps the result in { success: true, consensus: ... }
+      return response.consensus;
+    } catch (error: any) {
+      console.error("Error analyzing consensus:", error);
+      throw new Error(getErrorMessage(error, "Failed to analyze consensus"));
     }
   }
 }

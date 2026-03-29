@@ -9,14 +9,19 @@ import {
   Check,
   Trash2,
   BookOpen,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { CitationStyleFloatingPanel } from "./CitationStyleFloatingPanel";
 import { CitationStyle } from "../../utils/citationFormatter";
 import { StoredCitation } from "../../services/citationService";
 import { PDFAnnotator } from "../research/PDFAnnotator";
 import { PDFService } from "../../services/pdfService";
-import { ConfigService } from "../../services/ConfigService"; // Added
-import { LiteratureMatrix } from "./LiteratureMatrix"; // Added
+import { ConfigService } from "../../services/ConfigService";
+import { LiteratureMatrix } from "./LiteratureMatrix";
+import { ZoteroLibraryPanel } from "./ZoteroLibraryPanel";
+import { MendeleyLibraryPanel } from "./MendeleyLibraryPanel";
+import { useAuth } from "../../hooks/useAuth";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,8 +40,8 @@ interface SourcesLibraryPanelProps {
   citationStyle?: string | null; // Added
   onInsertCitation?: (text: string, trackingInfo?: any) => void;
   onFindMore?: () => void; // Callback to open the search side panel (right)
-  onStyleSet?: (style: string) => void; // Added
-  activeTab: "sources" | "collections" | "matrix"; // Control from parent nav rail
+  onStyleSet?: (style: string) => void;
+  activeTab: "sources" | "collections" | "matrix" | "zotero" | "mendeley";
   onSourceSelect: (source: StoredCitation | null) => void;
   selectedLibrarySource: StoredCitation | null;
   viewMode?: "split" | "full";
@@ -60,7 +65,10 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
   onUpdateCitations,
   userPlan,
 }) => {
+  const { user } = useAuth();
   const [filterQuery, setFilterQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"date" | "title" | "impact">("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [localCitations, setLocalCitations] =
     useState<StoredCitation[]>(citations); // Added for live sync
   const [showStylePanel, setShowStylePanel] = useState(false);
@@ -105,10 +113,8 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
     return Array.from(uniqueMap.values());
   }, [citations, getCitationKey]);
 
-  // Filter
+  // Filter and Sort
   const filteredCitations = useMemo(() => {
-    if (!filterQuery && activeTab === "sources") return processedCitations;
-
     let baseList = processedCitations;
 
     // Filter by tab
@@ -118,17 +124,41 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
       );
     }
 
-    if (!filterQuery) return baseList;
+    let result = baseList;
+    if (filterQuery) {
+      const q = filterQuery.toLowerCase();
+      result = baseList.filter(
+        (c) =>
+          c.title?.toLowerCase().includes(q) ||
+          (typeof c.author === "string" && c.author.toLowerCase().includes(q)) ||
+          (Array.isArray(c.authors) &&
+            c.authors.some((a: string) => a.toLowerCase().includes(q))),
+      );
+    }
 
-    const q = filterQuery.toLowerCase();
-    return baseList.filter(
-      (c) =>
-        c.title?.toLowerCase().includes(q) ||
-        (typeof c.author === "string" && c.author.toLowerCase().includes(q)) ||
-        (Array.isArray(c.authors) &&
-          c.authors.some((a: string) => a.toLowerCase().includes(q))),
-    );
-  }, [processedCitations, filterQuery, activeTab, collectionSet, getCitationKey]);
+    // Sort
+    return [...result].sort((a, b) => {
+      let comparison = 0;
+      if (sortBy === "title") {
+        comparison = (a.title || "").localeCompare(b.title || "");
+      } else if (sortBy === "impact") {
+        const impactA = Number(a.impactFactor) || a.citationCount || 0;
+        const impactB = Number(b.impactFactor) || b.citationCount || 0;
+        comparison = impactB - impactA; // Descending natural
+      } else {
+        // "date" defaulting to newest first
+        const tA = a.dateAdded ? new Date(a.dateAdded).getTime() : 0;
+        const tB = b.dateAdded ? new Date(b.dateAdded).getTime() : 0;
+        if (tA && tB && tA !== tB) {
+            comparison = tB - tA; // Descending natural
+        } else {
+            comparison = -1; // Reverse fallback: newer items are appended to the end, push them to top
+        }
+      }
+      
+      return sortOrder === "asc" ? -comparison : comparison;
+    });
+  }, [processedCitations, filterQuery, activeTab, collectionSet, getCitationKey, sortBy, sortOrder]);
 
   const handleToggleCollection = useCallback((source: StoredCitation) => {
     const key = getCitationKey(source);
@@ -196,8 +226,8 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
       />
 
       <div className="flex flex-col h-full bg-white relative">
-        {/* Header - Hidden if Matrix is active in split mode */}
-        {activeTab !== "matrix" && (
+        {/* Header - Hidden if Matrix or Integrations are active in split mode */}
+        {activeTab !== "matrix" && activeTab !== "zotero" && activeTab !== "mendeley" && (
           <div className="p-5 pb-0">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">Library</h2>
@@ -246,16 +276,35 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
               </div>
             </div>
 
-            {/* Search Bar */}
-            <div className="relative mb-2">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search sources..."
-                className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none bg-white"
-                value={filterQuery}
-                onChange={(e) => setFilterQuery(e.target.value)}
-              />
+            {/* Search Bar & Sort */}
+            <div className="flex items-center gap-2 mb-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search sources..."
+                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none bg-white shadow-sm hover:border-blue-300"
+                  value={filterQuery}
+                  onChange={(e) => setFilterQuery(e.target.value)}
+                />
+              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-3 py-2.5 text-sm font-medium border border-gray-200 rounded-lg outline-none bg-white text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all cursor-pointer shadow-sm appearance-none min-w-[130px]"
+                title="Sort sources"
+              >
+                <option value="date">Date Added</option>
+                <option value="title">Title A-Z</option>
+                <option value="impact">Confidence / Impact</option>
+              </select>
+              <button
+                onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
+                className="p-2.5 border border-gray-200 rounded-lg bg-white text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm"
+                title={sortOrder === "desc" ? "Descending" : "Ascending"}
+              >
+                {sortOrder === "desc" ? <ArrowDown className="w-4 h-4" /> : <ArrowUp className="w-4 h-4" />}
+              </button>
             </div>
           </div>
         )}
@@ -287,6 +336,25 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                 onToggleViewMode={onToggleViewMode}
               />
             )
+          ) : activeTab === "zotero" ? (
+            <ZoteroLibraryPanel 
+              projectId={projectId || ""} 
+              isConnected={!!user?.zotero_user_id}
+              onImportSuccess={() => {
+                // Potential callback to parent to reload main library
+                window.dispatchEvent(new CustomEvent('reloadProjectCitations'));
+              }}
+              onSourceSelect={onSourceSelect}
+            />
+          ) : activeTab === "mendeley" ? (
+            <MendeleyLibraryPanel 
+              projectId={projectId || ""} 
+              isConnected={!!user?.mendeley_access_token}
+              onImportSuccess={() => {
+                window.dispatchEvent(new CustomEvent('reloadProjectCitations'));
+              }}
+              onSourceSelect={onSourceSelect}
+            />
           ) : filteredCitations.length === 0 ? (
             <div className="text-center py-20">
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">

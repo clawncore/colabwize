@@ -23,6 +23,7 @@ import { ImageExtension } from "../../extensions/AdvancedImageExtension";
 import { AITrackingExtension } from "../../extensions/AITrackingExtension";
 import { PlaceholderMarkExtension } from "../../extensions/PlaceholderMarkExtension";
 import { MathExtension } from "../../extensions/MathExtension";
+import { ConsensusPinExtension } from "../../extensions/ConsensusPinExtension";
 import Superscript from "@tiptap/extension-superscript";
 import Subscript from "@tiptap/extension-subscript";
 import BulletList from "@tiptap/extension-bullet-list";
@@ -75,6 +76,7 @@ import { AuditReportModal } from "../audit/AuditReportModal";
 import { EditorToolbar } from "./editor-toolbar";
 import { ExportWorkflowModal } from "../export/ExportWorkflowModal";
 import { VersionHistoryModal } from "./VersionHistoryModal";
+import { ConsensusBubbleMenu } from "./ConsensusBubbleMenu";
 import {
   BookOpen,
   Eye,
@@ -460,6 +462,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         AutoNumbering, // Enable automatic figure and table numbering
         GrammarExtension, // AI Grammar Checker
         CitationScannerExtension,
+        ConsensusPinExtension,
       ],
       content: isCollaborative
         ? undefined
@@ -1055,6 +1058,38 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     };
   }, [editor]);
 
+  // Listen for consensus highlight events from the configured Details Sidebar
+  useEffect(() => {
+    const handleApplyConsensus = (e: CustomEvent) => {
+      if (editor && e.detail) {
+        const { claim, result } = e.detail;
+        const { selection } = editor.state;
+        
+        const highlightAttrs = {
+          claim: claim,
+          consensusLevel: result.consensusLevel,
+          consensusScore: result.agreementPercentage,
+          evidenceConvergent: result.evidenceConvergent,
+          dissentAcknowledged: result.dissentAcknowledged,
+          biasCheckStatus: result.biasCheckStatus,
+          methodologyScore: result.methodologyScore,
+          extraordinaryEvidenceRequired: result.extraordinaryEvidenceRequired,
+        };
+        
+        // Insert the red pin node into the editor
+        editor.chain().focus().insertContent({
+            type: 'consensusPin',
+            attrs: highlightAttrs
+        }).run();
+      }
+    };
+
+    window.addEventListener("apply-consensus-highlight", handleApplyConsensus as EventListener);
+    return () => {
+      window.removeEventListener("apply-consensus-highlight", handleApplyConsensus as EventListener);
+    };
+  }, [editor]);
+
   const handleSave = React.useCallback(async () => {
     if (!editor) return;
 
@@ -1220,6 +1255,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   return (
     <EditorProvider editor={editor}>
       {editor && isEditorMounted && <GrammarBubbleMenu editor={editor} />}
+      {editor && isEditorMounted && (
+        <ConsensusBubbleMenu editor={editor} projectId={project.id} />
+      )}
       <AuditReportModal
         isOpen={!!auditReport}
         onClose={() => setAuditReport(null)}

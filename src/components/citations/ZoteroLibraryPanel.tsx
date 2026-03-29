@@ -22,12 +22,14 @@ interface ZoteroLibraryPanelProps {
   projectId: string;
   isConnected?: boolean;
   onImportSuccess: () => void;
+  onSourceSelect?: (source: any) => void;
 }
 
 export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({ 
   projectId,
   isConnected,
-  onImportSuccess 
+  onImportSuccess,
+  onSourceSelect
 }) => {
   const [items, setItems] = useState<ZoteroItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -280,22 +282,34 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
                 </div>
               )}
 
-              <button
-                disabled={importing.includes(item.key)}
-                onClick={() => handleImport(item.key)}
-                className={`w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                  importing.includes(item.key)
-                    ? "bg-gray-50 text-gray-400 border border-gray-100"
-                    : "bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600"
-                }`}
-              >
-                {importing.includes(item.key) ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Plus className="w-3.5 h-3.5" />
-                )}
-                {importing.includes(item.key) ? "Importing..." : "Import Entry"}
-              </button>
+                <div className="flex gap-2">
+                  <button
+                    disabled={importing.includes(item.key)}
+                    onClick={() => handleImport(item.key)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                      importing.includes(item.key)
+                        ? "bg-gray-50 text-gray-400 border border-gray-100"
+                        : "bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600"
+                    }`}
+                  >
+                    {importing.includes(item.key) ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Plus className="w-3.5 h-3.5" />
+                    )}
+                    {importing.includes(item.key) ? "Importing..." : "Import Entry"}
+                  </button>
+                  
+                  {onSourceSelect && (
+                    <button
+                      onClick={() => onSourceSelect(item)}
+                      className="px-3 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <Info className="w-3.5 h-3.5" />
+                      Details
+                    </button>
+                  )}
+                </div>
             </div>
           ))
         )}

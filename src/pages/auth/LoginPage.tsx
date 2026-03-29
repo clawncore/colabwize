@@ -84,6 +84,20 @@ const loginSchema = z
     },
   );
 
+const UNSAFE_BROWSER_MESSAGE = `Security Alert: Your Browser May Not Be Safe 
+
+We’ve detected unusual activity from your current browser. For your protection, we recommend using only official and up-to-date browsers like Chrome, Firefox, Edge, or Safari. 
+
+Using unauthorized or modified browsers may expose your passwords and personal data to security risks. 
+
+✅ What to do:
+
+1. Switch to a trusted browser
+2. Ensure it’s updated to the latest version
+3. Avoid apps or tools that modify browser behavior 
+
+Your security matters — please take a moment to protect your account.`;
+
 type LoginFormData = z.infer<typeof loginSchema>;
 
 const LoginPage: React.FC = () => {
@@ -100,6 +114,7 @@ const LoginPage: React.FC = () => {
   const [failedAttempts, setFailedAttempts] = React.useState(0);
   const [isRecoveryMode, setIsRecoveryMode] = React.useState(false);
   const [isChallengeRequired, setIsChallengeRequired] = React.useState(false);
+  const [isSecurityInfo, setIsSecurityInfo] = React.useState(false);
   const [v2Token, setV2Token] = React.useState<string | null>(null);
   const v2ContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -207,6 +222,7 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
     clearErrors();
     setIsEmailNotConfirmed(false);
+    setIsSecurityInfo(false);
 
     try {
       // ── reCAPTCHA verification ──────────────────────────────────────────
@@ -215,7 +231,7 @@ const LoginPage: React.FC = () => {
           // If a manual challenge is already required, verify the v2 token instead
           if (isChallengeRequired) {
             if (!v2Token) {
-              setError("Please complete the security challenge.");
+              setError("Please complete the security challenge to proceed.");
               setIsLoading(false);
               isSubmittingRef.current = false;
               return;
@@ -228,7 +244,7 @@ const LoginPage: React.FC = () => {
             });
             const rcData = await rcRes.json();
             if (!rcRes.ok || !rcData.success) {
-              setError("Security verification failed. Please try again.");
+              setError(UNSAFE_BROWSER_MESSAGE);
               setV2Token(null);
               setIsLoading(false);
               isSubmittingRef.current = false;
@@ -240,7 +256,9 @@ const LoginPage: React.FC = () => {
             
             if (!rcToken) {
               console.warn("reCAPTCHA v3 blocked, triggering manual challenge");
+              setIsSecurityInfo(true);
               setIsChallengeRequired(true);
+              setError("Browser security features blocked. Please complete the challenge below.");
               setIsLoading(false);
               isSubmittingRef.current = false;
               return;
@@ -252,11 +270,15 @@ const LoginPage: React.FC = () => {
               });
               const rcData = await rcRes.json();
               if (!rcRes.ok || !rcData.success) {
+                // Robotic behavior (low score) vs Unsafe Browser
                 if (rcData.score !== undefined && rcData.score < 0.5) {
                   console.warn("Low v3 score, triggering manual challenge");
+                  setIsSecurityInfo(true);
                   setIsChallengeRequired(true);
+                  setError("Automated activity detected. Please complete the security challenge to continue.");
                 } else {
-                  setError("Security verification failed. Please try again.");
+                  setIsSecurityInfo(true);
+                  setError(UNSAFE_BROWSER_MESSAGE);
                 }
                 setIsLoading(false);
                 isSubmittingRef.current = false;
@@ -264,9 +286,10 @@ const LoginPage: React.FC = () => {
               }
             }
           }
-        } catch (rcErr) {
-          console.warn("reCAPTCHA check encountered an error, triggering manual challenge:", rcErr);
-          setIsChallengeRequired(true);
+        } catch (rcErr: any) {
+          console.warn("reCAPTCHA check encountered an error:", rcErr);
+          setIsSecurityInfo(true);
+          setError(UNSAFE_BROWSER_MESSAGE);
           setIsLoading(false);
           isSubmittingRef.current = false;
           return;
@@ -607,14 +630,14 @@ const LoginPage: React.FC = () => {
       {/* Error Message */}
       {error && (
         <div
-          className={`rounded-lg p-3 ${isEmailNotConfirmed ? "bg-blue-50 border border-blue-200" : "bg-red-50 border border-red-200"}`}>
+          className={`rounded-lg p-3 ${isEmailNotConfirmed || isSecurityInfo ? "bg-blue-50 border border-blue-200" : "bg-red-50 border border-red-200"}`}>
           <div className="flex items-start">
             <AlertCircle
-              className={`h-5 w-5 mr-2 ${isEmailNotConfirmed ? "text-blue-600" : "text-red-600"}`}
+              className={`h-5 w-5 mr-2 ${isEmailNotConfirmed || isSecurityInfo ? "text-blue-600" : "text-red-600"}`}
             />
             <div className="flex-1">
               <p
-                className={`text-sm font-medium ${isEmailNotConfirmed ? "text-blue-800" : "text-red-800"}`}>
+                className={`text-sm font-medium whitespace-pre-line ${isEmailNotConfirmed || isSecurityInfo ? "text-blue-800" : "text-red-800"}`}>
                 {error}
               </p>
 
@@ -747,9 +770,9 @@ const LoginPage: React.FC = () => {
         {/* reCAPTCHA v2 Fallback Challenge */}
         {isChallengeRequired && (
           <div className="space-y-2 animate-in fade-in slide-in-from-top-4 duration-500">
-            <p className="text-xs font-medium text-blue-600 flex items-center gap-1.5 px-1">
+            <p className="text-xs font-medium text-blue-600 flex items-center gap-1.5 px-1 underline decoration-dotted underline-offset-2">
               <Shield className="w-3.5 h-3.5" />
-              Security verification required
+              Security verification required for your browser version
             </p>
             <div 
               id="recaptcha-v2-container" 

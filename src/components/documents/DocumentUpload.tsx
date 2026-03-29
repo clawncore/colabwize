@@ -252,12 +252,19 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
           null
         );
       } else if (activeTab === "google-drive") {
-        result = await GoogleDriveService.createProject(
-          selectedItem.id,
-          title,
-          description,
-          workspaceId
-        );
+        if (projectId) {
+          result = await GoogleDriveService.importFile(
+            projectId,
+            selectedItem.id
+          );
+        } else {
+          result = await GoogleDriveService.createProject(
+            selectedItem.id,
+            title,
+            description,
+            workspaceId
+          );
+        }
       } else {
         throw new Error("Invalid source");
       }
@@ -291,11 +298,10 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   return (
     <div className="w-full p-6 bg-white">
       <h2 className="text-xl font-semibold mb-6">
-        {projectId ? "Update Document" : "Upload New Document"}
+        {projectId ? "Import Document to Project" : "Upload New Document"}
       </h2>
 
-      {!projectId && (
-        <div className="flex space-x-2 mb-8 border-b pb-2 overflow-x-auto">
+      <div className="flex space-x-2 mb-8 border-b pb-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab("local")}
             className={`flex items-center space-x-2 px-4 py-2 rounded-t-md font-medium text-sm transition-colors border-b-2 ${
@@ -326,7 +332,6 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             <span>OneDrive</span>
           </button>
         </div>
-      )}
 
 
 
@@ -436,7 +441,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             <div className={`flex flex-col flex-1 border rounded-lg bg-gray-50 mb-4 ${isNotLinked ? 'min-h-[250px]' : 'min-h-0 overflow-hidden'}`}>
               {isNotLinked ? (
                 <div className="flex flex-col items-center justify-center p-8 text-center" style={{ minHeight: '250px' }}>
-                  <GoogleDriveIcon className="w-12 h-12 mb-4 opacity-60" />
+                  <GoogleDriveIcon width={48} height={48} className="mb-4" />
                   <h3 className="text-base font-semibold text-gray-900 mb-2">Connect Google Drive</h3>
                   <p className="text-sm text-gray-500 mb-5 max-w-[280px]">
                     Grant one-time access so ColabWize can browse your Drive documents. You'll stay on this page.

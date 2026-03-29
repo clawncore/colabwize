@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod/dist/zod";
 import { z } from "zod";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { Mail, Lock, User, Shield } from "lucide-react";
+import { Mail, Lock, User, Shield, AlertCircle } from "lucide-react";
 import AuthLayout from "../../components/auth/AuthLayout";
 import FormInput from "../../components/auth/FormInput";
 import PasswordStrength from "../../components/auth/PasswordStrength";
@@ -142,6 +142,20 @@ const signupSchema = z
       path: ["email"],
     },
   );
+
+const UNSAFE_BROWSER_MESSAGE = `Security Alert: Your Browser May Not Be Safe 
+
+We’ve detected unusual activity from your current browser. For your protection, we recommend using only official and up-to-date browsers like Chrome, Firefox, Edge, or Safari. 
+
+Using unauthorized or modified browsers may expose your passwords and personal data to security risks. 
+
+✅ What to do:
+
+1. Switch to a trusted browser
+2. Ensure it’s updated to the latest version
+3. Avoid apps or tools that modify browser behavior 
+
+Your security matters — please take a moment to protect your account.`;
 
 type SignupFormData = z.infer<typeof signupSchema>;
 
@@ -665,7 +679,7 @@ const SignupPage: React.FC = () => {
             // If a manual challenge is already required, verify the v2 token instead
             if (isChallengeRequired) {
               if (!v2Token) {
-                setError("root", { message: "Please complete the security challenge." });
+                setError("root", { message: "Please complete the security challenge to proceed." });
                 setIsLoading(false);
                 return;
               }
@@ -677,7 +691,7 @@ const SignupPage: React.FC = () => {
               });
               const rcData = await rcRes.json();
               if (!rcRes.ok || !rcData.success) {
-                setError("root", { message: "Security verification failed. Please try again." });
+                setError("root", { message: UNSAFE_BROWSER_MESSAGE });
                 setV2Token(null);
                 setIsLoading(false);
                 return;
@@ -689,6 +703,7 @@ const SignupPage: React.FC = () => {
               if (!rcToken) {
                 console.warn("reCAPTCHA v3 blocked/empty, triggering manual challenge");
                 setIsChallengeRequired(true);
+                setError("root", { message: "Browser security features blocked. Please complete the challenge below." });
                 setIsLoading(false);
                 return;
               } else {
@@ -699,11 +714,13 @@ const SignupPage: React.FC = () => {
                 });
                 const rcData = await rcRes.json();
                 if (!rcRes.ok || !rcData.success) {
+                  // Robotic behavior (low score) vs Unsafe Browser
                   if (rcData.score !== undefined && rcData.score < 0.5) {
                     console.warn("Low v3 score, triggering manual challenge");
                     setIsChallengeRequired(true);
+                    setError("root", { message: "Automated activity detected. Please complete the security challenge to continue." });
                   } else {
-                    setError("root", { message: "Security verification failed. Please try again." });
+                    setError("root", { message: UNSAFE_BROWSER_MESSAGE });
                   }
                   setIsLoading(false);
                   return;
@@ -711,8 +728,8 @@ const SignupPage: React.FC = () => {
               }
             }
           } catch (rcErr) {
-            console.warn("reCAPTCHA check encountered an error, triggering manual challenge:", rcErr);
-            setIsChallengeRequired(true);
+            console.warn("reCAPTCHA check encountered an error:", rcErr);
+            setError("root", { message: UNSAFE_BROWSER_MESSAGE });
             setIsLoading(false);
             return;
           }
@@ -1054,8 +1071,13 @@ const SignupPage: React.FC = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Error message */}
           {errors.root && (
-            <div className="text-red-400 text-sm py-2">
-              {errors.root.message}
+            <div className={`rounded-lg p-3 bg-red-50 border border-red-200`}>
+              <div className="flex items-start">
+                <AlertCircle className="h-5 w-5 mr-2 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm font-medium text-red-800 whitespace-pre-line">
+                  {errors.root.message}
+                </p>
+              </div>
             </div>
           )}
 
