@@ -312,6 +312,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             <span>Local PC</span>
           </button>
           
+          {/* Cloud Storage disabled for now
           <button
             onClick={() => setActiveTab("google-drive")}
             className={`flex items-center space-x-2 px-4 py-2 rounded-t-md font-medium text-sm transition-colors border-b-2 ${
@@ -331,6 +332,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
             <OneDriveIcon className="w-4 h-4" />
             <span>OneDrive</span>
           </button>
+          */}
         </div>
 
 

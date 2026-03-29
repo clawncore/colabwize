@@ -146,6 +146,7 @@ function FeaturesPresentationFlow() {
         "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800&h=600&fit=crop",
       color: "from-blue-600 to-blue-800",
     },
+    /*
     {
       icon: Cloud,
       title: "Google Drive & Workspace",
@@ -162,6 +163,7 @@ function FeaturesPresentationFlow() {
       color: "from-green-600 to-emerald-700",
       reverse: true,
     },
+    */
     {
       icon: FileText,
       title: "Advanced File Support",
