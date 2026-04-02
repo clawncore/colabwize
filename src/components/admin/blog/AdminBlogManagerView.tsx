@@ -58,6 +58,8 @@ export const AdminBlogManagerView: React.FC = () => {
     fetchBlogs();
   }, []);
 
+
+
   const fetchBlogs = async () => {
     try {
       setIsLoading(true);
@@ -151,6 +153,11 @@ export const AdminBlogManagerView: React.FC = () => {
       </div>
     </div>
   );
+
+  // Mount sidebar into the layout — must be AFTER subSidebar is defined
+  useEffect(() => {
+    setSubSidebar(subSidebar);
+  }, [view, activeFilter, editingBlog]);
 
   return (
     <>
