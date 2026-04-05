@@ -600,7 +600,11 @@ export class CitationService {
       return response.data;
     } catch (error: any) {
       console.error("Error importing from URL:", error);
-      throw new Error(getErrorMessage(error, "Failed to import from URL"));
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to import from URL. The site may be blocking automated access.";
+      throw new Error(typeof msg === "string" ? msg : "Failed to import from URL");
     }
   }
 

@@ -26,6 +26,7 @@ import {
   PieChart
 } from "lucide-react";
 import { ConsensusBadge } from "./ConsensusBadge";
+import { ZoteroIcon } from "../common/ZoteroIcon";
 import { apiClient } from "../../services/apiClient";
 import { ZoteroService } from "../../services/zoteroService";
 import { useToast } from "../../hooks/use-toast";
@@ -181,7 +182,7 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
       url: s.url || s.data?.url || "N/A",
       abstract: s.abstract || s.data?.abstractNote || s.abstractNote || "",
       itemType: s.type || s.data?.itemType || "Journal Article",
-      sourceType: s.source ? (s.source as string).toLowerCase() : 'project',
+      sourceType: s.source ? String(s.source).toLowerCase() : (!s.id && (s.key || s.data?.key) ? 'zotero' : (!s.id && (s.profile_id || s.group_id) ? 'mendeley' : 'project')),
       
       // Extended Fields
       section: s.section || s.data?.section || "N/A",
@@ -270,13 +271,16 @@ export const SourceDetailPanel: React.FC<SourceDetailPanelProps> = ({
         {/* Compact Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
             <div className="flex items-center gap-3">
-                <div className={`p-1.5 rounded-lg ${normalizedSource.sourceType === 'zotero' ? 'bg-red-50 text-red-600' : 'bg-purple-50 text-purple-600'}`}>
-                    <BookOpen className="w-4 h-4" />
+                <div className={`p-1.5 rounded-lg ${normalizedSource.sourceType === 'zotero' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-purple-50 text-purple-600 border border-purple-100'}`}>
+                    {normalizedSource.sourceType === 'zotero' ? <ZoteroIcon className="w-5 h-5 drop-shadow-sm" /> : <BookOpen className="w-4 h-4" />}
                 </div>
-                <div className="space-y-0.5">
-                    <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                        Research Center
-                    </h2>
+                <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      {normalizedSource.sourceType === 'zotero' && <span className="flex items-center justify-center bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest leading-none top-0.5 relative">Zotero</span>}
+                      <h2 className={`text-[10px] font-black uppercase tracking-widest leading-none ${normalizedSource.sourceType === 'zotero' ? 'text-red-600/80 mt-0.5' : 'text-gray-400 mt-0.5'}`}>
+                          {normalizedSource.sourceType === 'zotero' ? 'Reference Library' : 'Research Center'}
+                      </h2>
+                    </div>
                     <p className="text-xs font-black text-gray-900 leading-none">{normalizedSource.title.slice(0, 30)}...</p>
                 </div>
             </div>

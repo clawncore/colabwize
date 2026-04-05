@@ -18,6 +18,8 @@ interface AddCitationModalProps {
   isPanel?: boolean;
   citations?: any[];
   onInsertCitation?: (text: string, trackingInfo?: any) => void;
+  initialSearchQuery?: string;
+  autoSearch?: boolean;
 }
 
 const AddCitationModal: React.FC<AddCitationModalProps> = ({
@@ -29,76 +31,32 @@ const AddCitationModal: React.FC<AddCitationModalProps> = ({
   isPanel = false,
   citations = [],
   onInsertCitation,
+  initialSearchQuery,
+  autoSearch = false,
 }) => {
-  const [mainTab, setMainTab] = useState<"library" | "add-new">("library");
-  const [activeTab, setActiveTab] = useState<"search" | "manual" | "import">(
-    "search",
-  );
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery || "");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
+
+  const [activeTab, setActiveTab] = useState<"search" | "manual" | "import">("search");
   const [citationData, setCitationData] = useState<CitationData>(
-    initialData || {
-      type: "article",
-      title: "",
-      authors: [{ firstName: "", lastName: "" }],
-    },
+    initialData || { type: "article", title: "", authors: [{ firstName: "", lastName: "" }] },
   );
-  const [importData, setImportData] = useState({
-    doi: "",
-    url: "",
-    bibtex: "",
-    ris: "",
-  });
+  const [importData, setImportData] = useState({ doi: "", url: "", bibtex: "", ris: "" });
   const [importResult, setImportResult] = useState<any>(null);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-
-  // New state for Library Search
-  const [librarySearchQuery, setLibrarySearchQuery] = useState("");
-
-  // Reset form when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setActiveTab("search");
-      setSearchQuery("");
-      setSearchResults([]);
-
-      // If we're editing, use initialData, otherwise reset to empty form
-      if (initialData) {
-        setCitationData(initialData);
-      } else {
-        setCitationData({
-          type: "article",
-          title: "",
-          authors: [{ firstName: "", lastName: "" }],
-        });
-      }
-
-      setImportData({
-        doi: "",
-        url: "",
-        bibtex: "",
-        ris: "",
-      });
-      setImportResult(null);
-      setError(null);
-      setSuccess(null);
-      setMainTab("library");
-    }
-  }, [isOpen, initialData]);
-
-
-  const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) return;
+  const handleSearch = useCallback(async (queryOverride?: string) => {
+    const query = queryOverride || searchQuery;
+    if (!query.trim()) return;
 
     setSearching(true);
     setError(null);
 
     try {
-      const results = await CitationService.searchCitations(searchQuery);
+      const results = await CitationService.searchCitations(query);
       setSearchResults(results);
       if (results.length === 0) {
         setError("No results found. Try adjusting your search terms.");
@@ -110,6 +68,30 @@ const AddCitationModal: React.FC<AddCitationModalProps> = ({
       setSearching(false);
     }
   }, [searchQuery]);
+
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab("search");
+      const q = initialSearchQuery || "";
+      setSearchQuery(q);
+      setSearchResults([]);
+      if (initialData) {
+        setCitationData(initialData);
+      } else {
+        setCitationData({ type: "article", title: "", authors: [{ firstName: "", lastName: "" }] });
+      }
+      setImportData({ doi: "", url: "", bibtex: "", ris: "" });
+      setImportResult(null);
+      setError(null);
+      setSuccess(null);
+
+      // Auto search if requested
+      if (autoSearch && q) {
+        handleSearch(q);
+      }
+    }
+  }, [isOpen, initialData, initialSearchQuery, autoSearch, handleSearch]);
 
   const handleImportDOI = useCallback(async () => {
     if (!importData.doi.trim()) {
@@ -310,177 +292,55 @@ const AddCitationModal: React.FC<AddCitationModalProps> = ({
 
   if (!isOpen) return null;
 
-
-
   // Panel mode rendering
   if (isPanel) {
-    const filteredCitations = citations.filter(c =>
-      c.title?.toLowerCase().includes(librarySearchQuery.toLowerCase()) ||
-      (Array.isArray(c.authors) && c.authors.some((a: any) =>
-        (typeof a === 'string' ? a : `${a.firstName} ${a.lastName}`).toLowerCase().includes(librarySearchQuery.toLowerCase())
-      ))
-    );
-
     return (
       <div className="flex flex-col h-full bg-[#f9fafb] min-w-0">
-        {/* Main Tabs - Pill Style - Add right padding to avoid close button overlap */}
-        <div className="px-4 pr-12 py-4">
-          <div className="flex bg-gray-100 p-1 rounded-xl">
-            <button
-              onClick={() => setMainTab("library")}
-              className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${mainTab === "library"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-                }`}
-            >
-              Library ({citations.length})
-            </button>
-            <button
-              onClick={() => setMainTab("add-new")}
-              className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${mainTab === "add-new"
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-                }`}
-            >
-              Add New
-            </button>
-          </div>
+        {/* Nested Tabs */}
+        <div className="flex border-b border-gray-100 px-4 mt-2">
+          <button
+            onClick={() => setActiveTab("search")}
+            className={`px-3 py-3 text-xs font-bold transition-all border-b-2 ${activeTab === "search"
+              ? "text-blue-600 border-blue-600"
+              : "text-gray-500 border-transparent hover:text-gray-700"
+              }`}
+          >
+            Search
+          </button>
+          <button
+            onClick={() => setActiveTab("manual")}
+            className={`px-3 py-3 text-xs font-bold transition-all border-b-2 ${activeTab === "manual"
+              ? "text-blue-600 border-blue-600"
+              : "text-gray-500 border-transparent hover:text-gray-700"
+              }`}
+          >
+            Manual
+          </button>
+          <button
+            onClick={() => setActiveTab("import")}
+            className={`px-3 py-3 text-xs font-bold transition-all border-b-2 ${activeTab === "import"
+              ? "text-blue-600 border-blue-600"
+              : "text-gray-500 border-transparent hover:text-gray-700"
+              }`}
+          >
+            Import
+          </button>
         </div>
 
-        {mainTab === "library" ? (
-          <div className="flex-1 flex flex-col min-h-0">
-            {/* Library Search */}
-            <div className="px-4 pb-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search library..."
-                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none bg-white"
-                  value={librarySearchQuery}
-                  onChange={(e) => setLibrarySearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          {renderContent()}
+        </div>
 
-            {/* Library List */}
-            <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3 custom-scrollbar">
-              {filteredCitations.length === 0 ? (
-                <div className="text-center py-10">
-                  <BookOpen className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500">
-                    {librarySearchQuery ? "No matching sources found." : "Your library is empty."}
-                  </p>
-                </div>
-              ) : (
-                filteredCitations.map((source, idx) => (
-                  <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-blue-200 transition-all">
-                    <h4 className="text-sm font-bold text-gray-900 mb-1 leading-snug line-clamp-2">{source.title}</h4>
-                    <p className="text-xs text-gray-500 mb-2 truncate">
-                      {Array.isArray(source.authors) && source.authors.length > 0
-                        ? source.authors.map((a: any) => {
-                          if (typeof a === 'string') return a;
-                          if (a.name) return a.name;
-                          if (a.firstName && a.lastName) return `${a.firstName} ${a.lastName}`;
-                          if (a.lastName) return a.lastName;
-                          return "Unknown";
-                        }).join(", ")
-                        : (source.author || "Unknown Author")}
-                    </p>
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
-                      <span className="text-[10px] font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded uppercase">
-                        {source.type || "Source"}
-                      </span>
-                      <button
-                        onClick={() => {
-                          if (onInsertCitation) {
-                            let author = "Anon";
-                            if (Array.isArray(source.authors) && source.authors.length > 0) {
-                              const firstAuthor = source.authors[0];
-                              if (typeof firstAuthor === 'string') {
-                                author = firstAuthor;
-                              } else if (firstAuthor.lastName) {
-                                author = firstAuthor.lastName;
-                              } else if (firstAuthor.name) {
-                                // Extract last name from full name if possible
-                                const parts = firstAuthor.name.split(' ');
-                                author = parts[parts.length - 1];
-                              }
-                            } else if (source.author) {
-                              const parts = (source.author as string).split(' ');
-                              author = parts[parts.length - 1];
-                            }
-
-                            const year = source.year || "n.d.";
-                            const citationText = `(${author}, ${year})`;
-
-                            onInsertCitation(citationText, {
-                              sourceId: source.id,
-                              title: source.title,
-                              fullReferenceEntry: `${author} (${year}). ${source.title}.`
-                            });
-                          }
-                        }}
-                        className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors"
-                      >
-                        <Quote className="w-3 h-3 fill-current" />
-                        Cite
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col min-h-0 bg-white border-t border-gray-100 rounded-t-3xl shadow-2xl">
-            {/* Nested Tabs for Add New */}
-            <div className="flex border-b border-gray-100 px-4 mt-2">
-              <button
-                onClick={() => setActiveTab("search")}
-                className={`px-3 py-3 text-xs font-bold transition-all border-b-2 ${activeTab === "search"
-                  ? "text-blue-600 border-blue-600"
-                  : "text-gray-500 border-transparent hover:text-gray-700"
-                  }`}
-              >
-                Search
-              </button>
-              <button
-                onClick={() => setActiveTab("manual")}
-                className={`px-3 py-3 text-xs font-bold transition-all border-b-2 ${activeTab === "manual"
-                  ? "text-blue-600 border-blue-600"
-                  : "text-gray-500 border-transparent hover:text-gray-700"
-                  }`}
-              >
-                Manual
-              </button>
-              <button
-                onClick={() => setActiveTab("import")}
-                className={`px-3 py-3 text-xs font-bold transition-all border-b-2 ${activeTab === "import"
-                  ? "text-blue-600 border-blue-600"
-                  : "text-gray-500 border-transparent hover:text-gray-700"
-                  }`}
-              >
-                Import
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-              {renderContent()}
-            </div>
-
-            {/* Footer for Add New */}
-            <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50/50">
-              <button
-                onClick={handleSaveCitation}
-                disabled={!isFormValid()}
-                className="w-full py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md shadow-blue-100"
-              >
-                {importResult ? "Add to Library" : "Save Citation"}
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50/50">
+          <button
+            onClick={handleSaveCitation}
+            disabled={!isFormValid()}
+            className="w-full py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md shadow-blue-100"
+          >
+            {importResult ? "Add to Library" : "Save Citation"}
+          </button>
+        </div>
       </div>
     );
   }

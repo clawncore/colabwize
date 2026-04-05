@@ -23,13 +23,19 @@ interface ZoteroLibraryPanelProps {
   isConnected?: boolean;
   onImportSuccess: () => void;
   onSourceSelect?: (source: any) => void;
+  citations?: any[];
+  onInsertCitation?: (text: string, trackingInfo?: any) => void;
+  citationStyle?: string | null;
 }
 
 export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({ 
   projectId,
   isConnected,
   onImportSuccess,
-  onSourceSelect
+  onSourceSelect,
+  citations = [],
+  onInsertCitation,
+  citationStyle
 }) => {
   const [items, setItems] = useState<ZoteroItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +44,7 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [collections, setCollections] = useState<any[]>([]);
   const [selectedCollectionKey, setSelectedCollectionKey] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<"all" | "imported" | "collection">("all");
   const [isCollectionsLoading, setIsCollectionsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -79,23 +86,33 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
     if (isConnected) {
       fetchCollections();
       fetchLibrary();
+    } else {
+      setLoading(false);
     }
   }, [isConnected, selectedCollectionKey]);
 
   const filteredItems = useMemo(() => {
-    if (!searchQuery) return items;
+    let list = items;
+    if (activeFilter === "imported") {
+      list = items.filter(item => citations?.some(c => c.formatted_citations?.key === (item.key || item.id) || c.formatted_citations?.data?.key === (item.key || item.id)));
+    }
+    
+    if (!searchQuery) return list;
     const q = searchQuery.toLowerCase();
-    return items.filter(item => 
-      item.data.title?.toLowerCase().includes(q) || 
-      item.meta.creatorSummary?.toLowerCase().includes(q)
+    return list.filter(item => 
+      item.data?.title?.toLowerCase().includes(q) || 
+      item.meta?.creatorSummary?.toLowerCase().includes(q)
     );
-  }, [items, searchQuery]);
+  }, [items, searchQuery, activeFilter, citations]);
 
   const handleImport = async (itemKey: string) => {
     setImporting(prev => [...prev, itemKey]);
     try {
-      const itemToImport = items.find(i => i.key === itemKey);
-      if (!itemToImport) throw new Error("Item not found");
+      const itemToImport = items.find(i => (i.key || i.id || (i as any).data?.key) === itemKey);
+      if (!itemToImport) {
+        console.error("Could not find Target Key:", itemKey, "in items:", items);
+        throw new Error("Item not found");
+      }
       
       await ZoteroService.importItems(projectId, [itemToImport]);
       toast({
@@ -196,21 +213,34 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
         {isConnected && (
           <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
             <button
-              onClick={() => setSelectedCollectionKey(null)}
+              onClick={() => { setActiveFilter("all"); setSelectedCollectionKey(null); }}
               className={`px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all border ${
-                selectedCollectionKey === null
+                activeFilter === "all"
                   ? "bg-red-600 text-white border-red-600 shadow-sm"
                   : "bg-white text-gray-500 border-gray-100 hover:border-red-200"
               }`}
             >
               All Items
             </button>
+            <button
+              onClick={() => { setActiveFilter("imported"); setSelectedCollectionKey(null); }}
+              className={`px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all border ${
+                activeFilter === "imported"
+                  ? "bg-purple-600 text-white border-purple-600 shadow-sm"
+                  : "bg-white text-gray-500 border-gray-100 hover:border-purple-200"
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3 h-3" />
+                Imported
+              </span>
+            </button>
             {collections.map((coll) => (
               <button
                 key={coll.key}
-                onClick={() => setSelectedCollectionKey(coll.key)}
+                onClick={() => { setActiveFilter("collection"); setSelectedCollectionKey(coll.key); }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all border ${
-                  selectedCollectionKey === coll.key
+                  activeFilter === "collection" && selectedCollectionKey === coll.key
                     ? "bg-red-600 text-white border-red-600 shadow-sm"
                     : "bg-white text-gray-500 border-gray-100 hover:border-red-200"
                 }`}
@@ -229,22 +259,22 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
             <p className="text-sm text-gray-400">No matching references found</p>
           </div>
         ) : (
-          filteredItems.map((item) => (
+          filteredItems.map((item: any) => (
             <div 
-              key={item.key} 
+              key={item?.key || item?.id} 
               className="p-4 bg-white border border-gray-100 rounded-2xl hover:border-red-200 hover:shadow-sm transition-all group"
             >
               <div className="flex justify-between items-start gap-3 mb-2">
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-bold rounded-lg uppercase border border-gray-100">
-                    {item.data.itemType.replace(/([A-Z])/g, ' $1').trim()}
+                    {String(item?.data?.itemType || item?.type || "unknown").replace(/([A-Z])/g, ' $1').trim()}
                   </span>
                   <span className="px-2 py-0.5 bg-red-50 text-red-700 text-[10px] font-bold rounded-lg uppercase border border-red-100 flex items-center gap-1">
                     <ZoteroIcon className="w-2.5 h-2.5" /> Verified
                   </span>
                 </div>
                 <a 
-                  href={`https://www.zotero.org/items/${item.key}`} 
+                  href={`https://www.zotero.org/items/${item?.key || item?.id}`} 
                   target="_blank" 
                   rel="noreferrer"
                   className="p-1 text-gray-300 hover:text-blue-500 transition-colors"
@@ -255,50 +285,111 @@ export const ZoteroLibraryPanel: React.FC<ZoteroLibraryPanelProps> = ({
 
               <div 
                 className="cursor-pointer"
-                onClick={() => toggleExpand(item.key)}
+                onClick={() => toggleExpand(item?.key || item?.id)}
               >
                 <h3 className="text-sm font-bold text-gray-900 leading-tight mb-1 group-hover:text-red-600 transition-colors line-clamp-2">
-                  {item.data.title}
+                  {item?.data?.title || item?.title || "Untitled"}
                 </h3>
                 
                 <p className="text-xs text-gray-500 mb-3 line-clamp-1">
-                  {item.meta.creatorSummary || "No authors listed"}
-                  {item.data.date && ` · ${item.data.date}`}
+                  {item?.meta?.creatorSummary || (Array.isArray(item?.author) ? item.author.map((a:any)=>a.family||a.literal).join(', ') : null) || "No authors listed"}
+                  {item?.data?.date && ` · ${item.data.date}`}
                 </p>
 
                 <div className="flex items-center gap-2 mb-4 text-[10px] text-gray-400 font-medium">
-                  {expandedItems.includes(item.key) ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  {expandedItems.includes(item?.key || item?.id) ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                   View Details
                 </div>
               </div>
 
-              {expandedItems.includes(item.key) && (
+              {expandedItems.includes(item?.key || item?.id) && (
                 <div className="mb-4 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
                     <div className="py-2 px-3 bg-gray-50 rounded-xl text-[10px] text-gray-500">
-                      <strong>Journal:</strong> {item.data.publicationTitle || 'N/A'}<br/>
-                      <strong>Volume:</strong> {item.data.volume || 'N/A'} <strong>Issue:</strong> {item.data.issue || 'N/A'}<br/>
-                      <strong>DOI:</strong> {item.data.DOI || 'N/A'}
+                      <strong>Journal:</strong> {item?.data?.publicationTitle || item?.container_title || 'N/A'}<br/>
+                      <strong>Volume:</strong> {item?.data?.volume || item?.volume || 'N/A'} <strong>Issue:</strong> {item?.data?.issue || item?.issue || 'N/A'}<br/>
+                      <strong>DOI:</strong> {item?.data?.DOI || item?.DOI || 'N/A'}
                     </div>
                 </div>
               )}
 
                 <div className="flex gap-2">
-                  <button
-                    disabled={importing.includes(item.key)}
-                    onClick={() => handleImport(item.key)}
-                    className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      importing.includes(item.key)
-                        ? "bg-gray-50 text-gray-400 border border-gray-100"
-                        : "bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600"
-                    }`}
-                  >
-                    {importing.includes(item.key) ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Plus className="w-3.5 h-3.5" />
-                    )}
-                    {importing.includes(item.key) ? "Importing..." : "Import Entry"}
-                  </button>
+                  {(() => {
+                    const matchedCitation = citations?.find(c => c.formatted_citations?.key === (item?.key || item?.id) || c.formatted_citations?.data?.key === (item?.key || item?.id));
+                    if (matchedCitation) {
+                      const source = matchedCitation;
+                      const authors = Array.isArray(source.authors)
+                        ? source.authors
+                        : source.author
+                          ? [source.author]
+                          : [];
+                      
+                      const getLastName = (a: any): string => {
+                        let extracted = "Author";
+                        if (typeof a === "string") {
+                          const trimmed = a.trim();
+                          if (trimmed.includes(",")) extracted = trimmed.split(",")[0].trim();
+                          else {
+                            const parts = trimmed.split(" ").filter(Boolean);
+                            if (parts.length === 2) extracted = parts[1];
+                            else extracted = trimmed;
+                          }
+                        } else if (typeof a === "object" && a !== null) {
+                          extracted = a.lastName || a.family || a.literal || a.name || a.firstName || a.given || "Author";
+                        }
+                        if (extracted.length > 25) {
+                          extracted = extracted.split(" ")[0].replace(/[^a-zA-Z-]/g, "");
+                        }
+                        return extracted || "Author";
+                      };
+
+                      let authorText = "Author";
+                      if (authors.length === 1) authorText = getLastName(authors[0]);
+                      else if (authors.length === 2) authorText = `${getLastName(authors[0])} & ${getLastName(authors[1])}`;
+                      else if (authors.length > 2) authorText = `${getLastName(authors[0])} et al.`;
+
+                      const year = source.year || "n.d.";
+                      const inTextText = `(${authorText}, ${year})`;
+                      const activeStyle = citationStyle || "APA";
+
+                      return (
+                        <button
+                          onClick={() => {
+                            if (onInsertCitation) {
+                              onInsertCitation(inTextText, {
+                                eventId: "citation_inserted",
+                                sourceId: source.id || source.doi || source.title,
+                                style: activeStyle,
+                                timestamp: new Date().toISOString(),
+                                fullReferenceEntry: source,
+                              });
+                            }
+                          }}
+                          className="flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-600 hover:text-white hover:border-purple-600"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Cite
+                        </button>
+                      );
+                    }
+                    return (
+                      <button
+                        disabled={importing.includes(item?.key || item?.id)}
+                        onClick={() => handleImport(item?.key || item?.id)}
+                        className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                          importing.includes(item?.key || item?.id)
+                            ? "bg-gray-50 text-gray-400 border border-gray-100"
+                            : "bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600"
+                        }`}
+                      >
+                        {importing.includes(item?.key || item?.id) ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Plus className="w-3.5 h-3.5" />
+                        )}
+                        {importing.includes(item?.key || item?.id) ? "Importing..." : "Import Entry"}
+                      </button>
+                    );
+                  })()}
                   
                   {onSourceSelect && (
                     <button

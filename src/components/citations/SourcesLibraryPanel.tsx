@@ -21,7 +21,9 @@ import { ConfigService } from "../../services/ConfigService";
 import { LiteratureMatrix } from "./LiteratureMatrix";
 import { ZoteroLibraryPanel } from "./ZoteroLibraryPanel";
 import { MendeleyLibraryPanel } from "./MendeleyLibraryPanel";
+import { ZoteroIcon } from "../common/ZoteroIcon";
 import { useAuth } from "../../hooks/useAuth";
+import AccountService, { ActualUserAccount } from "../../services/accountService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,6 +68,7 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
   userPlan,
 }) => {
   const { user } = useAuth();
+  const [extendedUser, setExtendedUser] = useState<ActualUserAccount | null>(null);
   const [filterQuery, setFilterQuery] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "title" | "impact">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -83,6 +86,15 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
   useEffect(() => {
     setLocalCitations(citations);
   }, [citations]);
+
+  // Fetch true database user profile for integration fields
+  useEffect(() => {
+    if (user) {
+      AccountService.getUserAccount()
+        .then((data) => setExtendedUser(data))
+        .catch(console.error);
+    }
+  }, [user]);
 
   // Helper to generate unique key
   const getCitationKey = useCallback((c: StoredCitation) => {
@@ -339,22 +351,30 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
           ) : activeTab === "zotero" ? (
             <ZoteroLibraryPanel 
               projectId={projectId || ""} 
-              isConnected={!!user?.zotero_user_id}
+              isConnected={!!extendedUser?.zotero_user_id}
               onImportSuccess={() => {
                 // Potential callback to parent to reload main library
                 window.dispatchEvent(new CustomEvent('reloadProjectCitations'));
               }}
               onSourceSelect={onSourceSelect}
+              citations={localCitations}
+              onInsertCitation={onInsertCitation}
+              citationStyle={citationStyle}
             />
+            /* 
           ) : activeTab === "mendeley" ? (
             <MendeleyLibraryPanel 
               projectId={projectId || ""} 
-              isConnected={!!user?.mendeley_access_token}
+              isConnected={!!extendedUser?.mendeley_access_token}
               onImportSuccess={() => {
                 window.dispatchEvent(new CustomEvent('reloadProjectCitations'));
               }}
               onSourceSelect={onSourceSelect}
+              citations={localCitations}
+              onInsertCitation={onInsertCitation}
+              citationStyle={citationStyle}
             />
+            */
           ) : filteredCitations.length === 0 ? (
             <div className="text-center py-20">
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
@@ -395,7 +415,29 @@ export const SourcesLibraryPanel: React.FC<SourcesLibraryPanelProps> = ({
                           Review
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Source Origin Icon Badge (icon-only, name on hover) */}
+                        {(() => {
+                          const src = (source as any).source || (source as any).metadata?.source || "";
+                          if (src === "Zotero" || src === "zotero") return (
+                            <span title="Zotero" className="flex items-center justify-center w-5 h-5 bg-red-50 border border-red-100 rounded p-0.5">
+                              <ZoteroIcon className="w-full h-full" />
+                            </span>
+                          );
+                          /* 
+                          if (src === "Mendeley" || src === "mendeley") return (
+                            <span title="Mendeley" className="flex items-center justify-center w-5 h-5 bg-blue-50 border border-blue-100 rounded text-blue-600 font-black text-[10px]">
+                              M
+                            </span>
+                          );
+                          */
+                          if (src && src !== "") return (
+                            <span title={src} className="flex items-center justify-center w-5 h-5 bg-teal-50 border border-teal-100 rounded text-teal-600">
+                              <BookOpen className="w-3 h-3" />
+                            </span>
+                          );
+                          return null;
+                        })()}
                         {source.impactFactor && (
                           <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded uppercase">
                             IF {source.impactFactor}

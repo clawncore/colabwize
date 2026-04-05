@@ -1308,7 +1308,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   placeholder="Untitled Document"
                 />
               </div>
-              <div className="flex items-center space-x-2 flex-nowrap overflow-x-auto pb-1 custom-scrollbar min-w-0 flex-1 justify-end">
+              <div className="flex items-center space-x-2 flex-nowrap overflow-x-auto pb-1 custom-scrollbar min-w-0 flex-1 md:justify-center justify-start max-md:mt-2">
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
                   className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode

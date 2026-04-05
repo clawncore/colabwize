@@ -248,9 +248,21 @@ export const CitationComponent = (props: NodeViewProps) => {
           {/* Top Header Section */}
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h4 className="text-[15px] font-bold text-gray-900 leading-tight line-clamp-2">
-                {metadata?.sourceTitle || "Reference Title Unavailable"}
-              </h4>
+              <div className="flex items-center gap-2 mb-1">
+                {(metadata?.metadata as any)?.source === 'Zotero' && (
+                  <Badge className="px-1.5 py-0 rounded flex items-center justify-center bg-red-600 hover:bg-red-600 text-white text-[8px] font-black uppercase tracking-widest shadow-sm border-0 h-4">
+                    Zotero
+                  </Badge>
+                )}
+                {(metadata?.metadata as any)?.source === 'Mendeley' && (
+                  <Badge className="px-1.5 py-0 rounded flex items-center justify-center bg-blue-600 hover:bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest shadow-sm border-0 h-4">
+                    Mendeley
+                  </Badge>
+                )}
+                <h4 className="text-[15px] font-bold text-gray-900 leading-tight line-clamp-2">
+                  {metadata?.sourceTitle || "Reference Title Unavailable"}
+                </h4>
+              </div>
               <p className="text-[12px] text-gray-500 font-medium truncate mt-0.5">
                 {metadata?.authors?.join(", ") || "No Authors Found"}
               </p>

@@ -26,11 +26,18 @@ const buildErrorNode = (messageString: string, actionLabel?: string, actionHref?
       )}
     </div>
   );
-  // Polyfill toString so that error logging or `throw new Error()` casts
-  // it properly rather than outputting [object Object].
-  (errorNode as any).toString = () => messageString;
 
-  return errorNode as any;
+  // Return a plain wrapper object so we can safely attach toString
+  // without mutating the frozen React element.
+  const wrapper = {
+    node: errorNode,
+    toString: () => messageString,
+    // Make the wrapper render-able by spreading as a React node
+    // by making it iterable like a string (for toast / error message usage)
+    message: messageString,
+  };
+
+  return wrapper as any;
 };
 
 export const getErrorMessage = (

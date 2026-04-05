@@ -976,19 +976,6 @@ const EditorWorkspacePage: React.FC = () => {
                       <div className="w-1.5 h-1.5 bg-red-400 rounded-full" />
                     )}
                   </button>
-                  <button
-                    onClick={() => setActiveSourceTab("mendeley")}
-                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
-                      activeSourceTab === "mendeley"
-                        ? "text-[#6366F1] bg-white shadow-sm"
-                        : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                    }`}>
-                    <MendeleyIcon className={`w-3 h-3 flex-shrink-0 ${activeSourceTab === "mendeley" ? "text-[#6366F1]" : "text-gray-400"}`} />
-                    Mendeley
-                    {!user?.mendeley_access_token && (
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
-                    )}
-                  </button>
                 </div>
               )}
 
@@ -1614,27 +1601,18 @@ const EditorWorkspacePage: React.FC = () => {
                         description: `"${issue.selectedSource?.title}" has been successfully added.`,
                       });
                     } else if (issue.action === "SEARCH") {
-                      let query =
-                        issue.citationText ||
-                        issue.metadata?.foundPaper?.title ||
-                        issue.metadata?.extractedTitle ||
-                        issue.message
-                          .split("match)")[1]
-                          ?.replace(/[".]/g, "")
-                          .replace("Closest paper found:", "")
-                          .trim() ||
-                        issue.message.substring(0, 50);
+                      // Use the exact citation text found by the audit if available
+                      const query = (issue.citationText || issue.message.substring(0, 50))
+                        .replace(/[()]/g, "") // Clean parentheses for better search
+                        .trim();
 
-                      // Final cleanup of the query
-                      query = query.replace(/^[:\s-]+/, "").trim();
-
-                      openPanel("citations", {
-                        contextKeywords: [query],
+                      openPanel("add-citation", {
+                        initialSearchQuery: query,
                         autoSearch: true,
                       });
                       toast({
                         title: "Researching Source",
-                        description: `Searching academic databases for matches...`,
+                        description: `Searching academic databases for "${query}"...`,
                       });
                     }
                     setSelectedAuditReport(null);
@@ -1828,6 +1806,19 @@ const EditorWorkspacePage: React.FC = () => {
                     onInsertCitation={handleInsertCitation}
                     contextKeywords={panelData?.contextKeywords}
                     onClose={() => setIsRightSidebarOpen(false)}
+                  />
+                )}
+                {activePanelType === "add-citation" && (
+                  <AddCitationModal
+                    isOpen={true}
+                    isPanel={true}
+                    onClose={() => setIsRightSidebarOpen(false)}
+                    projectId={selectedProject?.id}
+                    onCitationAdded={() => {
+                      reloadProjectCitations();
+                    }}
+                    initialSearchQuery={panelData?.initialSearchQuery}
+                    autoSearch={panelData?.autoSearch}
                   />
                 )}
                 {activePanelType === "rephrase" && (

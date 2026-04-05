@@ -74,6 +74,7 @@ export interface ZoteroItem {
     dateModified?: string;
     [key: string]: any;
   };
+  [key: string]: any;
 }
 
 export class ZoteroService {

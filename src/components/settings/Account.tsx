@@ -463,7 +463,8 @@ const AccountSettingsPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Linked Mendeley Account */}
+              {/* 
+              {/* Linked Mendeley Account * /}
               {user?.mendeley_access_token && (
                 <div className="flex items-center justify-between p-3 bg-blue-50/30 rounded-lg border border-blue-50">
                   <div className="flex items-center gap-3">
@@ -481,6 +482,7 @@ const AccountSettingsPage: React.FC = () => {
                   </div>
                 </div>
               )}
+              */}
             </div>
           </div>
         </div>
@@ -683,6 +685,7 @@ const AccountSettingsPage: React.FC = () => {
               </div>
             )}
 
+            {/* 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 mt-4">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-blue-50 text-blue-600">
@@ -739,6 +742,7 @@ const AccountSettingsPage: React.FC = () => {
                 </div>
               </div>
             )}
+            */}
           </div>
         </div>
 

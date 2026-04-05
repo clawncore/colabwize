@@ -9,6 +9,7 @@ import {
   Plus,
   Folder
 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { MendeleyService, MendeleyItem } from "../../services/mendeleyService";
 import { useToast } from "../../hooks/use-toast";
 import { MendeleyIcon } from "../common/MendeleyIcon";
@@ -19,13 +20,19 @@ interface MendeleyLibraryPanelProps {
   isConnected?: boolean;
   onImportSuccess?: () => void;
   onSourceSelect?: (source: any) => void;
+  citations?: any[];
+  onInsertCitation?: (text: string, trackingInfo?: any) => void;
+  citationStyle?: string | null;
 }
 
 export const MendeleyLibraryPanel: React.FC<MendeleyLibraryPanelProps> = ({ 
   projectId,
   isConnected,
   onImportSuccess,
-  onSourceSelect
+  onSourceSelect,
+  citations = [],
+  onInsertCitation,
+  citationStyle
 }) => {
   const [items, setItems] = useState<MendeleyItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -273,22 +280,60 @@ export const MendeleyLibraryPanel: React.FC<MendeleyLibraryPanelProps> = ({
               )}
 
                 <div className="flex gap-2">
-                  <button
-                    disabled={importing.includes(item.id)}
-                    onClick={() => handleImport(item.id)}
-                    className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      importing.includes(item.id)
-                        ? "bg-gray-50 text-gray-400 border border-gray-100"
-                        : "bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600"
-                    }`}
-                  >
-                    {importing.includes(item.id) ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Plus className="w-3.5 h-3.5" />
-                    )}
-                    {importing.includes(item.id) ? "Importing..." : "Import Entry"}
-                  </button>
+                  {(() => {
+                    const matchedCitation = citations?.find(c =>
+                      c.id === item.id ||
+                      c.doi === (item.identifiers as any)?.doi ||
+                      c.title?.toLowerCase() === item.title?.toLowerCase()
+                    );
+                    if (matchedCitation) {
+                      const source = matchedCitation;
+                      const authors = Array.isArray(source.authors) ? source.authors : source.author ? [source.author] : [];
+                      const getLastName = (a: any): string => {
+                        if (typeof a === "string") { const p = a.trim().split(" "); return p.length >= 2 ? p[p.length-1] : a; }
+                        return a?.last_name || a?.lastName || a?.family || a?.name || "Author";
+                      };
+                      let authorText = "Author";
+                      if (authors.length === 1) authorText = getLastName(authors[0]);
+                      else if (authors.length === 2) authorText = `${getLastName(authors[0])} & ${getLastName(authors[1])}`;
+                      else if (authors.length > 2) authorText = `${getLastName(authors[0])} et al.`;
+                      const year = source.year || item.year || "n.d.";
+                      const inTextText = `(${authorText}, ${year})`;
+                      return (
+                        <button
+                          onClick={() => onInsertCitation?.(inTextText, {
+                            eventId: "citation_inserted",
+                            sourceId: source.id || source.doi || source.title,
+                            style: citationStyle || "APA",
+                            timestamp: new Date().toISOString(),
+                            fullReferenceEntry: source,
+                          })}
+                          className="flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all bg-purple-50 text-purple-700 border border-purple-100 hover:bg-purple-600 hover:text-white hover:border-purple-600"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Cite
+                        </button>
+                      );
+                    }
+                    return (
+                      <button
+                        disabled={importing.includes(item.id)}
+                        onClick={() => handleImport(item.id)}
+                        className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                          importing.includes(item.id)
+                            ? "bg-gray-50 text-gray-400 border border-gray-100"
+                            : "bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+                        }`}
+                      >
+                        {importing.includes(item.id) ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Plus className="w-3.5 h-3.5" />
+                        )}
+                        {importing.includes(item.id) ? "Importing..." : "Import Entry"}
+                      </button>
+                    );
+                  })()}
                   
                   {onSourceSelect && (
                     <button
