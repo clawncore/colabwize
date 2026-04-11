@@ -18,7 +18,11 @@ build/
 coverage/
 
 # Backend files and directories to exclude from frontend repo
-backend/
+# backend/ (removed to allow Render deployment)
+backend/**/*.json
+backend/**/*.pem
+backend/.env*
+backend/scripts/push-secrets*
 uploads/
 migrations/
 schema.sql
