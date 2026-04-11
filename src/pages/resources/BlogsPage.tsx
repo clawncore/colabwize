@@ -16,6 +16,7 @@ interface ApiBlogPost {
   category: string;
   image: string | null;
   created_at: string;
+  published_at?: string | null;
   read_time?: string | null;
 }
 
@@ -169,7 +170,7 @@ export default function BlogsPage() {
   const renderBlogCard = (post: any, index: number) => {
     // Generate some fake meta for the "Medium" feel if not present
     const claps = Math.floor(Math.random() * 500) + 50;
-    const date = new Date(post.created_at).toLocaleDateString("en-US", {
+    const date = new Date(post.published_at || post.created_at).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric"

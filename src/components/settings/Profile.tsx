@@ -516,9 +516,9 @@ export default function Profile() {
                 {(profile as any).zotero_user_id ? "Connected" : "Setup Zotero"}
               </Button>
             </div>
-            
+
             <div className="hidden">
-                {/* 
+              {/* 
                   MENDELEY INTEGRATION - TEMPORARILY DISABLED
                   STATUS SUMMARY (April 2026):
                   - Backend: Refactored MendeleyService.ts with standard JSON headers and robust 15s timeouts.
@@ -526,32 +526,32 @@ export default function Profile() {
                   - Library: fetchLibrary, fetchFolders, and queryItems are ready for testing with a fresh Elsevier API Key.
                   - Frontend: MendeleyLibraryPanel.tsx is fully implemented with provenance badges and "Cite" button parity.
                 */}
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 opacity-50">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center p-2.5">
-                      <MendeleyIcon className="h-full w-full" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900">Mendeley</h3>
-                      <p className="text-xs text-gray-500">
-                        Sync your Mendeley library directly to your projects.
-                      </p>
-                    </div>
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 opacity-50">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center p-2.5">
+                    <MendeleyIcon className="h-full w-full" />
                   </div>
-                  <Button
-                    variant={(profile as any).mendeley_access_token ? "outline" : "default"}
-                    className={(profile as any).mendeley_access_token ? "border-blue-100 text-blue-600 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700 text-white"}
-                    onClick={async () => {
-                      if (!(profile as any).mendeley_access_token) {
-                        window.location.href = await MendeleyService.getConnectUrl();
-                      }
-                    }}
-                    disabled={true}
-                  >
-                    {(profile as any).mendeley_access_token ? "Connected" : "Setup Mendeley"}
-                  </Button>
+                  <div>
+                    <h3 className="font-bold text-gray-900">Mendeley</h3>
+                    <p className="text-xs text-gray-500">
+                      Sync your Mendeley library directly to your projects.
+                    </p>
+                  </div>
                 </div>
-                </div>
+                <Button
+                  variant={(profile as any).mendeley_access_token ? "outline" : "default"}
+                  className={(profile as any).mendeley_access_token ? "border-blue-100 text-blue-600 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700 text-white"}
+                  onClick={async () => {
+                    if (!(profile as any).mendeley_access_token) {
+                      window.location.href = await MendeleyService.getConnectUrl();
+                    }
+                  }}
+                  disabled={true}
+                >
+                  {(profile as any).mendeley_access_token ? "Connected" : "Setup Mendeley"}
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Save Button */}

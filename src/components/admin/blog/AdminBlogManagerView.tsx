@@ -35,6 +35,7 @@ interface BlogPost {
   category: string;
   image: string;
   is_published: boolean;
+  published_at?: string;
   created_at: string;
   views?: string;
 }
@@ -74,20 +75,38 @@ export const AdminBlogManagerView: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingBlog?.title || !editingBlog?.content) return;
+    
+    // Detailed validation
+    const missing = [];
+    if (!editingBlog?.title) missing.push('Title');
+    if (!editingBlog?.content) missing.push('Content');
+    if (!editingBlog?.excerpt) missing.push('Excerpt');
+    if (!editingBlog?.author) missing.push('Author');
+    if (!editingBlog?.category) missing.push('Category');
+
+    if (missing.length > 0) {
+      alert(`Missing required fields: ${missing.join(', ')}`);
+      return;
+    }
 
     try {
       setIsSaving(true);
+      const payload = {
+        ...editingBlog,
+        published_at: editingBlog.published_at || null
+      };
+
       if (editingBlog.id) {
-        await apiClient.patch(`/api/admin/blogs/${editingBlog.id}`, editingBlog);
+        await apiClient.patch(`/api/admin/blogs/${editingBlog.id}`, payload);
       } else {
-        await apiClient.post('/api/admin/blogs', editingBlog);
+        await apiClient.post('/api/admin/blogs', payload);
       }
       await fetchBlogs();
       setView('list');
       setEditingBlog(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save blog:', error);
+      alert(error.message || 'Failed to save blog post');
     } finally {
       setIsSaving(false);
     }
@@ -140,6 +159,7 @@ export const AdminBlogManagerView: React.FC = () => {
                   content: '',
                   author: 'CLAWNCORE',
                   category: 'Academic Writing',
+                  published_at: new Date().toISOString().split('T')[0],
                   image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800',
                   is_published: false
                 });
@@ -157,7 +177,8 @@ export const AdminBlogManagerView: React.FC = () => {
   // Mount sidebar into the layout — must be AFTER subSidebar is defined
   useEffect(() => {
     setSubSidebar(subSidebar);
-  }, [view, activeFilter, editingBlog]);
+    return () => setSubSidebar(null);
+  }, [view, activeFilter, editingBlog, setSubSidebar, subSidebar]);
 
   return (
     <>
@@ -238,7 +259,7 @@ export const AdminBlogManagerView: React.FC = () => {
                         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                           <span className="text-sky-600">{post.author}</span>
                           <span className="h-1 w-1 rounded-full bg-slate-200" />
-                          <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                          <span>{new Date(post.published_at || post.created_at).toLocaleDateString()}</span>
                           <span className="h-1 w-1 rounded-full bg-slate-200" />
                           <span className="flex items-center gap-1.5 opacity-80">
                             <Clock size={11} className="text-sky-500" /> {Math.ceil((post.content?.split(' ').length || 1) / 200)} min
@@ -364,6 +385,20 @@ export const AdminBlogManagerView: React.FC = () => {
                         className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all placeholder:text-slate-300"
                       />
                     </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                        <Clock size={14} className="text-sky-500" /> Published Date
+                      </label>
+                      <input 
+                        type="date" 
+                        value={editingBlog?.published_at ? new Date(editingBlog.published_at).toISOString().split('T')[0] : ''}
+                        onChange={(e) => setEditingBlog({...editingBlog, published_at: e.target.value})}
+                        className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all placeholder:text-slate-300"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
                         <ImageIcon size={14} className="text-sky-500" /> Post Image URL

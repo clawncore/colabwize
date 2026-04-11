@@ -447,7 +447,7 @@ export const AdminEmailCenter: React.FC = () => {
 
   useEffect(() => {
     setSubSidebar(subNavContent);
-    // No cleanup so it stays while we are on this route
+    return () => setSubSidebar(null);
   }, [activeTab, setSubSidebar, subNavContent]);
 
   return (
