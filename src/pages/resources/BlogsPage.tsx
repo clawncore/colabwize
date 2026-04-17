@@ -24,46 +24,44 @@ interface ApiBlogPost {
 function IntroHero() {
   const navigate = useNavigate();
 
-  const handleGetStarted = () => {
-    navigate("/signup");
-  };
-
   return (
-    <section className="section-padding bg-white relative overflow-hidden">
-      {/* Background Image Overlay */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 z-0"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&h=800&fit=crop')",
-        }}></div>
+    <section className="relative pt-32 pb-24 overflow-hidden bg-slate-900">
+      {/* Dynamic Background Elements */}
+      <div className="absolute top-0 right-0 w-1/2 h-full bg-emerald-500/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/3" />
+      <div className="absolute bottom-0 left-0 w-1/3 h-full bg-sky-500/10 blur-[120px] rounded-full translate-y-1/3 -translate-x-1/4" />
+      
       <div className="container-custom relative z-10">
-        <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-            ColabWize{" "}
-            <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-              Blog
-            </span>
-          </h1>
-
-          <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
-            Insights, tips, and best practices for academic writing and research
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
-              onClick={handleGetStarted}>
-              Get Started
-            </Button>
-            <Button
-              className="bg-gradient-to-r from-blue-600 to-cyan-700 text-white hover:from-blue-700 hover:to-cyan-800 font-semibold px-8 py-6 text-lg shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
-              asChild>
-              <RouterLink to="/signup">Subscribe to Newsletter</RouterLink>
-            </Button>
-          </div>
+        <div className="max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter leading-[1.1]">
+              ColabWize <span className="text-sky-400">Blog</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-slate-400 mb-12 leading-relaxed font-medium max-w-2xl">
+              Exploring the frontiers of academic integrity, AI collaboration, and original research.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Button
+                className="bg-sky-500 hover:bg-sky-600 text-white font-bold px-10 py-7 rounded-full shadow-xl shadow-sky-500/20 transition-all text-lg"
+                onClick={() => navigate("/signup")}>
+                Get Started Free
+              </Button>
+              <Button
+                variant="outline"
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 font-bold px-10 py-7 rounded-full transition-all text-lg"
+                asChild>
+                <RouterLink to="/signup">Newsletter Signup</RouterLink>
+              </Button>
+            </div>
+          </motion.div>
         </div>
       </div>
+
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none" />
     </section>
   );
 }
@@ -259,7 +257,7 @@ export default function BlogsPage() {
           {/* Header */}
           <header className="mb-12 border-b border-gray-100 pb-12">
             <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-gray-900 mb-4">
-              Academic <span className="text-sky-500">Transmission</span>
+              ColabWize <span className="text-sky-500">Blog</span>
             </h1>
             <p className="text-lg text-gray-500 font-medium">Insights from the forefront of integrity and collaboration.</p>
           </header>

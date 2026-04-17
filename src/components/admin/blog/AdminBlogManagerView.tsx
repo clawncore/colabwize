@@ -429,7 +429,7 @@ export const AdminBlogManagerView: React.FC = () => {
                     <textarea 
                       value={editingBlog?.excerpt || ''}
                       onChange={(e) => setEditingBlog({...editingBlog, excerpt: e.target.value})}
-                      placeholder="Transmission summary..."
+                      placeholder="Blog summary..."
                       rows={2}
                       className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-1 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all resize-none placeholder:text-slate-300 leading-relaxed"
                     />
@@ -449,7 +449,7 @@ export const AdminBlogManagerView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Right Column: Live Transmission Preview */}
+                {/* Live Blog Preview */}
                 <div className="hidden lg:block sticky top-8 space-y-4">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Live Preview</p>
                   <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[calc(100vh-200px)]">
@@ -462,7 +462,7 @@ export const AdminBlogManagerView: React.FC = () => {
                           </span>
                         </div>
                         <h1 className="text-3xl font-black text-slate-900 mb-6 leading-tight tracking-tight">
-                          {editingBlog?.title || 'Initializing Transmission...'}
+                          {editingBlog?.title || 'Initializing blog post...'}
                         </h1>
                         <div className="flex items-center justify-center gap-6 text-slate-400 font-bold text-[9px] uppercase tracking-widest">
                           <span className="flex items-center gap-2">
@@ -487,7 +487,7 @@ export const AdminBlogManagerView: React.FC = () => {
                     </div>
                     
                     <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
-                       <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.3em]">Official ColabWize Transmission Alpha</p>
+                       <p className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.3em]">Official ColabWize Blog Alpha</p>
                     </div>
                   </div>
                 </div>

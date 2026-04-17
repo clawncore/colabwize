@@ -145,6 +145,47 @@ code {
   border-radius: 0 !important;
 }
 
+/* Academic Prose Enhancements */
+.prose h1, .prose h2, .prose h3 {
+  color: hsl(var(--foreground));
+  letter-spacing: -0.02em;
+}
+
+.prose blockquote {
+  font-style: italic;
+  border-left-width: 4px;
+  border-left-color: hsl(var(--primary));
+  background-color: hsla(var(--primary), 0.05);
+  padding: 1.5rem 2rem;
+  border-radius: 0 1rem 1rem 0;
+  quotes: "\201C""\201D""\2018""\2019";
+}
+
+.prose blockquote p:first-of-type::before {
+  content: open-quote;
+}
+
+.prose blockquote p:last-of-type::after {
+  content: close-quote;
+}
+
+.prose img {
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  border-radius: 1.5rem;
+}
+
+.prose a {
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 2px solid hsla(var(--primary), 0.2);
+  transition: all 0.2s ease;
+}
+
+.prose a:hover {
+  border-bottom-color: hsl(var(--primary));
+  background-color: hsla(var(--primary), 0.05);
+}
+
 /* Ensure long URLs in bibliography preview don't break the layout */
 .article-content .prose a {
   word-break: break-all;
