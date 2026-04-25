@@ -128,6 +128,21 @@ function HeroSection() {
             </Button>
           </div>
 
+          {/* SaaS Hub Badge */}
+          <div className="mb-10 flex justify-center">
+            <a
+              href="https://www.saashub.com/colabwize?utm_source=badge&utm_campaign=badge&utm_content=colabwize&badge_variant=color&badge_kind=approved"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block hover:scale-105 transition-transform duration-200">
+              <img
+                src="https://cdn-b.saashub.com/img/badges/approved-color.png?v=1"
+                alt="ColabWize badge"
+                className="h-10 md:h-12 w-auto"
+              />
+            </a>
+          </div>
+
           {/* Enhanced Trust Indicator with People Icons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-gray-400 text-sm">
             <div className="flex items-center gap-1">
