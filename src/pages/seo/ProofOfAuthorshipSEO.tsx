@@ -1,12 +1,11 @@
 import React from "react";
-import Layout from "../../components/Layout";
 import { Clock, Shield, Award, CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Link } from "react-router-dom";
 
 const ProofOfAuthorshipSEO = () => {
   return (
-    <Layout>
+    <>
       <div className="bg-slate-50 min-h-screen">
         {/* Feature Hero */}
         <section className="bg-white border-b border-gray-100 py-24 mb-16 overflow-hidden">
@@ -146,7 +145,7 @@ const ProofOfAuthorshipSEO = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

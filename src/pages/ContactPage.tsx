@@ -4,7 +4,6 @@ import ConfigService from "../services/ConfigService";
 import { Mail, Building, Newspaper, Send, Check } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import Layout from "../components/Layout";
 import DiscordWebhookService from "../services/discordWebhookService";
 import { useNavigate } from "react-router-dom";
 import { loadRecaptchaScript, getRecaptchaToken } from "../lib/recaptcha";
@@ -419,11 +418,11 @@ function ClosingCTA() {
 
 export default function ContactPage() {
   return (
-    <Layout>
+    <>
       <ContactHero />
       <QuickContactOptions />
       <ContactForm />
       <ClosingCTA />
-    </Layout>
+    </>
   );
 }

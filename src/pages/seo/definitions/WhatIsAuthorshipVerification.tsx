@@ -1,19 +1,15 @@
 import React from "react";
 import { History, Shield, Lock, ArrowRight, Clock, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
-import Layout from "../../../components/Layout";
-import { Helmet } from "react-helmet-async";
+import PageMetadata from "../../../components/PageMetadata";
 
 const WhatIsAuthorshipVerification: React.FC = () => {
     return (
-        <Layout>
-            <Helmet>
-                <title>What is Authorship Verification? | Academic Defensibility | ColabWize</title>
-                <meta
-                    name="description"
-                    content="Define authorship verification in research and writing. Learn how students prove their work is human-written and original in the age of AI."
-                />
-            </Helmet>
+        <>
+            <PageMetadata 
+                title="What is Authorship Verification? | Academic Defensibility"
+                description="Define authorship verification in research and writing. Learn how students prove their work is human-written and original in the age of AI."
+            />
 
             <div className="bg-white min-h-screen">
                 <article className="py-20 container-custom max-w-3xl mx-auto">
@@ -79,7 +75,7 @@ const WhatIsAuthorshipVerification: React.FC = () => {
                     </div>
                 </article>
             </div>
-        </Layout>
+        </>
     );
 };
 

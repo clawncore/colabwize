@@ -13,12 +13,11 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 import { Helmet } from "react-helmet-async";
 
 const CollaborateAcademicSEO: React.FC = () => {
   return (
-    <Layout>
+    <>
       <Helmet>
         <title>
           How to Collaborate on Academic Papers Ethically | ColabWize
@@ -194,7 +193,7 @@ const CollaborateAcademicSEO: React.FC = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

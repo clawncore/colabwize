@@ -1,7 +1,6 @@
 import React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 
 import {
   Award,
@@ -247,10 +246,10 @@ export default function AuthorshipCertificatePage() {
   }
 
   return (
-    <Layout>
+    <>
       <IntroHero />
       <FeaturesPresentationFlow />
       <ClosingCTA />
-    </Layout>
+    </>
   );
 }

@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 import { Helmet } from "react-helmet-async";
 
 const AcademicIntegrityHub: React.FC = () => {
@@ -82,7 +81,7 @@ const AcademicIntegrityHub: React.FC = () => {
   ];
 
   return (
-    <Layout>
+    <>
       <Helmet>
         <title>Academic Integrity Tools & Guides | ColabWize</title>
         <meta
@@ -315,7 +314,7 @@ const AcademicIntegrityHub: React.FC = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

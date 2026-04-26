@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, User, Calendar, Clock, Share2, Bookmark, MessageSquare, ChevronRight, Check } from "lucide-react";
 import { motion, useScroll, useSpring } from "framer-motion";
-import Layout from "../../components/Layout";
 import { Button } from "../../components/ui/button";
 import PageMetadata from "../../components/PageMetadata";
 import ConfigService from "../../services/ConfigService";
@@ -125,35 +124,31 @@ export default function BlogPostPage() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-          <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-sky-500 border-t-transparent rounded-full" 
-          />
-          <p className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Initializing Article...</p>
-        </div>
-      </Layout>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-16 h-16 border-4 border-sky-500 border-t-transparent rounded-full" 
+        />
+        <p className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">Initializing Article...</p>
+      </div>
     );
   }
 
   if (notFound || !post) {
     return (
-      <Layout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 px-4 text-center">
-          <h1 className="text-5xl font-black text-gray-900 tracking-tighter">Transmission Lost</h1>
-          <p className="text-gray-500 max-w-md font-medium">
-            The article you are looking for has been moved or deleted from our database.
-          </p>
-          <Button 
-            className="bg-sky-500 hover:bg-sky-600 text-white rounded-full px-8 py-6 font-bold transition-all shadow-lg shadow-sky-500/20"
-            onClick={() => navigate("/resources/blogs")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Blog Feed
-          </Button>
-        </div>
-      </Layout>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 px-4 text-center">
+        <h1 className="text-5xl font-black text-gray-900 tracking-tighter">Transmission Lost</h1>
+        <p className="text-gray-500 max-w-md font-medium">
+          The article you are looking for has been moved or deleted from our database.
+        </p>
+        <Button 
+          className="bg-sky-500 hover:bg-sky-600 text-white rounded-full px-8 py-6 font-bold transition-all shadow-lg shadow-sky-500/20"
+          onClick={() => navigate("/resources/blogs")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Blog Feed
+        </Button>
+      </div>
     );
   }
 
@@ -181,7 +176,7 @@ export default function BlogPostPage() {
   };
 
   return (
-    <Layout>
+    <>
       <PageMetadata
         title={`${post.title} | ColabWize Blog`}
         description={post.excerpt}
@@ -410,7 +405,6 @@ export default function BlogPostPage() {
           </div>
         </section>
       </article>
-    </Layout>
+    </>
   );
 }
-

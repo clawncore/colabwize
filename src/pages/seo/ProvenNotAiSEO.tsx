@@ -11,12 +11,11 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 import { Helmet } from "react-helmet-async";
 
 const ProvenNotAiSEO: React.FC = () => {
   return (
-    <Layout>
+    <>
       <Helmet>
         <title>
           How to Prove Your Writing is Not AI | Step-by-Step Guide | ColabWize
@@ -194,7 +193,7 @@ const ProvenNotAiSEO: React.FC = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

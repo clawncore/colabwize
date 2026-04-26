@@ -1,12 +1,11 @@
 import React from "react";
 import { SearchCheck, Shield, Database, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import Layout from "../../../components/Layout";
 import { Helmet } from "react-helmet-async";
 
 const WhatIsCitationVerification: React.FC = () => {
     return (
-        <Layout>
+        <>
             <Helmet>
                 <title>What is Citation Verification? | Academic Research Terminology | ColabWize</title>
                 <meta
@@ -79,7 +78,7 @@ const WhatIsCitationVerification: React.FC = () => {
                     </div>
                 </article>
             </div>
-        </Layout>
+        </>
     );
 };
 

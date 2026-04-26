@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import Layout from "../components/Layout";
 
 interface ChangelogItem {
   id: string;
@@ -144,7 +143,7 @@ const ChangeSection = ({
 
 export default function ChangelogPage() {
   return (
-    <Layout>
+    <>
       <div className="min-h-screen bg-white section-padding">
         <div className="container-custom max-w-6xl mx-auto">
           {/* Header */}
@@ -215,6 +214,6 @@ export default function ChangelogPage() {
           </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }

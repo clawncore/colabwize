@@ -12,7 +12,6 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 import { Helmet } from "react-helmet-async";
 
 interface CompetitorData {
@@ -149,7 +148,7 @@ const ComparePage: React.FC = () => {
   }
 
   return (
-    <Layout>
+    <>
       <Helmet>
         <title>ColabWize vs {data.name} | Compare Academic Platforms</title>
         <meta
@@ -380,7 +379,7 @@ const ComparePage: React.FC = () => {
           </div>
         </footer>
       </div>
-    </Layout>
+    </>
   );
 };
 

@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
 import { caseStudies } from "../../data/caseStudies";
 
@@ -416,11 +415,11 @@ function CaseStudyList() {
 
 export default function CaseStudiesPage() {
   return (
-    <Layout>
+    <>
       <IntroHero />
       <CaseStudyList />
       <FeaturesPresentationFlow />
       <ClosingCTA />
-    </Layout>
+    </>
   );
 }

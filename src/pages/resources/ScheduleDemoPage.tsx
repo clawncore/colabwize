@@ -4,7 +4,6 @@ import { Link as RouterLink } from "react-router-dom";
 import ConfigService from "../../services/ConfigService";
 import DiscordWebhookService from "../../services/discordWebhookService";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 
 import {
   Calendar,
@@ -339,7 +338,7 @@ ${formData.message || "No additional message provided."}
   }
 
   return (
-    <Layout>
+    <>
       <IntroHero />
       <FeaturesPresentationFlow />
 
@@ -527,6 +526,6 @@ ${formData.message || "No additional message provided."}
       </section>
 
       <ClosingCTA />
-    </Layout>
+    </>
   );
 }

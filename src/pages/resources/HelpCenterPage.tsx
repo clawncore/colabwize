@@ -1,13 +1,12 @@
 import { Link } from "react-router-dom";
 import { CreditCard, LifeBuoy, Mail, Zap, BookOpen, Users } from "lucide-react";
-import Layout from "../../components/Layout";
 import ConfigService from "../../services/ConfigService";
 
 const HelpCenterPage = () => {
   const docsUrl = ConfigService.getDocsUrl();
 
   return (
-    <Layout>
+    <>
       <div className="min-h-screen bg-white">
         {/* Header / Hero Section */}
         <div className="bg-white border-b border-gray-100">
@@ -448,7 +447,7 @@ const HelpCenterPage = () => {
           </section>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

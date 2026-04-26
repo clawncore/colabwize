@@ -1,5 +1,4 @@
 import React from "react";
-import Layout from "../../components/Layout";
 import {
   Users,
   MessageSquare,
@@ -12,7 +11,7 @@ import { Link } from "react-router-dom";
 
 const AcademicCollaborationSEO = () => {
   return (
-    <Layout>
+    <>
       <div className="bg-white min-h-screen">
         {/* Feature Hero */}
         <section className="bg-purple-50/30 py-24 border-b border-purple-100">
@@ -117,7 +116,7 @@ const AcademicCollaborationSEO = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

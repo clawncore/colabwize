@@ -62,7 +62,7 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
       mounted = false;
       authListener.subscription.unsubscribe();
     };
-  }, [isInitialized]);
+  }, []);
 
   return (
     <AuthInitContext.Provider value={{ isInitialized }}>

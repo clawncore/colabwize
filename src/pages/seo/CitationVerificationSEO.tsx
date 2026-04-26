@@ -12,12 +12,11 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 import { Helmet } from "react-helmet-async";
 
 const CitationVerificationSEO: React.FC = () => {
   return (
-    <Layout>
+    <>
       <Helmet>
         <title>How to Verify Citation Credibility | ColabWize</title>
         <meta
@@ -198,7 +197,7 @@ const CitationVerificationSEO: React.FC = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

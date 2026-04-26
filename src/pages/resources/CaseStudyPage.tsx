@@ -7,7 +7,6 @@ import {
   Briefcase,
   TrendingUp,
 } from "lucide-react";
-import Layout from "../../components/Layout";
 import { Button } from "../../components/ui/button";
 import { caseStudies } from "../../data/caseStudies";
 
@@ -24,7 +23,7 @@ export default function CaseStudyPage() {
 
   if (!study) {
     return (
-      <Layout>
+      <>
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
           <h1 className="text-4xl font-bold text-gray-900">
             Case Study Not Found
@@ -36,12 +35,12 @@ export default function CaseStudyPage() {
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Case Studies
           </Button>
         </div>
-      </Layout>
+      </>
     );
   }
 
   return (
-    <Layout>
+    <>
       <article className="min-h-screen bg-white">
         {/* Header / Hero */}
         <div className="relative h-[400px] w-full bg-gray-900">
@@ -122,6 +121,6 @@ export default function CaseStudyPage() {
           </div>
         </div>
       </article>
-    </Layout>
+    </>
   );
 }

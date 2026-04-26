@@ -9,7 +9,6 @@ import {
   User,
 } from "lucide-react";
 import { apiClient } from "../../services/apiClient";
-import Layout from "../../components/Layout";
 
 interface CertificateData {
   id: string;
@@ -50,7 +49,7 @@ export const VerifyCertificatePage: React.FC = () => {
   }, [id]);
 
   return (
-    <Layout>
+    <>
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
           {/* Header */}
@@ -154,6 +153,6 @@ export const VerifyCertificatePage: React.FC = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };

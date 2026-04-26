@@ -11,12 +11,11 @@ import {
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
-import Layout from "../../components/Layout";
 import { Button } from "../../components/ui/button";
 
 export default function AcademicIntegrityGuide() {
   return (
-    <Layout>
+    <>
       <PageMetadata
         title="The Complete Guide to Academic Integrity in 2026"
         description="Master academic integrity in the AI era. Learn plagiarism prevention, authorship verification, citation credibility, and how to combat false AI detection."
@@ -332,6 +331,6 @@ export default function AcademicIntegrityGuide() {
           </div>
         </div>
       </main>
-    </Layout>
+    </>
   );
 }

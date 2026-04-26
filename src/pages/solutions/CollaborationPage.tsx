@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import LayoutWrapper from "../../components/Layout";
 import {
   Users,
   History,
@@ -60,7 +59,7 @@ export default function CollaborationPage() {
   ];
 
   return (
-    <LayoutWrapper>
+    <>
       {/* Hero Section */}
       <section className="section-padding bg-slate-900 text-white relative overflow-hidden">
         {/* Abstract Network Background */}
@@ -486,6 +485,6 @@ export default function CollaborationPage() {
           </div>
         </div>
       </section>
-    </LayoutWrapper>
+    </>
   );
 }

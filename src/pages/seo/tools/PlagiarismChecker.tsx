@@ -1,5 +1,4 @@
 import React from "react";
-import Layout from "../../../components/Layout";
 import PageMetadata from "../../../components/PageMetadata";
 import { Button } from "../../../components/ui/button";
 import { Link } from "react-router-dom";
@@ -7,7 +6,7 @@ import { ShieldAlert, Search, RefreshCw, Lock, ArrowRight } from "lucide-react";
 
 const PlagiarismChecker = () => {
   return (
-    <Layout>
+    <>
       <PageMetadata
         title="Accurate Plagiarism Checker for Students"
         description="Verify the originality of your work with our advanced plagiarism detection engine. Scan against billions of web pages and academic databases."
@@ -108,7 +107,7 @@ const PlagiarismChecker = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

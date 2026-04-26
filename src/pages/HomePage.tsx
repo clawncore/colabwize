@@ -18,9 +18,10 @@ import {
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import Layout from "../components/Layout";
 import React, { useState, useEffect } from "react";
 import ConfigService from "../services/ConfigService";
+
+import PageMetadata from "../components/PageMetadata";
 
 function HeroSection() {
   const [typedText, setTypedText] = useState("");
@@ -83,6 +84,10 @@ function HeroSection() {
 
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-white font-primary">
+      <PageMetadata 
+        title="ColabWize – Academic Integrity & Collaboration Platform"
+        description="ColabWize is the ultimate academic integrity and collaboration platform. Prove authorship, audit citations, and collaborate on research with complete confidence."
+      />
       {/* Content */}
       <div className="relative z-10 container-custom text-center mt-12">
         <div className="max-w-4xl mx-auto">
@@ -189,14 +194,13 @@ function PreviewSection() {
     {
       id: "citation-auditor",
       icon: SearchCheck,
-      title: "Scientific Citation Auditor",
+      title: "Scientific Integrity Audit",
       description:
-        "Protect your academic reputation. Our advanced engine cross-references every claim against millions of peer-reviewed sources to ensure 100% factual accuracy.",
-      image:
-        "https://i.ibb.co/sY9F6B3/Screenshot-2026-01-13-203136.png?w=800&q=80",
-      iconColor: "text-green-600",
-      iconBg: "bg-green-100",
-      previewBg: "bg-green-50",
+        "Protect your academic reputation by scoring every claim against verified sources, citation context, and defensibility signals.",
+      image: "citation-audit-illustration",
+      iconColor: "text-blue-600",
+      iconBg: "bg-blue-100",
+      previewBg: "bg-blue-50",
     },
     {
       id: "smart-citations",
@@ -325,11 +329,87 @@ function PreviewSection() {
                   </div>
                   {/* The image should cover the rest of the window */}
                   <div className="absolute inset-0 pt-12">
-                    <img
-                      src={feature.image}
-                      alt={feature.title}
-                      className="w-full h-full object-cover object-left-top"
-                    />
+                    {feature.image === "citation-audit-illustration" ? (
+                      <div className="h-full w-full bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-8 flex items-center justify-center">
+                        <div className="w-full max-w-xl rounded-[2rem] border border-blue-100 bg-white p-6 shadow-2xl shadow-blue-900/10">
+                          <div className="mb-6 flex items-center justify-between">
+                            <div>
+                              <div className="text-sm font-black text-gray-900">
+                                Integrity Audit Report
+                              </div>
+                              <div className="text-xs font-medium text-gray-500">
+                                Claims checked against verified academic sources
+                              </div>
+                            </div>
+                            <div className="rounded-2xl bg-blue-100 p-3">
+                              <SearchCheck className="h-6 w-6 text-blue-700" />
+                            </div>
+                          </div>
+
+                          <div className="mb-6 grid grid-cols-3 gap-3">
+                            <div className="rounded-2xl bg-blue-50 p-4 text-center">
+                              <div className="text-2xl font-black text-blue-700">96%</div>
+                              <div className="text-[10px] font-bold uppercase text-gray-500">
+                                Confidence
+                              </div>
+                            </div>
+                            <div className="rounded-2xl bg-cyan-50 p-4 text-center">
+                              <div className="text-2xl font-black text-cyan-700">42</div>
+                              <div className="text-[10px] font-bold uppercase text-gray-500">
+                                Sources
+                              </div>
+                            </div>
+                            <div className="rounded-2xl bg-amber-50 p-4 text-center">
+                              <div className="text-2xl font-black text-amber-700">3</div>
+                              <div className="text-[10px] font-bold uppercase text-gray-500">
+                                Gaps
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            {[
+                              ["Claim verified", "Longitudinal sample size matches cited source", "blue"],
+                              ["Citation context", "Source supports the stated conclusion", "blue"],
+                              ["Missing link", "Add evidence for one statistical claim", "amber"],
+                            ].map(([label, text, tone]) => (
+                              <div
+                                key={label}
+                                className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
+                                <div
+                                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                                    tone === "blue"
+                                        ? "bg-blue-100 text-blue-700"
+                                        : tone === "cyan"
+                                          ? "bg-cyan-100 text-cyan-700"
+                                        : "bg-amber-100 text-amber-700"
+                                  }`}>
+                                  {tone === "amber" ? (
+                                    <BookOpen className="h-5 w-5" />
+                                  ) : (
+                                    <CheckCircle className="h-5 w-5" />
+                                  )}
+                                </div>
+                                <div>
+                                  <div className="text-sm font-black text-gray-900">
+                                    {label}
+                                  </div>
+                                  <div className="text-xs font-medium text-gray-500">
+                                    {text}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={feature.image}
+                        alt={feature.title}
+                        className="w-full h-full object-cover object-left-top"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -342,39 +422,57 @@ function PreviewSection() {
 }
 
 // Logo Ticker Component
+function LogoItem({ logo }: { logo: { name: string; url: string } }) {
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <div className="flex h-20 min-w-[180px] items-center justify-center rounded-2xl bg-white px-6 shadow-sm ring-1 ring-gray-100 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+      {failed ? (
+        <span className="text-center text-sm font-bold text-gray-700 whitespace-normal">
+          {logo.name}
+        </span>
+      ) : (
+        <img
+          src={logo.url}
+          alt={logo.name}
+          className="max-h-14 w-auto max-w-[150px] object-contain"
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      )}
+    </div>
+  );
+}
+
 function LogoTicker() {
   const logos = [
-    {
-      name: "Vignan University",
-      url: "https://vignan.ac.in/newvignan/assets/images/Logo%20with%20Deemed.svg",
-    },
     {
       name: "University of Cambridge",
       url: "https://upload.wikimedia.org/wikipedia/commons/4/4d/University_of_Cambridge_logo.png",
     },
     {
       name: "University of Guelph",
-      url: "https://logowik.com/content/uploads/images/university-of-guelph5416.logowik.com.webp",
+      url: "https://upload.wikimedia.org/wikipedia/commons/6/6f/University_of_Guelph_logo.svg",
     },
     {
       name: "Harvard",
-      url: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Harvard_University_logo.svg/2560px-Harvard_University_logo.svg.png",
+      url: "https://upload.wikimedia.org/wikipedia/commons/7/70/Harvard_University_logo.svg",
     },
     {
       name: "Stanford",
-      url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Stanford_Cardinal_logo.svg/1200px-Stanford_Cardinal_logo.svg.png",
+      url: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Stanford_Cardinal_logo.svg",
     },
     {
       name: "MIT",
-      url: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/MIT_logo.svg/1200px-MIT_logo.svg.png",
+      url: "https://upload.wikimedia.org/wikipedia/commons/5/5d/MIT_logo_2003-2023.svg",
     },
     {
       name: "Oxford",
-      url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Oxford-University-Circlet.svg/1200px-Oxford-University-Circlet.svg.png",
+      url: "https://upload.wikimedia.org/wikipedia/commons/f/ff/Oxford-University-Circlet.svg",
     },
     {
       name: "Waterloo",
-      url: "https://upload.wikimedia.org/wikipedia/en/thumb/6/6e/University_of_Waterloo_seal.svg/1200px-University_of_Waterloo_seal.svg.png",
+      url: "https://upload.wikimedia.org/wikipedia/en/6/6e/University_of_Waterloo_seal.svg",
     },
     {
       name: "University of Zimbabwe",
@@ -391,15 +489,7 @@ function LogoTicker() {
         <div className="relative flex overflow-hidden group">
           <div className="animate-scroll whitespace-nowrap flex items-center gap-24 py-6">
             {[...logos, ...logos].map((logo, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-center grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
-                <img
-                  src={logo.url}
-                  alt={logo.name}
-                  className="h-16 w-auto object-contain max-w-[180px]"
-                />
-              </div>
+              <LogoItem key={`${logo.name}-${index}`} logo={logo} />
             ))}
           </div>
         </div>
@@ -577,8 +667,6 @@ function FeaturesGrid() {
                   }`}
                 />
 
-                {/* Decorative fade at the bottom to blend */}
-                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-gray-900/40 to-transparent pointer-events-none mix-blend-multiply"></div>
                 <div className="absolute bottom-6 left-6 right-6">
                   <div className="bg-white/90 backdrop-blur-md px-4 py-3 rounded-xl shadow-lg border border-white/20 inline-flex items-center gap-3">
                     <feature.icon className={`w-5 h-5 ${feature.iconColor}`} />
@@ -759,10 +847,10 @@ function WorkflowSection() {
   ];
 
   return (
-    <section className="section-padding bg-slate-900 text-white overflow-hidden relative">
-      <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500 rounded-full blur-[120px]"></div>
+    <section className="section-padding bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-900 overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-full opacity-50 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-200 rounded-full blur-[120px]"></div>
       </div>
 
       <div className="container-custom relative z-10">
@@ -770,7 +858,7 @@ function WorkflowSection() {
           <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">
             How ColabWize Works
           </h2>
-          <p className="text-gray-400 text-xl max-w-2xl mx-auto">
+          <p className="text-gray-600 text-xl max-w-2xl mx-auto">
             A seamless three-step lifecycle designed for modern scholarly
             excellence.
           </p>
@@ -778,19 +866,19 @@ function WorkflowSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
           {/* Connector Line (Desktop) */}
-          <div className="hidden md:block absolute top-1/4 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500/0 via-gray-700 to-purple-500/0 -z-0"></div>
+          <div className="hidden md:block absolute top-1/4 left-0 w-full h-0.5 bg-gradient-to-r from-blue-200/0 via-blue-200 to-purple-200/0 -z-0"></div>
 
           {steps.map((step, index) => (
             <div key={index} className="relative z-10 group">
               <div
-                className={`w-20 h-20 rounded-3xl ${step.bg} flex items-center justify-center mb-8 mx-auto md:mx-0 transform transition-transform group-hover:scale-110 duration-300 ring-4 ring-slate-800 shadow-2xl shadow-black/40`}>
+                className={`w-20 h-20 rounded-3xl ${step.bg} flex items-center justify-center mb-8 mx-auto md:mx-0 transform transition-transform group-hover:scale-110 duration-300 ring-4 ring-white shadow-xl shadow-blue-900/10`}>
                 <step.icon className={`w-10 h-10 ${step.color}`} />
               </div>
               <div className="text-center md:text-left">
                 <h3 className="text-2xl font-bold mb-4 tracking-tight">
                   {step.title}
                 </h3>
-                <p className="text-gray-400 leading-relaxed font-medium">
+                <p className="text-gray-600 leading-relaxed font-medium">
                   {step.description}
                 </p>
               </div>
@@ -799,7 +887,7 @@ function WorkflowSection() {
         </div>
 
         <div className="mt-20 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-full border border-slate-700 text-blue-400 text-sm font-bold animate-bounce">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-blue-100 text-blue-700 text-sm font-bold shadow-lg shadow-blue-900/10 animate-bounce">
             <TrendingUp className="w-4 h-4" />
             <span>Built for Institutional Standards</span>
           </div>
@@ -891,7 +979,7 @@ function CTASection() {
 // Main HomePage Component
 export default function HomePage() {
   return (
-    <Layout>
+    <>
       <HeroSection />
       <FeaturesGrid />
       <ComparisonSection />
@@ -900,6 +988,6 @@ export default function HomePage() {
       <TestimonialsSection />
       <LogoTicker />
       <CTASection />
-    </Layout>
+    </>
   );
 }

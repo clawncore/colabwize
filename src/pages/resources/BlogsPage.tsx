@@ -3,7 +3,6 @@ import { Check, Bookmark, Share2, MoreHorizontal, ThumbsUp, Clock } from "lucide
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 import PageMetadata from "../../components/PageMetadata";
 import ConfigService from "../../services/ConfigService";
 
@@ -245,7 +244,7 @@ export default function BlogsPage() {
   };
 
   return (
-    <Layout>
+    <>
       <PageMetadata
         title="Blog | Academic Integrity & Collaboration Insights"
         description="Discover insights, tips, and best practices for academic writing, authorship verification, and maintaining academic integrity in the AI era."
@@ -330,6 +329,6 @@ export default function BlogsPage() {
           )}
         </div>
       </div>
-    </Layout>
+    </>
   );
 }
