@@ -57,7 +57,6 @@ import {
   Layout,
   Trello,
   BarChart2,
-  MessageSquare,
   List,
   Sparkles,
   User,
@@ -1077,19 +1076,6 @@ export default function DashboardLayout({
                               `}>
                               <BarChart2 className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
                               Analytics
-                            </Link>
-                            <Link
-                              to={`/dashboard/workspace/${ws.id}/chat`}
-                              className={`
-                                flex items-center px-3 py-1.5 rounded-md text-xs font-medium ${transitionClasses} whitespace-nowrap
-                                ${
-                                  pathname.includes(`/workspace/${ws.id}/chat`)
-                                    ? "text-emerald-600 bg-emerald-50/50"
-                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-                                }
-                              `}>
-                              <MessageSquare className="w-3.5 h-3.5 mr-2 flex-shrink-0" />
-                              Chat
                             </Link>
                             <Link
                               to={`/dashboard/workspace/${ws.id}/notifications`}

@@ -18,7 +18,9 @@ const extractTextFromDocx = async (file: File): Promise<string> => {
   try {
     const zip = new JSZip();
     const content = await zip.loadAsync(file);
-    const documentXml = await content.file("word/document.xml")?.async("string");
+    const documentXml = await content
+      .file("word/document.xml")
+      ?.async("string");
 
     if (documentXml) {
       const parser = new DOMParser();
@@ -51,9 +53,11 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
 }) => {
   const { profile: user, loading: isProfileLoading } = useProfile();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"local" | "google-drive" | "onedrive">("local");
+  const [activeTab, setActiveTab] = useState<
+    "local" | "google-drive" | "onedrive"
+  >("local");
   const [isNotLinked, setIsNotLinked] = useState(false);
-  
+
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -91,7 +95,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
     setPdfPreviewUrl(null);
     setIsNotLinked(false);
     setError(null);
-    
+
     if (activeTab === "google-drive") {
       if (!user?.google_access_token) {
         setIsNotLinked(true);
@@ -104,24 +108,28 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   // Listen for Google Drive OAuth popup callback
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'GOOGLE_CONNECTED') {
+      if (event.data?.type === "GOOGLE_CONNECTED") {
         setIsNotLinked(false);
         setError(null);
         // Refresh profile so google_access_token is available
         window.location.reload();
       }
     };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
   }, []);
 
   const handleConnectGoogleDrive = async () => {
     try {
       const url = await GoogleDriveService.getConnectUrl();
-      window.open(url, 'google-drive-connect', 'width=600,height=700,popup=yes');
+      window.open(
+        url,
+        "google-drive-connect",
+        "width=600,height=700,popup=yes",
+      );
     } catch (err) {
-      console.error('Failed to get Google Drive connect URL:', err);
-      setError('Failed to initiate Google Drive connection.');
+      console.error("Failed to get Google Drive connect URL:", err);
+      setError("Failed to initiate Google Drive connection.");
     }
   };
 
@@ -141,10 +149,10 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const handleItemSelect = (item: any) => {
     setSelectedItem(item);
     setTitle(item.name.replace(/\.[^/.]+$/, ""));
-    setDocumentContent(`[Google Drive File Preview]\n\nName: ${item.name}\nMIME Type: ${item.mimeType}\nModified: ${new Date(item.modifiedTime).toLocaleString()}`);
+    setDocumentContent(
+      `[Google Drive File Preview]\n\nName: ${item.name}\nMIME Type: ${item.mimeType}\nModified: ${new Date(item.modifiedTime).toLocaleString()}`,
+    );
   };
-
-
 
   // Function to read and display file content (Local approach)
   const readDocumentContent = React.useCallback(async (selectedFile: File) => {
@@ -167,7 +175,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       reader.readAsText(selectedFile);
     } else {
       setDocumentContent(
-        "Preview not available for this file type. File will be processed after upload."
+        "Preview not available for this file type. File will be processed after upload.",
       );
     }
   }, []);
@@ -242,27 +250,27 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
     try {
       let result;
-      
+
       if (activeTab === "local") {
         result = await documentService.uploadDocument(
           file!,
           title,
           description,
           workspaceId,
-          null
+          null,
         );
       } else if (activeTab === "google-drive") {
         if (projectId) {
           result = await GoogleDriveService.importFile(
             projectId,
-            selectedItem.id
+            selectedItem.id,
           );
         } else {
           result = await GoogleDriveService.createProject(
             selectedItem.id,
             title,
             description,
-            workspaceId
+            workspaceId,
           );
         }
       } else {
@@ -302,40 +310,50 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       </h2>
 
       <div className="flex space-x-2 mb-8 border-b pb-2 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab("local")}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-t-md font-medium text-sm transition-colors border-b-2 ${
-              activeTab === "local" ? "border-blue-600 text-blue-600 bg-blue-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-            <span>Local PC</span>
-          </button>
-          
-          {/* Cloud Storage disabled for now
-          <button
-            onClick={() => setActiveTab("google-drive")}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-t-md font-medium text-sm transition-colors border-b-2 ${
-              activeTab === "google-drive" ? "border-blue-600 text-blue-600 bg-blue-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <GoogleDriveIcon className="w-4 h-4" />
-            <span>Google Drive</span>
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("onedrive")}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-t-md font-medium text-sm transition-colors border-b-2 ${
-              activeTab === "onedrive" ? "border-blue-700 text-blue-800 bg-blue-50" : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <OneDriveIcon className="w-4 h-4" />
-            <span>OneDrive</span>
-          </button>
-          */}
-        </div>
+        <button
+          onClick={() => setActiveTab("local")}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-t-md font-medium text-sm transition-colors border-b-2 ${
+            activeTab === "local"
+              ? "border-blue-600 text-blue-600 bg-blue-50"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+          }`}>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
+          </svg>
+          <span>Local PC</span>
+        </button>
 
+        <button
+          onClick={() => setActiveTab("google-drive")}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-t-md font-medium text-sm transition-colors border-b-2 ${
+            activeTab === "google-drive"
+              ? "border-blue-600 text-blue-600 bg-blue-50"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+          }`}>
+          <GoogleDriveIcon className="w-4 h-4" />
+          <span>Google Drive</span>
+        </button>
 
+        <button
+          onClick={() => setActiveTab("onedrive")}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-t-md font-medium text-sm transition-colors border-b-2 ${
+            activeTab === "onedrive"
+              ? "border-blue-700 text-blue-800 bg-blue-50"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+          }`}>
+          <OneDriveIcon className="w-4 h-4" />
+          <span>OneDrive</span>
+        </button>
+      </div>
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm flex items-center justify-between gap-3">
@@ -343,10 +361,20 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
           {isNotLinked && (
             <button
               onClick={() => navigate("/dashboard/settings/account")}
-              className="flex-shrink-0 flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors whitespace-nowrap"
-            >
+              className="flex-shrink-0 flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors whitespace-nowrap">
               Connect in Settings
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
             </button>
           )}
         </div>
@@ -390,8 +418,6 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
           {activeTab === "local" && (
             <div className="flex flex-col flex-1 pb-4 overflow-y-auto pr-2">
-
-
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Document File *
@@ -414,7 +440,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
                         />
                       </svg>
                       <p className="mb-2 text-sm text-gray-500">
-                        <span className="font-semibold">Click to upload</span> or drag and drop
+                        <span className="font-semibold">Click to upload</span>{" "}
+                        or drag and drop
                       </p>
                       <p className="text-xs text-gray-500">
                         DOCX, TXT, RTF, ODT (MAX. 10MB)
@@ -432,7 +459,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
                 {file && (
                   <div className="mt-2 text-sm text-gray-600 font-medium">
-                    Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                    Selected: {file.name} (
+                    {(file.size / 1024 / 1024).toFixed(2)} MB)
                   </div>
                 )}
               </div>
@@ -440,19 +468,24 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
           )}
 
           {activeTab === "google-drive" && (
-            <div className={`flex flex-col flex-1 border rounded-lg bg-gray-50 mb-4 ${isNotLinked ? 'min-h-[250px]' : 'min-h-0 overflow-hidden'}`}>
+            <div
+              className={`flex flex-col flex-1 border rounded-lg bg-gray-50 mb-4 ${isNotLinked ? "min-h-[250px]" : "min-h-0 overflow-hidden"}`}>
               {isNotLinked ? (
-                <div className="flex flex-col items-center justify-center p-8 text-center" style={{ minHeight: '250px' }}>
+                <div
+                  className="flex flex-col items-center justify-center p-8 text-center"
+                  style={{ minHeight: "250px" }}>
                   <GoogleDriveIcon width={48} height={48} className="mb-4" />
-                  <h3 className="text-base font-semibold text-gray-900 mb-2">Connect Google Drive</h3>
+                  <h3 className="text-base font-semibold text-gray-900 mb-2">
+                    Connect Google Drive
+                  </h3>
                   <p className="text-sm text-gray-500 mb-5 max-w-[280px]">
-                    Grant one-time access so ColabWize can browse your Drive documents. You'll stay on this page.
+                    Grant one-time access so ColabWize can browse your Drive
+                    documents. You'll stay on this page.
                   </p>
                   <button
                     type="button"
                     onClick={handleConnectGoogleDrive}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm cursor-pointer z-10"
-                  >
+                    className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm cursor-pointer z-10">
                     <ExternalLink className="w-4 h-4" />
                     Connect & Browse
                   </button>
@@ -464,7 +497,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
                       Select a document from Google Drive
                     </h3>
                   </div>
-                  
+
                   <div className="flex-1 overflow-y-auto p-2 space-y-2">
                     {isLoadingLibrary ? (
                       <div className="flex justify-center items-center h-full p-8 text-gray-400">
@@ -477,20 +510,24 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
                       </div>
                     ) : (
                       libraryItems.map((item, idx) => {
-                        const isSelected = selectedItem && selectedItem.id === item.id;
-                        
+                        const isSelected =
+                          selectedItem && selectedItem.id === item.id;
+
                         return (
-                          <div 
+                          <div
                             key={item.id || idx}
                             onClick={() => handleItemSelect(item)}
                             className={`p-3 rounded-md border cursor-pointer transition-colors ${
-                              isSelected 
-                                ? 'bg-blue-50 border-blue-400' 
-                                : 'bg-white border-gray-200 hover:border-gray-300'
-                            }`}
-                          >
-                            <div className="font-medium text-sm text-gray-900 line-clamp-2">{item.name || "Untitled"}</div>
-                            <div className="text-xs text-gray-500 mt-1 line-clamp-1">{new Date(item.modifiedTime).toLocaleDateString()}</div>
+                              isSelected
+                                ? "bg-blue-50 border-blue-400"
+                                : "bg-white border-gray-200 hover:border-gray-300"
+                            }`}>
+                            <div className="font-medium text-sm text-gray-900 line-clamp-2">
+                              {item.name || "Untitled"}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1 line-clamp-1">
+                              {new Date(item.modifiedTime).toLocaleDateString()}
+                            </div>
                           </div>
                         );
                       })
@@ -504,31 +541,40 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
           {activeTab === "onedrive" && (
             <div className="flex flex-col items-center justify-center flex-1 border rounded-lg bg-gray-50 mb-4 p-8 text-center">
               <OneDriveIcon className="w-12 h-12 mb-4 opacity-40" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">OneDrive Coming Soon</h3>
-              <p className="text-sm text-gray-500">We're working on making OneDrive integration as smooth as possible.</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                OneDrive Coming Soon
+              </h3>
+              <p className="text-sm text-gray-500">
+                We're working on making OneDrive integration as smooth as
+                possible.
+              </p>
             </div>
           )}
-
-
 
           {/* Upload Button at the bottom of left column */}
           <div className="mt-auto pt-2 border-t">
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={isUploading || (activeTab === "local" && (!file || !title.trim())) || (activeTab === "google-drive" && !selectedItem)}
+              disabled={
+                isUploading ||
+                (activeTab === "local" && (!file || !title.trim())) ||
+                (activeTab === "google-drive" && !selectedItem)
+              }
               className={`w-full py-2.5 px-4 rounded-md text-white font-medium transition-colors ${
-                isUploading || (activeTab === "local" && (!file || !title.trim())) || (activeTab === "google-drive" && !selectedItem)
+                isUploading ||
+                (activeTab === "local" && (!file || !title.trim())) ||
+                (activeTab === "google-drive" && !selectedItem)
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700"
-              }`}
-            >
+              }`}>
               {isUploading
                 ? "Uploading..."
                 : projectId
                   ? "Update Document"
-                : activeTab === "local" ? "Upload Document" : `Import Document from ${activeTab === 'google-drive' ? 'Google Drive' : 'OneDrive'}`
-              }
+                  : activeTab === "local"
+                    ? "Upload Document"
+                    : `Import Document from ${activeTab === "google-drive" ? "Google Drive" : "OneDrive"}`}
             </button>
           </div>
         </div>
@@ -557,8 +603,23 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-400 flex-col space-y-3">
-                <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                <p>{activeTab === "local" ? "Upload a document to see preview here" : `Select a document from ${activeTab === "google-drive" ? "Google Drive" : "OneDrive"} to preview`}</p>
+                <svg
+                  className="w-12 h-12 text-gray-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <p>
+                  {activeTab === "local"
+                    ? "Upload a document to see preview here"
+                    : `Select a document from ${activeTab === "google-drive" ? "Google Drive" : "OneDrive"} to preview`}
+                </p>
               </div>
             )}
           </div>

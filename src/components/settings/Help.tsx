@@ -131,7 +131,10 @@ const HelpSettingsPage: React.FC = () => {
       };
 
       // Send feedback to backend using the public endpoint
-      const result = await apiClient.post("/api/feedback/public", { ...feedbackData, token });
+      const result = await apiClient.post("/api/feedback/public", {
+        ...feedbackData,
+        token,
+      });
 
       if (result && result.success) {
         // Send Discord notification as a background task
@@ -350,8 +353,10 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
       } else {
         toast({
           title: "Vote Submission Failed",
-          description:
-            getErrorMessage(result, "Failed to submit vote. Please try again."),
+          description: getErrorMessage(
+            result,
+            "Failed to submit vote. Please try again.",
+          ),
           variant: "destructive",
         });
       }
@@ -381,7 +386,10 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
       let token = "";
       if (RECAPTCHA_SITE_KEY) {
         try {
-          token = await getRecaptchaToken(RECAPTCHA_SITE_KEY, "feature_request");
+          token = await getRecaptchaToken(
+            RECAPTCHA_SITE_KEY,
+            "feature_request",
+          );
           if (!token) {
             console.warn("reCAPTCHA token is empty, proceeding with fail-open");
           }
@@ -512,14 +520,16 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
         {/* Video Tutorials */}
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-gray-100 mb-8 overflow-hidden relative group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl -z-10 group-hover:bg-blue-100/50 transition-colors duration-700"></div>
-          
+
           <div className="p-6 border-b border-gray-100 flex items-center justify-between z-10">
             <div>
               <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-900 to-blue-600 flex items-center gap-2">
                 <Play className="w-5 h-5 text-blue-600 fill-current" />
                 Masterclass Tutorials
               </h2>
-              <p className="text-sm text-gray-500 mt-1 font-medium">Elevate your productivity with our expert guides</p>
+              <p className="text-sm text-gray-500 mt-1 font-medium">
+                Elevate your productivity with our expert guides
+              </p>
             </div>
           </div>
 
@@ -530,9 +540,10 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                   key={video.id}
                   onClick={() => video.videoId && setSelectedVideo(video)}
                   className={`group relative bg-white/60 backdrop-blur-sm rounded-2xl p-3 border border-gray-100/80 shadow-sm hover:shadow-[0_8px_30px_rgb(6,81,237,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col sm:flex-row gap-4 items-center overflow-hidden z-10 ${
-                    video.videoId ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'
-                  }`}
-                >
+                    video.videoId
+                      ? "cursor-pointer"
+                      : "cursor-not-allowed opacity-80"
+                  }`}>
                   <div className="w-full sm:w-32 h-44 sm:h-24 shrink-0 rounded-xl bg-gray-100/80 relative overflow-hidden shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)] border border-gray-200/50 flex items-center justify-center">
                     {/* Tutorial Badge */}
                     <div className="absolute top-1.5 left-1.5 z-10">
@@ -555,7 +566,10 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                         />
                         <div className="absolute inset-0 flex items-center justify-center bg-blue-900/10 group-hover:bg-blue-900/40 transition-colors duration-300">
                           <div className="w-8 h-8 bg-white/95 rounded-full flex items-center justify-center shadow-lg transform scale-75 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300">
-                            <Play className="h-4 w-4 text-blue-600 ml-0.5" fill="currentColor" />
+                            <Play
+                              className="h-4 w-4 text-blue-600 ml-0.5"
+                              fill="currentColor"
+                            />
                           </div>
                         </div>
                         {/* Duration Badge */}
@@ -569,20 +583,21 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex flex-col flex-1 py-1 pr-2 w-full text-center sm:text-left">
                     <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
                       {video.title}
                     </h3>
                     <p className="text-[11px] text-gray-500 mt-1.5 line-clamp-1">
-                      {video.videoId ? "Watch our step-by-step tutorial" : "Under production"}
+                      {video.videoId
+                        ? "Watch our step-by-step tutorial"
+                        : "Under production"}
                     </p>
                     <div className="mt-4 sm:mt-auto pt-2 flex items-center justify-center sm:justify-start">
-                      <div className={`flex items-center text-[10px] font-bold uppercase tracking-wider ${
-                        video.videoId
-                          ? "text-blue-600"
-                          : "text-gray-400"
-                      }`}>
+                      <div
+                        className={`flex items-center text-[10px] font-bold uppercase tracking-wider ${
+                          video.videoId ? "text-blue-600" : "text-gray-400"
+                        }`}>
                         {video.videoId ? (
                           <>
                             <span className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center mr-1.5 group-hover:bg-blue-100 transition-colors">
@@ -632,7 +647,7 @@ Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
                   Available Mon-Fri 9AM-5PM EST
                 </p>
                 <a
-                  href="https://calendly.com/audacityimpact/30min"
+                  href="https://calendly.com/colabwize/30min"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-700   block">

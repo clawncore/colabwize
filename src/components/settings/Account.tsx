@@ -1,25 +1,18 @@
 import { getErrorMessage } from "../../utils/errorHandler";
 import React, { useState, useEffect } from "react";
-import {
-  Download,
-  Eye,
-  EyeOff,
-  Loader2,
-  User,
-  Phone,
-  BookOpen,
-  BadgeCheck,
-} from "lucide-react";
+import { Download, Eye, EyeOff, Loader2, User, BadgeCheck } from "lucide-react";
 import { Button } from "../ui/button";
 import AccountService from "../../services/accountService";
 import ZoteroService from "../../services/zoteroService";
+import MendeleyService from "../../services/mendeleyService";
+import GoogleDriveService from "../../services/googleDriveService";
 import { useToast } from "../../hooks/use-toast";
 import { supabase } from "../../lib/supabase/client";
 import { TwoFactorSetup } from "./TwoFactorSetup";
 import { VaultIcon } from "../common/VaultIcon";
-import { MendeleyService } from "../../services/mendeleyService";
 import { MendeleyIcon } from "../common/MendeleyIcon";
 import { ZoteroIcon } from "../common/ZoteroIcon";
+import { GoogleDriveIcon } from "../common/GoogleDriveIcon";
 
 interface UserAccount {
   id: string;
@@ -37,6 +30,7 @@ interface UserAccount {
   zotero_auto_sync?: boolean;
   mendeley_access_token?: string | null;
   mendeley_auto_sync?: boolean;
+  google_access_token?: string | null;
   created_at: string;
   updated_at: string;
   subscription?: {
@@ -89,6 +83,29 @@ const AccountSettingsPage: React.FC = () => {
     }
   }, [toast]);
 
+  // Handle Google Drive popup message
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      if (event.data?.type === "GOOGLE_CONNECTED") {
+        toast({
+          title: "Google Drive Connected",
+          description: "Your Google Drive has been successfully linked.",
+        });
+
+        // Refresh account details
+        try {
+          const userData = await AccountService.getUserAccount();
+          setUser(userData as any);
+        } catch (error) {
+          console.error("Error refreshing user account:", error);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [toast]);
+
   // Fetch user account details
   useEffect(() => {
     const fetchAccountDetails = async () => {
@@ -106,8 +123,10 @@ const AccountSettingsPage: React.FC = () => {
         console.error("Error fetching account details:", error);
         toast({
           title: "Error",
-          description:
-            getErrorMessage(error, "Failed to load account details. Please try again."),
+          description: getErrorMessage(
+            error,
+            "Failed to load account details. Please try again.",
+          ),
           variant: "destructive",
         });
       } finally {
@@ -166,8 +185,10 @@ const AccountSettingsPage: React.FC = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description:
-          getErrorMessage(error, "Failed to update password. Please try again."),
+        description: getErrorMessage(
+          error,
+          "Failed to update password. Please try again.",
+        ),
         variant: "destructive",
       });
     } finally {
@@ -199,8 +220,10 @@ const AccountSettingsPage: React.FC = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description:
-          getErrorMessage(error, "Failed to export account data. Please try again."),
+        description: getErrorMessage(
+          error,
+          "Failed to export account data. Please try again.",
+        ),
         variant: "destructive",
       });
     } finally {
@@ -257,7 +280,10 @@ const AccountSettingsPage: React.FC = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: getErrorMessage(error, "Failed to send OTP. Please try again."),
+        description: getErrorMessage(
+          error,
+          "Failed to send OTP. Please try again.",
+        ),
         variant: "destructive",
       });
     } finally {
@@ -315,8 +341,10 @@ const AccountSettingsPage: React.FC = () => {
       console.error("Error updating email:", error); // Debug log
       toast({
         title: "Error",
-        description:
-          getErrorMessage(error, "Failed to update email. Please try again."),
+        description: getErrorMessage(
+          error,
+          "Failed to update email. Please try again.",
+        ),
         variant: "destructive",
       });
     } finally {
@@ -335,16 +363,18 @@ const AccountSettingsPage: React.FC = () => {
 
   const handleToggleAutoSync = async () => {
     if (!user) return;
-    
+
     const newValue = !user.zotero_auto_sync;
     try {
       await AccountService.updateProfile({
-        zotero_auto_sync: newValue
+        zotero_auto_sync: newValue,
       });
       setUser({ ...user, zotero_auto_sync: newValue });
       toast({
-        title: newValue ? "Zotero Auto-Sync Enabled" : "Zotero Auto-Sync Disabled",
-        description: newValue 
+        title: newValue
+          ? "Zotero Auto-Sync Enabled"
+          : "Zotero Auto-Sync Disabled",
+        description: newValue
           ? "New citations will now be automatically added to your Zotero."
           : "Zotero auto-sync has been turned off.",
       });
@@ -359,16 +389,18 @@ const AccountSettingsPage: React.FC = () => {
 
   const handleToggleMendeleyAutoSync = async () => {
     if (!user) return;
-    
+
     const newValue = !user.mendeley_auto_sync;
     try {
       await AccountService.updateProfile({
-        mendeley_auto_sync: newValue
+        mendeley_auto_sync: newValue,
       });
       setUser({ ...user, mendeley_auto_sync: newValue });
       toast({
-        title: newValue ? "Mendeley Auto-Sync Enabled" : "Mendeley Auto-Sync Disabled",
-        description: newValue 
+        title: newValue
+          ? "Mendeley Auto-Sync Enabled"
+          : "Mendeley Auto-Sync Disabled",
+        description: newValue
           ? "New citations will now be automatically added to your Mendeley library."
           : "Mendeley auto-sync has been turned off.",
       });
@@ -436,7 +468,9 @@ const AccountSettingsPage: React.FC = () => {
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                     <User className="w-4 h-4 text-blue-600" />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">{user?.email}</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {user?.email}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-md border border-green-100">
                   <BadgeCheck className="w-3.5 h-3.5" />
@@ -452,8 +486,12 @@ const AccountSettingsPage: React.FC = () => {
                       <ZoteroIcon width={32} height={32} />
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-700 block">Linked Zotero</span>
-                      <span className="text-[10px] text-gray-400">Status: Verified</span>
+                      <span className="text-sm font-medium text-gray-700 block">
+                        Linked Zotero
+                      </span>
+                      <span className="text-[10px] text-gray-400">
+                        Status: Verified
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-md border border-green-100">
@@ -463,8 +501,7 @@ const AccountSettingsPage: React.FC = () => {
                 </div>
               )}
 
-              {/* 
-              {/* Linked Mendeley Account * /}
+              {/* Linked Mendeley Account */}
               {user?.mendeley_access_token && (
                 <div className="flex items-center justify-between p-3 bg-blue-50/30 rounded-lg border border-blue-50">
                   <div className="flex items-center gap-3">
@@ -472,8 +509,12 @@ const AccountSettingsPage: React.FC = () => {
                       <MendeleyIcon className="w-full h-full" />
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-700 block">Linked Mendeley</span>
-                      <span className="text-[10px] text-gray-400">Status: Verified</span>
+                      <span className="text-sm font-medium text-gray-700 block">
+                        Linked Mendeley
+                      </span>
+                      <span className="text-[10px] text-gray-400">
+                        Status: Verified
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-md border border-green-100">
@@ -482,7 +523,6 @@ const AccountSettingsPage: React.FC = () => {
                   </div>
                 </div>
               )}
-              */}
             </div>
           </div>
         </div>
@@ -625,124 +665,239 @@ const AccountSettingsPage: React.FC = () => {
         {/* Integrations Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
+            <h2 className="text-lg font-medium text-gray-900 mb-6">
               Integrations
             </h2>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-red-50 overflow-hidden">
-                  <ZoteroIcon className="w-full h-full object-contain scale-[1.3]" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Zotero</h3>
-                  <p className="text-sm text-gray-500">
-                    {user?.zotero_user_id 
-                      ? `Zotero is active and synced.` 
-                      : "Sync your research library directly"}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant={user?.zotero_user_id ? "outline" : "default"}
-                className={user?.zotero_user_id ? "border-red-200 text-red-600 hover:bg-red-50" : "bg-red-600 hover:bg-red-700 text-white"}
-                onClick={async () => {
-                  if (user?.zotero_user_id) {
-                    toast({
-                      title: "Zotero Integration",
-                      description: "To disconnect your Zotero, please contact support or revoke access in your library settings.",
-                    });
-                  } else {
-                    window.location.href = await ZoteroService.getConnectUrl();
-                  }
-                }}
-              >
-                {user?.zotero_user_id ? "Connected" : "Setup Zotero"}
-              </Button>
+
+            {/* Citations Sub-heading */}
+            <div className="mb-4">
+              <h3 className="text-md font-semibold text-gray-800 border-b border-gray-100 pb-2">
+                Citations
+              </h3>
             </div>
 
-            {user?.zotero_user_id && (
-              <div className="mt-4 p-4 bg-red-50/20 rounded-lg border border-red-100 flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900">Automated Zotero Sync</h4>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Automatically synchronize new citations from your research to your Zotero library.
-                  </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Zotero Column */}
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 flex-1">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-red-50 overflow-hidden">
+                      <ZoteroIcon className="w-full h-full object-contain scale-[1.3]" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Zotero</h3>
+                      <p className="text-xs text-gray-500">
+                        {user?.zotero_user_id
+                          ? `Zotero is active and synced.`
+                          : "Sync your research library directly"}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={user?.zotero_user_id ? "outline" : "default"}
+                    className={
+                      user?.zotero_user_id
+                        ? "border-red-200 text-red-600 hover:bg-red-50 text-xs px-3"
+                        : "bg-red-600 hover:bg-red-700 text-white text-xs px-3"
+                    }
+                    onClick={async () => {
+                      if (user?.zotero_user_id) {
+                        toast({
+                          title: "Zotero Integration",
+                          description:
+                            "To disconnect your Zotero, please contact support or revoke access in your library settings.",
+                        });
+                      } else {
+                        window.location.href =
+                          await ZoteroService.getConnectUrl();
+                      }
+                    }}>
+                    {user?.zotero_user_id ? "Connected" : "Setup Zotero"}
+                  </Button>
                 </div>
-                <div className="flex items-center">
-                  <button
-                    onClick={handleToggleAutoSync}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                      user.zotero_auto_sync ? "bg-red-600" : "bg-gray-200"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        user.zotero_auto_sync ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </div>
+                {user?.zotero_user_id && (
+                  <div className="mt-2 p-3 bg-red-50/20 rounded-lg border border-red-100 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900">
+                        Automated Zotero Sync
+                      </h4>
+                    </div>
+                    <div className="flex items-center">
+                      <button
+                        onClick={handleToggleAutoSync}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                          user.zotero_auto_sync ? "bg-red-600" : "bg-gray-200"
+                        }`}>
+                        <span
+                          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                            user.zotero_auto_sync
+                              ? "translate-x-5"
+                              : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
 
-            {/* 
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 mt-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-blue-50 text-blue-600">
-                  <MendeleyIcon className="h-full w-full" />
+              {/* Mendeley Column */}
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 flex-1">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-blue-50 text-blue-600">
+                      <MendeleyIcon className="h-full w-full" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Mendeley</h3>
+                      <p className="text-xs text-gray-500">
+                        {user?.mendeley_access_token
+                          ? `Mendeley is active and synced.`
+                          : "Sync your Mendeley library directly"}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={
+                      user?.mendeley_access_token ? "outline" : "default"
+                    }
+                    className={
+                      user?.mendeley_access_token
+                        ? "border-blue-200 text-blue-600 hover:bg-blue-50 text-xs px-3"
+                        : "bg-blue-600 hover:bg-blue-700 text-white text-xs px-3"
+                    }
+                    onClick={async () => {
+                      if (user?.mendeley_access_token) {
+                        toast({
+                          title: "Mendeley Integration",
+                          description:
+                            "To disconnect Mendeley, please contact support or revoke access in your library settings.",
+                        });
+                      } else {
+                        window.location.href =
+                          await MendeleyService.getConnectUrl();
+                      }
+                    }}>
+                    {user?.mendeley_access_token
+                      ? "Connected"
+                      : "Setup Mendeley"}
+                  </Button>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Mendeley</h3>
-                  <p className="text-sm text-gray-500">
-                    {user?.mendeley_access_token 
-                      ? `Mendeley is active and synced.` 
-                      : "Sync your Mendeley library directly"}
-                  </p>
-                </div>
+                {user?.mendeley_access_token && (
+                  <div className="mt-2 p-3 bg-blue-50/20 rounded-lg border border-blue-100 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900">
+                        Automated Mendeley Sync
+                      </h4>
+                    </div>
+                    <div className="flex items-center">
+                      <button
+                        onClick={handleToggleMendeleyAutoSync}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                          user.mendeley_auto_sync
+                            ? "bg-blue-600"
+                            : "bg-gray-200"
+                        }`}>
+                        <span
+                          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                            user.mendeley_auto_sync
+                              ? "translate-x-5"
+                              : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <Button
-                variant={user?.mendeley_access_token ? "outline" : "default"}
-                className={user?.mendeley_access_token ? "border-blue-200 text-blue-600 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700 text-white"}
-                onClick={async () => {
-                  if (user?.mendeley_access_token) {
-                    toast({
-                      title: "Mendeley Integration",
-                      description: "To disconnect Mendeley, please contact support or revoke access in your library settings.",
-                    });
-                  } else {
-                    window.location.href = await MendeleyService.getConnectUrl();
-                  }
-                }}
-              >
-                {user?.mendeley_access_token ? "Connected" : "Setup Mendeley"}
-              </Button>
             </div>
 
-            {user?.mendeley_access_token && (
-              <div className="mt-4 p-4 bg-blue-50/20 rounded-lg border border-blue-100 flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-900">Automated Mendeley Sync</h4>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Automatically synchronize new citations from your research to your Mendeley library.
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <button
-                    onClick={handleToggleMendeleyAutoSync}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                      user.mendeley_auto_sync ? "bg-blue-600" : "bg-gray-200"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        user.mendeley_auto_sync ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
+            {/* Drives Sub-heading */}
+            <div className="mb-4">
+              <h3 className="text-md font-semibold text-gray-800 border-b border-gray-100 pb-2">
+                Drives
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Google Drive Column */}
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 flex-1">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-blue-50 text-blue-600">
+                      <GoogleDriveIcon className="w-full h-full object-contain" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        Google Drive
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        Sync and export effortlessly
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={user?.google_access_token ? "outline" : "default"}
+                    className={
+                      user?.google_access_token
+                        ? "border-blue-200 text-blue-600 hover:bg-blue-50 text-xs px-3"
+                        : "bg-blue-600 hover:bg-blue-700 text-white text-xs px-3"
+                    }
+                    onClick={async () => {
+                      if (user?.google_access_token) {
+                        toast({
+                          title: "Google Drive Integration",
+                          description:
+                            "To disconnect your Google Drive, please contact support or revoke access in your Google account settings.",
+                        });
+                      } else {
+                        const connectUrl = await GoogleDriveService.getConnectUrl();
+                        window.open(connectUrl, "Google Drive Auth", "width=600,height=600");
+                      }
+                    }}>
+                    {user?.google_access_token ? "Connected" : "Setup Drive"}
+                  </Button>
                 </div>
               </div>
-            )}
-            */}
+
+              {/* OneDrive Column */}
+              <div className="flex flex-col h-full opacity-60">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 flex-1 cursor-not-allowed">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-blue-50 text-blue-600">
+                      <svg
+                        className="w-full h-full"
+                        viewBox="0 0 24 24"
+                        fill="currentColor">
+                        <path
+                          d="M17.44 11.23c-.15-.9-1.01-1.63-2.06-1.63-.16 0-.32.02-.48.05-.33-1.07-1.39-1.85-2.65-1.85-1.42 0-2.61.98-2.91 2.33A3 3 0 0 0 6.5 13a3 3 0 0 0 2.96 3h8.08a2.5 2.5 0 0 0 .46-4.96v.19z"
+                          fill="#0078D4"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-gray-900">
+                          OneDrive
+                        </h3>
+                        <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] font-semibold leading-none">
+                          Coming Soon
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Microsoft OneDrive syncing
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    disabled
+                    className="border-gray-200 text-gray-400 cursor-not-allowed text-xs px-3">
+                    Setup OneDrive
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -855,9 +1010,7 @@ const AccountSettingsPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="mt-6 flex justify-between">
-                      <Button
-                        variant="outline"
-                        onClick={cancelEmailChange}>
+                      <Button variant="outline" onClick={cancelEmailChange}>
                         Cancel
                       </Button>
                       <Button
@@ -916,9 +1069,7 @@ const AccountSettingsPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="mt-6 flex justify-between">
-                      <Button
-                        variant="outline"
-                        onClick={cancelEmailChange}>
+                      <Button variant="outline" onClick={cancelEmailChange}>
                         Cancel
                       </Button>
                       <Button

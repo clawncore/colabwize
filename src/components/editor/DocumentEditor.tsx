@@ -97,7 +97,6 @@ import {
   HelpCircle,
   Video,
 } from "lucide-react";
-
 import { EditorHelpDialog } from "./EditorHelpDialog";
 import { Button } from "../ui/button";
 import ConfigService from "../../services/ConfigService";
@@ -385,24 +384,24 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           history: isCollaborative ? false : {},
         }),
         ...(isCollaborative &&
-          collabReady &&
-          providerRef.current &&
-          ydocRef.current
+        collabReady &&
+        providerRef.current &&
+        ydocRef.current
           ? [
-            Collaboration.configure({
-              document: ydocRef.current,
-            }),
-            CollaborationCursor.configure({
-              provider: providerRef.current,
-              user: {
-                name:
-                  user?.user_metadata?.full_name ||
-                  user?.email ||
-                  "Anonymous",
-                color: cursorColor,
-              },
-            }),
-          ]
+              Collaboration.configure({
+                document: ydocRef.current,
+              }),
+              CollaborationCursor.configure({
+                provider: providerRef.current,
+                user: {
+                  name:
+                    user?.user_metadata?.full_name ||
+                    user?.email ||
+                    "Anonymous",
+                  color: cursorColor,
+                },
+              }),
+            ]
           : []),
         AuthorshipExtension.configure({
           user: {
@@ -529,7 +528,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             try {
               const sel = NodeSelection.create(view.state.doc, pos);
               view.dispatch(view.state.tr.setSelection(sel));
-            } catch (e) { }
+            } catch (e) {}
             return true;
           }
 
@@ -836,7 +835,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) { } // Dispatch clear
+          } catch (e) {} // Dispatch clear
           console.log("âœ… No grammar issues in block.");
           return;
         }
@@ -874,7 +873,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (matchCount > 0 || errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) { }
+          } catch (e) {}
           console.log(`âœ… Applied ${matchCount} grammar highlights to block.`);
         }
       } catch (error) {
@@ -913,7 +912,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             description: `We've detected you're using ${state.stats.majorityStyle} formatting and updated your settings.`,
           });
         }
-      } catch (err) { }
+      } catch (err) {}
     }, 5000);
 
     return () => clearInterval(interval);
@@ -1064,7 +1063,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       if (editor && e.detail) {
         const { claim, result } = e.detail;
         const { selection } = editor.state;
-        
+
         const highlightAttrs = {
           claim: claim,
           consensusLevel: result.consensusLevel,
@@ -1075,18 +1074,28 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           methodologyScore: result.methodologyScore,
           extraordinaryEvidenceRequired: result.extraordinaryEvidenceRequired,
         };
-        
+
         // Insert the red pin node into the editor
-        editor.chain().focus().insertContent({
-            type: 'consensusPin',
-            attrs: highlightAttrs
-        }).run();
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: "consensusPin",
+            attrs: highlightAttrs,
+          })
+          .run();
       }
     };
 
-    window.addEventListener("apply-consensus-highlight", handleApplyConsensus as EventListener);
+    window.addEventListener(
+      "apply-consensus-highlight",
+      handleApplyConsensus as EventListener,
+    );
     return () => {
-      window.removeEventListener("apply-consensus-highlight", handleApplyConsensus as EventListener);
+      window.removeEventListener(
+        "apply-consensus-highlight",
+        handleApplyConsensus as EventListener,
+      );
     };
   }, [editor]);
 
@@ -1311,10 +1320,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               <div className="flex items-center space-x-2 flex-nowrap overflow-x-auto pb-1 custom-scrollbar min-w-0 flex-1 md:justify-center justify-start max-md:mt-2">
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isPreviewMode
                       ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
+                  }`}
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1330,10 +1340,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
+                    isFocusMode
                       ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
+                  }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />
@@ -1379,7 +1390,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                         console.error("Failed to save version:", error);
                       }
                     }}
-                    className={`gap-2 h-9 border-1 border-green-400 text-green-800 bg-white hover:bg-green-50 hover:text-green-900 transition-colors shadow-sm px-3 ${isFreePlan ? "opacity-70" : ""}`}
+                    className={`gap-2 h-9 px-4 py-2 border border-green-200 bg-green-50 text-green-700 rounded-md text-sm font-medium hover:bg-green-100 transition-colors flex items-center gap-2 ${isFreePlan ? "opacity-70" : ""}`}
                     title={
                       isFreePlan
                         ? "Available on Plus Plan"
@@ -1409,7 +1420,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                       }
                       setIsHistoryModalOpen(true);
                     }}
-                    className={`gap-2 h-9 border-1 border-indigo-400 text-indigo-800 bg-white hover:bg-indigo-50 hover:text-indigo-900 transition-colors shadow-sm px-3 ${isFreePlan ? "opacity-70" : ""}`}
+                    className="gap-2 h-9 px-4 py-2 border border-indigo-200 bg-indigo-50 text-indigo-700 rounded-md text-sm font-medium hover:bg-indigo-100 transition-colors flex items-center gap-2"
                     title={
                       isFreePlan
                         ? "Available on Plus Plan"
@@ -1430,22 +1441,9 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                   </Button>
                 )}
 
-                {/* Team Chat Button */}
-                {isCollaborative && onOpenPanel && (
-                  <button
-                    onClick={() => {
-                      onOpenPanel("team-chat");
-                    }}
-                    className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFreePlan ? "opacity-70" : "border-emerald-300 text-emerald-700 hover:bg-emerald-50"}`}
-                    title="Open Team Chat">
-                    <MessageSquare className="w-4 h-4 text-emerald-600" />
-                    <span className="hidden sm:inline">Chat</span>
-                  </button>
-                )}
-
                 <Button
                   onClick={() => setIsStyleDialogOpen(true)}
-                  className="gap-2 h-9 border-1 border-gray-400 text-gray-800 bg-white hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm px-3"
+                  className="gap-2 h-9 px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors flex items-center gap-2"
                   title={`Current Style: ${project.citation_style || "APA"} - Click to change`}>
                   <div className="flex items-center gap-1.5">
                     <BookOpen className="w-4 h-4 text-gray-600" />
@@ -1641,14 +1639,18 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               Compare
             </button>
 
-            <button
-              onClick={() => setShowHelpDialog(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md hover:scale-105"
-              title="Help & Video Tutorials"
-              aria-label="Help">
-              <HelpCircle className="w-4 h-4" />
-              Help
-            </button>
+            {/* Team Chat Button */}
+            {isCollaborative && onOpenPanel && (
+              <button
+                onClick={() => {
+                  onOpenPanel("team-chat");
+                }}
+                className="px-4 py-2 border border-emerald-200 bg-emerald-50 text-emerald-700 rounded-md text-sm font-medium hover:bg-emerald-100 transition-colors flex items-center gap-2"
+                title="Open Team Chat">
+                <MessageSquare className="w-4 h-4 text-emerald-600" />
+                <span className="hidden sm:inline">Chat</span>
+              </button>
+            )}
 
             <EditorHelpDialog
               open={showHelpDialog}
@@ -1764,7 +1766,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           }
         }}
       />
-
     </EditorProvider>
   );
 };
