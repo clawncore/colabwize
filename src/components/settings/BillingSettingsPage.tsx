@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import { CreditCard, Calendar, CheckCircle, BarChart } from "lucide-react";
+import ReferralCard from "../referral/ReferralCard";
 import {
   SubscriptionService,
   Plan,
@@ -98,21 +99,19 @@ const SubscriptionStatus = ({
               Current Subscription
             </h2>
             <div
-              className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase flex items-center gap-1.5 ${
-                subscription.status === "active"
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                  : subscription.status === "canceled"
-                    ? "bg-amber-50 text-amber-700 border border-amber-100"
-                    : "bg-gray-50 text-gray-700 border border-gray-100"
-              }`}>
+              className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase flex items-center gap-1.5 ${subscription.status === "active"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                : subscription.status === "canceled"
+                  ? "bg-amber-50 text-amber-700 border border-amber-100"
+                  : "bg-gray-50 text-gray-700 border border-gray-100"
+                }`}>
               <div
-                className={`w-1.5 h-1.5 rounded-full ${
-                  subscription.status === "active"
-                    ? "bg-emerald-500"
-                    : subscription.status === "canceled"
-                      ? "bg-amber-500"
-                      : "bg-gray-500"
-                }`}
+                className={`w-1.5 h-1.5 rounded-full ${subscription.status === "active"
+                  ? "bg-emerald-500"
+                  : subscription.status === "canceled"
+                    ? "bg-amber-500"
+                    : "bg-gray-500"
+                  }`}
               />
               {subscription.status}
             </div>
@@ -158,12 +157,12 @@ const SubscriptionStatus = ({
                             Access ends on:{" "}
                             {subscription.current_period_end
                               ? new Date(
-                                  subscription.current_period_end,
-                                ).toLocaleDateString("en-US", {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                })
+                                subscription.current_period_end,
+                              ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })
                               : "End of current period"}
                           </p>
                         </div>
@@ -414,13 +413,12 @@ const UsageChart = ({ usage, limits }: { usage: Usage; limits: any }) => {
                 {!isUnlimited && (
                   <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ease-out ${
-                        percentage > 90
-                          ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
-                          : percentage > 75
-                            ? "bg-amber-500"
-                            : "bg-indigo-500"
-                      }`}
+                      className={`h-full rounded-full transition-all duration-500 ease-out ${percentage > 90
+                        ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
+                        : percentage > 75
+                          ? "bg-amber-500"
+                          : "bg-indigo-500"
+                        }`}
                       style={{
                         width: `${percentage}%`,
                       }}
@@ -563,13 +561,12 @@ const PaymentHistory = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        invoice.status === "paid"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                          : invoice.status === "pending"
-                            ? "bg-amber-50 text-amber-700 border border-amber-100"
-                            : "bg-red-50 text-red-700 border border-red-100"
-                      }`}>
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${invoice.status === "paid"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                        : invoice.status === "pending"
+                          ? "bg-amber-50 text-amber-700 border border-amber-100"
+                          : "bg-red-50 text-red-700 border border-red-100"
+                        }`}>
                       {invoice.status.charAt(0).toUpperCase() +
                         invoice.status.slice(1)}
                     </span>
@@ -743,6 +740,8 @@ export default function BillingPage() {
       <PaymentHistory />
 
       <PaymentMethodsDisplay />
+
+      <ReferralCard />
     </div>
   );
 }

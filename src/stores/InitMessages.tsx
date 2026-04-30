@@ -9,6 +9,8 @@ export default function InitMessages({ messages }: { messages: Imessage[] }) {
   const hasMore = messages.length >= LIMIT_MESSAGE;
 
   useEffect(() => {
+    if (initState.current) return;
+    initState.current = true;
     useMessage.setState({ messages, hasMore });
     // eslint-disable-next-line
   }, [messages, hasMore]);
