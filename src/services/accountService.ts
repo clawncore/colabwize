@@ -23,6 +23,7 @@ export interface ActualUserAccount {
   zotero_auto_sync?: boolean;
   mendeley_access_token?: string | null;
   mendeley_auto_sync?: boolean;
+  google_access_token?: string | null;
   subscription?: {
     plan: string;
     status: string;

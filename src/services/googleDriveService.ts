@@ -63,7 +63,9 @@ export class GoogleDriveService {
    * Get the URL to initiate Google Drive OAuth connection
    */
   static async getConnectUrl(): Promise<string> {
-    const apiUrl = process.env.REACT_APP_API_URL || "https://api.colabwize.com";
+    // Dynamically import ConfigService to avoid circular dependency issues if any
+    const { default: ConfigService } = await import("./ConfigService");
+    const apiUrl = ConfigService.getApiUrl();
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token || "";
     // Updated to hit /api/auth/google instead of /connect as requested

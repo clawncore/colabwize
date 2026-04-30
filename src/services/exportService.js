@@ -56,30 +56,22 @@ class ExportService {
         throw new Error("Not authenticated");
       }
 
-      // Build query parameters
-      const params = new URLSearchParams();
-      params.append("projectId", projectId);
-      params.append("format", options.format || "pdf");
-      params.append(
-        "includeCitations",
-        options.includeCitations ? "true" : "false",
-      );
-      params.append(
-        "includeComments",
-        options.includeComments ? "true" : "false",
-      );
-      params.append("citationStyle", options.citationStyle || "apa");
-      params.append("template", options.template || "academic");
-      params.append("journalTemplate", options.journalTemplate || "");
-
-      const fullUrl = `${API_BASE_URL}/api/projects/export/google-drive?${params.toString()}`;
-
-      const response = await fetch(fullUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${API_BASE_URL}/api/projects/export/google-drive`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            projectId,
+            format: options.format || "pdf",
+            htmlContent: options.htmlContent,
+            metadata: options.metadata,
+          }),
         },
-      });
+      );
 
       if (!response.ok) {
         let errorMessage = "Failed to export to Google Drive";
@@ -95,13 +87,7 @@ class ExportService {
       const data = await response.json();
 
       if (data.success) {
-        // Show success message to user
-        alert(`File successfully exported to Google Drive: ${data.message}`);
-        // Optionally open the file in Google Drive
-        if (data.url) {
-          window.open(data.url, "_blank");
-        }
-        return { success: true };
+        return { success: true, url: data.url };
       } else {
         throw new Error(data.message || "Failed to export to Google Drive");
       }
@@ -111,65 +97,78 @@ class ExportService {
     }
   }
 
-  // Export to OneDrive
-  static async exportToOneDrive(projectId, options = {}) {
+  // Export to Zotero (Metadata Only)
+  static async exportToZotero(projectId, options = {}) {
     try {
       const token = await this.getAuthToken();
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
+      if (!token) throw new Error("Not authenticated");
 
-      // Build query parameters
-      const params = new URLSearchParams();
-      params.append("projectId", projectId);
-      params.append("format", options.format || "pdf");
-      params.append(
-        "includeCitations",
-        options.includeCitations ? "true" : "false",
-      );
-      params.append(
-        "includeComments",
-        options.includeComments ? "true" : "false",
-      );
-      params.append("citationStyle", options.citationStyle || "apa");
-      params.append("template", options.template || "academic");
-      params.append("journalTemplate", options.journalTemplate || "");
-
-      const fullUrl = `${API_BASE_URL}/api/projects/export/onedrive?${params.toString()}`;
-
-      const response = await fetch(fullUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${API_BASE_URL}/api/projects/export/zotero`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            projectId,
+            metadata: options.metadata,
+          }),
         },
-      });
+      );
 
       if (!response.ok) {
-        let errorMessage = "Failed to export to OneDrive";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch (e) {
-          errorMessage = response.statusText || errorMessage;
-        }
-        throw new Error(errorMessage);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            response.statusText ||
+            "Failed to export to Zotero",
+        );
       }
 
       const data = await response.json();
-
-      if (data.success) {
-        // Show success message to user
-        alert(`File successfully exported to OneDrive: ${data.message}`);
-        // Optionally open the file in OneDrive
-        if (data.url) {
-          window.open(data.url, "_blank");
-        }
-        return { success: true };
-      } else {
-        throw new Error(data.message || "Failed to export to OneDrive");
-      }
+      return { success: true, data };
     } catch (error) {
-      console.error("OneDrive export error:", error);
+      console.error("Zotero export error:", error);
+      throw error;
+    }
+  }
+
+  // Export to Mendeley (Metadata Only)
+  static async exportToMendeley(projectId, options = {}) {
+    try {
+      const token = await this.getAuthToken();
+      if (!token) throw new Error("Not authenticated");
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/projects/export/mendeley`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            projectId,
+            metadata: options.metadata,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            response.statusText ||
+            "Failed to export to Mendeley",
+        );
+      }
+
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error("Mendeley export error:", error);
       throw error;
     }
   }

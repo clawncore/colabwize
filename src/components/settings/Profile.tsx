@@ -8,11 +8,6 @@ import { Loader2, User, Upload, BadgeCheck } from "lucide-react";
 import ProfileService, { ProfileData } from "../../services/profileService";
 import { supabase } from "../../lib/supabase/client"; // Import Supabase client
 import apiClient from "../../services/apiClient";
-import { ZoteroService } from "../../services/zoteroService";
-import { VaultIcon } from "../common/VaultIcon";
-import { MendeleyService } from "../../services/mendeleyService";
-import { MendeleyIcon } from "../common/MendeleyIcon";
-import { ZoteroIcon } from "../common/ZoteroIcon";
 import {
   Dialog,
   DialogContent,
@@ -116,7 +111,10 @@ export default function Profile() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: getErrorMessage(error, "Failed to send code. Please try again."),
+        description: getErrorMessage(
+          error,
+          "Failed to send code. Please try again.",
+        ),
         variant: "destructive",
       });
     } finally {
@@ -185,7 +183,10 @@ export default function Profile() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: getErrorMessage(error, "Failed to verify OTP. Please try again."),
+        description: getErrorMessage(
+          error,
+          "Failed to verify OTP. Please try again.",
+        ),
         variant: "destructive",
       });
     } finally {
@@ -279,8 +280,10 @@ export default function Profile() {
                         } catch (error: any) {
                           toast({
                             title: "Error",
-                            description:
-                              getErrorMessage(error, "Failed to upload avatar. Please try again."),
+                            description: getErrorMessage(
+                              error,
+                              "Failed to upload avatar. Please try again.",
+                            ),
                             variant: "destructive",
                           });
                         }
@@ -483,73 +486,6 @@ export default function Profile() {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300  rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                 />
-              </div>
-            </div>
-          </div>
-
-          {/* Zotero Integration */}
-          <div className="mb-8">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
-              Integrations
-            </h2>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm border border-red-50 overflow-hidden">
-                  <ZoteroIcon className="w-full h-full object-contain scale-[1.3]" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900">Zotero</h3>
-                  <p className="text-sm text-gray-500">
-                    Sync your research library directly to your projects.
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant={(profile as any).zotero_user_id ? "outline" : "default"}
-                className={(profile as any).zotero_user_id ? "border-red-100 text-red-600 hover:bg-red-50" : "bg-red-600 hover:bg-red-700 text-white"}
-                onClick={async () => {
-                  if (!(profile as any).zotero_user_id) {
-                    window.location.href = await ZoteroService.getConnectUrl();
-                  }
-                }}
-              >
-                {(profile as any).zotero_user_id ? "Connected" : "Setup Zotero"}
-              </Button>
-            </div>
-
-            <div className="hidden">
-              {/* 
-                  MENDELEY INTEGRATION - TEMPORARILY DISABLED
-                  STATUS SUMMARY (April 2026):
-                  - Backend: Refactored MendeleyService.ts with standard JSON headers and robust 15s timeouts.
-                  - OAuth: Connection flow is verified but Elsevier API Key fallback to Client Secret was removed to prevent 403s.
-                  - Library: fetchLibrary, fetchFolders, and queryItems are ready for testing with a fresh Elsevier API Key.
-                  - Frontend: MendeleyLibraryPanel.tsx is fully implemented with provenance badges and "Cite" button parity.
-                */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 opacity-50">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center p-2.5">
-                    <MendeleyIcon className="h-full w-full" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">Mendeley</h3>
-                    <p className="text-xs text-gray-500">
-                      Sync your Mendeley library directly to your projects.
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant={(profile as any).mendeley_access_token ? "outline" : "default"}
-                  className={(profile as any).mendeley_access_token ? "border-blue-100 text-blue-600 hover:bg-blue-50" : "bg-blue-600 hover:bg-blue-700 text-white"}
-                  onClick={async () => {
-                    if (!(profile as any).mendeley_access_token) {
-                      window.location.href = await MendeleyService.getConnectUrl();
-                    }
-                  }}
-                  disabled={true}
-                >
-                  {(profile as any).mendeley_access_token ? "Connected" : "Setup Mendeley"}
-                </Button>
               </div>
             </div>
           </div>

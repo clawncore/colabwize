@@ -15,10 +15,16 @@ import {
   AlertTriangle,
   FileSearch,
   Pencil,
+  Cloud,
+  Download,
 } from "lucide-react";
+import ExportService from "../../services/exportService";
 import { apiClient } from "../../services/apiClient";
 import { Project } from "../../services/documentService";
 import { useToast } from "../../hooks/use-toast";
+import { GoogleDriveIcon } from "../common/GoogleDriveIcon";
+import { MendeleyIcon } from "../common/MendeleyIcon";
+import { ZoteroIcon } from "../common/ZoteroIcon";
 import { BibliographyManager } from "../../services/citationAudit/bibliographyEngine";
 import { detectAndNormalizeCitations } from "../editor/utils/normalization";
 import { CitationStyleDialog } from "../citations/CitationStyleDialog";
@@ -36,7 +42,8 @@ interface ExportWorkflowModalProps {
   initialAuditReport?: any;
 }
 
-type Step = "details" | "format" | "mode" | "review";
+type Step = "details" | "format" | "destination" | "review";
+type ExportDestination = "local" | "google-drive" | "zotero" | "mendeley";
 type ExportFormat = "docx" | "pdf" | "latex" | "rtf" | "txt";
 type ExportMode = "standard" | "journal";
 
@@ -58,6 +65,8 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     null,
   );
   const [downloading, setDownloading] = useState(false);
+  const [exportDestination, setExportDestination] =
+    useState<ExportDestination>("local");
 
   // Audit State
   const [auditResult, setAuditResult] = useState<any>(null);
@@ -249,7 +258,8 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     // 2. Flatten Bibliography Entry nodes → <p> tags, preserving the id anchor
     // BibliographyNode.renderHTML outputs:
     //   <div data-bibliography-entry="true" id="bib-KEY" class="bibliography-entry ...">...</div>
-    const bibRegex = /<div\s+data-bibliography-entry="true"([^>]*)>([\s\S]*?)<\/div>/g;
+    const bibRegex =
+      /<div\s+data-bibliography-entry="true"([^>]*)>([\s\S]*?)<\/div>/g;
     html = html.replace(bibRegex, (match, attrStr, content) => {
       // Extract the id attribute (e.g. id="bib-abc123") so in-text links land correctly
       const idMatch = attrStr.match(/id="([^"]+)"/);
@@ -307,13 +317,12 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
           currentHtmlContent || editor?.getHTML() || "",
         );
 
-        const response = await apiClient.download("/api/files", {
+        const filePayload = {
           fileData: {
             id: project.id,
             title: documentTitle,
             content: currentContent,
             htmlContent: preparedHtml,
-            // citations: citationsToSend, 
             metadata: {
               author,
               institution: affiliation,
@@ -325,25 +334,50 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
           },
           fileType: `export-${selectedFormat}`,
           userId: userId,
-        });
+        };
 
-        // apiClient throws on errors, so we can assume response.ok is true here
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        
-        // Primary document download
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = `${documentTitle.replace(/[^a-zA-Z0-9-_]/g, "_")}.${selectedFormat}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+        if (exportDestination === "local" || !selectedFormat) {
+          const response = await apiClient.download("/api/files", filePayload);
+          const blob = await response.blob();
+          const blobUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.download = `${documentTitle.replace(/[^a-zA-Z0-9-_]/g, "_")}.${selectedFormat || "pdf"}`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
 
-        toast({
-          title: "Download Started",
-          description: `Your ${selectedFormat.toUpperCase()} file is ready.`,
-        });
+          toast({
+            title: "Download Started",
+            description: `Your ${selectedFormat?.toUpperCase() || "PDF"} file is ready.`,
+          });
+        } else if (exportDestination === "google-drive") {
+          await ExportService.exportToGoogleDrive(project.id, {
+            ...filePayload.fileData,
+            format: selectedFormat,
+          });
+          toast({
+            title: "Export Success",
+            description: "Successfully exported to Google Drive.",
+          });
+        } else if (exportDestination === "zotero") {
+          await ExportService.exportToZotero(project.id, {
+            metadata: filePayload.fileData.metadata,
+          });
+          toast({
+            title: "Export Success",
+            description: "Successfully exported metadata to Zotero.",
+          });
+        } else if (exportDestination === "mendeley") {
+          await ExportService.exportToMendeley(project.id, {
+            metadata: filePayload.fileData.metadata,
+          });
+          toast({
+            title: "Export Success",
+            description: "Successfully exported metadata to Mendeley.",
+          });
+        }
 
         onClose();
       });
@@ -363,8 +397,8 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
   const goToNextStep = () => {
     if (currentStep === "details") setCurrentStep("format");
     else if (currentStep === "format" && selectedFormat)
-      setCurrentStep("review");
-    // else if (currentStep === "mode") setCurrentStep("review");
+      setCurrentStep("destination");
+    else if (currentStep === "destination") setCurrentStep("review");
   };
 
   // Step 1: Details Content
@@ -498,7 +532,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
     </div>
   );
 
-  // Step 3.5: Export Mode Selection (Commented out per user request)
+  // Step 2.5: Export Mode Selection (Commented out per user request)
   /*
   const renderModeContent = () => (
       <div className="space-y-6">
@@ -557,6 +591,84 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
       </div>
   );
   */
+
+  // Step 3: Destination Content'
+  const renderDestinationContent = () => {
+    const destinations = [
+      {
+        id: "local" as ExportDestination,
+        label: "Local Download",
+        desc: "Download file to your device",
+        icon: <Download className="w-5 h-5 text-white" />,
+        color: "bg-gray-600",
+      },
+      {
+        id: "google-drive" as ExportDestination,
+        label: "Google Drive",
+        desc: "Export directly to Google Drive",
+        icon: <GoogleDriveIcon className="w-6 h-6 text-white" />,
+        color: "bg-blue-500",
+      },
+      {
+        id: "zotero" as ExportDestination,
+        label: "Zotero",
+        desc: "Export metadata to Zotero library",
+        icon: <ZoteroIcon className="w-6 h-6 text-white" />,
+        color: "bg-red-500",
+      },
+      {
+        id: "mendeley" as ExportDestination,
+        label: "Mendeley",
+        desc: "Export metadata to Mendeley library",
+        icon: <MendeleyIcon className="w-6 h-6 text-white" />,
+        color: "bg-green-600",
+      },
+    ];
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Export Destination
+          </h2>
+          <p className="text-gray-500">
+            Choose where to send your exported document.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {destinations.map((dest) => (
+            <button
+              key={dest.id}
+              onClick={() => setExportDestination(dest.id)}
+              className={`relative p-5 rounded-xl border-2 text-left transition-all hover:shadow-md ${
+                exportDestination === dest.id
+                  ? "border-indigo-600 bg-indigo-50 ring-2 ring-indigo-200"
+                  : "border-gray-200 bg-white hover:border-gray-300"
+              }`}>
+              <div className="flex items-start gap-4">
+                <div
+                  className={`w-10 h-10 rounded-lg ${dest.color} flex items-center justify-center text-xl`}>
+                  {dest.icon}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">{dest.label}</p>
+                  <p className="text-sm text-gray-500 mt-0.5">{dest.desc}</p>
+                  {(dest.id === "zotero" || dest.id === "mendeley") && (
+                    <span className="inline-block mt-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                      Metadata only
+                    </span>
+                  )}
+                </div>
+              </div>
+              {exportDestination === dest.id && (
+                <CheckCircle2 className="absolute top-3 right-3 w-5 h-5 text-indigo-600" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   // Step 4: Final Review (Merged Preview + Action)
   const renderReviewContent = () => (
@@ -787,11 +899,13 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
           </button>
 
           <div className="flex items-center gap-12">
-            {["details", "format", "review"].map((step, idx) => {
-              const stepNames = ["Details", "Format", "Review"];
+            {["details", "format", "destination", "review"].map((step, idx) => {
+              const stepNames = ["Details", "Format", "Destination", "Review"];
               const isActive = currentStep === step;
               const isPast =
-                ["details", "format", "review"].indexOf(currentStep) > idx;
+                ["details", "format", "destination", "review"].indexOf(
+                  currentStep,
+                ) > idx;
 
               return (
                 <div
@@ -812,7 +926,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
                     {stepNames[idx]}
                   </span>
                   {/* Connector Line */}
-                  {idx < 2 && (
+                  {idx < 3 && (
                     <div
                       className={`absolute top-4 left-1/2 w-full h-0.5 -z-0 ml-4 w-24 ${
                         isPast ? "bg-indigo-600" : "bg-gray-200"
@@ -833,7 +947,7 @@ export const ExportWorkflowModal: React.FC<ExportWorkflowModalProps> = ({
             <div className="max-w-3xl mx-auto h-full">
               {currentStep === "details" && renderDetailsContent()}
               {currentStep === "format" && renderFormatContent()}
-              {/* {currentStep === "mode" && renderModeContent()} */}
+              {currentStep === "destination" && renderDestinationContent()}
               {currentStep === "review" && renderReviewContent()}
             </div>
           </div>

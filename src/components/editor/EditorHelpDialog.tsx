@@ -9,7 +9,17 @@ import {
 } from "../../components/ui/dialog";
 import { ScrollArea } from "../../components/ui/scroll-area";
 import { Button } from "../../components/ui/button";
-import { Play, ArrowLeft, Mail, MessageCircle, BookOpen, Heart, Star, Users, Zap } from "lucide-react";
+import {
+  Play,
+  ArrowLeft,
+  Mail,
+  MessageCircle,
+  BookOpen,
+  Heart,
+  Star,
+  Users,
+  Zap,
+} from "lucide-react";
 import { videoTutorials, VideoTutorial } from "../../data/helpData";
 
 interface EditorHelpDialogProps {
@@ -47,7 +57,19 @@ export function EditorHelpDialog({
         <button
           onClick={() => onOpenChange(false)}
           className="absolute right-4 top-4 z-50 h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
         </button>
         <DialogHeader className="px-6 py-4 border-b border-slate-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10 flex flex-row items-center justify-between rounded-t-2xl">
           <DialogTitle className="flex items-center gap-3 text-xl font-bold tracking-tight text-slate-800">
@@ -69,7 +91,9 @@ export function EditorHelpDialog({
                 </div>
                 <div>
                   <span className="text-slate-800">Editor Tutorials</span>
-                  <p className="text-xs text-slate-500 font-normal">Learn how to use the editor</p>
+                  <p className="text-xs text-slate-500 font-normal">
+                    Learn how to use the editor
+                  </p>
                 </div>
               </div>
             )}
@@ -102,7 +126,9 @@ export function EditorHelpDialog({
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span className="text-xs font-medium text-green-700">{selectedVideo.duration}</span>
+                    <span className="text-xs font-medium text-green-700">
+                      {selectedVideo.duration}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -155,7 +181,9 @@ export function EditorHelpDialog({
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center gap-3">
                           <div className="text-5xl">{video.thumbnail}</div>
-                          <span className="text-xs font-medium text-slate-400">Coming Soon</span>
+                          <span className="text-xs font-medium text-slate-400">
+                            Coming Soon
+                          </span>
                         </div>
                       )}
                     </div>
@@ -164,7 +192,7 @@ export function EditorHelpDialog({
                       <h4 className="font-semibold text-sm text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
                         {video.title}
                       </h4>
-                      
+
                       {video.description && (
                         <p className="text-xs text-slate-500 line-clamp-2">
                           {video.description}
@@ -204,12 +232,16 @@ export function EditorHelpDialog({
                       <Mail className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-800 text-sm">Email Support</p>
-                      <p className="text-xs text-slate-500">Get help from our team</p>
+                      <p className="font-semibold text-slate-800 text-sm">
+                        Email Support
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Get help from our team
+                      </p>
                     </div>
                   </a>
                   <a
-                    href="https://colabwize.com/contact"
+                    href="https://calendly.com/colabwize/30min"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 p-4 bg-white border border-slate-100 rounded-xl hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/50 transition-all group">
@@ -217,50 +249,13 @@ export function EditorHelpDialog({
                       <MessageCircle className="h-5 w-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-800 text-sm">Live Chat</p>
-                      <p className="text-xs text-slate-500">Chat with support</p>
+                      <p className="font-semibold text-slate-800 text-sm">
+                        Live Chat
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Chat with support
+                      </p>
                     </div>
-                  </a>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-5 border-t border-slate-100 pb-6">
-                <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <div className="p-1.5 bg-amber-100 rounded-lg">
-                    <Heart className="h-4 w-4 text-amber-600" />
-                  </div>
-                  Get Involved
-                </h3>
-                <div className="grid grid-cols-3 gap-3">
-                  <a
-                    href="https://colabwize.com/feedback"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-2 p-4 bg-white border border-slate-100 rounded-xl hover:border-amber-200 hover:shadow-lg transition-all group text-center">
-                    <div className="p-2 bg-amber-50 rounded-lg group-hover:bg-amber-100 transition-colors">
-                      <Star className="h-4 w-4 text-amber-500" />
-                    </div>
-                    <p className="font-medium text-slate-700 text-xs">Review</p>
-                  </a>
-                  <a
-                    href="https://colabwize.com/beta"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-2 p-4 bg-white border border-slate-100 rounded-xl hover:border-purple-200 hover:shadow-lg transition-all group text-center">
-                    <div className="p-2 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors">
-                      <Users className="h-4 w-4 text-purple-500" />
-                    </div>
-                    <p className="font-medium text-slate-700 text-xs">Beta</p>
-                  </a>
-                  <a
-                    href="https://colabwize.com/affiliate"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-2 p-4 bg-white border border-slate-100 rounded-xl hover:border-pink-200 hover:shadow-lg transition-all group text-center">
-                    <div className="p-2 bg-pink-50 rounded-lg group-hover:bg-pink-100 transition-colors">
-                      <Heart className="h-4 w-4 text-pink-500" />
-                    </div>
-                    <p className="font-medium text-slate-700 text-xs">Refer</p>
                   </a>
                 </div>
               </div>

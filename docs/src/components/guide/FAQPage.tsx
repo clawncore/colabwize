@@ -138,8 +138,8 @@ const FAQPage = () => {
       category.faqs.some(
         (faq) =>
           faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+          faq.answer.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
   );
 
   return (
@@ -240,7 +240,7 @@ const FAQPage = () => {
                 Book a 30-minute session with our support team.
               </p>
               <a
-                href="https://calendly.com/audacityimpact/30min"
+                href="https://calendly.com/colabwize/30min"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium inline-block">
