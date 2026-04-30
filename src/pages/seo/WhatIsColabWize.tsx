@@ -1,12 +1,11 @@
 import React from "react";
-import Layout from "../../components/Layout";
 import { Shield, CheckCircle, Users, ArrowRight } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Link } from "react-router-dom";
 
 const WhatIsColabWize = () => {
   return (
-    <Layout>
+    <>
       <div className="bg-white min-h-screen">
         {/* Hero Section */}
         <section className="section-padding bg-slate-50 relative overflow-hidden">
@@ -118,7 +117,7 @@ const WhatIsColabWize = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

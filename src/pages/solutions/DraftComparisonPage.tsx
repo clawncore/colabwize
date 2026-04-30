@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Layout from "../../components/Layout";
 import { motion, AnimatePresence } from "framer-motion";
 import { DraftComparisonPanel } from "../../components/originality/DraftComparisonPanel";
 import {
@@ -94,7 +93,7 @@ export const DraftComparisonPage: React.FC = () => {
   };
 
   return (
-    <Layout>
+    <>
       {/* Hero Section */}
       <section className="pt-24 pb-20 lg:pt-32 lg:pb-32 bg-slate-50 border-b border-slate-200 relative overflow-hidden">
         <div className="container-custom relative z-10">
@@ -569,6 +568,6 @@ export const DraftComparisonPage: React.FC = () => {
           </div>
         </div>
       </section>
-    </Layout>
+    </>
   );
 };

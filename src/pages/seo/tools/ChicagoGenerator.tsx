@@ -1,5 +1,4 @@
 import React from "react";
-import Layout from "../../../components/Layout";
 import PageMetadata from "../../../components/PageMetadata";
 import { Button } from "../../../components/ui/button";
 import { Link } from "react-router-dom";
@@ -7,7 +6,7 @@ import { CheckCircle, Zap, Shield, FileText, ArrowRight } from "lucide-react";
 
 const ChicagoGenerator = () => {
   return (
-    <Layout>
+    <>
       <PageMetadata
         title="Chicago Style Citation Generator (17th Edition)"
         description="Generate Chicago style citations easily for footnotes, endnotes, and bibliographies. Perfect for history and social science research."
@@ -76,7 +75,7 @@ const ChicagoGenerator = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

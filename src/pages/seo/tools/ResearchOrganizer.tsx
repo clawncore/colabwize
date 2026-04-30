@@ -1,5 +1,4 @@
 import React from "react";
-import Layout from "../../../components/Layout";
 import PageMetadata from "../../../components/PageMetadata";
 import { Button } from "../../../components/ui/button";
 import { Link } from "react-router-dom";
@@ -13,7 +12,7 @@ import {
 
 const ResearchOrganizer = () => {
   return (
-    <Layout>
+    <>
       <PageMetadata
         title="Research Paper Organizer & Management Tool"
         description="Organize your research papers, notes, and citations in one powerful workspace. Collaborate with teams and manage your academic bibliography seamlessly."
@@ -146,7 +145,7 @@ const ResearchOrganizer = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

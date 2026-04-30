@@ -15,8 +15,23 @@ import {
 } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import Layout from "../components/Layout";
+import React from 'react';
 import { useNavigate } from "react-router-dom";
+import PageMetadata from "../components/PageMetadata";
+
+export default function FeaturesPage() {
+  return (
+    <>
+      <PageMetadata 
+        title="Features"
+        description="Explore ColabWize's powerful features: AI-powered PDF chat, real-time collaboration, citation auditing, and verifiable authorship certificates for academic excellence."
+      />
+      <IntroHero />
+      <FeaturesPresentationFlow />
+      <ClosingCTA />
+    </>
+  );
+}
 
 // Intro Hero Section
 function IntroHero() {
@@ -378,12 +393,3 @@ function ClosingCTA() {
   );
 }
 
-export default function FeaturesPage() {
-  return (
-    <Layout>
-      <IntroHero />
-      <FeaturesPresentationFlow />
-      <ClosingCTA />
-    </Layout>
-  );
-}

@@ -1,5 +1,4 @@
 import React from "react";
-import Layout from "../../components/Layout";
 import { Shield, BookOpen, Clock, FileText, ArrowRight } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Link } from "react-router-dom";
@@ -33,7 +32,7 @@ const AcademicIntegrityPlatform = () => {
   ];
 
   return (
-    <Layout>
+    <>
       <div className="bg-slate-50 min-h-screen">
         {/* Category Hero */}
         <section className="bg-white border-b border-gray-100 py-20 lg:py-32">
@@ -132,7 +131,7 @@ const AcademicIntegrityPlatform = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

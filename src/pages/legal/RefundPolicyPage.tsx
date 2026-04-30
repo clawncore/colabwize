@@ -1,10 +1,9 @@
 import React from "react";
-import Layout from "../../components/Layout";
 import { Link } from "react-router-dom";
 
 const RefundPolicyPage = () => {
     return (
-        <Layout>
+        <>
             <div className="section-padding bg-white min-h-[60vh]">
                 <div className="container-custom max-w-3xl">
                     <h1 className="text-4xl font-bold text-gray-900 mb-8">Refunds & Cancellations</h1>
@@ -50,7 +49,7 @@ const RefundPolicyPage = () => {
                     </div>
                 </div>
             </div>
-        </Layout>
+        </>
     );
 };
 

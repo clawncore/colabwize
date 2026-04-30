@@ -14,12 +14,11 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 import { Helmet } from "react-helmet-async";
 
 const FalseAiAcademiaSEO: React.FC = () => {
   return (
-    <Layout>
+    <>
       <Helmet>
         <title>
           False AI Detection in Academic Writing: Why It Happens | ColabWize
@@ -243,7 +242,7 @@ const FalseAiAcademiaSEO: React.FC = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

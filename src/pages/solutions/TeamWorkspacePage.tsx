@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import LayoutWrapper from "../../components/Layout";
 import {
   LayoutDashboard,
   FolderOpen,
@@ -64,7 +63,7 @@ export default function TeamWorkspacePage() {
   ];
 
   return (
-    <LayoutWrapper>
+    <>
       {/* Hero Section */}
       <section className="section-padding bg-slate-900 text-white relative overflow-hidden">
         {/* Dynamic Background */}
@@ -541,6 +540,6 @@ export default function TeamWorkspacePage() {
           </div>
         </div>
       </section>
-    </LayoutWrapper>
+    </>
   );
 }

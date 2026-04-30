@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import LayoutWrapper from "../../components/Layout";
 import {
   MessageSquareText,
   Shield,
@@ -70,29 +69,29 @@ export default function ChatWithPdfsPage() {
   ];
 
   return (
-    <LayoutWrapper>
+    <>
       <div className="min-h-screen bg-white font-sans selection:bg-blue-500 selection:text-white">
         {/* Hero Section */}
-        <section className="relative pt-32 pb-24 md:pt-48 md:pb-32 overflow-hidden bg-slate-900 text-white">
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[120px]"></div>
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[120px]"></div>
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+        <section className="relative pt-32 pb-24 md:pt-48 md:pb-32 overflow-hidden bg-gradient-to-br from-white via-blue-50 to-cyan-50 text-slate-900">
+          <div className="absolute inset-0 opacity-80 pointer-events-none">
+            <div className="absolute top-[-8rem] right-[-6rem] w-[34rem] h-[34rem] bg-blue-300/40 rounded-full blur-[120px]"></div>
+            <div className="absolute bottom-[-10rem] left-[-8rem] w-[36rem] h-[36rem] bg-cyan-300/35 rounded-full blur-[120px]"></div>
+            <div className="absolute top-1/3 left-1/2 w-[24rem] h-[24rem] bg-indigo-200/30 rounded-full blur-[100px]"></div>
           </div>
 
           <div className="container-custom relative z-10 text-center">
             <div className="max-w-4xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs uppercase mb-8 tracking-widest backdrop-blur-sm animate-fade-in">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 border border-blue-100 text-blue-700 font-bold text-xs uppercase mb-8 tracking-widest shadow-lg shadow-blue-900/5 backdrop-blur-sm animate-fade-in">
                 <Bot className="w-4 h-4" /> Cognitive Institutional Intelligence
               </div>
               <h1 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-[1.1] animate-fade-in">
                 Chat with your <br />
-                <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 bg-clip-text text-transparent">
                   Institutional Memory.
                 </span>
               </h1>
               <p
-                className="text-lg md:text-xl text-slate-300 mb-12 max-w-2xl mx-auto leading-relaxed font-medium animate-fade-in"
+                className="text-lg md:text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed font-medium animate-fade-in"
                 style={{ animationDelay: "0.2s" }}>
                 Transform static PDFs into dynamic research nodes. ColabWize
                 extracts structural meaning, cross-references methodologies, and
@@ -108,7 +107,7 @@ export default function ChatWithPdfsPage() {
                     Start Free Analysis <ArrowRight className="ml-2 w-5 h-5" />
                   </RouterLink>
                 </Button>
-                <Button className="bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold px-10 py-7 rounded-2xl text-lg backdrop-blur-md">
+                <Button className="bg-white/90 border border-blue-100 hover:bg-blue-50 text-slate-900 font-bold px-10 py-7 rounded-2xl text-lg shadow-lg shadow-blue-900/5 backdrop-blur-md">
                   View Security Specs
                 </Button>
               </div>
@@ -119,29 +118,29 @@ export default function ChatWithPdfsPage() {
           <div
             className="container-custom mt-20 relative px-4 md:px-0 lg:px-20 animate-fade-in"
             style={{ animationDelay: "0.6s" }}>
-            <div className="relative mx-auto max-w-6xl rounded-[3rem] p-2 bg-gradient-to-b from-white/20 to-transparent backdrop-blur-sm border border-white/10 shadow-3xl overflow-hidden group">
-              <div className="rounded-[2.5rem] bg-[#0F1218] overflow-hidden aspect-[16/8] relative">
+            <div className="relative mx-auto max-w-6xl rounded-[3rem] p-2 bg-gradient-to-br from-blue-500/20 via-white/70 to-cyan-500/20 backdrop-blur-sm border border-white shadow-3xl overflow-hidden group">
+              <div className="rounded-[2.5rem] bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-hidden aspect-[16/8] relative">
                 <img
                   src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=1200&q=80"
                   alt="Research Console"
-                  className="w-full h-full object-cover opacity-30 group-hover:scale-[1.02] transition-transform duration-1000"
+                  className="w-full h-full object-cover opacity-[0.18] group-hover:scale-[1.02] transition-transform duration-1000"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0D1016] via-transparent to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-white via-blue-50/80 to-cyan-100/40"></div>
 
                 {/* Simulated Chat Interface */}
                 <div className="absolute inset-0 flex items-center justify-center p-6 md:p-12">
-                  <div className="w-full h-full bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
-                    <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+                  <div className="w-full h-full bg-white/80 backdrop-blur-xl rounded-3xl border border-white shadow-2xl shadow-blue-900/15 flex flex-col overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                          <Sparkles className="w-4 h-4 text-blue-400" />
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Sparkles className="w-4 h-4 text-blue-600" />
                         </div>
-                        <span className="text-white font-bold text-sm tracking-tight">
+                        <span className="text-slate-900 font-bold text-sm tracking-tight">
                           Project Delta Collective
                         </span>
                       </div>
                       <div className="flex gap-2">
-                        <span className="px-2 py-1 bg-white/5 rounded text-[10px] text-slate-400 uppercase font-bold tracking-widest border border-white/5">
+                        <span className="px-2 py-1 bg-blue-50 rounded text-[10px] text-blue-700 uppercase font-bold tracking-widest border border-blue-100">
                           12 Sources Active
                         </span>
                       </div>
@@ -151,9 +150,9 @@ export default function ChatWithPdfsPage() {
                         <div className="w-8 h-8 rounded-full bg-indigo-500 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-lg">
                           JD
                         </div>
-                        <div className="bg-white/5 p-4 rounded-2xl rounded-tl-none border border-white/5 text-sm md:text-base text-slate-300">
+                        <div className="bg-gradient-to-br from-white to-blue-50 p-4 rounded-2xl rounded-tl-none border border-blue-100 text-sm md:text-base text-slate-700 shadow-sm">
                           Does the longitudinal study in the{" "}
-                          <span className="text-blue-400 font-bold">
+                          <span className="text-blue-700 font-bold">
                             Nature 2023 paper
                           </span>{" "}
                           contradict the findings about sample bias in our
@@ -174,11 +173,11 @@ export default function ChatWithPdfsPage() {
                             that our current draft overlooks...
                           </p>
                           <div className="mt-4 pt-4 border-t border-white/10 flex gap-3">
-                            <div className="px-2 py-1 bg-white/10 rounded flex items-center gap-1.5 text-[10px] font-bold">
+                            <div className="px-2 py-1 bg-white/20 rounded flex items-center gap-1.5 text-[10px] font-bold">
                               <FileText className="w-3 h-3" /> Nature_2023.pdf
                               (Source)
                             </div>
-                            <div className="px-2 py-1 bg-emerald-400/20 rounded flex items-center gap-1.5 text-[10px] font-bold text-emerald-300">
+                            <div className="px-2 py-1 bg-emerald-50 rounded flex items-center gap-1.5 text-[10px] font-bold text-emerald-700">
                               <Shield className="w-3 h-3" /> Verified Cite
                             </div>
                           </div>
@@ -258,7 +257,7 @@ export default function ChatWithPdfsPage() {
               {/* Dynamic Feature Preview */}
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-200/40 to-indigo-200/40 blur-[120px] rounded-full"></div>
-                <div className="relative bg-slate-900 rounded-[3rem] p-4 shadow-3xl border border-slate-800 rotate-1">
+                <div className="relative bg-white rounded-[3rem] p-4 shadow-3xl border border-blue-100 rotate-1">
                   <div className="bg-slate-50 rounded-[2.5rem] p-8 aspect-[4/5] flex flex-col justify-center text-center space-y-8">
                     <div className="w-24 h-24 rounded-3xl bg-white shadow-xl flex items-center justify-center mx-auto text-blue-600">
                       {React.createElement(features[activeTab].icon, {
@@ -353,15 +352,18 @@ export default function ChatWithPdfsPage() {
         {/* Final CTA */}
         <section className="section-padding bg-white overflow-hidden relative">
           <div className="container-custom max-w-5xl mx-auto relative z-10">
-            <div className="bg-slate-900 rounded-[4rem] p-12 md:p-24 text-center text-white relative overflow-hidden shadow-3xl">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[100px]"></div>
+            <div className="bg-gradient-to-br from-blue-50 via-white to-cyan-50 rounded-[4rem] p-12 md:p-24 text-center text-slate-900 relative overflow-hidden shadow-3xl border border-blue-100">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-300/25 rounded-full blur-[100px]"></div>
+              <div className="absolute -right-24 -bottom-24 w-80 h-80 bg-cyan-300/30 rounded-full blur-[90px]"></div>
 
               <div className="relative z-10">
                 <h2 className="text-4xl md:text-6xl font-black mb-8 tracking-tighter">
                   Research at the <br />
-                  Speed of Thought.
+                  <span className="bg-gradient-to-r from-blue-600 to-cyan-700 bg-clip-text text-transparent">
+                    Speed of Thought.
+                  </span>
                 </h2>
-                <p className="text-lg text-slate-400 mb-12 max-w-xl mx-auto font-medium">
+                <p className="text-lg text-slate-600 mb-12 max-w-xl mx-auto font-medium">
                   Join the thousands of researchers transforming cognitive labor
                   into creative breakthrough with ColabWize.
                 </p>
@@ -372,7 +374,7 @@ export default function ChatWithPdfsPage() {
                     <RouterLink to="/signup">Deploy Your Engine</RouterLink>
                   </Button>
                   <Button
-                    className="bg-white/5 border-white/10 hover:bg-white/10 text-white font-bold px-12 py-8 rounded-2xl text-xl backdrop-blur-sm"
+                    className="bg-white/90 border border-blue-100 hover:bg-blue-50 text-slate-900 font-bold px-12 py-8 rounded-2xl text-xl shadow-lg shadow-blue-900/5 backdrop-blur-sm"
                     asChild>
                     <RouterLink to="/contact">Request Lab Demo</RouterLink>
                   </Button>
@@ -395,6 +397,6 @@ export default function ChatWithPdfsPage() {
           }}
         />
       </div>
-    </LayoutWrapper>
+    </>
   );
 }

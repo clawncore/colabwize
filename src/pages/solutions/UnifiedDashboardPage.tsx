@@ -1,7 +1,6 @@
 import React from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 
 import {
   Layout as LayoutIcon,
@@ -262,10 +261,10 @@ export default function UnifiedDashboardPage() {
   }
 
   return (
-    <Layout>
+    <>
       <IntroHero />
       <FeaturesPresentationFlow />
       <ClosingCTA />
-    </Layout>
+    </>
   );
 }

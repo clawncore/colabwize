@@ -4,7 +4,6 @@ import { Button } from "../components/ui/button";
 import { Check } from "lucide-react";
 import { SubscriptionService } from "../services/subscriptionService";
 import { useToast } from "../hooks/use-toast";
-import Layout from "../components/Layout";
 
 import { useAuth } from "../hooks/useAuth";
 
@@ -874,10 +873,10 @@ function ClosingCTA() {
 
 export default function PricingPage() {
   return (
-    <Layout>
+    <>
       <IntroHero />
       <FeaturesPresentationFlow />
       <ClosingCTA />
-    </Layout>
+    </>
   );
 }

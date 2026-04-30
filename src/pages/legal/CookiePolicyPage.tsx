@@ -1,7 +1,7 @@
-import Layout from "../../components/Layout";
 import { Shield, Scale, ExternalLink, ChevronRight, Info } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../../components/ui/button";
+import PageMetadata from "../../components/PageMetadata";
 
 // 1. Policy Header
 function PolicyHeader() {
@@ -256,13 +256,18 @@ function PolicyContent() {
   );
 }
 
+
 export default function CookiePolicyPage() {
   return (
-    <Layout>
+    <>
+      <PageMetadata 
+        title="Cookie Policy"
+        description="Read the ColabWize Cookie Policy to understand how we use cookies and similar technologies to enhance your research experience and maintain platform security."
+      />
       <div className="bg-white min-h-screen">
         <PolicyHeader />
         <PolicyContent />
       </div>
-    </Layout>
+    </>
   );
 }

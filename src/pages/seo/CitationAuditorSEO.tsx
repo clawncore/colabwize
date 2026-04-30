@@ -1,5 +1,4 @@
 import React from "react";
-import Layout from "../../components/Layout";
 import {
   SearchCheck,
   Link as LinkIcon,
@@ -12,7 +11,7 @@ import { Link } from "react-router-dom";
 
 const CitationAuditorSEO = () => {
   return (
-    <Layout>
+    <>
       <div className="bg-white min-h-screen">
         {/* Feature Hero */}
         <section className="bg-green-50/30 overflow-hidden py-24">
@@ -161,7 +160,7 @@ const CitationAuditorSEO = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

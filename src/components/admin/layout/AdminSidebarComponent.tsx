@@ -14,7 +14,9 @@ import {
   ChevronRight,
   BarChart3,
   Settings,
-  LogOut
+  LogOut,
+  ExternalLink,
+  Home
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -64,7 +66,10 @@ export const AdminSidebarComponent: React.FC<SidebarProps> = ({ onToggleSubSideb
               </span>
               
               {isActive && (
-                <div className="absolute right-0 top-1/4 bottom-1/4 w-1 bg-sky-500 rounded-l-full" />
+                <motion.div 
+                  layoutId="active-indicator"
+                  className="absolute right-0 top-1/4 bottom-1/4 w-1 bg-sky-500 rounded-l-full" 
+                />
               )}
 
               {/* Tooltip */}
@@ -77,10 +82,30 @@ export const AdminSidebarComponent: React.FC<SidebarProps> = ({ onToggleSubSideb
       </nav>
 
       <div className="mt-auto space-y-4 flex flex-col items-center w-full px-2">
-        <button className="w-12 h-12 flex items-center justify-center rounded-lg text-slate-400 hover:bg-secondary transition-all group">
+        <Link 
+          to="/"
+          className="w-12 h-12 flex items-center justify-center rounded-lg text-slate-400 hover:bg-sky-50 hover:text-sky-600 transition-all group"
+          title="Return to Main Site"
+        >
+            <Home size={18} />
+        </Link>
+        <button 
+          onClick={() => {
+            // Quick action or future feature - currently just logs
+            console.log("Quick action clicked");
+          }}
+          className="w-12 h-12 flex items-center justify-center rounded-lg text-slate-400 hover:bg-secondary transition-all group"
+          title="Quick Actions"
+        >
             <Zap size={18} className="group-hover:text-amber-500 transition-all" />
         </button>
-        <button className="w-12 h-12 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50/50 hover:text-red-500 transition-all group">
+        <button 
+          onClick={() => {
+            // Logout logic should be here or handled via props
+            window.location.href = '/login';
+          }}
+          className="w-12 h-12 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50/50 hover:text-red-500 transition-all group"
+        >
             <LogOut size={18} />
         </button>
       </div>

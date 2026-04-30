@@ -1,7 +1,6 @@
 import { Check, Calendar, Sparkles, Users } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import Layout from "../components/Layout";
 import { useNavigate } from "react-router-dom";
 
 // Intro Hero Section
@@ -13,10 +12,13 @@ function IntroHero() {
   };
 
   return (
-    <section className="section-padding bg-white relative overflow-hidden">
+    <section className="section-padding bg-gradient-to-br from-white via-blue-50 to-cyan-50 relative overflow-hidden">
+      <div className="absolute top-[-8rem] right-[-6rem] w-[34rem] h-[34rem] bg-blue-300/35 rounded-full blur-[120px]"></div>
+      <div className="absolute bottom-[-10rem] left-[-8rem] w-[36rem] h-[36rem] bg-cyan-300/30 rounded-full blur-[120px]"></div>
+      <div className="absolute top-1/3 left-1/2 w-[24rem] h-[24rem] bg-indigo-200/25 rounded-full blur-[100px]"></div>
       {/* Background Image Overlay */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 z-0"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10 z-0 mix-blend-multiply"
         style={{
           backgroundImage:
             "url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&h=800&fit=crop')",
@@ -25,7 +27,7 @@ function IntroHero() {
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
             Our{" "}
-            <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-600 to-cyan-700 bg-clip-text text-transparent">
               Product Roadmap
             </span>
           </h1>
@@ -37,7 +39,7 @@ function IntroHero() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
-              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
+              className="bg-gradient-to-r from-blue-600 to-cyan-700 hover:from-blue-700 hover:to-cyan-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
               onClick={handleGetStarted}>
               See Our Vision
             </Button>
@@ -143,22 +145,29 @@ function FeaturesPresentationFlow() {
   ];
 
   return (
-    <section className="section-padding bg-white">
+    <section className="section-padding bg-white relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/40 to-white pointer-events-none"></div>
       <div className="container-custom">
-        <div className="space-y-24">
+        <div className="relative z-10 grid gap-8">
           {roadmap.map((quarter, index) => (
             <div
               key={index}
-              className="bg-white border border-gray-300 rounded-2xl p-8">
+              className="relative overflow-hidden rounded-[2.5rem] border border-blue-100 bg-gradient-to-br from-white via-blue-50/40 to-cyan-50/50 p-6 md:p-8 shadow-xl shadow-blue-900/5">
+              <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-blue-200/30 blur-3xl"></div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {quarter.quarter}
-                </h2>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-700 text-white shadow-lg shadow-blue-500/20">
+                    <Calendar className="h-7 w-7" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {quarter.quarter}
+                  </h2>
+                </div>
                 <span
                   className={`px-4 py-2 rounded-full text-sm font-semibold ${
                     quarter.status === "In Progress"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
+                      ? "bg-blue-100 text-blue-800 border border-blue-200"
+                      : "bg-white/80 text-slate-700 border border-blue-100"
                   }`}>
                   {quarter.status}
                 </span>
@@ -167,8 +176,10 @@ function FeaturesPresentationFlow() {
                 {quarter.items.map((item, i) => (
                   <div
                     key={i}
-                    className="bg-white border border-gray-300 rounded-lg p-6">
-                    <div className="text-4xl mb-3">{item.icon}</div>
+                    className="group rounded-3xl border border-blue-100 bg-white/85 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/10">
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 text-3xl ring-1 ring-blue-100 transition-transform duration-300 group-hover:scale-110">
+                      {item.icon}
+                    </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       {item.title}
                     </h3>
@@ -181,7 +192,7 @@ function FeaturesPresentationFlow() {
         </div>
 
         {/* Additional Roadmap Information */}
-        <div className="mt-24">
+        <div className="relative z-10 mt-24 rounded-[2.5rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-8 md:p-12 shadow-xl shadow-blue-900/5">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               How We Build Our Roadmap
@@ -193,8 +204,8 @@ function FeaturesPresentationFlow() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-white border border-gray-300 rounded-xl p-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-green-600 to-green-800 mb-6">
+            <div className="bg-white/85 border border-blue-100 rounded-[2rem] p-8 shadow-lg shadow-blue-900/5">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-700 mb-6 shadow-lg shadow-blue-500/20">
                 <Calendar className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
@@ -206,23 +217,23 @@ function FeaturesPresentationFlow() {
               </p>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-600 to-green-800 mt-2.5 flex-shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-blue-600 to-cyan-700 mt-2.5 flex-shrink-0"></div>
                   <span className="text-gray-600">
                     User surveys and feedback forms
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-600 to-green-800 mt-2.5 flex-shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-blue-600 to-cyan-700 mt-2.5 flex-shrink-0"></div>
                   <span className="text-gray-600">Feature voting system</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-600 to-green-800 mt-2.5 flex-shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-blue-600 to-cyan-700 mt-2.5 flex-shrink-0"></div>
                   <span className="text-gray-600">Beta testing programs</span>
                 </li>
               </ul>
               <Button
                 asChild
-                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold shadow-lg hover:shadow-green-500/20 transition-all duration-300">
+                className="w-full bg-gradient-to-r from-blue-600 to-cyan-700 hover:from-blue-700 hover:to-cyan-800 text-white font-semibold shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
                 <a
                   href="https://discord.gg/2MMSdX3Uee"
                   target="_blank"
@@ -234,8 +245,8 @@ function FeaturesPresentationFlow() {
               </Button>
             </div>
 
-            <div className="bg-white border border-gray-300 rounded-xl p-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-green-600 to-green-800 mb-6">
+            <div className="bg-white/85 border border-blue-100 rounded-[2rem] p-8 shadow-lg shadow-blue-900/5">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-700 mb-6 shadow-lg shadow-blue-500/20">
                 <Sparkles className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
@@ -247,17 +258,17 @@ function FeaturesPresentationFlow() {
               </p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-600 to-green-800 mt-2.5 flex-shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-blue-600 to-cyan-700 mt-2.5 flex-shrink-0"></div>
                   <span className="text-gray-600">AI and ML research</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-600 to-green-800 mt-2.5 flex-shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-blue-600 to-cyan-700 mt-2.5 flex-shrink-0"></div>
                   <span className="text-gray-600">
                     Academic partnership programs
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-600 to-green-800 mt-2.5 flex-shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-br from-blue-600 to-cyan-700 mt-2.5 flex-shrink-0"></div>
                   <span className="text-gray-600">Industry best practices</span>
                 </li>
               </ul>
@@ -280,16 +291,16 @@ function ClosingCTA() {
   return (
     <section className="section-padding relative overflow-hidden bg-white">
       {/* Background with academic shapes */}
-      <div className="absolute inset-0 bg-gradient-to-r from-green-100/20 to-emerald-100/20 opacity-95"></div>
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-10 left-10 w-20 h-20 border-2 border-green-300/30 rounded-full"></div>
-        <div className="absolute top-40 right-20 w-16 h-16 border-2 border-green-300/30 rotate-45"></div>
-        <div className="absolute bottom-20 left-1/4 w-24 h-24 border-2 border-green-300/30 rounded-full"></div>
-        <div className="absolute bottom-40 right-10 w-12 h-12 border-2 border-green-300/30 rotate-12"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-cyan-50 opacity-95"></div>
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-10 left-10 w-20 h-20 border-2 border-blue-300/40 rounded-full"></div>
+        <div className="absolute top-40 right-20 w-16 h-16 border-2 border-cyan-300/40 rotate-45"></div>
+        <div className="absolute bottom-20 left-1/4 w-24 h-24 border-2 border-blue-300/40 rounded-full"></div>
+        <div className="absolute bottom-40 right-10 w-12 h-12 border-2 border-cyan-300/40 rotate-12"></div>
       </div>
 
       <div className="container-custom relative z-10">
-        <div className="text-center max-w-3xl mx-auto">
+        <div className="text-center max-w-3xl mx-auto rounded-[3rem] border border-blue-100 bg-white/80 p-8 md:p-14 shadow-2xl shadow-blue-900/10 backdrop-blur-sm">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
             Ready to Shape Our Future?
           </h2>
@@ -298,7 +309,7 @@ function ClosingCTA() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Button
-              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-green-500/20 transition-all duration-300"
+              className="bg-gradient-to-r from-blue-600 to-cyan-700 hover:from-blue-700 hover:to-cyan-800 text-white font-semibold px-8 py-6 shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
               onClick={handleGetStarted}>
               Start Your Free Trial
             </Button>
@@ -318,15 +329,15 @@ function ClosingCTA() {
           {/* Trust indicators */}
           <div className="flex flex-col sm:flex-row justify-center items-center gap-6 text-gray-600 text-sm">
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-500" />
+              <Check className="h-4 w-4 text-blue-600" />
               <span>No credit card required</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-500" />
+              <Check className="h-4 w-4 text-blue-600" />
               <span>Cancel anytime</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-500" />
+              <Check className="h-4 w-4 text-blue-600" />
               <span>Available worldwide</span>
             </div>
           </div>
@@ -338,10 +349,10 @@ function ClosingCTA() {
 
 export default function RoadmapPage() {
   return (
-    <Layout>
+    <>
       <IntroHero />
       <FeaturesPresentationFlow />
       <ClosingCTA />
-    </Layout>
+    </>
   );
 }

@@ -1,5 +1,4 @@
 import React from "react";
-import Layout from "../../../components/Layout";
 import PageMetadata from "../../../components/PageMetadata";
 import { Button } from "../../../components/ui/button";
 import { Link } from "react-router-dom";
@@ -7,7 +6,7 @@ import { CheckCircle, Zap, Shield, FileText, ArrowRight } from "lucide-react";
 
 const MlaGenerator = () => {
   return (
-    <Layout>
+    <>
       <PageMetadata
         title="Free MLA Citation Generator (9th Edition)"
         description="Create perfect MLA citations for your essays and research papers. Our MLA generator handles books, websites, and articles with extreme precision."
@@ -99,7 +98,7 @@ const MlaGenerator = () => {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 };
 

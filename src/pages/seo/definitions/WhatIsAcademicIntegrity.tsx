@@ -1,12 +1,11 @@
 import React from "react";
 import { Shield, BookOpen, Search, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import Layout from "../../../components/Layout";
 import { Helmet } from "react-helmet-async";
 
 const WhatIsAcademicIntegrity: React.FC = () => {
     return (
-        <Layout>
+        <>
             <Helmet>
                 <title>What is Academic Integrity? | Definition & Importance | ColabWize</title>
                 <meta
@@ -74,7 +73,7 @@ const WhatIsAcademicIntegrity: React.FC = () => {
                     </div>
                 </article>
             </div>
-        </Layout>
+        </>
     );
 };
 

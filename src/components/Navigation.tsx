@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ConfigService from "../services/ConfigService";
 import {
   Menu,
@@ -32,6 +32,7 @@ interface DropdownItem {
 
 export default function Navigation() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [productOpen, setProductOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
@@ -260,7 +261,7 @@ export default function Navigation() {
                       <div
                         className="bg-[#050B14] rounded-2xl overflow-hidden shadow-2xl h-[280px] w-full relative flex flex-col p-8 text-white cursor-pointer hover:shadow-blue-900/20 transition-all group/promo"
                         onClick={() => {
-                          window.location.href = "/solutions/team-workspace";
+                          navigate("/solutions/team-workspace");
                           setSolutionsOpen(false);
                         }}>
                         <div className="absolute inset-0 z-0">
@@ -379,7 +380,7 @@ export default function Navigation() {
                       <div
                         className="bg-[#050B14] rounded-2xl overflow-hidden shadow-2xl h-[280px] w-full relative flex flex-col p-8 text-white cursor-pointer hover:shadow-indigo-900/20 transition-all group/promo"
                         onClick={() => {
-                          window.location.href = "/changelog";
+                          navigate("/changelog");
                           setProductOpen(false);
                         }}>
                         <div className="absolute inset-0 z-0">
@@ -541,7 +542,7 @@ export default function Navigation() {
                       <div
                         className="bg-[#050B14] rounded-2xl overflow-hidden shadow-2xl h-[280px] w-full relative flex flex-col p-8 text-white cursor-pointer hover:shadow-emerald-900/20 transition-all group/promo"
                         onClick={() => {
-                          window.location.href = "/resources/blogs";
+                          navigate("/resources/blogs");
                           setResourcesOpen(false);
                         }}>
                         <div className="absolute inset-0 z-0">

@@ -13,12 +13,11 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 import { Helmet } from "react-helmet-async";
 
 const ProveAuthorshipSEO: React.FC = () => {
   return (
-    <Layout>
+    <>
       <Helmet>
         <title>How to Prove Authorship of Academic Work | ColabWize</title>
         <meta
@@ -230,7 +229,7 @@ const ProveAuthorshipSEO: React.FC = () => {
           </div>
         </footer>
       </div>
-    </Layout>
+    </>
   );
 };
 

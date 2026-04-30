@@ -11,12 +11,11 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 import { Helmet } from "react-helmet-async";
 
 const AIFalsePositiveSEO: React.FC = () => {
   return (
-    <Layout>
+    <>
       <Helmet>
         <title>
           The AI False Positive Problem: Protecting Your Work | ColabWize
@@ -193,7 +192,7 @@ const AIFalsePositiveSEO: React.FC = () => {
           </div>
         </article>
       </div>
-    </Layout>
+    </>
   );
 };
 

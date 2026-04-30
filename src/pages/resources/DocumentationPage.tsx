@@ -8,7 +8,6 @@ import {
   Terminal,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
 import ConfigService from "../../services/ConfigService";
 
@@ -355,10 +354,10 @@ function ClosingCTA() {
 
 export default function DocumentationPage() {
   return (
-    <Layout>
+    <>
       <IntroHero />
       <FeaturesPresentationFlow />
       <ClosingCTA />
-    </Layout>
+    </>
   );
 }

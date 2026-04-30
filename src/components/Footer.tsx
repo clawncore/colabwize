@@ -109,11 +109,22 @@ export default function Footer() {
                   ColabWize
                 </span>
               </Link>
-              <p className="text-gray-500 text-sm mb-8 max-w-sm leading-relaxed">
+              <p className="text-gray-500 text-sm mb-4 max-w-sm leading-relaxed">
                 Your Academic Success, Defended. A platform designed to
                 transform anxiety into confidence through academic integrity and
                 defensibility.
               </p>
+              <a
+                href="https://www.saashub.com/colabwize?utm_source=badge&utm_campaign=badge&utm_content=colabwize&badge_variant=color&badge_kind=approved"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-8 inline-block">
+                <img
+                  src="https://cdn-b.saashub.com/img/badges/approved-color.png?v=1"
+                  alt="ColabWize badge"
+                  style={{ maxWidth: "150px" }}
+                />
+              </a>
               <div className="flex space-x-4">
                 {socialLinks.map((social) => (
                   <a
