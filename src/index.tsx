@@ -7,24 +7,31 @@ import ConfigService from "./services/ConfigService";
 
 import reportWebVitals from "./reportWebVitals";
 
-// Suppress known Supabase 'steal' DOMException caused by React StrictMode duplicate renders
-// This prevents the Webpack error overlay from crashing the local development view.
-const blockLockErrors = (message: any) => {
-  if (typeof message === 'string' && message.includes('Lock broken')) return true;
-  if (message && message.message && typeof message.message === 'string' && message.message.includes('Lock broken')) return true;
+// Suppress known warnings that don't affect functionality:
+// 1. Supabase 'Lock broken' DOMException from React StrictMode
+// 2. TipTap flushSync warning (known React 18 incompatibility, doesn't break functionality)
+const blockKnownWarnings = (message: any) => {
+  if (typeof message === 'string') {
+    if (message.includes('Lock broken')) return true;
+    if (message.includes('flushSync was called from inside a lifecycle method')) return true;
+  }
+  if (message && message.message && typeof message.message === 'string') {
+    if (message.message.includes('Lock broken')) return true;
+    if (message.message.includes('flushSync was called from inside a lifecycle method')) return true;
+  }
   if (message && message.name === 'AbortError') return true;
   return false;
 };
 
 // Intercept window errors
 window.addEventListener('unhandledrejection', (event) => {
-  if (blockLockErrors(event.reason)) {
+  if (blockKnownWarnings(event.reason)) {
     event.preventDefault();
   }
 });
 
 window.addEventListener('error', (event) => {
-  if (blockLockErrors(event.error) || blockLockErrors(event.message)) {
+  if (blockKnownWarnings(event.error) || blockKnownWarnings(event.message)) {
     event.preventDefault();
   }
 });
@@ -32,8 +39,8 @@ window.addEventListener('error', (event) => {
 // Intercept console.error to prevent CRA's Error Overlay web socket integration from seeing it
 const originalConsoleError = console.error;
 console.error = (...args: any[]) => {
-  if (args.some(arg => blockLockErrors(arg))) {
-    // Optionally log a debug message silently, but do not pass to the original console.error
+  if (args.some(arg => blockKnownWarnings(arg))) {
+    // Silently suppress known warnings that don't affect functionality
     return;
   }
   originalConsoleError.apply(console, args);
@@ -43,7 +50,7 @@ const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 root.render(
-    <App />
+  <App />
 );
 
 // Register service worker only in production environment

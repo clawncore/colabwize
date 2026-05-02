@@ -3,11 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
-import { 
-  Copy, 
-  Share2, 
-  Users, 
-  Gift, 
+import {
+  Copy,
+  Share2,
+  Users,
+  Gift,
   Clock,
   CheckCircle2,
   Loader2,
@@ -40,6 +40,7 @@ const ReferralCard: React.FC = () => {
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -47,15 +48,19 @@ const ReferralCard: React.FC = () => {
   }, []);
 
   const fetchReferralData = async () => {
+    setDebugInfo("Starting fetch...");
     try {
-      const token = localStorage.getItem("token") || 
-                   sessionStorage.getItem("token") || 
-                   (window as any).__AUTH_TOKEN__;
-      
+      const token = localStorage.getItem("auth_token") ||
+        sessionStorage.getItem("auth_token") ||
+        (window as any).__AUTH_TOKEN__;
+
       if (!token) {
+        setDebugInfo("No auth_token found in localStorage");
         setLoading(false);
         return;
       }
+
+      setDebugInfo(`Token found, calling API at ${API_BASE_URL}/api/users/referrals`);
 
       const response = await fetch(`${API_BASE_URL}/api/users/referrals`, {
         headers: {
@@ -63,15 +68,25 @@ const ReferralCard: React.FC = () => {
         },
       });
 
+      setDebugInfo(`Response status: ${response.status}`);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        setDebugInfo(`Error ${response.status}: ${errorText}`);
         throw new Error("Failed to fetch referral data");
       }
 
       const data = await response.json();
+      setDebugInfo(`API response: ${JSON.stringify(data).substring(0, 200)}`);
+
       if (data.success) {
         setReferralData(data);
+      } else {
+        setDebugInfo(`API returned success=false: ${JSON.stringify(data)}`);
       }
     } catch (error) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      setDebugInfo(prev => prev + `\nError: ${errMsg}`);
       console.error("Error fetching referral data:", error);
     } finally {
       setLoading(false);
@@ -106,7 +121,7 @@ const ReferralCard: React.FC = () => {
   const shareReferral = async () => {
     const url = getReferralUrl();
     const text = `Join me on ColabWize - the academic integrity platform that helps researchers write with confidence. Get started with my referral link!`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -200,15 +215,15 @@ const ReferralCard: React.FC = () => {
         </div>
 
         {/* How it works */}
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 space-y-2">
+        <div className="bg-gray-50 dark:bg-gray-900/20 rounded-lg p-3 space-y-2">
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-green-100 text-green-700">Reward</Badge>
-            <span className="text-sm font-medium text-green-700 dark:text-green-400">
+            <Badge variant="secondary" className="bg-gray-100 text-gray-700">Reward</Badge>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-400">
               5 Days of Plus Free
             </span>
           </div>
-          <p className="text-xs text-green-600 dark:text-green-300">
-            For each friend who signs up using your link, you get 5 days of Plus plan 
+          <p className="text-xs text-gray-600">
+            For each friend who signs up using your link, you get 5 days of Plus plan
             with unlimited scans, AI features, and priority support.
           </p>
         </div>
@@ -231,7 +246,7 @@ const ReferralCard: React.FC = () => {
                       {referral.refereeName || referral.refereeEmail}
                     </span>
                   </div>
-                  <Badge 
+                  <Badge
                     variant={referral.status === "granted" ? "default" : "secondary"}
                     className="text-xs"
                   >

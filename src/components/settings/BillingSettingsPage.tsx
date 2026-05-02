@@ -253,15 +253,18 @@ const SubscriptionStatus = ({
                 <span className="text-amber-700 font-medium">
                   Expires on{" "}
                   {new Date(
-                    subscription.current_period_end!,
+                    subscription.entitlement_expires_at || subscription.current_period_end!,
                   ).toLocaleDateString()}
                 </span>
               ) : (
                 <span>
-                  Renews on{" "}
-                  {new Date(
-                    subscription.current_period_end || Date.now(),
-                  ).toLocaleDateString()}
+                  {(subscription.entitlement_expires_at || subscription.current_period_end) ? (
+                    <>Expires on {new Date(
+                      subscription.entitlement_expires_at || subscription.current_period_end,
+                    ).toLocaleDateString()}</>
+                  ) : (
+                    "No expiry date"
+                  )}
                 </span>
               )}
             </div>

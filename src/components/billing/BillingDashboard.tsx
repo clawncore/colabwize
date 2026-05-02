@@ -185,10 +185,10 @@ const BillingSettingsPage: React.FC = () => {
 
   const currentPlan = plans.find((p) => p.id === currentPlanId) ||
     plans.find((p) => p.id === "free") || {
-      name: "Free Plan",
-      price: 0,
-      id: "free",
-    };
+    name: "Free Plan",
+    price: 0,
+    id: "free",
+  };
 
   const handleViewAllInvoices = async () => {
     try {
@@ -382,13 +382,13 @@ const BillingSettingsPage: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                Next Payment
+                {subscription?.entitlement_expires_at ? "Expires On" : "Next Payment"}
               </p>
               <div className="text-lg font-bold text-gray-900">
-                {subscription?.current_period_end
+                {(subscription?.entitlement_expires_at || subscription?.current_period_end)
                   ? new Date(
-                      subscription.current_period_end,
-                    ).toLocaleDateString()
+                    subscription.entitlement_expires_at || subscription.current_period_end!,
+                  ).toLocaleDateString()
                   : "No payment due"}
               </div>
             </div>
@@ -544,9 +544,9 @@ const BillingSettingsPage: React.FC = () => {
                     Resets{" "}
                     {usage.periodEnd
                       ? new Date(usage.periodEnd).toLocaleDateString(
-                          undefined,
-                          { day: "numeric", month: "short" },
-                        )
+                        undefined,
+                        { day: "numeric", month: "short" },
+                      )
                       : "Monthly"}
                   </span>
                 </div>
@@ -576,17 +576,16 @@ const BillingSettingsPage: React.FC = () => {
                     {/* Progress Bar */}
                     <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          limits.scans_per_month !== -1 &&
-                          (usage.scan || 0) >= (limits.scans_per_month || 0)
+                        className={`h-full rounded-full transition-all duration-500 ${limits.scans_per_month !== -1 &&
+                            (usage.scan || 0) >= (limits.scans_per_month || 0)
                             ? "bg-red-500" // Exceeded
                             : limits.scans_per_month !== -1 &&
-                                (usage.scan || 0) /
-                                  (limits.scans_per_month || 1) >
-                                  0.8
+                              (usage.scan || 0) /
+                              (limits.scans_per_month || 1) >
+                              0.8
                               ? "bg-amber-400" // Near limit
                               : "bg-green-500" // Normal or Infinite
-                        }`}
+                          }`}
                         style={{
                           width: `${limits.scans_per_month === -1 ? 0 : Math.min(100, ((usage.scan || 0) / (limits.scans_per_month || 1)) * 100)}%`,
                         }} // 0% width for infinite to show "empty" or just use full green? Usually full green or empty. Let's start with 0 or 100.
@@ -661,14 +660,13 @@ const BillingSettingsPage: React.FC = () => {
                     </div>
                     <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          limits.rephrase_suggestions === -1
+                        className={`h-full rounded-full transition-all duration-500 ${limits.rephrase_suggestions === -1
                             ? "bg-purple-500"
                             : (usage.rephrase_suggestions || 0) >=
-                                (limits.rephrase_suggestions || 0)
+                              (limits.rephrase_suggestions || 0)
                               ? "bg-red-500"
                               : "bg-purple-500"
-                        }`}
+                          }`}
                         style={{
                           width: `${limits.rephrase_suggestions === -1 ? 0 : Math.min(100, ((usage.rephrase_suggestions || 0) / (limits.rephrase_suggestions || 1)) * 100)}%`,
                         }}

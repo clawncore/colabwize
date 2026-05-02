@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, memo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import { EditorProvider } from "./EditorContext";
 import StarterKit from "@tiptap/starter-kit";
@@ -95,12 +95,11 @@ import {
   GitCompare,
   Lock,
   HelpCircle,
-  Video,
 } from "lucide-react";
 import { EditorHelpDialog } from "./EditorHelpDialog";
 import { Button } from "../ui/button";
 import ConfigService from "../../services/ConfigService";
-import { loadRecaptchaScript, getRecaptchaToken } from "../../lib/recaptcha";
+import { loadRecaptchaScript } from "../../lib/recaptcha";
 
 const RECAPTCHA_SITE_KEY = ConfigService.getRecaptchaSiteKey();
 
@@ -112,6 +111,44 @@ function isViewReady(ed: any): boolean {
     return false;
   }
 }
+
+// EditorContent wrapper that DEFERS rendering to avoid flushSync in React 18
+// CRITICAL: We NEVER render EditorContent on first mount or when editor changes.
+// We always defer using setTimeout(0) to move out of React's render phase.
+const DeferredEditorContent = ({ editor, className }: { editor: any; className: string }) => {
+  // Start with NULL - never render EditorContent synchronously
+  const [renderedEditor, setRenderedEditor] = useState<any>(null);
+  const pendingEditorRef = useRef(editor);
+
+  useEffect(() => {
+    // Always update the pending ref
+    pendingEditorRef.current = editor;
+
+    // If no editor, clear immediately
+    if (!editor) {
+      setRenderedEditor(null);
+      return;
+    }
+
+    // ALWAYS defer, even on initial mount
+    // setTimeout(0) pushes to next tick, after React's render phase completes
+    const timer = setTimeout(() => {
+      if (editor === pendingEditorRef.current && isViewReady(editor)) {
+        setRenderedEditor(editor);
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [editor]);
+
+  // NEVER render EditorContent during React's render phase
+  // Only render after setTimeout has fired (next tick)
+  if (!renderedEditor || !isViewReady(renderedEditor)) {
+    return <div className={className} style={{ minHeight: "500px" }} />;
+  }
+
+  return <EditorContent editor={renderedEditor} className={className} />;
+};
 
 interface DocumentEditorProps {
   project: Project;
@@ -142,7 +179,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const { user, token } = useAuth();
   const ydocRef = useRef<Y.Doc | null>(null);
   const providerRef = useRef<HocuspocusProvider | null>(null);
-  const [collabReady, setCollabReady] = useState(false); // Collaboration State
+  // NOTE: collabReady removed - using isSynced instead to prevent editor recreation
   const [isEditorMounted, setIsEditorMounted] = useState(false);
   const [collabStatus, setCollabStatus] = useState<string>("disconnected");
   const [isSynced, setIsSynced] = useState(false);
@@ -202,13 +239,21 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     const h = Math.abs(hash) % 360;
     return hslToHex(h, 70, 50);
   }, [user?.id]);
+  // Create Yjs document synchronously when entering collaborative mode
+  // This ensures the editor is created with Collaboration extension from the start
+  if (isCollaborative && !ydocRef.current) {
+    ydocRef.current = new Y.Doc();
+    console.log("[HP] Created Yjs document synchronously");
+  }
+
   // Handle Hocuspocus Lifecycle
   useEffect(() => {
     if (!isCollaborative || !project.id || !token) {
       if (!isCollaborative || !project.id) {
+        providerRef.current?.destroy();
+        ydocRef.current?.destroy();
         providerRef.current = null;
         ydocRef.current = null;
-        setCollabReady(false);
         setIsSynced(false);
         isSyncedRef.current = false;
       }
@@ -221,7 +266,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     );
     setCollabStatus("connecting");
     setIsSynced(false);
-    setCollabReady(false);
     isSyncedRef.current = false;
     setCollabError(null);
 
@@ -229,8 +273,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       `[HP Auth] Initializing with token length: ${token?.length || 0}`,
     );
 
-    const freshYdoc = new Y.Doc();
-    ydocRef.current = freshYdoc;
+    // Use existing Yjs doc or create fresh one
+    const freshYdoc = ydocRef.current || new Y.Doc();
+    if (!ydocRef.current) {
+      ydocRef.current = freshYdoc;
+    }
 
     const newProvider = new HocuspocusProvider({
       url: ConfigService.getCollabUrl(),
@@ -249,7 +296,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         console.log(`[HP Sync] Project ${project.id} ready`);
         setIsSynced(true);
         isSyncedRef.current = true;
-        setCollabReady(true);
         setCollabError(null);
         if (connectionTimeoutRef.current) {
           clearTimeout(connectionTimeoutRef.current);
@@ -350,6 +396,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   const [editCount, setEditCount] = useState(0);
   const hasInitializedContentRef = useRef(false);
   const currentProjectIdRef = useRef<string | null>(null);
+  const isNormalizingRef = useRef(false); // Guard to prevent concurrent normalization
 
   // Reset initialization flag when collaboration mode or project changes
   useEffect(() => {
@@ -383,25 +430,26 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
           // @ts-ignore — `history` exists at runtime but is missing from this version's StarterKitOptions types
           history: isCollaborative ? false : {},
         }),
-        ...(isCollaborative &&
-        collabReady &&
-        providerRef.current &&
-        ydocRef.current
+        ...(isCollaborative && ydocRef.current
           ? [
-              Collaboration.configure({
-                document: ydocRef.current,
-              }),
-              CollaborationCursor.configure({
-                provider: providerRef.current,
-                user: {
-                  name:
-                    user?.user_metadata?.full_name ||
-                    user?.email ||
-                    "Anonymous",
-                  color: cursorColor,
-                },
-              }),
-            ]
+            Collaboration.configure({
+              document: ydocRef.current,
+            }),
+          ]
+          : []),
+        ...(isCollaborative && providerRef.current
+          ? [
+            CollaborationCursor.configure({
+              provider: providerRef.current,
+              user: {
+                name:
+                  user?.user_metadata?.full_name ||
+                  user?.email ||
+                  "Anonymous",
+                color: cursorColor,
+              },
+            }),
+          ]
           : []),
         AuthorshipExtension.configure({
           user: {
@@ -528,7 +576,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             try {
               const sel = NodeSelection.create(view.state.doc, pos);
               view.dispatch(view.state.tr.setSelection(sel));
-            } catch (e) {}
+            } catch (e) { }
             return true;
           }
 
@@ -536,7 +584,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         },
       },
     },
-    [project.id, isCollaborative, collabReady],
+    [project.id, isCollaborative],
   );
 
   useEffect(() => {
@@ -579,6 +627,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   }, [editor]);
 
   useEffect(() => {
+    // CRITICAL: Never run this effect in collaborative mode
+    if (isCollaborative) {
+      return;
+    }
+
     if (editor && isEditorMounted && isViewReady(editor)) {
       if (onEditorReady) {
         onEditorReady(editor);
@@ -588,8 +641,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     if (
       editor &&
       project.content &&
-      currentProjectIdRef.current !== project.id &&
-      !isCollaborative
+      currentProjectIdRef.current !== project.id
     ) {
       if (
         currentProjectIdRef.current &&
@@ -664,12 +716,165 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
       isCollaborative &&
       editor &&
       isSynced &&
-      !hasInitializedContentRef.current
+      !hasInitializedContentRef.current &&
+      !isNormalizingRef.current // GUARD: Prevent concurrent normalization
     ) {
+      // CRITICAL DIAGNOSTIC: Log document structure to detect duplication
+      const docJson = editor.getJSON();
+      const contentStr = JSON.stringify(docJson);
+      const contentLength = contentStr.length;
+      const paragraphCount = docJson.content?.length || 0;
+
+      // DETECT: Check for potential duplicate content by comparing consecutive paragraphs
+      let duplicatePatterns = 0;
+      const duplicateTexts: string[] = [];
+      if (docJson.content && docJson.content.length > 1) {
+        for (let i = 0; i < docJson.content.length - 1; i++) {
+          const currentText = JSON.stringify(docJson.content[i]);
+          const nextText = JSON.stringify(docJson.content[i + 1]);
+          if (currentText === nextText && currentText.length > 20) {
+            duplicatePatterns++;
+            duplicateTexts.push(docJson.content[i].content?.[0]?.text?.substring(0, 100) || "empty");
+          }
+        }
+      }
+
+      // CRITICAL: Check if entire document appears duplicated (same content repeated)
+      let fullDocumentDuplicate = false;
+      if (docJson.content && docJson.content.length > 3) {
+        const firstHalf = docJson.content.slice(0, Math.floor(docJson.content.length / 2));
+        const secondHalf = docJson.content.slice(Math.floor(docJson.content.length / 2));
+        // If first half matches second half, the entire doc is duplicated
+        if (JSON.stringify(firstHalf) === JSON.stringify(secondHalf)) {
+          fullDocumentDuplicate = true;
+        }
+      }
+
+      if (duplicatePatterns > 0 || fullDocumentDuplicate) {
+        console.error(
+          `[Collab] CRITICAL: Content duplication detected!`,
+          {
+            duplicatePatterns,
+            duplicateTexts: duplicateTexts.slice(0, 3),
+            fullDocumentDuplicate,
+            paragraphCount,
+            projectId: project.id,
+          }
+        );
+
+        // AUTOMATIC FIX: Detect and remove ANY number of full-document repetitions (2x, 3x, 4x, etc.)
+        if (fullDocumentDuplicate && docJson.content && docJson.content.length > 3) {
+          // Find the smallest repeating unit
+          const paragraphs = docJson.content;
+          let repeatingUnitLength = 0;
+
+          // Try to find the smallest N where paragraphs[0..N-1] === paragraphs[N..2N-1] === paragraphs[2N..3N-1] etc.
+          for (let candidateLength = 1; candidateLength <= Math.floor(paragraphs.length / 2); candidateLength++) {
+            const firstChunk = paragraphs.slice(0, candidateLength);
+            let isRepeating = true;
+
+            // Check if this pattern repeats throughout the entire document
+            for (let i = candidateLength; i < paragraphs.length; i += candidateLength) {
+              const nextChunk = paragraphs.slice(i, Math.min(i + candidateLength, paragraphs.length));
+              // Allow last chunk to be partial (might be cut off)
+              if (nextChunk.length === candidateLength) {
+                if (JSON.stringify(firstChunk) !== JSON.stringify(nextChunk)) {
+                  isRepeating = false;
+                  break;
+                }
+              }
+            }
+
+            if (isRepeating) {
+              repeatingUnitLength = candidateLength;
+              break; // Found the smallest repeating unit
+            }
+          }
+
+          // If we found a repeating pattern, keep only one instance
+          if (repeatingUnitLength > 0) {
+            const uniqueContent = paragraphs.slice(0, repeatingUnitLength);
+            const removed = paragraphs.length - repeatingUnitLength;
+            const repetitionCount = Math.round(paragraphs.length / repeatingUnitLength);
+
+            console.log(`[Collab] AUTO-FIX: Document repeated ${repetitionCount}x. Keeping ${repeatingUnitLength} unique paragraphs, removing ${removed}.`);
+
+            const cleanedContent = {
+              type: "doc",
+              content: uniqueContent,
+            };
+
+            editor.commands.setContent(cleanedContent, false, {
+              preserveWhitespace: false,
+            });
+
+            toast({
+              title: "Document Cleaned",
+              description: `Detected ${repetitionCount}x repetition. Removed ${removed} duplicate paragraphs. Please save the document.`,
+              variant: "default",
+            });
+
+            console.log(`[Collab] AUTO-FIX: Document deduplicated successfully`,
+              { originalParagraphs: paragraphs.length, kept: repeatingUnitLength, removed }
+            );
+
+            // Skip normalization on this first load since we just modified content
+            hasInitializedContentRef.current = true;
+            isNormalizingRef.current = false;
+            return;
+          }
+
+          // Fallback: simple 2x split (original logic)
+          const mid = Math.floor(paragraphs.length / 2);
+          console.log(`[Collab] AUTO-FIX: Simple 2x split fallback - keeping ${mid} paragraphs`);
+
+          const cleanedContent = {
+            type: "doc",
+            content: paragraphs.slice(0, mid),
+          };
+
+          editor.commands.setContent(cleanedContent, false, {
+            preserveWhitespace: false,
+          });
+
+          toast({
+            title: "Document Cleaned",
+            description: `Removed ${paragraphCount - mid} duplicate paragraphs. Please save the document.`,
+            variant: "default",
+          });
+
+          hasInitializedContentRef.current = true;
+          isNormalizingRef.current = false;
+          return;
+        }
+
+        // Alert user to the issue (only if not auto-fixed)
+        toast({
+          title: "Document Issue Detected",
+          description: "Duplicate content found. Please contact support if this persists.",
+          variant: "destructive",
+        });
+      }
+
+      console.log(
+        `[Collab] Initial Sync Complete - Document stats:`,
+        {
+          contentLength,
+          paragraphCount,
+          duplicatePatterns,
+          fullDocumentDuplicate,
+          firstParagraphs: docJson.content?.slice(0, 3).map((p: any) =>
+            p.content?.[0]?.text?.substring(0, 50) || "empty"
+          ),
+          projectId: project.id,
+        }
+      );
+
       console.log(
         "[Collab] Initial Sync Complete, triggering normalization...",
       );
       hasInitializedContentRef.current = true;
+      isNormalizingRef.current = true; // Set guard
       currentProjectIdRef.current = project.id;
 
       const initCollabRegistry = async () => {
@@ -699,11 +904,14 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                 );
               } catch (e) {
                 console.error("Collab Normalization Failed:", e);
+              } finally {
+                isNormalizingRef.current = false; // Release guard
               }
             },
           );
         } catch (e) {
           console.error("Collab init registry failed:", e);
+          isNormalizingRef.current = false; // Release guard on error
         }
       };
 
@@ -715,9 +923,18 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
   useEffect(() => {
     if (!editor || !isEditorMounted || !isViewReady(editor)) return;
     if (editCount === 0) return; // Wait for first user edit
+    // In collaborative mode, wait for sync before running normalization
+    if (isCollaborative && !isSynced) return;
 
     const timer = setTimeout(async () => {
-      console.log("ðŸ“  Running debounced normalization (post-edit)...");
+      // GUARD: Prevent concurrent normalization that can cause content duplication
+      if (isNormalizingRef.current) {
+        console.log("[Normalization] Skipping: already in progress");
+        return;
+      }
+      isNormalizingRef.current = true;
+
+      console.log("📚 Running debounced normalization (post-edit)...");
       try {
         const { detectAndNormalizeBibliography, detectAndNormalizeCitations } =
           await import("./utils/normalization");
@@ -732,11 +949,13 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         );
       } catch (err) {
         console.error("Debounced normalization failed", err);
+      } finally {
+        isNormalizingRef.current = false;
       }
     }, 4500); // 4.5s debounce: long enough to not be annoying while typing
 
     return () => clearTimeout(timer);
-  }, [editor, editCount, isEditorMounted, project.id, project.citations]);
+  }, [editor, editCount, isEditorMounted, project.id, project.citations, isCollaborative, isSynced]);
 
   // --- Preview Mode (Read-Only) ---
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -770,8 +989,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
         // --- Optimization: Check only current paragraph ---
         const { state } = editor;
-        const { selection } = state;
-        const { $from } = selection;
+        const { $from } = state.selection;
 
         if (!$from.parent.isTextblock) return;
 
@@ -835,7 +1053,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) {} // Dispatch clear
+          } catch (e) { } // Dispatch clear
           console.log("âœ… No grammar issues in block.");
           return;
         }
@@ -873,7 +1091,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
         if (matchCount > 0 || errors.length === 0) {
           try {
             if (editor.view && editor.view.dom) editor.view.dispatch(tr);
-          } catch (e) {}
+          } catch (e) { }
           console.log(`âœ… Applied ${matchCount} grammar highlights to block.`);
         }
       } catch (error) {
@@ -912,11 +1130,11 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
             description: `We've detected you're using ${state.stats.majorityStyle} formatting and updated your settings.`,
           });
         }
-      } catch (err) {}
+      } catch (err) { }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [editor, isEditorMounted, project.citation_style, onProjectUpdate, toast]);
+  }, [editor, isEditorMounted, project.citation_style, project, onProjectUpdate, toast]);
 
   const statsRef = useRef({
     timeSpent: 0,
@@ -1062,7 +1280,6 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
     const handleApplyConsensus = (e: CustomEvent) => {
       if (editor && e.detail) {
         const { claim, result } = e.detail;
-        const { selection } = editor.state;
 
         const highlightAttrs = {
           claim: claim,
@@ -1320,11 +1537,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
               <div className="flex items-center space-x-2 flex-nowrap overflow-x-auto pb-1 custom-scrollbar min-w-0 flex-1 md:justify-center justify-start max-md:mt-2">
                 <button
                   onClick={() => setIsPreviewMode(!isPreviewMode)}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isPreviewMode
-                      ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isPreviewMode
+                    ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
                   title={
                     isPreviewMode
                       ? "Switch to Edit Mode"
@@ -1340,11 +1556,10 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
 
                 <button
                   onClick={onToggleFocusMode}
-                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${
-                    isFocusMode
-                      ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
-                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
+                  className={`p-2 border rounded-md text-sm font-medium transition-all flex items-center gap-2 ${isFocusMode
+                    ? "bg-purple-600 text-white border-purple-600 hover:bg-purple-700"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
                   title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
                   {isFocusMode ? (
                     <Minimize2 className="w-4 h-4" />
@@ -1552,7 +1767,7 @@ export const DocumentEditor: React.FC<DocumentEditorProps> = ({
                     ? { pointerEvents: "none", userSelect: "none" }
                     : undefined
                 }>
-                <EditorContent
+                <DeferredEditorContent
                   editor={editor}
                   className={`${isFocusMode ? "max-w-[900px]" : "max-w-[816px]"} mx-auto prose prose-lg min-h-full focus:outline-none p-8 bg-white rounded-lg shadow-sm`}
                 />
