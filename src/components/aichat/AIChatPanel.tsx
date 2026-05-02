@@ -472,7 +472,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
           <AIChatUpgradeModal
             reason={limitState.reason}
             message={limitState.message}
-            // No onDismiss — we intentionally make this sticky
+          // No onDismiss — we intentionally make this sticky
           />
         )}
 
@@ -620,7 +620,7 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                         : "mr-auto",
                   )}>
                   {message.role === "system" &&
-                  message.metadata?.type === "limit" ? (
+                    message.metadata?.type === "limit" ? (
                     <div className="w-full my-4">
                       <InlineLimitMessage
                         type={message.metadata.code}
@@ -666,7 +666,10 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
                             ? "bg-indigo-600 text-white"
                             : "bg-gray-100 text-gray-800",
                         )}>
-                        <div className="prose prose-sm max-w-none break-words dark:prose-invert">
+                        <div className={cn(
+                          "prose prose-sm max-w-none break-words",
+                          message.role === "user" ? "dark:prose-invert" : "prose-slate"
+                        )}>
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
@@ -766,35 +769,34 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
       </CardContent>
 
       <CardFooter className="p-4 border-t">
-        <form onSubmit={handleSubmit} className="flex w-full gap-2 items-end">
-          <Textarea
-            ref={textareaRef}
-            placeholder={
-              limitState
-                ? "AI chat limit reached — upgrade to continue"
-                : selectedText
-                  ? "Ask about selection..."
-                  : "Ask a question (Shift+Enter for new line)..."
-            }
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isLoading || !!limitState}
-            className="flex-1 min-h-[44px] max-h-[200px] resize-none py-3 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-            rows={1}
-            style={{
-              overflowY:
-                textareaRef.current && textareaRef.current.scrollHeight > 200
-                  ? "auto"
-                  : "hidden",
-            }}
-          />
-          <Button
-            type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            disabled={isLoading || !input.trim() || !!limitState}>
-            <Send className="w-4 h-4" />
-          </Button>
+        <form onSubmit={handleSubmit} className="flex w-full">
+          <div className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2 focus-within:border-gray-300 transition-colors relative overflow-hidden">
+            <Textarea
+              ref={textareaRef}
+              placeholder={
+                limitState
+                  ? "AI chat limit reached — upgrade to continue"
+                  : selectedText
+                    ? "Ask about selection..."
+                    : "Ask a question..."
+              }
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={isLoading || !!limitState}
+              className="w-full min-h-[24px] max-h-[120px] resize-none border-0 bg-transparent py-1 px-0 pr-8 focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              rows={1}
+              style={{
+                overflowY: "auto",
+              }}
+            />
+            <Button
+              type="submit"
+              className="h-8 w-8 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white p-0 flex items-center justify-center absolute right-3 bottom-2"
+              disabled={isLoading || !input.trim() || !!limitState}>
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
         </form>
       </CardFooter>
     </Card>
